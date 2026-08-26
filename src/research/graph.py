@@ -27,7 +27,9 @@ class FactGraph:
         path = self._path(fact.fact_id)
         if path.exists():
             stored = self.get_fact(fact.fact_id)
-            if stored != fact:
+            stored_content = (stored.problem_id, stored.statement, stored.proof, stored.predecessors)
+            submitted_content = (fact.problem_id, fact.statement, fact.proof, fact.predecessors)
+            if stored_content != submitted_content:
                 raise ValueError(f"fact ID collision or corrupt file: {fact.fact_id}")
             return stored
 
