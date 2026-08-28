@@ -1,0 +1,107 @@
+# N1 First-Class Proof Obligations Report
+
+## DANUS Reuse Audit
+
+| Component | Source | Decision | Noespire implementation |
+| --- | --- | --- | --- |
+| Fact schema and content identity | `danus/core/schema.py` | KEEP_EXISTING | `src/research/fact.py` Phase 0A adaptation |
+| File-backed Fact Graph | `danus/core/factgraph.py` | KEEP_EXISTING | `src/research/graph.py` |
+| Verifier-gated submission | `danus/gateway/server.py::fact_submit` | KEEP_EXISTING | `src/research/pipeline.py::submit_candidate` |
+| DANUS worker contract | `agents/contracts/worker.md`, `danus/execution/loop.py` | ADAPT | Existing `ResearchWorker` receives one obligation-specific goal and its exact premise Facts |
+| Fresh verifier | `agents/contracts/verifier.md`, `danus/verify/launcher.py` | KEEP_EXISTING | Existing `ResearchVerifier` plus one ephemeral `CodexExec` invocation per verdict |
+| Fact persistence | `danus/core/factgraph.py` | KEEP_EXISTING | Existing Fact Markdown persistence |
+| Supporting closure | `danus/write_paper/assemble.py` | NOT_NEEDED | Existing closure implementation remains unchanged |
+| Memory, retrieval, gateway roles, swarm, orchestration | DANUS runtime modules | NOT_NEEDED | Not introduced for N1 |
+| Proof Obligation, Route, Registry | No DANUS first-class equivalent | NEW | `src/research/obligation.py` |
+| Obligation execution seam | No direct DANUS equivalent | NEW | `src/research/obligation_execution.py` composes existing worker/verifier/truth modules |
+
+The detailed source comparison is in `docs/n1_danus_reuse_audit.md`. No frozen DANUS source was copied, and Noespire product code has no runtime dependency on `baselines/danus`.
+
+## New Code
+
+- ProofObligation: immutable `O = (premises -> goal)` state with `OPEN`, `RUNNING`, `DISCHARGED`, and a retained-but-unused `REJECTED` enum value. Ordinary candidate or verifier failure returns `RUNNING -> OPEN`.
+- Route: explicit route identity plus the obligation IDs belonging to that OR alternative.
+- ObligationRegistry: deterministic JSON add/get/list, guarded transitions, exact duplicate protection, accepted-Fact resolution, and reload.
+- execution seam: `execute_obligation(...)` loads accepted premises, supplies the complete AND input to the existing worker, validates the returned goal and predecessor identity, submits through the existing verifier gate, and resolves only after the admitted Fact is readable from `FactGraph`.
+
+## Reused DANUS Infrastructure
+
+- Existing content-addressed `Fact` and file-backed `FactGraph` adaptation.
+- Existing verifier-gated `submit_candidate` truth-write path.
+- Existing DANUS-derived `ResearchWorker` contract.
+- Existing fresh/stateless `ResearchVerifier` contract and ephemeral Codex process adapter.
+- Existing Fact persistence and supporting-closure behavior.
+
+## Failure-Semantics Fix
+
+- before: an ordinary verifier FAIL transitioned the obligation from `RUNNING` to terminal-looking `REJECTED`.
+- after: verifier FAIL and deterministic candidate-shape rejection both transition `RUNNING -> OPEN` without admitting a Fact or setting `resolved_by_fact_id`.
+- reason: a failed proof candidate is evidence only about that attempt, not evidence that the Proof Obligation is false.
+- retry control: attempt A fails and leaves the graph unchanged; an explicit attempt B passes, admits exactly one Fact, and transitions the same obligation to `DISCHARGED`.
+
+## Truth-Boundary Verification
+
+- OPEN -> FactGraph: never; registry search state and Fact storage use separate files and interfaces.
+- verifier FAIL: FactGraph remains unchanged, `resolved_by_fact_id` remains null, status returns to `OPEN`, and the obligation remains available for a later explicit attempt.
+- verifier PASS: exactly one content-addressed Fact is admitted, then the obligation becomes `DISCHARGED`.
+- idempotence: executing an already discharged obligation reads back the same admitted Fact without another worker/verifier call or graph write.
+- resolution integrity: `resolved_by_fact_id` is set only by `resolve`, which first reads the accepted Fact from `FactGraph` and checks its statement against the obligation goal.
+
+## AND / OR Verification
+
+- AND: one three-premise obligation supplies all F1/F2/F3 Facts jointly to one worker invocation; the admitted target Fact retains all three predecessor IDs.
+- OR: obligations with the same goal but distinct `route_id` values remain distinct alternatives. They are not encoded as one target with combined predecessor edges.
+
+## Tests
+
+- command: `wsl -e bash -lc 'cd /mnt/c/Users/wmywb/PycharmProjects/Noespire && PYTHONPATH=src python3 -m unittest discover -s tests -v'`
+- passed: 25
+- skipped: 1 pre-existing opt-in Phase 0A real-Codex smoke
+- failed: 0
+- compile check: `python3 -m compileall -q src tests experiments/n1_triangular_sum_smoke/run.py` -> PASS
+- deterministic controls: scripted two-premise PASS and FAIL paths both PASS; an explicit FAIL -> OPEN -> retry -> PASS control admits exactly one Fact and ends `DISCHARGED`
+
+## Real Smoke
+
+- problem: frozen Baseline A `triangular_sum`
+- accepted premise: archived upstream-verified Fact `30b6f70e453bbdaa`, materialized as Noespire Fact `96607ae530927290`
+- worker: `research_worker`, fresh Codex thread `01a047f1-ad80-7260-9776-a740afa790e8`
+- verifier: `research_verifier`, independent fresh Codex thread `01a047f4-d60a-7f71-a5dd-949fe19bc577`, verdict accepted
+- resulting fact: `7d15fc7567e7dd7f`
+- obligation final state: `DISCHARGED`, `resolved_by_fact_id=7d15fc7567e7dd7f`
+- FactGraph before/after: 1 / 2 Facts
+- token evidence: input 41,924; output 484; reasoning output 243; cached input 0
+- wall-clock: 395.006 seconds
+- raw evidence: `experiments/n1_triangular_sum_smoke/artifacts/`
+- result: PASS
+
+This smoke deliberately tests N1 mechanics, not proof-search performance: its route restates the exact frozen target from one already verifier-accepted Baseline A theorem Fact.
+
+## Frozen Baseline Integrity
+
+- baselines/danus HEAD: `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`
+- baselines/danus branch: `codex`
+- baselines/danus working tree: clean
+
+## Review Gate
+
+- Standards/minimality axis after the failure-semantics fix: PASS, 0 findings.
+- N1 specification axis after the failure-semantics fix: PASS, 0 findings.
+- Parallel FactGraph/verifier/worker infrastructure introduced: NO.
+- Runtime dependency on frozen baseline clone: NO.
+
+## Scope Audit
+
+- Coarse Proof Scaffold: NOT IMPLEMENTED
+- Cheap Probe: NOT IMPLEMENTED
+- WORKER_READY / TOO_WIDE classifier: NOT IMPLEMENTED
+- Cut / Cut-Set / Adaptive refinement: NOT IMPLEMENTED
+- GraphPatch / structural auditor: NOT IMPLEMENTED
+- Failure classification / obstruction diagnosis / Progress Contract: NOT IMPLEMENTED
+- Local Graph Surgery / critical-gap scheduling: NOT IMPLEMENTED
+- Semantic obligation dedup / retrieval or memory changes: NOT IMPLEMENTED
+- Lean / Cross-DAG / mapping / fidelity: NOT IMPLEMENTED
+
+## Verdict
+
+`N1_VALIDATED`
