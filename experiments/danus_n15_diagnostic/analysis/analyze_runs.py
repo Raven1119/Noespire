@@ -164,7 +164,11 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         row["repeated_target"] = label
 
     failed_proof_cost: float | str = "unavailable"
-    if workers and all(worker in worker_tokens for worker in workers):
+    if (
+        workers
+        and all(worker in worker_tokens for worker in workers)
+        and all(verifications_by_author.get(worker) for worker in workers)
+    ):
         failed_workers = {
             worker
             for worker in workers

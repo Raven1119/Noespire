@@ -1,0 +1,99 @@
+problem_id,attempt_id,worker,target_claim,predecessors,tokens,attempt_duration_seconds,verifier,fact_id,in_final_closure,repeated_target,downstream_use
+putnam-2023-b1,afaf8ab89fa007e0,high,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,88944,530.432297,PASS,48d558819514bf7a,yes,exact (7),0
+putnam-2023-b1,2576afeba219c609,high2,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,83439,415.442152,PASS,e228e681543f2d1f,no,exact (7),0
+putnam-2023-b1,f562ac0d49300017,high3,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,84201,475.525421,PASS,98c977737ca2d39e,no,exact (7),0
+putnam-2023-b1,0f228eb8f9cfc60b,xhigh,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,100198,527.864862,PASS,68da0a7380632702,no,exact (7),0
+putnam-2023-b1,907c6f5d9f393edb,xhigh2,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,193422,577.702006,PASS,e4b6fc8fdb25987f,no,exact (7),0
+putnam-2023-b1,4c74e0fc0befcbad,xhigh3,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,145830,743.084731,PASS,c81ac61714428573,no,exact (7),0
+putnam-2023-b1,ad9f42328d46d400,xhigh4,"Consider an \(m\)-by-\(n\) grid of unit squares, indexed by \((i,j)\) with \(1\le i\le m\) and \(1\le j\le n\). There are \((m-1)(n-1)\) coins, which are initially placed in the squares \((i,j)\) with \(1\le i\le m-1\) and \(1\le j\le n-1\). If a coin occupies the square \((i,j)\) with \(i\le m-1\) and \(j\le n-1\), and the squares \((i+1,j)\), \((i,j+1)\), and \((i+1,j+1)\) are unoccupied, then a legal move is to slide the coin from \((i,j)\) to \((i+1,j+1)\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",,135253,467.71198,PASS,67bc05401db02c4c,no,exact (7),0
+putnam-2024-a1,46f88c889d431a52,high,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,66204,339.212039,PASS,8ea06c2590646e22,no,exact (6),0
+putnam-2024-a1,646cda6f2ba57195,high2,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,88818,392.361253,PASS,ed933f62aef0416e,no,exact (6),0
+putnam-2024-a1,7c0fe981be7fd8e5,high3,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,100729,404.99705,PASS,def86f00ef4b9faa,no,exact (6),0
+putnam-2024-a1,25e2855779d98349,xhigh,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,119276,489.629024,PASS,06304f7a4f140dc9,yes,exact (6),0
+putnam-2024-a1,8f68a768ed8e334e,xhigh2,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,98371,426.679805,PASS,982ce400c6181d3c,no,exact (6),0
+putnam-2024-a1,9604cf0ea7e74081,xhigh3,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+\[
+2a^n + 3b^n = 4c^n.
+\]",,80498,365.407434,PASS,51a90cf2226db0ec,no,near (0.985),0
+putnam-2024-a1,9532021ef8579c92,xhigh4,"Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]",,98934,474.983337,PASS,1bac333407da0ae1,no,exact (6),0
+putnam-2024-a2,a1bbe44b6046c894,high,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,64432,269.321804,PASS,68e29d0676764226,no,exact (7),0
+putnam-2024-a2,ccd22da3eda05064,high2,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,114090,335.622763,PASS,ce7644b69bf7fa2b,no,exact (7),0
+putnam-2024-a2,1cf919c3abf85a26,high3,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,47598,263.145856,PASS,6dd1826193fad43a,no,exact (7),0
+putnam-2024-a2,96669da60c05a4ce,xhigh,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,92960,322.950277,PASS,98180ade9e47103b,no,exact (7),0
+putnam-2024-a2,a3413ce15961028b,xhigh2,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,109912,323.912162,PASS,7efc9619478f1e02,no,exact (7),0
+putnam-2024-a2,22749bb307377fd4,xhigh3,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,90205,368.150791,PASS,da4178fd60b46ed0,no,exact (7),0
+putnam-2024-a2,b5255299ff6f9f3e,xhigh4,"For which real polynomials \(p\) is there a real polynomial \(q\) such that
+
+\[
+p(p(x))-x=(p(x)-x)^2q(x)
+\]
+
+for all real \(x\)?",,126219,398.813892,PASS,5d90f9aaa84887e9,yes,exact (7),0
+putnam-2024-b2,8bea069450199eab,high,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,,117684,502.220002,PASS,85ce799860bb57f0,no,exact (6),0
+putnam-2024-b2,edb0ee52b18d3f3c,high2,"Let a, b, c, d, and K be positive real numbers. There are at most two congruence classes of convex quadrilaterals PQRS satisfying PQ=a, QR=b, RS=c, SP=d, and having area K.",,unavailable,unavailable,PASS,66e0f3ce87e4696d,no,no,1
+putnam-2024-b2,2a054a56302aa738,high2,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,66e0f3ce87e4696d,unavailable,unavailable,PASS,9cf65343d0b09f0b,no,exact (6),0
+putnam-2024-b2,365dbbf917c2ae56,high3,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,,139755,530.957561,PASS,5c5466270a625684,yes,exact (6),0
+putnam-2024-b2,1ea108a8ee8e705a,xhigh,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,,100918,486.416597,PASS,e6de928dc0afc2d3,no,exact (6),0
+putnam-2024-b2,c2a60beea7811dcc,xhigh2,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,,147029,446.719798,PASS,fb21825f35e0abcf,no,exact (6),0
+putnam-2024-b2,5c6bad19fdf029cc,xhigh3,Solved direct proof of the full Putnam 2024 B2 target via side-length and area invariants.,,136890,410.664482,NOT_SUBMITTED,,no,no,0
+putnam-2024-b2,40f8a2916f20ccba,xhigh4,Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \(ABCD\) and \(ABCE\) so that \(E\) is the reflection of \(D\) across the perpendicular bisector of the diagonal \(AC\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?,,63709,381.26458,PASS,d3269ed51299b02c,no,exact (6),0

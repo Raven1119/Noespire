@@ -1,0 +1,64 @@
+{
+  "runs": [
+    {
+      "problem_id": "putnam-2023-b1",
+      "solved": true,
+      "worker_attempts": 7,
+      "verifier_accepts": 7,
+      "verifier_rejects": 0,
+      "verified_fact_count": 7,
+      "supporting_closure_size": 1,
+      "verified_facts_outside_closure": 6,
+      "verified_search_waste": 0.8571428571,
+      "failed_proof_cost": 0.0,
+      "total_tokens": 1089160,
+      "wall_clock_seconds": 725.428646,
+      "sessions": 7
+    },
+    {
+      "problem_id": "putnam-2024-a1",
+      "solved": true,
+      "worker_attempts": 7,
+      "verifier_accepts": 7,
+      "verifier_rejects": 0,
+      "verified_fact_count": 7,
+      "supporting_closure_size": 1,
+      "verified_facts_outside_closure": 6,
+      "verified_search_waste": 0.8571428571,
+      "failed_proof_cost": 0.0,
+      "total_tokens": 899738,
+      "wall_clock_seconds": 469.064391,
+      "sessions": 7
+    },
+    {
+      "problem_id": "putnam-2024-a2",
+      "solved": true,
+      "worker_attempts": 7,
+      "verifier_accepts": 7,
+      "verifier_rejects": 0,
+      "verified_fact_count": 7,
+      "supporting_closure_size": 1,
+      "verified_facts_outside_closure": 6,
+      "verified_search_waste": 0.8571428571,
+      "failed_proof_cost": 0.0,
+      "total_tokens": 853553,
+      "wall_clock_seconds": 388.491201,
+      "sessions": 7
+    },
+    {
+      "problem_id": "putnam-2024-b2",
+      "solved": true,
+      "worker_attempts": 7,
+      "verifier_accepts": 7,
+      "verifier_rejects": 0,
+      "verified_fact_count": 7,
+      "supporting_closure_size": 1,
+      "verified_facts_outside_closure": 6,
+      "verified_search_waste": 0.8571428571,
+      "failed_proof_cost": "unavailable",
+      "total_tokens": 1097110,
+      "wall_clock_seconds": 670.655542,
+      "sessions": 7
+    }
+  ]
+}
