@@ -1,0 +1,3 @@
+2026-08-28T13:59:35Z	pid=420	role=worker	cwd=/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_capability_probe_20260828t135929z/workers/high	policy=workspace-write,auto-review,network-off,web-off,matlas-disabled,browser-off,plugins-off
+2026-08-28T13:59:36Z	pid=473	role=verifier	cwd=/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/danus/verify/agent	policy=workspace-write,auto-review,network-off,web-off,matlas-disabled,browser-off,plugins-off
+2026-08-28T13:59:37Z	pid=526	role=main_or_strategy	cwd=/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus	policy=workspace-write,auto-review,network-off,web-off,matlas-disabled,browser-off,plugins-off

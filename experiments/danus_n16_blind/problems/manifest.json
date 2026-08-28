@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-08-28T15:06:02Z",
+  "frozen_before_first_run": true,
+  "hash_contract": "SHA-256 of the exact UTF-8 problem file bytes",
+  "problems": [
+    {
+      "problem_id": "cubic-form-image",
+      "problem_file": "cubic-form-image.md",
+      "statement": "Characterize the nonnegative integers representable as a^3+b^3+c^3-3abc for nonnegative integers a,b,c, proving that N is representable exactly when 3 does not divide N or 9 divides N.",
+      "statement_sha256": "51109dc012315b93ae138daf3ef059cbb7a1ee5c11f2db53ef7962374d17d632",
+      "source_private": "reference/cubic-form-image-reference.md (2019 Putnam A1, official MAA problem and solution)",
+      "structural_rationale": "Two independent directions: explicit residue-class constructions and a divisibility-strengthening lemma from 3 to 9.",
+      "frozen_before_run": true
+    },
+    {
+      "problem_id": "period-five-recurrence",
+      "problem_file": "period-five-recurrence.md",
+      "statement": "For prime p>5, count nonzero-mod-p infinite sequences satisfying a_n a_(n+2)=1+a_(n+1), and prove that the count is congruent to 0 or 2 modulo 5.",
+      "statement_sha256": "2a717f69d7178eb6e7aa35f2e8485b0be801b2263235b06ea71c6ed20cdacbeb",
+      "source_private": "reference/period-five-recurrence-reference.md (2022 Putnam A3, official MAA problem and solution)",
+      "structural_rationale": "A period-five recurrence lemma reduces an infinite object to cyclic orbits, followed by a fixed-point quadratic count.",
+      "frozen_before_run": true
+    },
+    {
+      "problem_id": "weighted-binomial-paths",
+      "problem_file": "weighted-binomial-paths.md",
+      "statement": "For every nonnegative integer k, prove the weighted binomial identity sum from j=0 to k of 2^(k-j) binom(k+j,j) equals 4^k.",
+      "statement_sha256": "6baac13f257def1abcde219c457de62f4610600e64ea453f3ba836288eb2c80a",
+      "source_private": "reference/weighted-binomial-paths-reference.md (2020 Putnam A2, official MAA problem and solution)",
+      "structural_rationale": "A first-hit lattice-path decomposition supplies the meaningful intermediate counting lemma and a second global count closes the proof.",
+      "frozen_before_run": true
+    },
+    {
+      "problem_id": "reflection-fixed-vector",
+      "problem_file": "reflection-fixed-vector.md",
+      "statement": "For an orthogonal Q without a nonzero fixed vector and the reflection H=I-2uu^T for unit u, prove that HQ has a nonzero fixed vector.",
+      "statement_sha256": "0916681243c800579f8f38563c3cd5a6cb9a84c68733d008bd77bb09af91981c",
+      "source_private": "reference/reflection-fixed-vector-reference.md (2019 Putnam B3, official MAA problem and solution)",
+      "structural_rationale": "A reusable eigenvalue-parity lemma connects the local determinant calculation for a rank-one reflection to the target fixed vector.",
+      "frozen_before_run": true
+    }
+  ]
+}

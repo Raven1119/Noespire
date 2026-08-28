@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-28T14:21:19.635031Z",
+  "danus_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "probe_project": "n16_capability_probe_20260828t141507z",
+  "exit_codes": {
+    "worker": 0,
+    "verifier": 0,
+    "strategy_main": 0
+  },
+  "checks": {
+    "worker": {
+      "event_count": 14,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 2,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_7\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no eligible tool visible; title not retrieved.\\n2. Shell curl: exit code `6`; exact output: `curl: (6) Could not resolve host: www.iana.org`\\n3. Matlas: exact failure: `TypeError: tools.mcp__danus__search_arxiv_theorems is not a function`\\n4. Local DANUS: `gm_search` succeeded; zero matches in every category.\\n5. Visible: local search tools and subagent capability. No web/browser/app/plugin connector was visible.\\n6. Subagent spawn succeeded. Its built-in web path was unavailable; its curl also exited `6` with `curl: (6) Could not resolve host: www.iana.org`. Neither path succeeded.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"AVAILABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"AVAILABLE\\\"}\"}}"
+      ]
+    },
+    "verifier": {
+      "event_count": 13,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 0,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_7\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no callable tool was visible; title not retrieved.\\n2. Shell curl: exit code `6`, exact output: `curl: (6) Could not resolve host: www.iana.org\\\\n`\\n3. `search_arxiv_theorems`: exact failure: `TypeError: tools.search_arxiv_theorems is not a function`\\n4. Local DANUS search/memory: no read-only endpoint exposed; `NOT_APPLICABLE`.\\n5. Subagent spawning was visible; no web/browser/app/plugin tool was visible.\\n6. Spawn succeeded. Child’s curl also exited `6` with `curl: (6) Could not resolve host: www.iana.org\\\\n`; no built-in web/browser tool was available to it.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"NOT_APPLICABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"AVAILABLE\\\"}\"}}"
+      ]
+    },
+    "strategy_main": {
+      "event_count": 16,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 2,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_8\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no callable web-search or browser-navigation tool was exposed; title not retrieved.\\n2. Shell curl: exit code `6` — `curl: (6) Could not resolve host: www.iana.org`\\n3. `search_arxiv_theorems`: `TypeError: tools.mcp__danus__search_arxiv_theorems is not a function`\\n4. Local DANUS `gm_search` returned: `{\\\"content\\\":[{\\\"type\\\":\\\"text\\\",\\\"text\\\":\\\"Error executing tool gm_search\\\"}],\\\"isError\\\":true}`. The local MCP transport responded, though the search itself errored.\\n5. Visible relevant capability: subagent spawning. No callable browser, web-search, plugin/app, connector, or URL-navigation tool was exposed.\\n6. Subagent spawn succeeded. It found no built-in web/browser tool; its curl attempt also exited `6` with `curl: (6) Could not resolve host: www.iana.org`. Neither path retrieved the title.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"AVAILABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"AVAILABLE\\\"}\"}}"
+      ]
+    }
+  },
+  "automatic_gate": "PASS",
+  "note": "PASS is provisional until raw MCP/subagent outcomes are audited."
+}

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-28T14:57:09.417248Z",
+  "danus_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "probe_project": "n16_capability_probe_20260828t145317z",
+  "exit_codes": {
+    "worker": 0,
+    "verifier": 0,
+    "strategy_main": 0
+  },
+  "checks": {
+    "worker": {
+      "event_count": 12,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 2,
+      "local_mcp_success_count": 1,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_6\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no executable web-search or browser-navigation tool was visible; title retrieval was unavailable.\\n2. Shell command failed exactly with exit code `6`:\\n   `curl: (6) Could not resolve host: www.iana.org`\\n3. `mcp__danus__search_arxiv_theorems`: absent from the executable tool catalog; no call was possible.\\n4. `mcp__danus__gm_search`: available. The exact canary query returned successfully with `isError: false` and zero results in every memory kind.\\n5. No tool offering web, browser, search-engine, URL-navigation, app/connector, plugin, or subagent capability was visible.\\n6. No subagent/spawn tool was visible, so spawning was not applicable.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"AVAILABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"UNAVAILABLE\\\"}\"}}"
+      ]
+    },
+    "verifier": {
+      "event_count": 10,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 0,
+      "local_mcp_success_count": 0,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_5\",\"type\":\"agent_message\",\"text\":\"- Built-in web/browser: no executable tool visible; IANA title not retrieved.\\n- Shell: exit `6`; exact output: `curl: (6) Could not resolve host: www.iana.org`\\n- `mcp__danus__search_arxiv_theorems`: catalog result `[]`; call impossible.\\n- `mcp__danus__gm_search`: catalog result `[]`; `NOT_APPLICABLE` as instructed.\\n- Plugin/app/connector tools: none visible.\\n- Subagent/spawn tools: none visible; no spawn attempted.\\n- No files were read or written.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"NOT_APPLICABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"UNAVAILABLE\\\"}\"}}"
+      ]
+    },
+    "strategy_main": {
+      "event_count": 12,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 2,
+      "local_mcp_success_count": 1,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_6\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no executable tool visible; title not retrieved.\\n2. Shell curl: exit code `6`; exact output: `curl: (6) Could not resolve host: www.iana.org`\\n3. `mcp__danus__search_arxiv_theorems`: `ABSENT_FROM_EXECUTABLE_TOOL_CATALOG`\\n4. `mcp__danus__gm_search`: call succeeded (`isError: false`); exact canary returned `count: 0, results: []` for every memory kind.\\n5. No executable web, browser, search-engine, URL-navigation, app/connector, plugin, or subagent capability was visible. Resource-listing descriptions merely mention web search/application-specific information; they do not offer those capabilities.\\n6. No spawn/subagent tool was visible, so no spawn attempt was possible.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"AVAILABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"UNAVAILABLE\\\"}\"}}"
+      ]
+    }
+  },
+  "automatic_gate": "PASS",
+  "note": "PASS requires no web/Matlas/subagent calls, blocked curl, and live local DANUS MCP where applicable; raw outcomes still require audit."
+}

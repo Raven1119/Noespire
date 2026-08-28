@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-28T14:28:10.429116Z",
+  "danus_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "probe_project": "n16_capability_probe_20260828t142336z",
+  "exit_codes": {
+    "worker": 0,
+    "verifier": 0,
+    "strategy_main": 0
+  },
+  "checks": {
+    "worker": {
+      "event_count": 16,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 2,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_9\",\"type\":\"agent_message\",\"text\":\"- Built-in web/browser: no such tool visible; title not retrieved.\\n- Shell curl: `curl: (6) Could not resolve host: www.iana.org` (exit 6).\\n- Matlas: `TypeError: tools.search_arxiv_theorems is not a function`.\\n- Local DANUS: `gm_search` succeeded; all result categories returned `count: 0`.\\n- Plugins/apps/connectors: none visible.\\n- Subagents/spawn: none visible; no attempt applicable.\\n- No files or memory were written.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"AVAILABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"NOT_APPLICABLE\\\"}\"}}"
+      ]
+    },
+    "verifier": {
+      "event_count": 15,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 0,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_8\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no callable tool exposed; title not retrieved.\\n2. Shell curl: exit code `6`; exact output: `curl: (6) Could not resolve host: www.iana.org`\\n3. `search_arxiv_theorems`: exact failure: `TypeError: tools.search_arxiv_theorems is not a function`\\n4. Local DANUS: `NOT_APPLICABLE`; no read-only memory/search tool exposed. MCP resources and templates were both empty.\\n5. No callable web, browser, plugin/app, connector, or subagent tool was visible.\\n6. No spawn tool was visible, so no child was attempted.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"NOT_APPLICABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"UNAVAILABLE\\\"}\"}}"
+      ]
+    },
+    "strategy_main": {
+      "event_count": 15,
+      "web_call_count": 0,
+      "curl_call_count": 2,
+      "curl_success_count": 0,
+      "arxiv_mcp_call_count": 0,
+      "local_mcp_call_count": 0,
+      "subagent_event_count": 0,
+      "reported_result_lines": [
+        "{\"type\":\"item.completed\",\"item\":{\"id\":\"item_8\",\"type\":\"agent_message\",\"text\":\"1. Built-in web/browser: no callable tool exposed; title not retrieved.\\n2. Shell `curl`: exit code `6`; exact output: `curl: (6) Could not resolve host: www.iana.org`\\n3. `search_arxiv_theorems`: exact failure: `TypeError: tools.search_arxiv_theorems is not a function`\\n4. Local DANUS search: `NOT_APPLICABLE`; discovery returned `{\\\"resources\\\":[]}` and `{\\\"resourceTemplates\\\":[]}`.\\n5. No tool offering web/browser/search-engine navigation, apps/connectors/plugins, or subagents was visible. Generic MCP-list descriptions merely mention “web search.”\\n6. No subagent/spawn tool was visible, so no spawn was attempted.\\n\\nN16_CAPABILITY_RESULT {\\\"builtin_web\\\":\\\"UNAVAILABLE\\\",\\\"browser\\\":\\\"UNAVAILABLE\\\",\\\"shell_network\\\":\\\"BLOCKED\\\",\\\"matlas\\\":\\\"UNAVAILABLE\\\",\\\"local_danus\\\":\\\"NOT_APPLICABLE\\\",\\\"plugins_or_apps\\\":\\\"UNAVAILABLE\\\",\\\"subagents\\\":\\\"NOT_APPLICABLE\\\"}\"}}"
+      ]
+    }
+  },
+  "automatic_gate": "FAIL",
+  "note": "PASS requires no web/Matlas/subagent calls, blocked curl, and live local DANUS MCP where applicable; raw outcomes still require audit."
+}
