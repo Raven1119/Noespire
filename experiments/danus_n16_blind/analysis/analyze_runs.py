@@ -53,6 +53,14 @@ def fact_proof(project: Path, fact_id: str) -> str:
     return match.group(1).strip() if match else text
 
 
+def worker_trace_tail(project: Path, worker: str, limit: int = 8000) -> str:
+    logs = sorted((project / "workers" / worker / "logs").glob("round_*.log"))
+    if not logs:
+        return "No worker trace was captured."
+    text = logs[-1].read_text(encoding="utf-8", errors="replace")
+    return text[-limit:]
+
+
 def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], str]:
     result = json.loads((run_dir / "result.json").read_text(encoding="utf-8"))
     project = run_dir / "project_artifacts"
@@ -64,76 +72,117 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], st
     closure = set(result["supporting_closure"])
 
     expected = result["worker_attempts"]
-    checks = {"verification events": len(verifications), "accepted facts": len(facts)}
-    for name, count in checks.items():
-        if count != expected:
-            raise ValueError(f"{run_dir.name}: {name}={count}, expected {expected}")
-    if result["verifier_calls"] != expected:
+    workers = sorted(path.name for path in (project / "workers").iterdir() if path.is_dir())
+    if len(workers) != result["worker_sessions"]:
+        raise ValueError(f"{run_dir.name}: worker-session count mismatch")
+    if len(verifications) != result["verifier_calls"]:
         raise ValueError(f"{run_dir.name}: verifier-call count mismatch")
+    if len(facts) != result["verifier_accepts"] or len(facts) != result["accepted_fact_count"]:
+        raise ValueError(f"{run_dir.name}: accepted Fact count mismatch")
+    accepts = sum(event.get("verdict") == "correct" for event in verifications)
+    if accepts != result["verifier_accepts"]:
+        raise ValueError(f"{run_dir.name}: verifier-accept count mismatch")
+    if len(verifications) - accepts != result["verifier_rejects"]:
+        raise ValueError(f"{run_dir.name}: verifier-reject count mismatch")
     if len(closure) != result["supporting_closure_size"]:
         raise ValueError(f"{run_dir.name}: supporting-closure mismatch")
 
-    claim_norms = [normalized(event["claim"]) for event in verifications]
+    attempts_by_author: dict[str, list[dict[str, Any]]] = {}
+    for attempt in proof_attempts:
+        attempts_by_author.setdefault(attempt.get("author", ""), []).append(attempt)
+    events_by_author: dict[str, list[dict[str, Any]]] = {}
+    for event in verifications:
+        events_by_author.setdefault(event["author"], []).append(event)
+
     rows: list[dict[str, Any]] = []
     packet_sections: list[str] = []
-    for event in verifications:
-        author = event["author"]
-        source_id = (event.get("links") or {}).get("source_id")
-        fact_id = event.get("fact_id") or ""
+    tokens_by_worker = {worker: worker_tokens(project, worker) for worker in workers}
+    observations: list[tuple[str, dict[str, Any] | None]] = [
+        (event["author"], event) for event in verifications
+    ]
+    observations.extend((worker, None) for worker in workers if worker not in events_by_author)
+    for author, event in observations:
+        author_events = events_by_author.get(author) or [None]
+        links = (event or {}).get("links") or {}
+        source_id = links.get("source_id")
         attempt = attempts_by_id.get(source_id)
-        claim_norm = normalized(event["claim"])
+        if attempt is None and attempts_by_author.get(author):
+            attempt = attempts_by_author[author][-1]
+        claim = (event or {}).get("claim") or (attempt or {}).get("claim") or problem
+        fact_id = (event or {}).get("fact_id") or ""
+        predecessors = links.get("predecessors") or []
+        verdict = (
+            "NOT_SUBMITTED"
+            if event is None
+            else "PASS" if event.get("verdict") == "correct" else "FAIL"
+        )
+        attempt_suffix = source_id or (attempt or {}).get("id") or "round-1"
+        attempt_id = f"{author}:{attempt_suffix}"
+        attributable = len(author_events) == 1
+        tokens: int | str = tokens_by_worker[author] if attributable else "unavailable"
+        duration: float | str = worker_duration(project, author) if attributable else "unavailable"
+        rows.append(
+            {
+                "problem_id": result["problem_id"],
+                "attempt_id": attempt_id,
+                "target_claim": claim,
+                "predecessor_fact_ids": ";".join(predecessors),
+                "verifier_result": verdict,
+                "fact_id": fact_id,
+                "in_final_closure": str(bool(fact_id) and fact_id in closure).lower(),
+                "tokens": tokens,
+                "duration": duration,
+                "exact_repeat": "",
+                "near_repeat": "",
+                "_author": author,
+            }
+        )
+        report = (event or {}).get("verification_report") or {}
+        if attempt:
+            proof_trace = attempt.get("evidence", "")
+        elif fact_id:
+            proof_trace = fact_proof(project, fact_id)
+        else:
+            proof_trace = worker_trace_tail(project, author)
+        packet_sections.append(
+            "\n".join(
+                [
+                    f"### Attempt `{attempt_id}`",
+                    "",
+                    f"- local premises: `{predecessors}`",
+                    f"- verifier result: `{verdict}`",
+                    f"- accepted fact: `{fact_id or 'none'}`",
+                    f"- in final supporting closure: `{bool(fact_id) and fact_id in closure}`",
+                    f"- worker tokens: `{tokens}`",
+                    f"- worker duration seconds: `{duration}`",
+                    "",
+                    "Attempted claim:",
+                    "",
+                    claim,
+                    "",
+                    "Worker proof/trace:",
+                    "",
+                    proof_trace,
+                    "",
+                    "Verifier summary:",
+                    "",
+                    report.get("summary", (event or {}).get("evidence", "No verifier submission.")),
+                ]
+            )
+        )
+
+    claim_norms = [normalized(row["target_claim"]) for row in rows]
+    for row, claim_norm in zip(rows, claim_norms):
         exact_count = claim_norms.count(claim_norm)
         similarities = [
             SequenceMatcher(None, claim_norm, other).ratio()
             for other in claim_norms
             if other != claim_norm
         ]
-        predecessors = (event.get("links") or {}).get("predecessors") or []
-        tokens = worker_tokens(project, author)
-        duration = worker_duration(project, author)
-        verdict = "PASS" if event.get("verdict") == "correct" else "FAIL"
-        rows.append(
-            {
-                "problem_id": result["problem_id"],
-                "attempt_id": f"{author}:{source_id}",
-                "target_claim": event["claim"],
-                "predecessor_fact_ids": ";".join(predecessors),
-                "verifier_result": verdict,
-                "fact_id": fact_id,
-                "in_final_closure": str(fact_id in closure).lower(),
-                "tokens": tokens,
-                "duration": duration,
-                "exact_repeat": str(exact_count > 1).lower(),
-                "near_repeat": str(exact_count == 1 and max(similarities, default=0) >= 0.9).lower(),
-            }
-        )
-        report = event.get("verification_report") or {}
-        packet_sections.append(
-            "\n".join(
-                [
-                    f"### Attempt `{author}:{source_id}`",
-                    "",
-                    f"- local premises: `{predecessors}`",
-                    f"- verifier result: `{verdict}`",
-                    f"- accepted fact: `{fact_id or 'none'}`",
-                    f"- in final supporting closure: `{fact_id in closure}`",
-                    f"- worker tokens: `{tokens}`",
-                    f"- worker duration seconds: `{duration}`",
-                    "",
-                    "Attempted claim:",
-                    "",
-                    event["claim"],
-                    "",
-                    "Worker proof/trace:",
-                    "",
-                    attempt.get("evidence", "") if attempt else fact_proof(project, fact_id),
-                    "",
-                    "Verifier summary:",
-                    "",
-                    report.get("summary", event.get("evidence", "")),
-                ]
-            )
-        )
+        row["exact_repeat"] = str(exact_count > 1).lower()
+        row["near_repeat"] = str(
+            exact_count == 1 and max(similarities, default=0) >= 0.9
+        ).lower()
 
     exact_target_facts = sum(
         normalized(event["claim"]) == normalized(problem) and event.get("verdict") == "correct"
@@ -145,7 +194,19 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], st
         and event.get("fact_id") not in closure
         for event in verifications
     )
-    failed_attempts = sum(event.get("verdict") != "correct" for event in verifications)
+    failed_workers = {
+        worker
+        for worker in workers
+        if not any(row["_author"] == worker and row["verifier_result"] == "PASS" for row in rows)
+    }
+    total_worker_tokens = sum(tokens_by_worker.values())
+    failed_proof_cost = (
+        round(sum(tokens_by_worker[worker] for worker in failed_workers) / total_worker_tokens, 10)
+        if total_worker_tokens
+        else "unavailable"
+    )
+    for row in rows:
+        del row["_author"]
     metric = {
         "run_id": result["run_id"],
         "problem_id": result["problem_id"],
@@ -160,12 +221,12 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], st
         "wall_clock_seconds": result["wall_clock_seconds"],
         "too_wide_regions": 0,
         "missing_lemma_regions": 0,
-        "search_failed_attempts": failed_attempts,
+        "search_failed_attempts": len(failed_workers),
         "strategy_waste_regions": 1 if full_proof_duplicates else 0,
         "full_proof_duplication_count": full_proof_duplicates,
         "repeated_target_count": exact_target_facts,
         "redundant_target_repeat_count": max(exact_target_facts - 1, 0),
-        "failed_proof_cost": 0.0 if failed_attempts == 0 else "unavailable",
+        "failed_proof_cost": failed_proof_cost,
         "verified_search_waste": result["waste_ratio"],
     }
     packet = "\n".join(

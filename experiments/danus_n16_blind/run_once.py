@@ -83,6 +83,31 @@ def copy_project_artifacts(source: Path, destination: Path) -> None:
     )
 
 
+def preserve_runtime_artifacts(
+    project_dir: Path,
+    run_dir: Path,
+    verify_runs_dir: Path,
+    verifier_runs_before: set[str],
+) -> list[str]:
+    """Snapshot available project and verifier evidence for success or failure."""
+    project_destination = run_dir / "project_artifacts"
+    if project_dir.is_dir() and not project_destination.exists():
+        copy_project_artifacts(project_dir, project_destination)
+
+    verifier_run_ids = sorted(
+        path.name
+        for path in verify_runs_dir.iterdir()
+        if path.is_dir() and path.name not in verifier_runs_before
+    )
+    verifier_destination = run_dir / "verifier_outputs"
+    verifier_destination.mkdir(exist_ok=True)
+    for verifier_run_id in verifier_run_ids:
+        destination = verifier_destination / verifier_run_id
+        if not destination.exists():
+            shutil.copytree(verify_runs_dir / verifier_run_id, destination)
+    return verifier_run_ids
+
+
 class CommandRecorder:
     def __init__(self, cwd: Path, log_path: Path, env: dict[str, str]) -> None:
         self.cwd = cwd
@@ -236,19 +261,19 @@ def main() -> None:
         path.name for path in (danus_root / "runtime" / "verify-runs").iterdir() if path.is_dir()
     }
     verifier_log_handle = (run_dir / "verifier_service.log").open("w", encoding="utf-8")
-    verifier = subprocess.Popen(
-        [str(danus_root / "runtime" / "venv" / "bin" / "python"), "-m", "danus.verify"],
-        cwd=danus_root,
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=verifier_log_handle,
-        stderr=subprocess.STDOUT,
-        text=True,
-        start_new_session=True,
-    )
-
+    verifier: subprocess.Popen[str] | None = None
     started_at = utc_now()
     try:
+        verifier = subprocess.Popen(
+            [str(danus_root / "runtime" / "venv" / "bin" / "python"), "-m", "danus.verify"],
+            cwd=danus_root,
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=verifier_log_handle,
+            stderr=subprocess.STDOUT,
+            text=True,
+            start_new_session=True,
+        )
         wait_for_verifier(port, verifier.pid)
         recorder.run(["bash", "bin/danus", "new", project])
         shutil.copyfile(problem_path, project_dir / "PROBLEM.md")
@@ -315,6 +340,27 @@ def main() -> None:
         wall_clock_seconds = time.monotonic() - started
         completed_at = utc_now()
     except Exception as exc:
+        cleanup_error = None
+        if project_dir.is_dir():
+            try:
+                recorder.run(["bash", "bin/danus", "stop", project, "--force"], timeout=60)
+            except Exception as cleanup_exc:
+                cleanup_error = f"{type(cleanup_exc).__name__}: {cleanup_exc}"
+        if verifier is not None:
+            stop_process_group(verifier)
+        if not verifier_log_handle.closed:
+            verifier_log_handle.close()
+        preservation_error = None
+        verifier_run_ids: list[str] = []
+        try:
+            verifier_run_ids = preserve_runtime_artifacts(
+                project_dir,
+                run_dir,
+                danus_root / "runtime" / "verify-runs",
+                before_verifier_runs,
+            )
+        except Exception as preservation_exc:
+            preservation_error = f"{type(preservation_exc).__name__}: {preservation_exc}"
         (run_dir / "system_invalid.json").write_text(
             json.dumps(
                 {
@@ -323,6 +369,9 @@ def main() -> None:
                     "error_type": type(exc).__name__,
                     "error": str(exc),
                     "recorded_at_utc": utc_now(),
+                    "cleanup_error": cleanup_error,
+                    "artifact_preservation_error": preservation_error,
+                    "verifier_run_ids_preserved": verifier_run_ids,
                 },
                 indent=2,
             )
@@ -331,8 +380,10 @@ def main() -> None:
         )
         raise
     finally:
-        stop_process_group(verifier)
-        verifier_log_handle.close()
+        if verifier is not None:
+            stop_process_group(verifier)
+        if not verifier_log_handle.closed:
+            verifier_log_handle.close()
 
     verifications = load_jsonl(project_dir / "global_memory" / "verification.jsonl")
     exact_targets = sorted(
@@ -361,18 +412,13 @@ def main() -> None:
         ).stdout.strip().splitlines()
         closure = list(ast.literal_eval(closure_output[-1]))
 
-    copy_project_artifacts(project_dir, run_dir / "project_artifacts")
-    after_verifier_runs = {
-        path.name for path in (danus_root / "runtime" / "verify-runs").iterdir() if path.is_dir()
-    }
-    verifier_run_ids = sorted(after_verifier_runs - before_verifier_runs)
+    verifier_run_ids = preserve_runtime_artifacts(
+        project_dir,
+        run_dir,
+        danus_root / "runtime" / "verify-runs",
+        before_verifier_runs,
+    )
     verifier_output_root = run_dir / "verifier_outputs"
-    verifier_output_root.mkdir()
-    for verifier_run_id in verifier_run_ids:
-        shutil.copytree(
-            danus_root / "runtime" / "verify-runs" / verifier_run_id,
-            verifier_output_root / verifier_run_id,
-        )
 
     project_copy = run_dir / "project_artifacts"
     fact_ids = sorted(path.stem for path in (project_copy / "fact_graph" / "facts").glob("*.md"))

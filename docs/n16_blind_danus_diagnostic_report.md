@@ -35,12 +35,12 @@ All four were selected from official MAA problems using mathematical structure o
 
 | Problem | Integrity | Evidence |
 | --- | --- | --- |
-| `cubic-form-image` | `BLIND_INTEGRITY_PASS` | 7 worker + 7 verifier wrapper launches; 7 HTTP 200, 0 HTTP 500; 21 formal trace files; no retrieval/source/private-path markers; strongest reference overlap 16 contiguous normalized tokens and 1.12% generated 12-gram coverage. |
-| `period-five-recurrence` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 22 trace files; no retrieval/source/private-path markers; strongest overlap 9 tokens and 0% 12-gram coverage. |
-| `weighted-binomial-paths` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 21 trace files; no retrieval/source/private-path markers; strongest overlap 15 tokens and 1.34% 12-gram coverage. |
-| `reflection-fixed-vector` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 21 trace files; no retrieval/source/private-path markers; strongest overlap 5 tokens and 0% 12-gram coverage. |
+| `cubic-form-image` | `BLIND_INTEGRITY_PASS` | 7 worker + 7 verifier wrapper launches; 7 HTTP 200, 0 HTTP 500; 35 formal trace files; 4 blocked theorem-search intents, 0 completed search events; no source-name/private-path marker or unexpected URL; strongest all-trace reference overlap 16 tokens and 0.103% generated 12-gram coverage. |
+| `period-five-recurrence` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 36 trace files; 5 blocked intents, 0 completed events; no source-name/private-path marker or unexpected URL; strongest overlap 9 tokens and 0% coverage. |
+| `weighted-binomial-paths` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 35 trace files; 4 blocked intents, 0 completed events; no source-name/private-path marker or unexpected URL; strongest overlap 15 tokens and 0.161% coverage. |
+| `reflection-fixed-vector` | `BLIND_INTEGRITY_PASS` | 7 + 7 launches; 7 HTTP 200, 0 HTTP 500; 35 trace files; 6 blocked intents, 0 completed events; no source-name/private-path marker or unexpected URL; strongest overlap 11 tokens and 0% coverage. |
 
-The exact audit, including every Fact-to-reference overlap measurement, is `analysis/leakage_audit.json`. Capability-probe copies were intentionally excluded from formal-math trace scanning because that probe was required to attempt blocked network/private reads. Expected loopback verifier URLs and Codex sandbox-documentation warnings were allowlisted; there were zero other URL occurrences.
+The exact audit is `analysis/leakage_audit.json`. It checks every accepted Fact and all 141 captured LLM/tool traces against the isolated reference proof, and records every structured theorem-search intent separately from actual calls. The 19 intents all have `event_type=search_math_results_stalled`, explicitly state that the tool was not exposed, and contain no results; actual web/arXiv/shell-network calls and completed search events remain zero. Capability-probe copies were intentionally excluded from formal-math trace scanning because that probe was required to attempt blocked network/private reads. Expected loopback verifier URLs and Codex sandbox-documentation warnings were allowlisted; there were zero other URL occurrences.
 
 ## Results
 
@@ -83,7 +83,7 @@ None were proposed or run. The frozen protocol permits this step only after a fr
 
 ## Interpretation
 
-The blind protocol removes the specific N1.5 confound: no proof-relevant session had a working external retrieval path, and post-run traces show no attempted source lookup or reference access. The result is therefore evidence about unchanged DANUS under the intended blind condition.
+The blind protocol removes the specific N1.5 confound: no proof-relevant session had a working external retrieval path. Workers did formulate 19 theorem-search queries because the unchanged DANUS worker workflow asks them to record such searches, but every corresponding structured event is explicitly `stalled`; there are zero tool calls, completed searches, results, source-name queries, or reference-path accesses. The result is therefore evidence about unchanged DANUS under the intended blind condition, while preserving the distinction between search intent and retrieval.
 
 The 4/4 solve rate alone does not decide the N2 gate. The deciding evidence is the attempt shape: four structurally different, frozen, reference-backed problems produced 28 accepted direct full proofs, no rejections, no failed search, no dependency edges, and no reviewer-supported wide-gap or missing-lemma region. The dominant pathology is redundant parallel completion after the target was already independently solvable, not inability to discover a local proof cut.
 
@@ -111,6 +111,7 @@ The support thresholdâ€”credible cut regions on at least two distinct problemsâ€
 - external solution leakage: **NO** in the four valid runs; all are `BLIND_INTEGRITY_PASS`.
 - mathematical reruns: **NO**. The sole repeated problem is the explicitly excluded system-invalid environment attempt followed by its one permitted valid run after a fresh passing capability gate.
 - N2 implementation: **NO**.
+- diagnostic regression checks: **PASS**; three standard-library tests cover rejected attempts, zero-Fact leakage audits, and failure snapshots, and the frozen wrapper-policy test passes.
 
 ### Windows nested-cache / ACL-helper correction
 

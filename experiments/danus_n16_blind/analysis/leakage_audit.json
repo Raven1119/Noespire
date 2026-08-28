@@ -9,7 +9,7 @@
       "run_id": "cubic-form-image_20260828T164931Z",
       "integrity": "BLIND_INTEGRITY_PASS",
       "capability_gate": "PASS",
-      "trace_file_count": 21,
+      "trace_file_count": 35,
       "wrapper_worker_roles": 7,
       "wrapper_verifier_roles": 7,
       "expected_worker_roles": 7,
@@ -23,33 +23,62 @@
         "shell_url_call": [],
         "shell_network_call": []
       },
+      "blocked_theorem_search_intents": [
+        {
+          "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "a^3+b^3+c^3-3abc identity nonnegative representable 9",
+            "a^3+b^3+c^3-3abc nonnegative integers divisible by 9 residue mod 3"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems endpoint and built-in web-search endpoint are unavailable in this worker session; no external theorem is needed because the proof is elementary and self-contained."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "representation by a^3+b^3+c^3-3abc",
+            "factorization of sum of three cubes minus 3abc"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool and built-in web search are not exposed in this worker session; no external result is needed because all steps are elementary identities and congruences."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "Characterization of values of a^3+b^3+c^3-3abc over nonnegative integers",
+            "Representations by the cubic form x^3+y^3+z^3-3xyz"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker session, and the proof is fully elementary and self-contained, so no external result is used."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "If 3 divides a^3+b^3+c^3-3abc, then 9 divides it; characterize its nonnegative image",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The search_arxiv_theorems endpoint and a built-in web-search endpoint are not available in this worker's exposed tool set. The target is proved by a self-contained polynomial identity, elementary congruences, and explicit substitutions, so no external result is used."
+        }
+      ],
+      "completed_theorem_search_events": [],
       "source_lookup_hits": [],
       "protected_path_hits": [],
       "unexpected_url_occurrences": [],
       "reference_overlap": {
         "method": "token-level longest contiguous match plus 12-token n-gram coverage",
-        "strongest": {
-          "reference_word_count": 193,
-          "generated_word_count": 456,
-          "longest_common_token_span": 16,
-          "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
-          "shared_12gram_count": 5,
-          "generated_12gram_coverage": 0.011236,
-          "manual_overlap_review": false,
-          "fact_id": "3c1ee6a958c315aa"
-        },
-        "all_facts": [
-          {
-            "reference_word_count": 193,
-            "generated_word_count": 447,
-            "longest_common_token_span": 11,
-            "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "1d8ddde8d657d676"
-          },
-          {
+        "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+        "accepted_facts": {
+          "strongest": {
             "reference_word_count": 193,
             "generated_word_count": 456,
             "longest_common_token_span": 16,
@@ -59,67 +88,454 @@
             "manual_overlap_review": false,
             "fact_id": "3c1ee6a958c315aa"
           },
-          {
+          "all": [
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 447,
+              "longest_common_token_span": 11,
+              "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "1d8ddde8d657d676"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 456,
+              "longest_common_token_span": 16,
+              "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 5,
+              "generated_12gram_coverage": 0.011236,
+              "manual_overlap_review": false,
+              "fact_id": "3c1ee6a958c315aa"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 535,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.001984,
+              "manual_overlap_review": false,
+              "fact_id": "4f01c125cb984e8c"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 350,
+              "longest_common_token_span": 12,
+              "longest_common_text": "write f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.00295,
+              "manual_overlap_review": false,
+              "fact_id": "727412a401ddf3ea"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 452,
+              "longest_common_token_span": 11,
+              "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "82e137871eec6663"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 447,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "bc2bbe95f5c3d68d"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 373,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "ec3d95349fa8454b"
+            }
+          ]
+        },
+        "all_llm_and_tool_traces": {
+          "files_checked": 35,
+          "strongest": {
             "reference_word_count": 193,
-            "generated_word_count": 535,
-            "longest_common_token_span": 12,
-            "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
-            "shared_12gram_count": 1,
-            "generated_12gram_coverage": 0.001984,
+            "generated_word_count": 6439,
+            "longest_common_token_span": 16,
+            "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+            "shared_12gram_count": 5,
+            "generated_12gram_coverage": 0.001029,
             "manual_overlap_review": false,
-            "fact_id": "4f01c125cb984e8c"
+            "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165337Z_244161b9311e/log.md"
           },
-          {
-            "reference_word_count": 193,
-            "generated_word_count": 350,
-            "longest_common_token_span": 12,
-            "longest_common_text": "write f a b c a 3 b 3 c 3 3abc",
-            "shared_12gram_count": 1,
-            "generated_12gram_coverage": 0.00295,
-            "manual_overlap_review": false,
-            "fact_id": "727412a401ddf3ea"
-          },
-          {
-            "reference_word_count": 193,
-            "generated_word_count": 452,
-            "longest_common_token_span": 11,
-            "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "82e137871eec6663"
-          },
-          {
-            "reference_word_count": 193,
-            "generated_word_count": 447,
-            "longest_common_token_span": 9,
-            "longest_common_text": "a 2 b 2 c 2 ab bc ca",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "bc2bbe95f5c3d68d"
-          },
-          {
-            "reference_word_count": 193,
-            "generated_word_count": 373,
-            "longest_common_token_span": 9,
-            "longest_common_text": "a 2 b 2 c 2 ab bc ca",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "ec3d95349fa8454b"
-          }
-        ],
+          "all": [
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 735,
+              "longest_common_token_span": 1,
+              "longest_common_text": "write",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/blind_wrapper.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 1932,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000606,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/global_memory/conclusion.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 830,
+              "longest_common_token_span": 11,
+              "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/global_memory/proof_attempt.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 1216,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.001151,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/global_memory/verification.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 220,
+              "longest_common_token_span": 7,
+              "longest_common_text": "a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 112,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 11300,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000162,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 48,
+              "longest_common_token_span": 1,
+              "longest_common_text": "and",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 135,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 3568,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.00062,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 204,
+              "longest_common_token_span": 7,
+              "longest_common_text": "a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 106,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 9430,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000162,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/high3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 91,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 162,
+              "longest_common_token_span": 8,
+              "longest_common_text": "a b c 2 3 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 4805,
+              "longest_common_token_span": 10,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 217,
+              "longest_common_token_span": 7,
+              "longest_common_text": "a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 121,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.009091,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 10208,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.00016,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 86,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 200,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 9800,
+              "longest_common_token_span": 12,
+              "longest_common_text": "write f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000186,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 204,
+              "longest_common_token_span": 7,
+              "longest_common_text": "a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 110,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.010101,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh4/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 11669,
+              "longest_common_token_span": 16,
+              "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 5,
+              "generated_12gram_coverage": 0.000826,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/project_artifacts/workers/xhigh4/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 723,
+              "longest_common_token_span": 1,
+              "longest_common_text": "write",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/stdout_stderr.log"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 29,
+              "longest_common_token_span": 2,
+              "longest_common_text": "in the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/strategy_master_trace.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 5935,
+              "longest_common_token_span": 9,
+              "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165230Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 3880,
+              "longest_common_token_span": 12,
+              "longest_common_text": "write f a b c a 3 b 3 c 3 3abc",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000374,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165306Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 4556,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000343,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165308Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 6238,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000206,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165319Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 4283,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000362,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165327Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 6439,
+              "longest_common_token_span": 16,
+              "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 5,
+              "generated_12gram_coverage": 0.001029,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165337Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 6032,
+              "longest_common_token_span": 12,
+              "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+              "shared_12gram_count": 1,
+              "generated_12gram_coverage": 0.000213,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_outputs/20260828T165524Z_244161b9311e/log.md"
+            },
+            {
+              "reference_word_count": 193,
+              "generated_word_count": 150,
+              "longest_common_token_span": 2,
+              "longest_common_text": "0 0",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/cubic-form-image_20260828T164931Z/verifier_service.log"
+            }
+          ]
+        },
         "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
       },
-      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker, unexpected URL, completed search event, or suspicious reference overlap in formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
     },
     {
       "problem_id": "period-five-recurrence",
       "run_id": "period-five-recurrence_20260828T170106Z",
       "integrity": "BLIND_INTEGRITY_PASS",
       "capability_gate": "PASS",
-      "trace_file_count": 22,
+      "trace_file_count": 36,
       "wrapper_worker_roles": 7,
       "wrapper_verifier_roles": 7,
       "expected_worker_roles": 7,
@@ -133,43 +549,72 @@
         "shell_url_call": [],
         "shell_network_call": []
       },
+      "blocked_theorem_search_intents": [
+        {
+          "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "Lyness period-five recurrence x_{n+2}x_n=1+x_{n+1}"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not available in this worker session. The proof route reduces completely to explicit field algebra and does not use an external theorem."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "Lyness recurrence five-cycle identity over a finite field",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The required search_arxiv_theorems tool and a web-search fallback were not exposed in this worker session; no external theorem is needed in the proof, which derives every identity directly."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "A_2 Y-system period five recurrence x_n x_{n+2}=1+x_{n+1}"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool and web-search fallback are not exposed in this worker session. No external result is needed: the period-five identity is proved directly by field algebra."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "Lyness recurrence x_n x_{n+2}=1+x_{n+1} period five",
+            "order-five birational Lyness map over finite fields"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. The target reduces directly to a self-contained five-term symbolic calculation, so no external theorem is needed."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "five-periodic Lyness recurrence over finite fields",
+            "x_{n+2}=(1+x_{n+1})/x_n"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker environment. No external theorem is needed because the five-periodicity and exact count have a self-contained elementary derivation."
+        }
+      ],
+      "completed_theorem_search_events": [],
       "source_lookup_hits": [],
       "protected_path_hits": [],
       "unexpected_url_occurrences": [],
       "reference_overlap": {
         "method": "token-level longest contiguous match plus 12-token n-gram coverage",
-        "strongest": {
-          "reference_word_count": 218,
-          "generated_word_count": 465,
-          "longest_common_token_span": 9,
-          "longest_common_text": "use of the recurrence gives a 3 frac 1",
-          "shared_12gram_count": 0,
-          "generated_12gram_coverage": 0.0,
-          "manual_overlap_review": false,
-          "fact_id": "499cfdc336951af2"
-        },
-        "all_facts": [
-          {
-            "reference_word_count": 218,
-            "generated_word_count": 735,
-            "longest_common_token_span": 5,
-            "longest_common_text": "gives a 3 frac 1",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "37d9e494a5c261a3"
-          },
-          {
-            "reference_word_count": 218,
-            "generated_word_count": 373,
-            "longest_common_token_span": 4,
-            "longest_common_text": "qquad a 4 frac",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "468a414eb1af36d4"
-          },
-          {
+        "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+        "accepted_facts": {
+          "strongest": {
             "reference_word_count": 218,
             "generated_word_count": 465,
             "longest_common_token_span": 9,
@@ -179,57 +624,464 @@
             "manual_overlap_review": false,
             "fact_id": "499cfdc336951af2"
           },
-          {
+          "all": [
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 735,
+              "longest_common_token_span": 5,
+              "longest_common_text": "gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "37d9e494a5c261a3"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 373,
+              "longest_common_token_span": 4,
+              "longest_common_text": "qquad a 4 frac",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "468a414eb1af36d4"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 465,
+              "longest_common_token_span": 9,
+              "longest_common_text": "use of the recurrence gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "499cfdc336951af2"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 464,
+              "longest_common_token_span": 6,
+              "longest_common_text": "qquad a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "65b9237c6ebe5e0c"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 479,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "686ebce00d842b99"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 503,
+              "longest_common_token_span": 6,
+              "longest_common_text": "qquad a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "bff8f135a656c1ef"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 499,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "e84dff893543ed80"
+            }
+          ]
+        },
+        "all_llm_and_tool_traces": {
+          "files_checked": 36,
+          "strongest": {
             "reference_word_count": 218,
-            "generated_word_count": 464,
-            "longest_common_token_span": 6,
-            "longest_common_text": "qquad a 4 frac 1 a",
+            "generated_word_count": 9582,
+            "longest_common_token_span": 9,
+            "longest_common_text": "use of the recurrence gives a 3 frac 1",
             "shared_12gram_count": 0,
             "generated_12gram_coverage": 0.0,
             "manual_overlap_review": false,
-            "fact_id": "65b9237c6ebe5e0c"
+            "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high3/logs/round_1.log"
           },
-          {
-            "reference_word_count": 218,
-            "generated_word_count": 479,
-            "longest_common_token_span": 5,
-            "longest_common_text": "a 4 frac 1 a",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "686ebce00d842b99"
-          },
-          {
-            "reference_word_count": 218,
-            "generated_word_count": 503,
-            "longest_common_token_span": 6,
-            "longest_common_text": "qquad a 4 frac 1 a",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "bff8f135a656c1ef"
-          },
-          {
-            "reference_word_count": 218,
-            "generated_word_count": 499,
-            "longest_common_token_span": 5,
-            "longest_common_text": "a 4 frac 1 a",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "e84dff893543ed80"
-          }
-        ],
+          "all": [
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 735,
+              "longest_common_token_span": 1,
+              "longest_common_text": "recurrence",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/blind_wrapper.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 1867,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a n 5 a n",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/global_memory/conclusion.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 250,
+              "longest_common_token_span": 3,
+              "longest_common_text": "1 the recurrence",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/global_memory/counterexample.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 391,
+              "longest_common_token_span": 3,
+              "longest_common_text": "the number of",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/global_memory/proof_attempt.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 1179,
+              "longest_common_token_span": 3,
+              "longest_common_text": "a n 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/global_memory/verification.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 19,
+              "longest_common_token_span": 1,
+              "longest_common_text": "2",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 108,
+              "longest_common_token_span": 3,
+              "longest_common_text": "5 f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 2461,
+              "longest_common_token_span": 4,
+              "longest_common_text": "in mathbb f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 190,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 118,
+              "longest_common_token_span": 4,
+              "longest_common_text": "nonzero and not 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 8696,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 231,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 88,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 9582,
+              "longest_common_token_span": 9,
+              "longest_common_text": "use of the recurrence gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/high3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 188,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 156,
+              "longest_common_token_span": 3,
+              "longest_common_text": "and a 7",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 11693,
+              "longest_common_token_span": 5,
+              "longest_common_text": "gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 103,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 200,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 4928,
+              "longest_common_token_span": 6,
+              "longest_common_text": "qquad a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 155,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 137,
+              "longest_common_token_span": 3,
+              "longest_common_text": "a 1 and",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 8415,
+              "longest_common_token_span": 4,
+              "longest_common_text": "in mathbb f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 175,
+              "longest_common_token_span": 2,
+              "longest_common_text": "f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 83,
+              "longest_common_token_span": 3,
+              "longest_common_text": "a 1 and",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh4/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 7786,
+              "longest_common_token_span": 5,
+              "longest_common_text": "thus modulo 5 f p",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/project_artifacts/workers/xhigh4/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 723,
+              "longest_common_token_span": 1,
+              "longest_common_text": "is",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/stdout_stderr.log"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 29,
+              "longest_common_token_span": 1,
+              "longest_common_text": "in",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/strategy_master_trace.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 6585,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170403Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 3900,
+              "longest_common_token_span": 6,
+              "longest_common_text": "qquad a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170416Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 5954,
+              "longest_common_token_span": 5,
+              "longest_common_text": "a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170418Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 6183,
+              "longest_common_token_span": 4,
+              "longest_common_text": "qquad a 4 frac",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170421Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 3766,
+              "longest_common_token_span": 6,
+              "longest_common_text": "qquad a 4 frac 1 a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170437Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 6074,
+              "longest_common_token_span": 9,
+              "longest_common_text": "use of the recurrence gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170438Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 6500,
+              "longest_common_token_span": 5,
+              "longest_common_text": "gives a 3 frac 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_outputs/20260828T170602Z_13258dbea25b/log.md"
+            },
+            {
+              "reference_word_count": 218,
+              "generated_word_count": 150,
+              "longest_common_token_span": 2,
+              "longest_common_text": "1 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/period-five-recurrence_20260828T170106Z/verifier_service.log"
+            }
+          ]
+        },
         "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
       },
-      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker, unexpected URL, completed search event, or suspicious reference overlap in formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
     },
     {
       "problem_id": "reflection-fixed-vector",
       "run_id": "reflection-fixed-vector_20260828T171608Z",
       "integrity": "BLIND_INTEGRITY_PASS",
       "capability_gate": "PASS",
-      "trace_file_count": 21,
+      "trace_file_count": 35,
       "wrapper_worker_roles": 7,
       "wrapper_verifier_roles": 7,
       "expected_worker_roles": 7,
@@ -243,33 +1095,83 @@
         "shell_url_call": [],
         "shell_network_call": []
       },
+      "blocked_theorem_search_intents": [
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "real orthogonal matrix without eigenvalue 1 determinant parity; Householder reflection product fixed vector",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "search_arxiv_theorems is not exposed in this worker runtime and no built-in web-search tool is available; the argument will use no external result."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "For a real orthogonal matrix Q with 1 not an eigenvalue, characterize the symmetric part of (Q-I)^{-1} and fixed vectors of a Householder reflection times Q",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The required search_arxiv_theorems tool is not available in this worker session. The identity was instead proved directly from Q^T=Q^{-1}; no external result is used."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "Orthogonal matrix with no eigenvalue 1 has determinant (-1)^n",
+            "Real orthogonal matrix determinant parity forces eigenvalue 1"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. The lemma is proved self-containedly from complex-conjugate eigenvalue pairing, so no external result is used."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "For a real orthogonal matrix Q with no eigenvalue 1 and a unit vector u, the Householder reflection H=I-2uu^T makes HQ have eigenvalue 1.",
+          "attempted_queries": [
+            "orthogonal matrix Householder reflection fixed vector",
+            "Cayley transform rank-one reflection eigenvalue one"
+          ],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker runtime. No external result is needed: the proof reduces entirely to finite-dimensional injective-implies-surjective and norm preservation."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "A real orthogonal matrix Q with no eigenvalue 1 and a Householder reflection H=I-2uu^T; show HQ has eigenvalue 1",
+            "inverse of I-Q for orthogonal Q and Householder fixed vector"
+          ],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The required search_arxiv_theorems tool and built-in web search are not exposed in this session. No external theorem is needed for the self-contained elementary proof."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "A real orthogonal matrix Q without eigenvalue 1 and a unit vector u imply (I-2uu^T)Q has eigenvalue 1",
+            "Cayley transform of an orthogonal matrix without eigenvalue 1"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool and a web-search tool are not exposed in this session. No external result is needed: the proof is elementary and self-contained."
+        }
+      ],
+      "completed_theorem_search_events": [],
       "source_lookup_hits": [],
       "protected_path_hits": [],
       "unexpected_url_occurrences": [],
       "reference_overlap": {
         "method": "token-level longest contiguous match plus 12-token n-gram coverage",
-        "strongest": {
-          "reference_word_count": 177,
-          "generated_word_count": 302,
-          "longest_common_token_span": 5,
-          "longest_common_text": "h i 2uu mathsf t",
-          "shared_12gram_count": 0,
-          "generated_12gram_coverage": 0.0,
-          "manual_overlap_review": false,
-          "fact_id": "38e6654bfc95327b"
-        },
-        "all_facts": [
-          {
-            "reference_word_count": 177,
-            "generated_word_count": 208,
-            "longest_common_token_span": 3,
-            "longest_common_text": "h i 2uu",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "1ce832a4e0572b89"
-          },
-          {
+        "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+        "accepted_facts": {
+          "strongest": {
             "reference_word_count": 177,
             "generated_word_count": 302,
             "longest_common_token_span": 5,
@@ -279,67 +1181,454 @@
             "manual_overlap_review": false,
             "fact_id": "38e6654bfc95327b"
           },
-          {
+          "all": [
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 208,
+              "longest_common_token_span": 3,
+              "longest_common_text": "h i 2uu",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "1ce832a4e0572b89"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 302,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "38e6654bfc95327b"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 393,
+              "longest_common_token_span": 4,
+              "longest_common_text": "i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "424bc4756088dc25"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 451,
+              "longest_common_token_span": 4,
+              "longest_common_text": "i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "4f8e163faf723982"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 254,
+              "longest_common_token_span": 4,
+              "longest_common_text": "i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "6bd14f7725160296"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 283,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "97493d8793a0006f"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 263,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "a2f4777c19fe4f71"
+            }
+          ]
+        },
+        "all_llm_and_tool_traces": {
+          "files_checked": 35,
+          "strongest": {
             "reference_word_count": 177,
-            "generated_word_count": 393,
-            "longest_common_token_span": 4,
-            "longest_common_text": "i 2uu mathsf t",
+            "generated_word_count": 1534,
+            "longest_common_token_span": 11,
+            "longest_common_text": "det hq 1 n 1 if hq had no eigenvalue 1",
             "shared_12gram_count": 0,
             "generated_12gram_coverage": 0.0,
             "manual_overlap_review": false,
-            "fact_id": "424bc4756088dc25"
+            "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/global_memory/conclusion.jsonl"
           },
-          {
-            "reference_word_count": 177,
-            "generated_word_count": 451,
-            "longest_common_token_span": 4,
-            "longest_common_text": "i 2uu mathsf t",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "4f8e163faf723982"
-          },
-          {
-            "reference_word_count": 177,
-            "generated_word_count": 254,
-            "longest_common_token_span": 4,
-            "longest_common_text": "i 2uu mathsf t",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "6bd14f7725160296"
-          },
-          {
-            "reference_word_count": 177,
-            "generated_word_count": 283,
-            "longest_common_token_span": 5,
-            "longest_common_text": "h i 2uu mathsf t",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "97493d8793a0006f"
-          },
-          {
-            "reference_word_count": 177,
-            "generated_word_count": 263,
-            "longest_common_token_span": 5,
-            "longest_common_text": "h i 2uu mathsf t",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "a2f4777c19fe4f71"
-          }
-        ],
+          "all": [
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 735,
+              "longest_common_token_span": 1,
+              "longest_common_text": "vector",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/blind_wrapper.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 1534,
+              "longest_common_token_span": 11,
+              "longest_common_text": "det hq 1 n 1 if hq had no eigenvalue 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/global_memory/conclusion.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 336,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/global_memory/proof_attempt.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 1166,
+              "longest_common_token_span": 9,
+              "longest_common_text": "det hq 1 n 1 if hq had no",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/global_memory/verification.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 157,
+              "longest_common_token_span": 2,
+              "longest_common_text": "real orthogonal",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 85,
+              "longest_common_token_span": 5,
+              "longest_common_text": "det hq 1 n 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 5937,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 257,
+              "longest_common_token_span": 3,
+              "longest_common_text": "a real orthogonal",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 65,
+              "longest_common_token_span": 2,
+              "longest_common_text": "u and",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 9054,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 201,
+              "longest_common_token_span": 4,
+              "longest_common_text": "det q 1 n",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 155,
+              "longest_common_token_span": 4,
+              "longest_common_text": "det a 1 n",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 9872,
+              "longest_common_token_span": 6,
+              "longest_common_text": "real eigenvalues of an orthogonal matrix",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/high3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 231,
+              "longest_common_token_span": 4,
+              "longest_common_text": "eigenvalue 1 and a",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 92,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 9427,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 249,
+              "longest_common_token_span": 4,
+              "longest_common_text": "hq has eigenvalue 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 84,
+              "longest_common_token_span": 3,
+              "longest_common_text": "has no nonzero",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 9690,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 213,
+              "longest_common_token_span": 4,
+              "longest_common_text": "of an orthogonal matrix",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 62,
+              "longest_common_token_span": 2,
+              "longest_common_text": "q 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 8692,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 116,
+              "longest_common_token_span": 2,
+              "longest_common_text": "1 hence",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 59,
+              "longest_common_token_span": 2,
+              "longest_common_text": "a 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh4/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 4937,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/project_artifacts/workers/xhigh4/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 723,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/stdout_stderr.log"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 29,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/strategy_master_trace.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 4056,
+              "longest_common_token_span": 9,
+              "longest_common_text": "det hq 1 n 1 if hq had no",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171851Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 3823,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171856Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 3953,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171913Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 6510,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171919Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 6248,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171931Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 5491,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171935Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 3813,
+              "longest_common_token_span": 5,
+              "longest_common_text": "h i 2uu mathsf t",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_outputs/20260828T171956Z_93f0640c3d5a/log.md"
+            },
+            {
+              "reference_word_count": 177,
+              "generated_word_count": 150,
+              "longest_common_token_span": 1,
+              "longest_common_text": "to",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/reflection-fixed-vector_20260828T171608Z/verifier_service.log"
+            }
+          ]
+        },
         "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
       },
-      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker, unexpected URL, completed search event, or suspicious reference overlap in formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
     },
     {
       "problem_id": "weighted-binomial-paths",
       "run_id": "weighted-binomial-paths_20260828T170915Z",
       "integrity": "BLIND_INTEGRITY_PASS",
       "capability_gate": "PASS",
-      "trace_file_count": 21,
+      "trace_file_count": 35,
       "wrapper_worker_roles": 7,
       "wrapper_verifier_roles": 7,
       "expected_worker_roles": 7,
@@ -353,63 +1642,58 @@
         "shell_url_call": [],
         "shell_network_call": []
       },
+      "blocked_theorem_search_intents": [
+        {
+          "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+          "line": 3,
+          "event_type": "search_math_results_stalled",
+          "query": "For every nonnegative integer k, sum_{j=0}^k 2^{k-j} binom(k+j,j)=4^k; binary-word majority interpretation",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The prescribed search_arxiv_theorems tool is not exposed in this worker session, and no built-in web-search tool is available. The proof uses no external result and needs no literature citation."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "binomial partial sum via odd-length binary words and complement involution"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. The proof uses no external theorem or citation: only a finite set partition and an explicit involution."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": "For every nonnegative integer k, sum_{j=0}^k 2^{k-j} binom(k+j,j)=4^k; binary words and first occurrence interpretation",
+          "attempted_queries": [],
+          "primary_tool": "search_arxiv_theorems",
+          "reason": "The required search_arxiv_theorems tool is not available in this session's tool inventory; no external result is needed for the self-contained proof."
+        },
+        {
+          "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl",
+          "line": 2,
+          "event_type": "search_math_results_stalled",
+          "query": null,
+          "attempted_queries": [
+            "weighted binomial paths target theorem recurrence closed form",
+            "binomial"
+          ],
+          "primary_tool": null,
+          "reason": "The required search_arxiv_theorems tool is not exposed in this worker session; shared theorem/fact search returned no hits. No external theorem is needed because the proof is elementary and self-contained."
+        }
+      ],
+      "completed_theorem_search_events": [],
       "source_lookup_hits": [],
       "protected_path_hits": [],
       "unexpected_url_occurrences": [],
       "reference_overlap": {
         "method": "token-level longest contiguous match plus 12-token n-gram coverage",
-        "strongest": {
-          "reference_word_count": 179,
-          "generated_word_count": 309,
-          "longest_common_token_span": 15,
-          "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
-          "shared_12gram_count": 4,
-          "generated_12gram_coverage": 0.013423,
-          "manual_overlap_review": false,
-          "fact_id": "a896e2781ba9418d"
-        },
-        "all_facts": [
-          {
-            "reference_word_count": 179,
-            "generated_word_count": 289,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "0dae029f5ad942e9"
-          },
-          {
-            "reference_word_count": 179,
-            "generated_word_count": 232,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "2369c3965f3b0426"
-          },
-          {
-            "reference_word_count": 179,
-            "generated_word_count": 391,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "45c38579a42d6d6e"
-          },
-          {
-            "reference_word_count": 179,
-            "generated_word_count": 481,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "6f9ce5df15dcc7a3"
-          },
-          {
+        "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+        "accepted_facts": {
+          "strongest": {
             "reference_word_count": 179,
             "generated_word_count": 309,
             "longest_common_token_span": 15,
@@ -419,36 +1703,455 @@
             "manual_overlap_review": false,
             "fact_id": "a896e2781ba9418d"
           },
-          {
+          "all": [
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 289,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "0dae029f5ad942e9"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 232,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "2369c3965f3b0426"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 391,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "45c38579a42d6d6e"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 481,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "6f9ce5df15dcc7a3"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 309,
+              "longest_common_token_span": 15,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
+              "shared_12gram_count": 4,
+              "generated_12gram_coverage": 0.013423,
+              "manual_overlap_review": false,
+              "fact_id": "a896e2781ba9418d"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 341,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "b2c94a8f7de3fb3d"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 357,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "fact_id": "cc8ed457a7c71c33"
+            }
+          ]
+        },
+        "all_llm_and_tool_traces": {
+          "files_checked": 35,
+          "strongest": {
             "reference_word_count": 179,
-            "generated_word_count": 341,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
+            "generated_word_count": 3739,
+            "longest_common_token_span": 15,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
+            "shared_12gram_count": 4,
+            "generated_12gram_coverage": 0.001606,
             "manual_overlap_review": false,
-            "fact_id": "b2c94a8f7de3fb3d"
+            "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171154Z_bf71c0caf3f6/log.md"
           },
-          {
-            "reference_word_count": 179,
-            "generated_word_count": 357,
-            "longest_common_token_span": 11,
-            "longest_common_text": "sum j 0 k 2 k j binom k j j",
-            "shared_12gram_count": 0,
-            "generated_12gram_coverage": 0.0,
-            "manual_overlap_review": false,
-            "fact_id": "cc8ed457a7c71c33"
-          }
-        ],
+          "all": [
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 735,
+              "longest_common_token_span": 1,
+              "longest_common_text": "paths",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/blind_wrapper.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 1752,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/global_memory/conclusion.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 283,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/global_memory/proof_attempt.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 1099,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/global_memory/verification.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 92,
+              "longest_common_token_span": 2,
+              "longest_common_text": "of the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 102,
+              "longest_common_token_span": 4,
+              "longest_common_text": "at least k 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 4310,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 123,
+              "longest_common_token_span": 1,
+              "longest_common_text": "or",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 99,
+              "longest_common_token_span": 7,
+              "longest_common_text": "2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 5359,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 205,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 79,
+              "longest_common_token_span": 4,
+              "longest_common_text": "at least k 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 9173,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/high3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 155,
+              "longest_common_token_span": 2,
+              "longest_common_text": "of the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 136,
+              "longest_common_token_span": 9,
+              "longest_common_text": "0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 6529,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 205,
+              "longest_common_token_span": 1,
+              "longest_common_text": "all",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh2/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 117,
+              "longest_common_token_span": 7,
+              "longest_common_text": "2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh2/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 8918,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh2/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 175,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh3/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 106,
+              "longest_common_token_span": 4,
+              "longest_common_text": "of length 2k 1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh3/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 7219,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh3/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 173,
+              "longest_common_token_span": 1,
+              "longest_common_text": "all",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh4/local_memory/events.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 146,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh4/local_memory/notes.jsonl"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 11346,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/project_artifacts/workers/xhigh4/logs/round_1.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 723,
+              "longest_common_token_span": 1,
+              "longest_common_text": "paths",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/stdout_stderr.log"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 29,
+              "longest_common_token_span": 1,
+              "longest_common_text": "the",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/strategy_master_trace.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 3620,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171140Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 3739,
+              "longest_common_token_span": 15,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
+              "shared_12gram_count": 4,
+              "generated_12gram_coverage": 0.001606,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171154Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 3741,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171204Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 6059,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171226Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 3975,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171234Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 6291,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171247Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 6312,
+              "longest_common_token_span": 11,
+              "longest_common_text": "sum j 0 k 2 k j binom k j j",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_outputs/20260828T171254Z_bf71c0caf3f6/log.md"
+            },
+            {
+              "reference_word_count": 179,
+              "generated_word_count": 150,
+              "longest_common_token_span": 1,
+              "longest_common_text": "1",
+              "shared_12gram_count": 0,
+              "generated_12gram_coverage": 0.0,
+              "manual_overlap_review": false,
+              "file": "experiments/danus_n16_blind/runs/weighted-binomial-paths_20260828T170915Z/verifier_service.log"
+            }
+          ]
+        },
         "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
       },
-      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker, unexpected URL, completed search event, or suspicious reference overlap in formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
     }
   ],
   "summary": {
     "pass": 4,
     "fail": 0,
     "unexpected_url_occurrences": 0,
-    "manual_overlap_reviews": 0
+    "blocked_theorem_search_intents": 19,
+    "completed_theorem_search_events": 0,
+    "suspicious_reference_overlaps": 0
   }
 }

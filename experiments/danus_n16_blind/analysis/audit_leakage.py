@@ -38,6 +38,7 @@ def trace_files(run: Path) -> list[Path]:
         run / "verifier_service.log",
     ]
     candidates.extend((run / "project_artifacts" / "workers").glob("*/logs/round_*.log"))
+    candidates.extend((run / "project_artifacts" / "workers").glob("*/local_memory/*.jsonl"))
     candidates.extend((run / "verifier_outputs").glob("*/log.md"))
     candidates.extend((run / "project_artifacts" / "global_memory").glob("*.jsonl"))
     return sorted(path for path in candidates if path.is_file())
@@ -88,6 +89,32 @@ def overlap(reference: str, generated: str) -> dict[str, Any]:
     }
 
 
+def search_intents(run: Path, root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    blocked: list[dict[str, Any]] = []
+    completed: list[dict[str, Any]] = []
+    paths = sorted((run / "project_artifacts" / "workers").glob("*/local_memory/events.jsonl"))
+    for path in paths:
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            event_type = event.get("event_type", "")
+            if not event_type.startswith("search_math_results"):
+                continue
+            record = {
+                "file": path.relative_to(root).as_posix(),
+                "line": number,
+                "event_type": event_type,
+                "query": event.get("query"),
+                "attempted_queries": event.get("attempted_queries") or [],
+                "primary_tool": event.get("primary_tool"),
+                "reason": event.get("reason"),
+            }
+            (blocked if event_type == "search_math_results_stalled" else completed).append(record)
+    return blocked, completed
+
+
 def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) -> dict[str, Any]:
     result = json.loads((run / "result.json").read_text(encoding="utf-8"))
     files = trace_files(run)
@@ -103,6 +130,7 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
     }
     source_hits = line_hits(files, SOURCE_LOOKUP_RE, root)
     protected_hits = line_hits(files, PROTECTED_RE, root)
+    blocked_search_intents, completed_search_events = search_intents(run, root)
     unexpected_urls: list[dict[str, Any]] = []
     for path in files:
         for number, line in enumerate(
@@ -116,14 +144,30 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
 
     reference_path = reference_dir / f"{result['problem_id']}-reference.md"
     reference_proof = section(reference_path.read_text(encoding="utf-8"), "Reference proof")
-    overlaps: list[dict[str, Any]] = []
+    fact_overlaps: list[dict[str, Any]] = []
     for fact_path in sorted((run / "project_artifacts" / "fact_graph" / "facts").glob("*.md")):
         fact_overlap = overlap(reference_proof, section(fact_path.read_text(encoding="utf-8"), "proof"))
         fact_overlap["fact_id"] = fact_path.stem
-        overlaps.append(fact_overlap)
-    strongest = max(
-        overlaps,
+        fact_overlaps.append(fact_overlap)
+    strongest_fact = max(
+        fact_overlaps,
         key=lambda item: (item["longest_common_token_span"], item["generated_12gram_coverage"]),
+        default=None,
+    )
+    trace_overlaps: list[dict[str, Any]] = []
+    for path in files:
+        trace_overlap = overlap(
+            reference_proof, path.read_text(encoding="utf-8", errors="replace")
+        )
+        trace_overlap["file"] = path.relative_to(root).as_posix()
+        trace_overlaps.append(trace_overlap)
+    strongest_trace = max(
+        trace_overlaps,
+        key=lambda item: (item["longest_common_token_span"], item["generated_12gram_coverage"]),
+        default=None,
+    )
+    suspicious_overlap = any(
+        item["manual_overlap_review"] for item in fact_overlaps + trace_overlaps
     )
 
     policy_counts_match = (
@@ -132,7 +176,14 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
         and http_200 == result["verifier_calls"]
         and http_500 == 0
     )
-    direct_trace_leak = any(call_hits.values()) or bool(source_hits) or bool(protected_hits)
+    direct_trace_leak = (
+        any(call_hits.values())
+        or bool(completed_search_events)
+        or bool(source_hits)
+        or bool(protected_hits)
+        or bool(unexpected_urls)
+        or suspicious_overlap
+    )
     integrity = (
         "BLIND_INTEGRITY_PASS"
         if capability_gate == "PASS" and policy_counts_match and not direct_trace_leak
@@ -152,24 +203,27 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
         "verifier_http_500": http_500,
         "policy_counts_match": policy_counts_match,
         "external_call_hits": call_hits,
+        "blocked_theorem_search_intents": blocked_search_intents,
+        "completed_theorem_search_events": completed_search_events,
         "source_lookup_hits": source_hits,
         "protected_path_hits": protected_hits,
         "unexpected_url_occurrences": unexpected_urls,
         "reference_overlap": {
             "method": "token-level longest contiguous match plus 12-token n-gram coverage",
-            "strongest": strongest,
-            "all_facts": overlaps,
-            "assessment": (
-                "MANUAL_REVIEW_REQUIRED: similarity alone is not retrieval evidence"
-                if any(item["manual_overlap_review"] for item in overlaps)
-                else "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
-            ),
+            "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+            "accepted_facts": {"strongest": strongest_fact, "all": fact_overlaps},
+            "all_llm_and_tool_traces": {
+                "files_checked": len(trace_overlaps),
+                "strongest": strongest_trace,
+                "all": trace_overlaps,
+            },
+            "assessment": "SUSPICIOUS_TEXTUAL_OVERLAP" if suspicious_overlap else "NO_SUSPICIOUS_TEXTUAL_OVERLAP",
         },
         "decision_basis": (
             "PASS requires the pre-math capability gate, one blind wrapper invocation per "
             "proof-relevant session, successful verifier calls, and no retrieval/source/private-path "
-            "marker in formal-run traces. URL warnings and reference-proof similarity are reported "
-            "separately and are not treated as tool retrieval without a call/access trace."
+            "marker, unexpected URL, completed search event, or suspicious reference overlap in "
+            "formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
         ),
     }
 
@@ -202,8 +256,15 @@ def main() -> None:
             "unexpected_url_occurrences": sum(
                 len(run["unexpected_url_occurrences"]) for run in audits
             ),
-            "manual_overlap_reviews": sum(
-                run["reference_overlap"]["assessment"].startswith("MANUAL") for run in audits
+            "blocked_theorem_search_intents": sum(
+                len(run["blocked_theorem_search_intents"]) for run in audits
+            ),
+            "completed_theorem_search_events": sum(
+                len(run["completed_theorem_search_events"]) for run in audits
+            ),
+            "suspicious_reference_overlaps": sum(
+                run["reference_overlap"]["assessment"] == "SUSPICIOUS_TEXTUAL_OVERLAP"
+                for run in audits
             ),
         },
     }
