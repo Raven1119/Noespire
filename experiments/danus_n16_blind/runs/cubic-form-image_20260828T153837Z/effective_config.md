@@ -1,0 +1,21 @@
+# Effective Configuration — cubic-form-image_20260828T153837Z
+
+- project: `n16_cubic_form_image_20260828t153837z`
+- problem SHA-256: `51109dc012315b93ae138daf3ef059cbb7a1ee5c11f2db53ef7962374d17d632`
+- upstream commit: `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`
+- blind wrapper SHA-256: `71f5722a9dd9dcbc69494b98ae853c407c6c6d32a212447a930948db1412f098`
+- capability evidence: `capability_probe_20260828T152943Z`
+- backend: existing ChatGPT login
+- model: `gpt-5.6-sol`
+- verifier model/effort: `gpt-5.6-sol` / `xhigh`
+- roles: upstream default `high:3,xhigh:4`
+- maximum rounds: `1`
+- worker round timeout: `14400` seconds
+- verifier Codex timeout: `900` seconds
+- verifier URL: isolated loopback `127.0.0.1:56949`
+- web/browser/Matlas/apps/plugins/subagents: disabled by external wrapper
+- N1.6 control directory: filesystem read denied by `n16_blind` permission profile
+- local DANUS Fact/Memory MCP: enabled
+- DANUS prompts, retrieval algorithm, memory, FactGraph, and orchestration: unchanged
+- strategy/master formal session: not invoked, matching N1.5 run path
+- assignment template: frozen in `runtime_manifest.md` and identical across all four runs

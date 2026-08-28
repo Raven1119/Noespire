@@ -20,7 +20,7 @@ import urllib.request
 
 
 UPSTREAM_COMMIT = "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c"
-CAPABILITY_EVIDENCE = "capability_probe_20260828T152943Z"
+CAPABILITY_EVIDENCE = "capability_probe_20260828T162750Z"
 TOKEN_RE = re.compile(r"tokens used\s*\r?\n([0-9,]+)")
 TERMINAL_STATES = {"max_rounds", "stopped", "failed", "error", "deadline"}
 WORKER_TASKS = {
@@ -72,6 +72,15 @@ def tokens_from_logs(paths: list[Path]) -> int | str:
             total += int(matches[-1].replace(",", ""))
             found += 1
     return total if found == len(paths) and paths else "unavailable"
+
+
+def copy_project_artifacts(source: Path, destination: Path) -> None:
+    """Copy evidence without nested VCS/build caches that trigger Windows ACL helpers."""
+    shutil.copytree(
+        source,
+        destination,
+        ignore=shutil.ignore_patterns(".agents", ".git", ".lake", "__pycache__"),
+    )
 
 
 class CommandRecorder:
@@ -295,6 +304,11 @@ def main() -> None:
         }
         if invalid_workers:
             raise RuntimeError(f"worker system-invalid terminal state: {invalid_workers}")
+        verifier_service_text = (run_dir / "verifier_service.log").read_text(
+            encoding="utf-8", errors="replace"
+        )
+        if "500 Internal Server Error" in verifier_service_text:
+            raise RuntimeError("verifier service returned HTTP 500; run is system-invalid")
         wrapper_text = wrapper_log.read_text(encoding="utf-8", errors="replace")
         if wrapper_text.count("role=worker") < len(WORKER_TASKS):
             raise RuntimeError("blind wrapper evidence does not cover all worker sessions")
@@ -347,7 +361,7 @@ def main() -> None:
         ).stdout.strip().splitlines()
         closure = list(ast.literal_eval(closure_output[-1]))
 
-    shutil.copytree(project_dir, run_dir / "project_artifacts")
+    copy_project_artifacts(project_dir, run_dir / "project_artifacts")
     after_verifier_runs = {
         path.name for path in (danus_root / "runtime" / "verify-runs").iterdir() if path.is_dir()
     }

@@ -20,18 +20,20 @@ Every DANUS-launched `codex exec` resolves through `protocol/codex_blind_wrapper
 - `search_arxiv_theorems` removed from the DANUS MCP tool surface;
 - `MATLAS_URL` redirected to a closed loopback endpoint as defense in depth;
 - authoring MCP servers disabled for this experiment.
+- verifier-role-only write access to the existing `runtime/verify-runs/` output directory; no worker or strategy/main write expansion.
 
 The directory-level deny is intentional. It hides both private references and source-bearing manifests. A recursive per-file glob on Windows-mounted WSL storage caused the sandbox helper to fail while materializing individual masks. Denying the directory itself produces `Permission denied` inside every role without changing NTFS ACLs, touching `.lake/.git` caches, or invoking the Windows ACL helper.
 
 ## Pre-mathematics capability gate
 
-Canonical passing evidence: `protocol/evidence/capability_probe_20260828T152943Z/`.
+Canonical passing evidence: `protocol/evidence/capability_probe_20260828T162750Z/`.
 
 The probe exercised the real frozen worker launcher, verifier launcher, and strategy/main launcher. In every role:
 
 - no built-in web, browser, app/plugin, Matlas, or subagent call occurred;
 - `curl` failed at DNS resolution;
 - reading both `reference/capability_canary.txt` and the source-bearing problem manifest returned `Permission denied`; neither private marker appeared in the trace;
+- the verifier wrote the exact output canary only under `runtime/verify-runs/`, while worker and strategy/main reported that write check not applicable;
 - the worker and strategy/main DANUS local `gm_search` call completed successfully;
 - verifier local search was not applicable because the frozen verifier role intentionally exposes only the now-disabled external search tool.
 
@@ -43,6 +45,7 @@ The probe exercised the real frozen worker launcher, verifier launcher, and stra
 - Seven upstream workers (`high:3,xhigh:4`), one round, no retry, best-of-N, replacement, manual Fact, prompt repair, guidance, or budget change.
 - A dedicated stateless verifier service is launched for each run under the same wrapper, on an isolated loopback port, then terminated after capture.
 - A system fault is recorded as `SYSTEM_INVALID_RUN`; it is never silently retried or counted as proof-search failure.
+- The preserved first pre-run attempt for `cubic-form-image` is system-invalid because the initial workspace-only verifier could not persist verdict files and returned HTTP 500. It does not count as a mathematical run; the external boundary was repaired and the complete capability gate repeated before any valid run.
 - The formal wrapper policy and problem byte hash are checked before each run.
 - The target rule is the lexicographically smallest accepted Fact whose whitespace-normalized statement equals the frozen problem bytes. If none exists, the run is unsolved.
 

@@ -1,0 +1,1 @@
+{"time":"2026-08-28T15:39:18Z","branch":"direct_complete_proof","note":"Let S=a+b+c and Q=a^2+b^2+c^2-ab-bc-ca. Necessity: F=SQ, F congruent S mod 3, and Q congruent S^2 mod 3; hence 3|F implies 9|F. Sufficiency: F(a,t,t)=(a+2t)(a-t)^2 gives N=3t+1 via (t+1,t,t) and N=3t+2 via (t,t+1,t+1). For N=9t, t>=1, choose (t+1,t-1,t), whose sum is 3t and Q=3. N=0 uses (0,0,0)."}

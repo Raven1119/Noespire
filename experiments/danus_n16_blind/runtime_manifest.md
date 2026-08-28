@@ -10,7 +10,7 @@ Status: **PRE-RUN FROZEN**
 - DANUS path: `baselines/danus`
 - DANUS branch/commit: `codex` / `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`
 - DANUS source/prompts/workers/verifier/strategy/FactGraph/retrieval/memory/orchestration modified: **NO**
-- canonical capability evidence: `protocol/evidence/capability_probe_20260828T152943Z/summary.json` (`PASS`)
+- canonical capability evidence: `protocol/evidence/capability_probe_20260828T162750Z/summary.json` (`PASS`)
 
 ## Diagnostic set
 
@@ -48,6 +48,7 @@ Unavoidable experimental differences:
 3. Built-in web/browser, Matlas, plugins/apps, and native Codex subagents are disabled; local DANUS Fact/Memory MCP tools remain available.
 4. The N1.6 experiment-control directory (including `reference/` and the source-bearing manifest) is denied by the Codex filesystem profile.
 5. A fresh stateless verifier service uses an isolated loopback port for each independent run so its inherited wrapper policy and evidence log are unambiguous.
+6. Only verifier-role sessions receive write access to `runtime/verify-runs/`, the existing DANUS output contract; worker and strategy/main sessions do not. This was added after the preserved pre-run system-invalid attempt showed that a workspace-only verifier could reason but could not persist its verdict.
 
 ## Frozen worker assignment template
 

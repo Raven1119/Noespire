@@ -1,0 +1,23 @@
+INFO:     Started server process [400]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:56949 (Press CTRL+C to quit)
+INFO:     127.0.0.1:40282 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53694 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:42746 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:41088 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:41082 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:35172 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49266 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:45054 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:43786 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49284 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:38280 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:43798 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:49268 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:43664 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:46026 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:50416 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:42892 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:46030 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     Shutting down

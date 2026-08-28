@@ -1,0 +1,1128 @@
+Reading additional input from stdin...
+2026-08-28T15:38:53.479427Z ERROR codex_models_manager::manager: failed to refresh available models: timeout waiting for child process to exit
+OpenAI Codex v0.150.1
+--------
+workdir: /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a04906-20db-7e11-a083-a62cd66a9ce0
+--------
+user
+You are worker 'high3' on project 'n16_cubic_form_image_20260828t153837z'. Continue solving the problem (this is a continuation round, not a fresh start).
+1. Read TASK.md — your current assignment (which direction/subgoal is yours).
+2. Follow AGENTS.md (worker.md) exactly — your standing contract (the adaptive control loop, memory discipline, the fact_submit gate). Drive toward a full verified result.
+3. Resume from state: gm_search relevant findings + dead ends, read the fact graph and the latest master_guidance — DO NOT restart from zero; build on what is already there.
+4. Keep going: assess -> pick skills adaptively -> act -> persist, repeatedly. An open problem is not a reason to stop. Do NOT finalize prematurely.
+5. Persist as you go: rough progress to local memory; shareable findings via gm_add; any verified result via fact_submit.
+warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+warning: Under-development features enabled: current_time_reminder. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/codex-home/config.toml.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m resuming the assigned branch and using the query-memory workflow first, because this round explicitly depends on prior shared findings, verifier feedback, and the current steering rather than a fresh proof attempt. I’ll then select the next proof skill from the actual obstruction I find.
+exec
+/bin/bash -lc "pwd && sed -n '1,240p' TASK.md && sed -n '1,260p' /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker/query-memory/SKILL.md && if [ -f local_memory/notes.jsonl ]; then tail -n 80 local_memory/notes.jsonl; fi && if [ -f local_memory/events.jsonl ]; then tail -n 40 local_memory/events.jsonl; fi" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 986ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+Identify concrete intermediate lemmas or obstructions, prove what is justified, and complete the target if possible. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+---
+name: query-memory
+description: Recall what is already known — your own prior reasoning, the swarm's shared findings (including dead ends and verifier feedback), and the verified facts — before doing new work. Use when prior conclusions, examples, dead branches, verification outcomes, or verified results may inform the current question, claim, subgoal, or branch decision.
+---
+
+# Query Memory
+
+Before spending effort, check what already exists. There are three places to
+look, in the three-memory model:
+
+1. **Your own local memory** (private): read/grep `local_memory/notes.jsonl` and
+   `events.jsonl` for your prior reasoning and what you already tried.
+2. **Global memory** (shared findings): `gm_search(query, kinds=...)` over the
+   swarm's findings. Especially useful kinds:
+   - `dead_end` / `obstacle` — paths that already died (skip them);
+   - `verification` — outcomes of others' `fact_submit` (learn from rejections);
+   - `conclusion` / `example` / `counterexample` / `plan` — others' results to build on.
+   You can also read the `global_memory/<kind>.jsonl` files directly.
+3. **Fact graph** (verified truth): `fact_search(query)` (BM25 over the verified
+   facts) to find results you can cite or that show your subgoal is already
+   proved — it returns `{fact_id, statement}`; read the full proof from
+   `fact_graph/facts/<fact_id>.md` on a relevant hit, and `fact_graph/glossary.json`
+   to reuse the project's symbol definitions. A proof may build **only** on facts
+   (cite a `fact_id`).
+
+## Procedure
+
+1. Obey the current prompt's restrictions first. If it forbids a direction, file,
+   or search, that overrides default recall. If it recommends specific results or
+   directions, raise their priority.
+2. Start with the cheapest relevant source: your own local memory for your
+   context; `gm_search` for the swarm's findings; the fact graph for verified
+   building blocks.
+3. Prefer a narrow, targeted query (specific `kinds`, a sharp query string) over
+   reading everything.
+4. **Workspace boundary:** stay inside your own working directory and the shared
+   project stores. Do not scan parent directories, other workers' private
+   `local_memory/`, or other projects.
+
+## Retrieval priority
+
+- A relevant **verified fact** (fact graph) is the strongest hit — you can build
+  on it directly by citing its `fact_id`.
+- A sibling's **`dead_end`/`obstacle`** saves you from re-walking a dead path.
+- A sibling's **`verification`** rejection tells you why a similar claim failed.
+- A `conclusion`/`example`/`counterexample` is awareness — useful, but **never a
+  brick** (only facts are). Re-verify anything you intend to build on.
+
+## Output
+
+Note what you recalled and how you used it in your local memory (`events`). Do not
+re-publish others' findings; just use them.
+
+## Tools
+
+- `gm_search` (recall shared findings; BM25 over global memory)
+- `fact_search` (recall verified facts; BM25 over the fact graph — novelty + citation lookup)
+- local memory is read directly (no tool — read/grep the files); read a fact's full
+  proof from its `fact_graph/facts/<fact_id>.md` once `fact_search` surfaces it
+
+exec
+/bin/bash -lc "sed -n '1,260p' PROBLEM.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ exited 2 in 949ms:
+sed: can't read PROBLEM.md: No such file or directory
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+The memory stores are currently empty for the broad project terms, and no verified fact surfaced. The local copy of `PROBLEM.md` is absent, so I’m checking the shared project root (an allowed shared store) and sharpening the memory queries once I have the theorem’s exact notation.
+exec
+/bin/bash -lc "rg --files . && sed -n '1,300p' /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/PROBLEM.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 1409ms:
+./TASK.md
+./logs/loop.log
+./logs/round_1.log
+Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+The exact theorem has a compact constructive route: the “only if” direction is a modulus argument, while three near-diagonal families appear to cover residues \(1\), \(2\), and \(0 \pmod 9\). I’m now using the immediate-conclusions skill to formalize those identities and the math-search skill to satisfy the required literature check before submitting anything to the verifier.
+exec
+/bin/bash -lc "sed -n '1,320p' /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker/obtain-immediate-conclusions/SKILL.md && sed -n '1,380p' /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker/search-math-results/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 1108ms:
+---
+name: obtain-immediate-conclusions
+description: Derive immediate mathematical consequences from a theorem statement or subgoal. Use when starting a new problem, branch, or subgoal, or when cheap progress or a cleaner reformulation is needed before deeper proof search.
+---
+
+# Obtain Immediate Conclusions
+
+Extract direct implications before speculative reasoning.
+
+## Input Contract
+
+Read from memory and current context:
+
+- `problem_id`
+- current theorem/subgoal statement
+- memory
+
+## Procedure
+
+1. Normalize notation and restate the claim in equivalent forms.
+2. List direct consequences that follow from definitions and basic algebraic/logical manipulations.
+3. Split consequences into necessary conditions and candidate sufficient conditions.
+4. Mark each consequence with confidence and justification type.
+5. For every conclusion, explicitly decide whether it is likely fragile and should be stress-tested by counterexample.
+6. If a conclusion is fragile, record why it is fragile and indicate that `$construct-counterexamples` should be considered next.
+
+## Output Contract
+
+Publish each conclusion to global memory with `gm_add` (kind `conclusion`):
+`claim` = the conclusion's statement, `evidence` = the derivation/justification
+that makes it checkable, and carry these fields in the record:
+
+```json
+{
+  "statement": "...",
+  "justification_type": "by_definition|calculation|known_fact|logical_equivalence",
+  "confidence": 0.0,
+  "is_fragile": false,
+  "fragility_reason": "",
+  "suggested_followup": "none|construct-counterexamples",
+  "scope": "global|branch|subgoal",
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+Rules:
+
+- `is_fragile` must always be present.
+- If `is_fragile=true`, then `fragility_reason` must explain the risk and `suggested_followup` should be `construct-counterexamples`.
+- If `is_fragile=false`, use `fragility_reason=""` and `suggested_followup="none"`.
+
+## Tools
+
+- `gm_add` (publish the conclusion finding)
+- `gm_search` (recall related findings across the swarm)
+- `search_arxiv_theorems` for nontrivial consequences
+- Codex built-in web search for background definitions/terminology
+
+## Failure Logging
+
+If no meaningful consequence is found, note it in your local memory (`events`) with:
+
+- `event_type="immediate_conclusions_stalled"`
+- missing assumptions and suspected blockers
+---
+name: search-math-results
+description: Find program-conditioned math results, constructions, examples, counterexamples, analogies, and background references. Use when the current active program needs repair, mutation, analogy, a program shift, or carefully gated obstruction search.
+---
+
+# Search Math Results
+
+Use this skill as the default retrieval workflow for mathematical background and related results, conditioned on the live research program currently being pursued.
+
+## Input Contract
+
+Read:
+
+- the current target statement, subgoal, lemma, or claim
+- the `program_stage`, chosen from:
+  - `fresh_orientation`
+  - `active_program`
+  - `mature_subproblem`
+- the current `active_program`, meaning the live research program currently being pursued, such as a construction route, globalization route, mutation route, or other proof strategy
+- the current `missing_mechanism`, meaning the specific mechanism, construction, lemma, bridge, or proof move that is missing
+- the `search_mode`, chosen from:
+  - `repair`
+  - `mutation`
+  - `analogy`
+  - `program_shift`
+  - `theorem_level_blocker`
+- the search intent:
+  - `theorem`
+  - `construction`
+  - `example`
+  - `counterexample`
+  - `background`
+- relevant branch/subgoal context from memory
+
+If the prompt explicitly declares the `program_stage`, `active_program`, `missing_mechanism`, or blocker policy, obey those declarations. If the prompt does not declare the stage, default to `fresh_orientation` for a new problem, first-pass search, or no mature program yet; use `active_program` when the run already has a live named program, branch, or missing mechanism; and use `mature_subproblem` only when the run is already narrowed to a repeatedly failed mature subproblem or mature active program.
+
+## Search Modes
+
+- `repair`: search for results or constructions that directly repair a specific missing step in the current active program.
+- `mutation`: search for nearby constructions or variants that modify the current active program while preserving continuity with it.
+- `analogy`: search broadly, including in apparently unrelated areas, for mechanisms, lemmas, constructions, examples, or proof ideas that might transfer to the current missing mechanism after translation or modest modification.
+- `program_shift`: search for a genuinely new program after repeated failure of the current one, while explaining the possible splice point or bridge back to the current problem.
+- `theorem_level_blocker`: search for obstruction or impossibility results only under the activation rule below.
+
+`theorem_level_blocker` is not a default mode. It is disallowed by default in `fresh_orientation`. It is allowed in `mature_subproblem` when the blocker search targets that narrowed mature subproblem or mature active program rather than the whole original goal. It is also allowed whenever the prompt explicitly asks for obstructions, impossibility results, blocker theorems, or negative evidence. If blocker mode is not allowed, downgrade to `repair`, `mutation`, `analogy`, or `program_shift`.
+
+Broad and creative search is allowed. Do not restrict yourself to the surface vocabulary of the current problem or only the literal keywords in the prompt. Cross-field and apparently unrelated analogy search is acceptable when it targets the same missing mechanism. Theorem-level, proof-level, theory-level, and more abstract analogy search are all allowed when tied to a plausible transfer idea.
+
+## Procedure
+
+1. Identify the current `program_stage`, `active_program`, `missing_mechanism`, and `search_mode` before searching.
+2. For non-blocker modes, usually generate searches in multiple layers. In `fresh_orientation`, allow broad object-level, theorem-level, proof-pattern, and theory-pattern queries. In `active_program` and `mature_subproblem`, still allow broad queries, but tie them to the active program or a plausible program shift.
+3. Start with `search_arxiv_theorems`.
+4. When using `search_arxiv_theorems`, phrase the query as a complete mathematical statement whenever possible, but also issue mechanism- and analogy-driven queries when they better target the missing mechanism. Each hit carries `title`, the full verbatim `theorem` text, `arxiv_id`, and the in-paper `theorem_id`; use `arxiv_id` to pull the exact paper.
+5. Inspect the returned items and decide whether they are useful for the current active program.
+6. Do not use broad recursive scans of `downloads/` as a theorem-search engine. If an exact local paper/file is already known or prompt-recommended, read that exact path. Otherwise search externally first. If relevant long-term papers already exist in `downloads/common`, prefer those exact files before re-downloading.
+7. If a genuinely new technical branch is opened (a new class of objects, a new construction regime, or a new body of machinery), then before killing that branch normally do at least one of the following: download and read at least one exact paper about that direction; read an exact local paper already present in `downloads/common` or another exact prompt-recommended path; or explicitly justify why no extra literature layer is needed because the branch has already reduced to a previously audited regime.
+8. External search first is still the default, but once a genuinely new direction is chosen, exact paper download/read is expected before final branch rejection. This rule is about depth of engagement with a new direction: use a small number of exact relevant papers, not no papers and not many-paper rummaging.
+9. Keep all downloaded PDFs and extracted text files organized inside `downloads/` in the current working directory.
+10. If a useful theorem/example/counterexample is found and it comes from a paper, download that paper into the workspace, extract its text, and read the extracted text before relying on the result.
+11. If a useful theorem is found, do not stop at the statement alone. Read the proof of that theorem as well and extract any techniques, constructions, reductions, or proof patterns that may help with the current target statement.
+12. Expand the definitions and concepts appearing in that theorem using the surrounding context of the paper, and check carefully whether the theorem is actually applicable to the current situation. Be explicit about terminology that may shift across contexts. If the theorem is only a partial result for the current target, also analyze why its method does not prove the full statement — which extra hypotheses it needs, where the proof breaks without them, and what obstruction this reveals (do not merely force the current object to satisfy the extra hypotheses).
+13. Record not only what the theorem says, but also what its proof suggests for the current active program and missing mechanism.
+14. If the theorem search returns no useful information, switch to Codex's built-in web search.
+15. Use the built-in web search either to look for specific math results or to gather background information, terminology, standard references, canonical constructions/examples/counterexamples, or remote analogies.
+16. If the built-in web search reveals a useful paper, again download it, extract its text, and read the relevant extracted text before using it in reasoning.
+17. If the built-in web search reveals a useful theorem, also read its proof, expand its local definitions from the paper context, and extract the techniques that look adaptable to the current active program. Apply the same partial-result analysis if the web result is only a partial result.
+18. Summarize the most useful findings and explain why they matter for the current proof state.
+19. If a result may later be used in a proof, preserve its full statement and source identifiers (`title`, `authors`, `arxiv_id`, `theorem_id`, year) so downstream proof steps can cite it explicitly — and so it can be passed as a structured `external_refs` entry when the proof that uses it is submitted via `fact_submit`.
+
+## Usefulness Test
+
+For `fresh_orientation`, treat search results as useful if they do at least one of the following:
+
+- provide a theorem/lemma/definition close to the target statement
+- provide a construction/example/counterexample that can be adapted
+- suggest a standard technique or reformulation relevant to the current branch or problem
+- provide a proof-level analogy
+- provide a theory-level analogy
+- provide a remote analogy together with a plausible transfer idea
+
+For `active_program`, treat search results as useful if they do at least one of the following:
+
+- repair a concrete missing mechanism in the active program
+- provide a mutation of the current program
+- provide a remote analogy that can plausibly transfer
+- provide a new program together with a plausible splice point or bridge to the current problem
+- provide a proof-pattern or theory-pattern transfer hypothesis that could plausibly be migrated into the active program
+
+For `mature_subproblem`, use the `active_program` criteria and additionally allow gated blocker search.
+
+A result can be strategically useful even if it does not yet directly repair the missing mechanism, provided it includes a plausible transfer hypothesis explaining how its construction, proof, or theory might transfer.
+
+Treat results as not useful if they are vague, merely generic survey material, or a whole-goal obstruction search when blocker mode is not allowed. If the results are too weak to guide the next step, fall back to the built-in web search.
+
+## Output Contract
+
+Note a summary of the search in your local memory (`events`) — search is process,
+not a shared finding. (A *useful reference you actually use* is recorded inside the
+proof step that cites it, with its complete statement + `paper_id`/`theorem_id`/
+`arXiv id`.) Summary record:
+
+```json
+{
+  "event_type": "search_math_results",
+  "query": "...",
+  "program_stage": "fresh_orientation|active_program|mature_subproblem",
+  "active_program": "...",
+  "missing_mechanism": "...",
+  "search_mode": "repair|mutation|analogy|program_shift|theorem_level_blocker",
+  "blocker_search_allowed": false,
+  "usefulness_tier": "direct|strategic|discard",
+  "analogy_depth": "theorem|proof|theory|meta",
+  "transfer_hypothesis": "optional plausible transfer idea; analogy_depth is descriptive bookkeeping, not a ranking of importance",
+  "new_direction_requires_exact_paper": false,
+  "literature_depth_reached": "none|local_exact|downloaded_exact",
+  "search_intent": "theorem|construction|example|counterexample|background",
+  "primary_tool": "search_arxiv_theorems",
+  "fallback_used": false,
+  "splice_point": "optional bridge back to the current problem",
+  "results_summary": ["..."],
+  "useful_references": [
+    {
+      "title": "...",
+      "complete_statement": "...",
+      "url_or_id": "...",
+      "paper_id": "...",
+      "arxiv_id": "...",
+      "theorem_id": "...",
+      "local_pdf_path": "optional",
+      "local_text_path": "optional",
+      "expanded_definitions": ["paper-context expansions of terms/concepts used in the statement"],
+      "applicability_check": ["why the statement does or does not apply in the current setting"],
+      "partial_result_analysis": ["if only a partial result: extra hypotheses, where the method fails for the full problem, and what difficulty this reveals"],
+      "proof_insights": ["optional extracted techniques or ideas from the proof"],
+      "why_useful": "..."
+    }
+  ],
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+## Tools
+
+- `search_arxiv_theorems` (Matlas arXiv theorem search — verbatim statements)
+- `gm_search` (check whether a sibling already found/used this result)
+- Codex built-in web search (fallback when the theorem search is too weak)
+- local memory (`events`) for the search log — direct file write
+
+## Failure Logging
+
+If neither theorem search nor web search yields useful information, note in local memory (`events`):
+
+- `event_type="search_math_results_stalled"`
+- the attempted queries
+- the reason the results were not useful
+
+exec
+/bin/bash -lc "sed -n '1,360p' /home/wmywb/.agents/skills/bohrium-web-search/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 884ms:
+---
+name: bohrium-web-search
+description: "Web search via Bohrium's open-platform proxy (backed by searchapi.io). Use when: user needs to search the open web for research papers, documentation, tutorials, news, or general information. NOT for: academic database search (use bohrium-paper-search / bohrium-scholar-search), Bohrium knowledge base search."
+---
+
+# SKILL: Bohrium Web 搜索
+
+## 概述
+
+通过 `open.bohrium.com` 的 `/v2/search/web` 端点代理到 searchapi.io，对**开放互联网**做关键词搜索，返回包含标题、链接、摘要的结果列表。
+
+**典型场景**：找一个软件的官网、搜一篇博客、快速核实某个术语、获取新闻报道。
+
+**不适用**：
+
+- 学术论文检索 → 用 `bohrium-paper-search` 或 `bohrium-scholar-search`
+- Bohrium 知识库内搜索 → 用 `bohrium-knowledge-base`
+
+**无 CLI 支持** — 通过 HTTP API 操作；`bohr` CLI 内置了对应的 `BohrWebSearch` 工具，会自动走这个端点。
+
+## 认证配置
+
+BOHR_ACCESS_KEY 从 OpenClaw 配置文件 `~/.openclaw/openclaw.json` 中读取：
+
+```json
+"bohrium-web-search": {
+  "enabled": true,
+  "apiKey": "YOUR_BOHR_ACCESS_KEY",
+  "env": {
+    "BOHR_ACCESS_KEY": "YOUR_BOHR_ACCESS_KEY"
+  }
+}
+```
+
+OpenClaw 会自动将 `env.BOHR_ACCESS_KEY` 注入到运行环境。
+
+## API
+
+```
+GET https://open.bohrium.com/openapi/v2/search/web?q=QUERY&num=N
+Header: Authorization: Bearer $BOHR_ACCESS_KEY
+```
+
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `q` | string | 必填 | 搜索关键词 |
+| `num` | int | `3` | 返回结果数，范围 `1-10` |
+
+## Python 示例
+
+```python
+import os, requests
+
+AK = os.environ["BOHR_ACCESS_KEY"]
+BASE = "https://open.bohrium.com/openapi/v2/search/web"
+
+r = requests.get(BASE,
+    headers={"Authorization": f"Bearer {AK}"},
+    params={"q": "graphene synthesis CVD", "num": 5})
+data = r.json()
+
+for i, hit in enumerate(data.get("organic_results", []), 1):
+    print(f"[{i}] {hit['title']}")
+    print(f"    {hit['link']}")
+    print(f"    {hit.get('snippet', '')[:200]}")
+    print()
+```
+
+**响应字段：**
+
+| 字段 | 说明 |
+|------|------|
+| `organic_results` | 主要结果列表 |
+| `organic_results[].title` | 页面标题 |
+| `organic_results[].link` | 页面 URL |
+| `organic_results[].snippet` | 摘要片段 |
+| `organic_results[].position` | 搜索排序位置 |
+
+## curl 示例
+
+```bash
+AK="$BOHR_ACCESS_KEY"
+curl -s "https://open.bohrium.com/openapi/v2/search/web?q=deepmd-kit&num=5" \
+  -H "Authorization: Bearer $AK" | jq '.organic_results[] | {title, link, snippet}'
+```
+
+## 常见问题
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| `No organic_results` | 查询无结果 | 换关键词；英文一般比中文命中更多 |
+| `401` | BOHR_ACCESS_KEY 错误 | 使用 `Authorization: Bearer $BOHR_ACCESS_KEY` |
+| `num` 被忽略 | 超出范围 | `num` 限制在 `1-10`，超出上限会截断或忽略 |
+
+## 搭配使用
+
+- 用 **web-search** 找一个软件的官网 → 再用 **bohrium-job** 提交用该软件的计算任务
+- 用 **web-search** 快速核实一个方法学名词 → 再用 **bohrium-paper-search** 查相关文献
+- 搜索最近的 arxiv 预印本 URL → 交给 **bohrium-pdf-parser** 解析全文
+
+codex
+The required Matlas theorem-search endpoint is not exposed in this worker’s tool set. Following the search skill’s fallback rule, I’m switching to the available Bohrium academic search path; this is only a grounding check, since the proof itself uses elementary identities and no external theorem.
+exec
+/bin/bash -lc "sed -n '1,420p' /home/wmywb/.agents/skills/bohrium-paper-search/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 962ms:
+---
+name: bohrium-paper-search
+description: "Search academic papers and patents via open.bohrium.com RAG engine. Use when: user asks about searching/finding academic papers, literature review, patent search, or technical survey using keywords or natural language questions. NOT for: knowledge base management, file management, or dataset operations."
+---
+
+# SKILL: Bohrium 论文与专利搜索
+
+## 概述
+
+通过 Bohrium RAG 搜索引擎进行学术论文和专利检索。基于关键词匹配 + 语义理解，支持自然语言问题描述、时间范围限定、JCR 分区/数据库筛选和 AI 重排序。
+
+**支持的搜索类型：**
+
+| 类型 | 端点 | 语料库 |
+|------|------|--------|
+| 英文文献 | `/openapi/v2/paper/rag/pass/keyword` | 英文学术论文（题目、摘要、语料、图片） |
+| 专利 | `/openapi/v2/paper/rag/pass/patent` | 全球专利（含分类号、专利权人筛选） |
+
+**适用场景：** 文献综述、技术调研、方法对比、趋势分析。
+
+**无 CLI 支持** — 全部通过 HTTP API 操作。
+
+## 认证配置
+
+BOHR_ACCESS_KEY 从 OpenClaw 配置文件 `~/.openclaw/openclaw.json` 中读取：
+
+```json
+"bohrium-paper-search": {
+  "enabled": true,
+  "apiKey": "YOUR_BOHR_ACCESS_KEY",
+  "env": {
+    "BOHR_ACCESS_KEY": "YOUR_BOHR_ACCESS_KEY"
+  }
+}
+```
+
+OpenClaw 会自动将 `env.BOHR_ACCESS_KEY` 注入到运行环境。
+
+## 通用代码模板
+
+```python
+import os, requests
+
+AK = os.environ.get("BOHR_ACCESS_KEY", "")
+BASE = "https://open.bohrium.com"
+PAPER_BASE = f"{BASE}/openapi/v2/paper"
+HEADERS_JSON = {"Authorization": f"Bearer {AK}", "Content-Type": "application/json"}
+```
+
+---
+
+## 英文文献搜索
+
+### 基本搜索
+
+```python
+r = requests.post(f"{PAPER_BASE}/rag/pass/keyword", headers=HEADERS_JSON, json={
+    "words": ["deep learning", "molecular dynamics"],
+    "question": "How to use deep learning for molecular dynamics simulation?",
+    "startTime": "",
+    "endTime": "",
+    "pageSize": 10
+})
+data = r.json()
+print(f"Found {len(data['data'])} papers")
+for p in data["data"]:
+    print(f"  [{p['doi']}] {p['enName']}")
+    print(f"    Journal: {p.get('publicationEnName', '')}, IF: {p.get('impactFactor', 0)}")
+    print(f"    Date: {p['coverDateStart']}, Citations: {p['citationNums']}")
+```
+
+### 高级搜索（时间范围 + JCR 分区 + 数据库 + type）
+
+```python
+r = requests.post(f"{PAPER_BASE}/rag/pass/keyword", headers=HEADERS_JSON, json={
+    "words": ["deep learning", "protein structure"],
+    "question": "deep learning protein structure prediction",
+    "type": 1,                          # 搜索版本：0=普通, 1=加强版
+    "startTime": "2024-01-01",          # 起始日期 YYYY-MM-DD
+    "endTime": "2025-01-01",            # 截止日期
+    "jcrZones": ["Q1", "Q2"],           # JCR 分区筛选
+    "includeDbs": ["SCI"],              # 数据库筛选
+    "areaIds": [],                      # 领域 ID（可选）
+    "publicationIds": [],               # 期刊 ID（可选）
+    "pageSize": 20
+})
+```
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `words` | string[] | 是 | 关键词列表，建议 3-8 个英文术语 |
+| `question` | string | 是 | 研究问题的自然语言描述 |
+| `type` | integer | 否 | keyword 接口搜索版本，仅支持 0=普通、1=加强版 |
+| `startTime` | string | 否 | 起始日期 `YYYY-MM-DD`，空字符串表示不限 |
+| `endTime` | string | 否 | 截止日期 `YYYY-MM-DD` |
+| `jcrZones` | string[] | 否 | JCR 分区筛选，如 `["Q1","Q2"]` |
+| `includeDbs` | string[] | 否 | 数据库筛选，如 `["SCI","SSCI"]` |
+| `areaIds` | string[] | 否 | 领域 ID |
+| `publicationIds` | number[] | 否 | 期刊 ID |
+| `subjectIds` | number[] | 否 | 主题 ID |
+| `pageSize` | integer | 是 | 返回数量，1-100，默认 50 |
+
+### 返回字段
+
+| 字段 | 说明 |
+|------|------|
+| `code` | 0=成功 |
+| `message` | 状态消息 |
+| `data[]` | 论文列表 |
+| `data[].doi` | DOI |
+| `data[].paperId` | 论文 ID |
+| `data[].enName` | 英文标题 |
+| `data[].zhName` | 中文标题 |
+| `data[].enAbstract` | 英文摘要 |
+| `data[].zhAbstract` | 中文摘要 |
+| `data[].authors` | 作者列表 |
+| `data[].coverDateStart` | 发表日期 |
+| `data[].publicationEnName` | 期刊英文名 |
+| `data[].publicationCover` | 期刊封面 URL |
+| `data[].impactFactor` | 影响因子 |
+| `data[].citationNums` | 被引次数 |
+| `data[].popularity` | 热度 |
+| `data[].pieces` | 相关语料片段 |
+| `data[].figures[]` | 相关图片（含 `figureId`, `imageUrl`, `enExplain`） |
+| `data[].languageType` | 0=英文 |
+
+---
+
+## 专利搜索
+
+```python
+r = requests.post(f"{PAPER_BASE}/rag/pass/patent", headers=HEADERS_JSON, json={
+    "type": 1,
+    "words": ["neural network"],
+    "question": "neural network",
+    "pageSize": 5
+})
+data = r.json()
+for p in data["data"]:
+    print(f"  Patent: {p}")
+```
+
+**注意**: keyword 搜索的 `type` 仅支持 0（普通）、1（加强版）；patent 搜索的 `type` 支持 0、1、2。
+
+### 专利请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `type` | integer | 否 | 专利搜索版本，仅支持 0、1、2 |
+| `words` | string[] | 是 | 关键词列表 |
+| `question` | string | 是 | 检索问题或关键词描述 |
+| `pageSize` | integer | 是 | 每页数量 |
+
+### 专利返回字段
+
+返回结构是 dict；专利结果列表在 `data[]`，顶层通常包含 `code`、`data`、`message`、`trace_id` 等字段。
+
+---
+
+## 搜索技巧
+
+### 关键词选择
+
+```python
+# GOOD: 3-8 个专业术语
+words = ["molecular dynamics", "force field", "deep potential", "neural network"]
+
+# BAD: 太笼统
+words = ["science", "research"]
+```
+
+### 结合 question 提升相关性
+
+`words` 用于精确关键词匹配，`question` 用于语义理解。两者结合效果最佳，英文文献 keyword 搜索和专利搜索都适用：
+
+```python
+{
+    "words": ["GNN", "molecular property", "prediction"],
+    "question": "How do graph neural networks predict molecular properties?",
+    "pageSize": 20
+}
+```
+
+### 限定高质量期刊
+
+```python
+{
+    "words": ["..."],
+    "question": "...",
+    "jcrZones": ["Q1"],          # 只看 Q1 期刊
+    "includeDbs": ["SCI"],       # 只看 SCI 收录
+    "startTime": "2023-01-01",   # 近两年
+    "endTime": "2025-12-31"
+}
+```
+
+---
+
+## curl 示例
+
+```bash
+AK="$BOHR_ACCESS_KEY"
+BASE="https://open.bohrium.com"
+PAPER_BASE="$BASE/openapi/v2/paper"
+
+# 英文文献搜索
+curl -s -X POST "$PAPER_BASE/rag/pass/keyword" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $AK" \
+  -d '{"words":["deep learning","protein"],"question":"deep learning protein structure prediction","type":1,"startTime":"2024-01-01","endTime":"2025-01-01","jcrZones":["Q1"],"pageSize":5}'
+
+# 专利搜索
+curl -s -X POST "$PAPER_BASE/rag/pass/patent" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $AK" \
+  -d '{"type":1,"words":["neural network"],"question":"neural network","pageSize":5}'
+```
+
+---
+
+## 常见问题
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| `code` 非 0 | 请求参数错误 | 检查 `message` 字段获取错误详情 |
+| 401 Unauthorized | 鉴权无效 | 确认 BOHR_ACCESS_KEY 正确 |
+| 结果不相关 | 关键词太泛或 question 不够具体 | 使用 3-8 个专业术语 + 清晰的 question |
+| 返回为空 | 时间范围太窄或筛选条件过严 | 放宽 startTime/endTime 或去掉 jcrZones 限制 |
+| 响应含多行 JSON | 正常行为（streaming） | 取第一行解析即可，或用 `json.loads(response.text.split('\n')[0])` |
+| 专利 pieces 为空 | 部分专利无语料索引 | 正常现象，可通过 `abstracts` 获取摘要内容 |
+
+exec
+/bin/bash -lc "curl -sS --max-time 20 -X POST 'https://open.bohrium.com/openapi/v2/paper/rag/pass/keyword' -H 'Content-Type: application/json' -H \"Authorization: Bearer "'${BOHR_ACCESS_KEY}" -d '"'{\"words\":[\"cubic form\",\"sum of three cubes\",\"representation of integers\"],\"question\":\"Which papers characterize integers represented by a"'^3+b''^3+c''^3-3abc?","type":1,"startTime":"","endTime":"","pageSize":5}'"' | jq '{code,message,data:[.data[]? | {title:.enName,doi,paperId,abstract:.enAbstract}]}'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ exited 127 in 1141ms:
+curl: (6) Could not resolve host: open.bohrium.com
+/bin/bash: line 1: jq: command not found
+
+exec
+/bin/bash -lc "if [ -f /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/fact_graph/glossary.json ]; then sed -n '1,260p' /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/fact_graph/glossary.json; else echo '{}'; fi" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 1091ms:
+{}
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+The narrowed memory query found two sibling derivations of the same construction, but neither is verified yet; I will not treat those findings as premises. I independently checked the three substitutions symbolically and am submitting a self-contained target proof with no predecessors or external citations.
+exec
+/bin/bash -lc 'mkdir -p local_memory' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3
+ succeeded in 945ms:
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3/local_memory/events.jsonl
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3/local_memory/notes.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+codex
+The verifier is still processing the complete theorem submission. The proof has no dependency on unverified memory: it contains the factorization, the divisibility argument, and all three explicit construction calculations in full.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..99ffb1f32de6249da837374a9b4adecb15fb7b4b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+codex
+The verifier returned an infrastructure error (`HTTP 500`), not a mathematical rejection; it reported no undefined symbols. Per the worker contract I’m retrying unchanged, while checking whether an equivalent target fact was accepted by another worker during the outage.
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3/local_memory/events.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+codex
+The retry is still pending at the verifier service. No fact has appeared in the graph yet, so I’m keeping this submission active rather than declaring completion from the proof alone.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+codex
+The verifier has exceeded two minutes on this retry, but the call remains live. I’m continuing to poll in short intervals; if it returns another service error, I’ll re-query the fact graph before a third submission to avoid duplicate verified nodes.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..43db91c4d9208d051996098c635684179d962c81
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+codex
+The second call also ended in the same `HTTP 500` with no mathematical feedback and no undefined symbols. I’m checking shared verification activity now; if the outage is project-wide, I’ll preserve the full proof as a global proof attempt and continue retries rather than weakening it into artificial micro-facts.
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_cubic_form_image_20260828t153837z/workers/high3/local_memory/events.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d409667a08cfa7d08865e1e5cc3f8e340b16bf6d
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
++{"timestamp_utc":"2026-08-28T16:12:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Check shared graph and verification activity, preserve proof, then retry; no mathematical repair hint was returned."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d409667a08cfa7d08865e1e5cc3f8e340b16bf6d
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
++{"timestamp_utc":"2026-08-28T16:12:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Check shared graph and verification activity, preserve proof, then retry; no mathematical repair hint was returned."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d409667a08cfa7d08865e1e5cc3f8e340b16bf6d
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
++{"timestamp_utc":"2026-08-28T16:12:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Check shared graph and verification activity, preserve proof, then retry; no mathematical repair hint was returned."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d409667a08cfa7d08865e1e5cc3f8e340b16bf6d
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
++{"timestamp_utc":"2026-08-28T16:12:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Check shared graph and verification activity, preserve proof, then retry; no mathematical repair hint was returned."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d409667a08cfa7d08865e1e5cc3f8e340b16bf6d
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"timestamp_utc":"2026-08-28T15:40:00Z","event_type":"query_memory","summary":"Read TASK.md and local memory; searched master_guidance, global findings, verifier outcomes, and fact graph. Initial stores had no hits. A later narrow query found equivalent unverified sibling conclusions, but no verified facts, so they were used only as awareness and not as proof premises."}
++{"timestamp_utc":"2026-08-28T15:42:00Z","event_type":"search_math_results_stalled","attempted_queries":["Which papers characterize integers represented by a^3+b^3+c^3-3abc?"],"program_stage":"active_program","active_program":"direct factorization and near-diagonal constructions","missing_mechanism":"none; grounding check only","search_mode":"analogy","search_intent":"background","reason":"The required search_arxiv_theorems tool is not exposed in this worker. The Bohrium academic-search fallback could not resolve open.bohrium.com, and jq was unavailable. No external result is needed or cited in the elementary proof."}
++{"timestamp_utc":"2026-08-28T15:45:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Retry unchanged because this is verifier unavailability, not a rejection."}
++{"timestamp_utc":"2026-08-28T16:12:00Z","event_type":"fact_submit","statement_scope":"full target theorem","verdict":"error","error":"HTTP Error 500: Internal Server Error","undefined_symbols":[],"decision":"Check shared graph and verification activity, preserve proof, then retry; no mathematical repair hint was returned."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..f0916e04f838e695c151c81b6ae313a1289f6e46
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp_utc":"2026-08-28T15:43:00Z","branch":"direct_complete_proof","note":"Independent direct proof found. Necessity: modulo 3 plus factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), with the quadratic factor congruent to (a+b+c)^2 mod 3. Sufficiency: N=3t+1 via (t+1,t,t); N=3t+2 via (t,t+1,t+1); N=9t>0 via (t+1,t,t-1); N=0 via (0,0,0). All calculations checked symbolically in text."}
+

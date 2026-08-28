@@ -1,0 +1,16 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "problem_id": "cubic-form-image",
+  "project": "n16_cubic_form_image_20260828t153837z",
+  "recorded_at_utc": "2026-08-28T16:14:15.2091709Z",
+  "fault": "The blind verifier sandbox could reason about submissions but could not write the required runtime/verify-runs/<run_id>/verification.json outside its working directory.",
+  "evidence": {
+    "worker_states_at_classification": "running:7",
+    "verifier_wrapper_sessions_at_classification": 19,
+    "http_500_responses_at_classification": 16,
+    "verification_events_persisted": 0,
+    "representative_trace": "Verifier logs report that the exact output path is outside the writable sandbox."
+  },
+  "count_for_proof_search_metrics": false,
+  "rerun_policy": "A new one-shot run is permitted only after an external-policy fix and a fresh passing capability probe."
+}

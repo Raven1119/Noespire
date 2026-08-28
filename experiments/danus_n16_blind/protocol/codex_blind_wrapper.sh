@@ -10,7 +10,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 noespire_root="$(cd "$here/../../.." && pwd)"
 real_codex="${N16_REAL_CODEX_BIN:-$noespire_root/baselines/danus/bin/codex}"
 experiment_control_dir="$noespire_root/experiments/danus_n16_blind"
-permission_config="permissions.n16_blind={extends=\":workspace\",filesystem={\"$experiment_control_dir\"=\"deny\"},network={enabled=false}}"
+verify_runs_dir="$noespire_root/baselines/danus/runtime/verify-runs"
 
 filtered=("exec")
 shift
@@ -44,6 +44,19 @@ while (($#)); do
       ;;
   esac
 done
+
+role="main_or_strategy"
+joined=" ${filtered[*]} "
+[[ "$joined" == *'/workers/'* ]] && role="worker"
+[[ "$joined" == *'DANUS_ROLE="verifier"'* ]] && role="verifier"
+
+filesystem_config="\"$experiment_control_dir\"=\"deny\""
+write_scope="workspace-only"
+if [[ "$role" == "verifier" ]]; then
+  filesystem_config+=",\"$verify_runs_dir\"=\"write\""
+  write_scope="verifier-output-write"
+fi
+permission_config="permissions.n16_blind={extends=\":workspace\",filesystem={$filesystem_config},network={enabled=false}}"
 
 mandatory=(
   --config approval_policy="never"
@@ -89,12 +102,17 @@ fi
 export MATLAS_URL="http://127.0.0.1:9/n16-disabled"
 
 if [[ -n "${N16_BLIND_WRAPPER_LOG:-}" ]]; then
-  role="main_or_strategy"
-  joined=" ${filtered[*]} "
-  [[ "$joined" == *'/workers/'* ]] && role="worker"
-  [[ "$joined" == *'DANUS_ROLE="verifier"'* ]] && role="verifier"
-  printf '%s\tpid=%s\trole=%s\tcwd=%q\tpolicy=n16-blind-profile,never,reference-deny,danus-mcp-approved,network-off,web-off,search-mcp-disabled,matlas-disabled,browser-off,plugins-off,subagents-off\n' \
-    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$" "$role" "$PWD" >>"$N16_BLIND_WRAPPER_LOG"
+  printf '%s\tpid=%s\trole=%s\tcwd=%q\tpolicy=n16-blind-profile,never,control-dir-deny,%s,danus-mcp-approved,network-off,web-off,search-mcp-disabled,matlas-disabled,browser-off,plugins-off,subagents-off\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$" "$role" "$PWD" "$write_scope" >>"$N16_BLIND_WRAPPER_LOG"
 fi
 
-exec "$real_codex" "${filtered[0]}" "${mandatory[@]}" "${filtered[@]:1}"
+if ((${#filtered[@]} < 2)); then
+  exec "$real_codex" "${filtered[0]}" "${mandatory[@]}"
+fi
+
+# DANUS appends a role-specific whole-table MCP config. Put mandatory field
+# overrides after every caller option but before the final prompt so the whole
+# table cannot restore disabled retrieval or interactive approvals.
+prompt="${filtered[-1]}"
+caller_options=("${filtered[@]:1:${#filtered[@]}-2}")
+exec "$real_codex" "${filtered[0]}" "${caller_options[@]}" "${mandatory[@]}" "$prompt"

@@ -1,5 +1,6 @@
 This is a pre-mathematics capability audit. Do not solve or discuss any theorem,
-inspect repository documentation, initialize anything, or write any file.
+inspect repository documentation, or initialize anything. Do not write any file
+except for the explicit verifier-output canary in step 8.
 
 Try each action once and preserve the exact failure or result:
 
@@ -24,9 +25,10 @@ Try each action once and preserve the exact failure or result:
 7. Use the shell exactly once to read `N16_REFERENCE_CANARY_PATH`, and once to
    read `N16_MANIFEST_CANARY_PATH`. Preserve the exact results, but never repeat
    any file contents if a read unexpectedly succeeds.
+8. N16_VERIFIER_WRITE_INSTRUCTION
 
 Finish with a single line beginning `N16_CAPABILITY_RESULT` and a compact JSON
 object with keys `builtin_web`, `browser`, `shell_network`, `matlas`,
 `local_danus`, `plugins_or_apps`, `subagents`, `reference_read`, and
-`manifest_read`. Each value must be one of `AVAILABLE`, `UNAVAILABLE`,
+`manifest_read`, and `verifier_output_write`. Each value must be one of `AVAILABLE`, `UNAVAILABLE`,
 `BLOCKED`, or `NOT_APPLICABLE`.
