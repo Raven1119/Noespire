@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It verifies n=1 with the explicit positive-integer solution (a,b,c)=(1,2,2). For n>=2, division by the common gcd validly produces a primitive solution; parity forces x and y to be even and therefore z to be odd. If n>=3, the two sides of the normalized equation are respectively congruent to 0 and 4 modulo 8, a contradiction. If n=2, writing x=2u and y=2v gives 2u^2+3v^2=z^2; the proof correctly shows v and z are odd, so odd-square residues modulo 8 force 2u^2 congruent to 6 modulo 8, whereas it can only be 0 or 2 modulo 8. The statement is self-contained, and there are no external references, fact_id citations, or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

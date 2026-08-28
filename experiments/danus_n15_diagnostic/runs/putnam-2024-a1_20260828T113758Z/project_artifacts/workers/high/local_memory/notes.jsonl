@@ -1,0 +1,1 @@
+{"timestamp":"2026-08-28T11:38:26Z","branch":"exponent-case-split","note":"Recovered empty shared state. Full solution: n=1 works via (a,b,c)=(1,2,2); n=2 impossible because modulo 3 forces 3|a,c and then 3|b, giving descent; n>=3 impossible because parity forces 2|b, then 2|a, and after rewriting forces 2|c, with (a/2,b/2,c/2) again a solution."}

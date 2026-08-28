@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The binomial expansion establishes the polynomial remainder identity for r(x+r(x)); comparison with the required identity shows that r divides 2+r'. For nonconstant r, the degree argument forces 2+r'=0, yielding p(x)=-x+c, while constant r yields p(x)=x+c. The sufficiency checks provide valid polynomial choices of q in every case. The statement is self-contained, no external or internal references require validation, and no hard prohibition is triggered.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

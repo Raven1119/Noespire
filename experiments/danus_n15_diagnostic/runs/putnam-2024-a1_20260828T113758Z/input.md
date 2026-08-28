@@ -1,0 +1,5 @@
+Determine all positive integers \(n\) for which there exist positive integers \(a\), \(b\), and \(c\) satisfying
+
+\[
+2a^n+3b^n=4c^n.
+\]

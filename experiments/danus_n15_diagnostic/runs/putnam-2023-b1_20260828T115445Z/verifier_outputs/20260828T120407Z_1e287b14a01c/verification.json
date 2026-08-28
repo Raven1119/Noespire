@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It establishes one vacancy on each diagonal as an invariant, proves consecutive diagonal vacancies remain edge-adjacent, encodes each reachable configuration by a monotone word with exactly m-1 R symbols and n-1 B symbols, and shows that every such word is reachable because each adjacent swap RB to BR is realized by a legal move. The degenerate cases m=1 or n=1 are also handled correctly. The proof uses no external references or internal fact IDs and violates none of the hard prohibitions.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

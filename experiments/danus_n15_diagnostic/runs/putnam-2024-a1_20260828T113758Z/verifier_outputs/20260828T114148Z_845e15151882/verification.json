@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It verifies n=1 by an explicit positive-integer solution. For every fixed n>=2, a minimal-sum solution would have a and b even. If n>=3, this also forces c even, and division by 2^n produces a smaller solution. If n=2, writing a=2x and b=2y and reducing 2x^2+3y^2=c^2 modulo 3 forces 3 to divide x and c, then y, so division by 3^2 produces a smaller solution. Both cases contradict minimality. No external references, prohibited justifications, logical errors, or gaps occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

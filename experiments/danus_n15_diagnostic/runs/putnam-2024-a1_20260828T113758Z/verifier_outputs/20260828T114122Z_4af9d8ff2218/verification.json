@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It verifies n=1 by an explicit positive-integer solution. For n=2, reduction modulo 3 forces 3 to divide a, c, and then b, yielding a strictly smaller positive-integer solution and contradicting minimality. For every fixed n>=3, parity forces b, then a, then c to be even; division by the resulting common powers of 2 again yields a strictly smaller solution for the same exponent, contradicting minimality. These cases exhaust all positive integers n. The statement is self-contained, no prohibited proof patterns occur, and no external references or fact_id citations require checking.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

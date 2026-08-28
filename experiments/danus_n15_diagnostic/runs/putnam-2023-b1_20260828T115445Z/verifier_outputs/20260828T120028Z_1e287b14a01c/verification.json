@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It establishes that the unoccupied squares form the vertex set of a monotone path, identifies each legal move with the local word replacement ES to SE, proves the converse reachability by induction on the inversion number through reverse local replacements, and counts the resulting path words. The degenerate cases m=1 or n=1 are also handled. No external references, fact_id citations, or hard-prohibition violations occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

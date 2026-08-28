@@ -34,7 +34,7 @@ Here “Attempts” means worker sessions, matching the frozen mechanical metric
 | `putnam-2024-b2` | yes | 7 | 7 | 0 | 7 | 1 | 6 | 1,097,110 | 670.656 s |
 | **Total** | **4/4** | **28** | **28** | **0** | **28** | **4** | **24** | **3,939,561** | **2,253.640 s** |
 
-Raw immutable run copies are preserved locally under `experiments/danus_n15_diagnostic/runs/`. The complete fact graph, project state, worker traces, verifier outputs, closure, stdout/stderr, usage, wall time, and termination result exist for every run. The raw directories are intentionally ignored by the parent repository rather than vendored as product source.
+Raw run copies are preserved and tracked under `experiments/danus_n15_diagnostic/runs/`. The complete fact graph, project state, worker traces, verifier outputs, closure, stdout/stderr, usage, wall time, and termination result exist for every run. A clean checkout therefore retains the evidence used by the analyzer and report.
 
 ## Attempt-Level Findings
 
@@ -75,13 +75,13 @@ The factual 29-row table is `experiments/danus_n15_diagnostic/analysis/attempt_t
 
 ## Fresh Diagnostic Review
 
-Fresh reviewers saw only frozen local packets, not the repository, the aggregate hypothesis, or the desired gate outcome.
+Fresh reviewers saw only frozen local packets containing actual persisted attempt excerpts, not the repository, the aggregate hypothesis, or the desired gate outcome. Model, effort, isolation, exact invocation template, packet, and output provenance are recorded in `experiments/danus_n15_diagnostic/analysis/fresh_review_manifest.md`.
 
 | Region | Classification | Confidence | Evidence |
 | --- | --- | --- | --- |
 | B2 `high2` intermediate and dependent target | `DIRECTLY_SOLVABLE` | HIGH | Both claims passed in one round; the intermediate has an observed downstream use and no predecessor |
 | B1 high-cost direct attempts | `DIRECTLY_SOLVABLE` | HIGH | Seven no-predecessor target proofs passed; token totals alone show neither a wide gap nor a missing lemma |
-| B2 `xhigh3` non-submission | `DIRECTLY_SOLVABLE` | MEDIUM | Trace reports a complete direct proof deliberately not submitted after target reuse; no verifier failure occurred |
+| B2 `xhigh3` non-submission | `DIRECTLY_SOLVABLE` | HIGH | Persisted attempt supplies the invariant/quadratic route and records deliberate target reuse; no verifier failure occurred |
 
 No fresh review classified a region as `TOO_WIDE`, `MISSING_LEMMA`, or `BAD_DEPENDENCY`.
 
@@ -158,7 +158,7 @@ This verdict is not `N2_TARGET_SUPPORTED`, because the explicit gate is unmet. I
 - problems frozen before runs: **YES**, commit `7aa8ad0f79dcb8015034b4a9f467be7400eeae7b`
 - problem statements changed or replaced after first run: **NO**
 - runs per problem: **exactly one**
-- raw trace evidence preserved: **YES**
+- raw trace evidence preserved in Git: **YES**, 4 run directories, 945 files, 5,918,222 bytes before Git compression
 - DANUS modified: **NO**
 - DANUS prompts modified: **NO**
 - DANUS final HEAD: `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`

@@ -1,13 +1,20 @@
 classification: DIRECTLY_SOLVABLE
-confidence: MEDIUM
+confidence: HIGH
 evidence: >-
-  The worker's local trace reports that it completed a direct proof using side-length
-  and area invariants, then intentionally withheld submission after finding an already
-  accepted full-target fact in the shared graph. This is a duplicate-avoidance
-  non-submission rather than a failed search or verifier failure. Confidence is limited
-  because the proof was neither submitted nor verified, and the packet cannot determine
-  how external confirmation of the official answer shaped the proof.
+  The persisted attempt identifies a complete route to the negative answer: partnership
+  preserves both the unordered side-length multiset and area, while fixed positive
+  ordered side lengths and fixed positive area admit only finitely many congruence
+  classes. The recorded quadratic argument supplies the essential finiteness step.
+  The worker did not submit because another worker's completed target fact became
+  available and it avoided a duplicate; there was no verifier failure. External search
+  may have influenced the proof, but the packet still contains enough mathematical
+  structure to distinguish this from failed search or a missing-lemma impasse.
 possible_intermediate_structure: >-
-  A direct invariant-based argument organized around side lengths and areas appears
-  sufficient. The packet does not identify a missing lemma or justify introducing a
-  separate intermediate fact beyond those invariant calculations.
+  First prove that a partner move preserves the four side lengths as an unordered
+  multiset and preserves area. Then prove a finite-realization lemma: for any fixed
+  cyclic ordering of four positive side lengths and fixed positive area, the possible
+  quadrilaterals form at most two congruence classes, using a diagonal variable and
+  the resulting nonzero quadratic constraint. Finally take the finitely many cyclic
+  orderings of the invariant side multiset to conclude that every partner chain meets
+  only finitely many congruence classes, ruling out an infinite pairwise-noncongruent
+  sequence.

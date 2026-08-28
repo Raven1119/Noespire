@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It establishes that legal moves correspond exactly to local ES-to-SE swaps in the monotone path of unoccupied squares, proves every monotone path is reachable by reversing adjacent inversions, and counts the resulting distinct path configurations as binomial(m+n-2, m-1). No hard-prohibition violation, unsupported citation, logical error, or gap is present.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

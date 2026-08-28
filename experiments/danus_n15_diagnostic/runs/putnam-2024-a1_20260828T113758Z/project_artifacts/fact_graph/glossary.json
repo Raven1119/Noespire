@@ -1,0 +1,23 @@
+{
+  "n": "the positive integer exponent whose possible values are to be determined",
+  "a": "the first positive integer variable in the target equation",
+  "b": "the second positive integer variable in the target equation",
+  "c": "the third positive integer variable in the target equation",
+  "A": "the primitive positive integer a/d",
+  "B": "the primitive positive integer b/d",
+  "C": "the primitive positive integer c/d",
+  "x": "the normalized positive integer a/d",
+  "y": "the normalized positive integer b/d",
+  "a_1": "the positive integer a/2 used in the descent for n at least 3",
+  "b_1": "the positive integer b/2 used in the descent for n at least 3",
+  "c_1": "the positive integer c/2 used in the descent for n at least 3",
+  "u": "the positive integer x/2 in the n=2 case",
+  "v": "the positive integer y/2 in the n=2 case",
+  "w": "the positive integer y/3 in the descent when n=2",
+  "d": "the positive greatest common divisor of a, b, and c",
+  "z": "the normalized positive integer c/d",
+  "t": "an arbitrary odd integer in the odd-square congruence argument",
+  "k": "an integer such that t=2k+1",
+  "X": "the positive integer x/2 used when n=2",
+  "Y": "the positive integer y/2 used when n=2"
+}

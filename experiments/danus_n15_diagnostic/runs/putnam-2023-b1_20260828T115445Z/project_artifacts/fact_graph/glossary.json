@@ -1,0 +1,23 @@
+{
+  "m": "a positive integer equal to the number of grid rows",
+  "n": "a positive integer equal to the number of grid columns",
+  "i": "an integer row index used in the problem statement",
+  "j": "an integer column index used in the problem statement",
+  "D": "a path step from (r,c) to (r+1,c)",
+  "L": "a path step from (r,c) to (r,c-1)",
+  "r": "an integer row coordinate of a path vertex",
+  "s": "a nonnegative integer counting leftward steps in the auxiliary word argument",
+  "E": "the monotone-path step from (i,j) to (i+1,j)",
+  "S": "the monotone-path step from (i,j) to (i,j-1)",
+  "w": "a target word in the letters D and L",
+  "I(w)": "The number of pairs of positions in w in which an S is earlier than an E.",
+  "P": "a monotone path from (1,n) to (m,1)",
+  "inversion number": "the number of ordered pairs of path-word positions in which an S occurs before an E",
+  "c": "an integer column coordinate of a path vertex",
+  "a": "a nonnegative integer denoting a number of D letters in the word induction",
+  "b": "a nonnegative integer denoting a number of L letters in the word induction",
+  "D_k": "the northwest-southeast diagonal consisting of grid squares (i,j) with i-j=k",
+  "v_k": "the unique vacant square on D_k in a reachable configuration",
+  "R": "a transition between successive diagonal vacancies that increases the first coordinate by 1",
+  "B": "a transition between successive diagonal vacancies that decreases the second coordinate by 1"
+}

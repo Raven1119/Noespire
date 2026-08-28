@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and self-contained. It establishes that the unoccupied squares in every reachable configuration are exactly the vertices of a monotone path from (1,n) to (m,1): a legal move replaces an ES corner of that path by an SE corner. Conversely, every such path is reduced to the initial path by adjacent SE-to-ES swaps, with the inversion number proving termination; reversing these swaps gives a sequence of legal moves. The proof also correctly shows that distinct path words yield distinct configurations, counts the path words by the stated binomial coefficient, and handles m=1 or n=1. No external references, internal fact citations, hard-prohibition violations, logical errors, or justification gaps occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

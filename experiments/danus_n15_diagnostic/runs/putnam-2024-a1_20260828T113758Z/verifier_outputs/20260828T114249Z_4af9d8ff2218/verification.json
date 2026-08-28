@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It supplies a valid example for n=1, reduces any hypothetical solution with n>=2 to a primitive one, and uses parity to exclude n>=3. For n=2, the normalized equation leads to a valid contradiction modulo 8. The statement is self-contained, all assumptions are handled, and the proof contains no external references, fact_id citations, or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

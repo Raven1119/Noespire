@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The exhibited positive-integer solution verifies n=1. After dividing by the common gcd, the parity argument for n>=3 forces x, y, and z all to be even, contradicting primitivity. For n=2, reduction modulo 3 first forces 3 to divide x and z, and the original equation then forces 3 to divide y, again contradicting primitivity. The statement is self-contained, and the proof contains no external references, internal fact citations, hard-prohibition violations, critical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is complete and correct. The proposed triple verifies existence for n=1. For n>=2, division by the common gcd produces a primitive solution; parity forces x and y even and z odd. Modulo 8 then excludes n>=3, while after halving x and y, the odd-square congruences modulo 8 exclude n=2. The argument is self-contained and uses no external references or prohibited justifications.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

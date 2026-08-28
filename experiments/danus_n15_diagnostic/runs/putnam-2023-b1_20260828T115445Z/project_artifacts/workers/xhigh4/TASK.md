@@ -1,0 +1,1 @@
+Inspect shared verified state, synthesize the strongest available route, and complete the target if possible. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.

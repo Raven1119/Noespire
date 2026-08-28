@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It verifies n=1 by an explicit positive-integer solution. For every n>=2, the modulo-4 argument correctly forces a and b to be even. When n>=3, the equation then forces c to be even, and halving a, b, and c yields a strictly smaller positive solution, contradicting minimality. When n=2, rewriting the equation as c^2=2x^2+3y^2 and reducing modulo 3 correctly forces 3 to divide x, c, and y; dividing all three variables by 3 again yields a strictly smaller positive solution, contradicting minimality. The statement is self-contained, no hard prohibition is violated, and the proof uses no external references or internal fact citations requiring validation.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct. It establishes that the holes form a monotone path, proves that each legal coin move corresponds exactly to replacing DL by LD in the path word, shows that every word with the prescribed numbers of D and L is reachable, and verifies that distinct path words give distinct coin configurations. No prohibited justification or unchecked reference occurs.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

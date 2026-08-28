@@ -1,15 +1,6 @@
 classification: DIRECTLY_SOLVABLE
 confidence: HIGH
 evidence: >-
-  The intermediate claim was accepted with no predecessors, and the same worker then
-  used it as the sole recorded predecessor of an accepted proof of the full target in
-  the same round. This is direct evidence that the claim was locally solvable and
-  operationally useful. Its absence from a separately selected final closure does not
-  establish a defect in this successful route. The packet leaves the reported
-  independence from the external answer undecidable, but that does not contradict the
-  recorded verifier results or dependency.
+  The worker proved the attempted intermediate from no starting premises, and the verifier accepted it in the same single round. The proof reduces the quadrilateral to its diagonal squared t, expresses the two triangle areas through quadratic Heron-type polynomials F(t) and G(t), and obtains a nonzero polynomial equation of degree at most two, yielding at most two congruence classes. The accepted target then used this fact once to bound all partner quadrilaterals by finitely many congruence classes. Selection of a different self-contained proof for the final closure does not show that this route failed or was intrinsically wasteful.
 possible_intermediate_structure: >-
-  A standalone finiteness lemma for congruence classes of convex quadrilaterals with
-  fixed ordered side lengths and fixed area, followed by the target proof: partnership
-  preserves the side-length multiset and area, only finitely many cyclic side orders
-  occur, and the lemma bounds the congruence classes for each order.
+  No additional prerequisite lemma is indicated. A useful intermediate is exactly the accepted finiteness claim: fixed four ordered side lengths and fixed positive area determine at most two convex-quadrilateral congruence classes, proved by parameterizing the shared diagonal with t = PR^2 and bounding the roots of the resulting quadratic equation. It can then be combined with preservation of area and the unordered side-length multiset under the partner operation.

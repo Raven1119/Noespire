@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "run_id": "putnam-2023-b1_20260828T115445Z",
+  "project": "n15_putnam_2023_b1",
+  "problem_id": "putnam-2023-b1",
+  "problem_sha256": "f21221acf68b5de8c7485860936434741da89f7dc2cced7699f3f605a6bbf5bd",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-28T11:54:48.522284Z",
+  "completed_at_utc": "2026-08-28T12:07:24.491953Z",
+  "wall_clock_seconds": 725.428646,
+  "classification": "SOLVED",
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "xhigh": "max_rounds",
+    "xhigh2": "max_rounds",
+    "xhigh3": "max_rounds",
+    "xhigh4": "max_rounds"
+  },
+  "max_rounds": 1,
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "accepted_fact_count": 7,
+  "target_fact_ids": [
+    "48d558819514bf7a"
+  ],
+  "supporting_closure": [
+    "48d558819514bf7a"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "waste_ratio": 0.8571428571,
+  "worker_tokens": 831287,
+  "verifier_tokens": 257873,
+  "total_tokens": 1089160,
+  "verifier_run_ids": [
+    "20260828T115941Z_1e287b14a01c",
+    "20260828T115949Z_1e287b14a01c",
+    "20260828T120028Z_1e287b14a01c",
+    "20260828T120054Z_1e287b14a01c",
+    "20260828T120128Z_1e287b14a01c",
+    "20260828T120158Z_1e287b14a01c",
+    "20260828T120407Z_1e287b14a01c"
+  ],
+  "accepted_fact_ids": [
+    "48d558819514bf7a",
+    "67bc05401db02c4c",
+    "68da0a7380632702",
+    "98c977737ca2d39e",
+    "c81ac61714428573",
+    "e228e681543f2d1f",
+    "e4b6fc8fdb25987f"
+  ],
+  "target_selection_rule": "lexicographically smallest accepted exact normalized statement",
+  "notes": [
+    "One frozen upstream DANUS round per default worker; no retry or intervention.",
+    "Reference proofs were not copied into the DANUS project.",
+    "No target is finalized when no accepted statement exactly matches the frozen input after whitespace normalization."
+  ]
+}

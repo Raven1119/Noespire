@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. Each partnership preserves the multiset of side lengths and the unordered pair of opposite-angle sums. For any fixed cyclic ordering of those side lengths and a fixed opposite-angle sum, the cosine-law equation has at most one admissible value of the relevant interior angle because its left-hand side is strictly increasing while its right-hand side is strictly decreasing. The two constituent triangles, and hence the convex quadrilateral, are then determined up to congruence. Thus at most 24 congruence classes can occur, so an infinite sequence must repeat a congruence class. The statement is self-contained, the proof contains no prohibited premise or vague citation, and it uses no external references or fact IDs requiring validation.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

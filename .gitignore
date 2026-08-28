@@ -5,4 +5,3 @@ __pycache__/
 baselines/danus/
 experiments/danus_baseline_a/
 experiments/n1_triangular_sum_smoke/artifacts/
-experiments/danus_n15_diagnostic/runs/
