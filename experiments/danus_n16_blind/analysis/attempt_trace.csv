@@ -9,17 +9,17 @@ cubic-form-image,xhigh3:f7ca1d3f2c684171,"Characterize the nonnegative integers 
 a^3+b^3+c^3-3abc
 \]
 with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,727412a401ddf3ea,false,63841,354.578986,true,false
-cubic-form-image,xhigh2:round-1,"Characterize the nonnegative integers representable in the form
+cubic-form-image,xhigh2:None,"Characterize the nonnegative integers representable in the form
 \[
 a^3+b^3+c^3-3abc
 \]
 with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,1d8ddde8d657d676,true,64563,351.244063,true,false
-cubic-form-image,high3:round-1,"Characterize the nonnegative integers representable in the form
+cubic-form-image,high3:None,"Characterize the nonnegative integers representable in the form
 \[
 a^3+b^3+c^3-3abc
 \]
 with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,82e137871eec6663,false,64031,361.991005,true,false
-cubic-form-image,xhigh4:round-1,"Characterize the nonnegative integers representable in the form
+cubic-form-image,xhigh4:None,"Characterize the nonnegative integers representable in the form
 \[
 a^3+b^3+c^3-3abc
 \]
@@ -29,7 +29,7 @@ cubic-form-image,xhigh:aeac67407e9a4eed,"Characterize the nonnegative integers r
 a^3+b^3+c^3-3abc
 \]
 with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,bc2bbe95f5c3d68d,false,59337,503.631327,true,false
-cubic-form-image,high:round-1,"Characterize the nonnegative integers representable in the form
+cubic-form-image,high:None,"Characterize the nonnegative integers representable in the form
 \[
 a^3+b^3+c^3-3abc
 \]
@@ -84,7 +84,7 @@ reflection-fixed-vector,xhigh3:316031ebef6d463c,"Let \(Q\) be a real \(n\times n
 H=I-2uu^{\mathsf T}.
 \]
 Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,1ce832a4e0572b89,true,58429,324.970934,true,false
-reflection-fixed-vector,high3:round-1,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+reflection-fixed-vector,high3:None,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
 \[
 H=I-2uu^{\mathsf T}.
 \]
@@ -94,7 +94,7 @@ reflection-fixed-vector,xhigh:24df43ab5449ce47,"Let \(Q\) be a real \(n\times n\
 H=I-2uu^{\mathsf T}.
 \]
 Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,6bd14f7725160296,false,58245,337.474939,true,false
-reflection-fixed-vector,xhigh2:round-1,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+reflection-fixed-vector,xhigh2:None,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
 \[
 H=I-2uu^{\mathsf T}.
 \]

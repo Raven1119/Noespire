@@ -186,7 +186,7 @@ Thus w=x is nonzero and satisfies HQw=w, as required.
 Verifier summary:
 
 The proof is correct and complete. The hypothesis implies that I-Q is invertible, so x=(I-Q)^{-1}u is well-defined and nonzero. Using u=x-Qx and orthogonality of Q, the proof correctly derives u^T x=1/2 and u^T Qx=-1/2, from which HQx=Qx-2u(u^TQx)=Qx+u=x. Thus w=x is a nonzero fixed vector of HQ. The statement is self-contained, and the proof contains no external references, prohibited justifications, critical errors, or gaps.
-### Attempt `high3:round-1`
+### Attempt `high3:None`
 
 - local premises: `[]`
 - verifier result: `PASS`
@@ -305,7 +305,7 @@ Thus the constructed vector \(w\) is nonzero and satisfies \(HQw=w\), as require
 Verifier summary:
 
 The proof is correct and complete. It validly derives the invertibility of I-Q from the absence of nonzero fixed vectors, constructs a nonzero w with (I-Q)w=u, uses orthogonality to obtain u^T w=1/2, and then verifies directly that HQw=w. The statement is self-contained, all hypotheses are used, and there are no citations or hard-prohibition violations.
-### Attempt `xhigh2:round-1`
+### Attempt `xhigh2:None`
 
 - local premises: `[]`
 - verifier result: `PASS`

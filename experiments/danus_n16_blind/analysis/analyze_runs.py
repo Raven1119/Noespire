@@ -27,14 +27,18 @@ def normalized(text: str) -> str:
     return " ".join(text.lower().split())
 
 
-def worker_tokens(project: Path, worker: str) -> int:
+def worker_tokens(project: Path, worker: str) -> int | str:
     logs = sorted((project / "workers" / worker / "logs").glob("round_*.log"))
     matches: list[str] = []
     for log in logs:
         matches.extend(TOKEN_RE.findall(log.read_text(encoding="utf-8", errors="replace")))
     if not matches:
-        raise ValueError(f"no token count for worker {worker}")
+        return "unavailable"
     return sum(int(value.replace(",", "")) for value in matches)
+
+
+def sum_observable(values: list[int | float | str]) -> int | float | str:
+    return sum(values) if all(isinstance(value, (int, float)) for value in values) else "unavailable"
 
 
 def worker_duration(project: Path, worker: str) -> float:
@@ -116,7 +120,7 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], st
             if event is None
             else "PASS" if event.get("verdict") == "correct" else "FAIL"
         )
-        attempt_suffix = source_id or (attempt or {}).get("id") or "round-1"
+        attempt_suffix = source_id or (attempt or {}).get("id")
         attempt_id = f"{author}:{attempt_suffix}"
         attributable = len(author_events) == 1
         tokens: int | str = tokens_by_worker[author] if attributable else "unavailable"
@@ -199,12 +203,13 @@ def analyze_run(run_dir: Path) -> tuple[dict[str, Any], list[dict[str, Any]], st
         for worker in workers
         if not any(row["_author"] == worker and row["verifier_result"] == "PASS" for row in rows)
     }
-    total_worker_tokens = sum(tokens_by_worker.values())
-    failed_proof_cost = (
-        round(sum(tokens_by_worker[worker] for worker in failed_workers) / total_worker_tokens, 10)
-        if total_worker_tokens
-        else "unavailable"
-    )
+    token_values = list(tokens_by_worker.values())
+    total_worker_tokens = sum_observable(token_values)
+    failed_proof_cost: float | str = "unavailable"
+    if isinstance(total_worker_tokens, (int, float)) and total_worker_tokens:
+        failed_tokens = sum_observable([tokens_by_worker[worker] for worker in failed_workers])
+        if isinstance(failed_tokens, (int, float)):
+            failed_proof_cost = round(failed_tokens / total_worker_tokens, 10)
     for row in rows:
         del row["_author"]
     metric = {
@@ -286,7 +291,7 @@ def main() -> None:
         "verified_fact_count": sum(metric["verified_fact_count"] for metric in metrics),
         "supporting_closure_size": sum(metric["supporting_closure_size"] for metric in metrics),
         "outside_closure_count": sum(metric["outside_closure_count"] for metric in metrics),
-        "tokens": sum(metric["tokens"] for metric in metrics),
+        "tokens": sum_observable([metric["tokens"] for metric in metrics]),
         "wall_clock_seconds": round(sum(metric["wall_clock_seconds"] for metric in metrics), 6),
         "strategy_waste_regions": sum(metric["strategy_waste_regions"] for metric in metrics),
         "full_proof_duplication_count": sum(

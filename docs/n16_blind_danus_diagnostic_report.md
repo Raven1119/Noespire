@@ -111,7 +111,7 @@ The support thresholdâ€”credible cut regions on at least two distinct problemsâ€
 - external solution leakage: **NO** in the four valid runs; all are `BLIND_INTEGRITY_PASS`.
 - mathematical reruns: **NO**. The sole repeated problem is the explicitly excluded system-invalid environment attempt followed by its one permitted valid run after a fresh passing capability gate.
 - N2 implementation: **NO**.
-- diagnostic regression checks: **PASS**; three standard-library tests cover rejected attempts, zero-Fact leakage audits, and failure snapshots, and the frozen wrapper-policy test passes.
+- diagnostic regression checks: **PASS**; four standard-library tests cover rejected attempts, unavailable token evidence, zero-Fact leakage audits, and failure snapshots, and the frozen wrapper-policy test passes.
 
 ### Windows nested-cache / ACL-helper correction
 

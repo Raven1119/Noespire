@@ -85,6 +85,17 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(rows[0]["verifier_result"], "FAIL")
         self.assertEqual(rows[0]["fact_id"], "")
 
+    def test_analyzer_preserves_run_when_token_marker_is_unavailable(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            run = rejected_run(Path(directory))
+            worker_log = run / "project_artifacts/workers/high/logs/round_1.log"
+            worker_log.write_text("partial trace without usage footer\n", encoding="utf-8")
+            metric, rows, _packet = analyze_runs.analyze_run(run)
+
+        self.assertEqual(metric["failed_proof_cost"], "unavailable")
+        self.assertEqual(rows[0]["tokens"], "unavailable")
+        self.assertEqual(analyze_runs.sum_observable([1, "unavailable"]), "unavailable")
+
     def test_leakage_audit_handles_zero_facts_and_records_blocked_search(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             tmp_path = Path(directory)

@@ -113,7 +113,7 @@ Thus every nonnegative integer satisfying either \(3\nmid N\) or \(9\mid N\) is 
 Verifier summary:
 
 The proof is correct and complete. The identity F=s(s^2-3p) is valid; the modular argument shows that any represented multiple of 3 is divisible by 9; and the explicit constructions correctly represent every integer congruent to 1 or 2 modulo 3 and every nonnegative multiple of 9, with all parameters nonnegative. The statement is self-contained, no hard prohibition is triggered, and there are no external or fact-graph citations requiring validation.
-### Attempt `xhigh2:round-1`
+### Attempt `xhigh2:None`
 
 - local premises: `[]`
 - verifier result: `PASS`
@@ -211,7 +211,7 @@ Thus every nonnegative integer satisfying \(3\nmid N\) or \(9\mid N\) has a repr
 Verifier summary:
 
 The proof is correct and complete. The factorization F=(a+b+c)(a^2+b^2+c^2-ab-bc-ca) is used correctly to prove that any represented multiple of 3 is a multiple of 9. Conversely, the explicit triples given for N congruent to 1 or 2 modulo 3 and for N divisible by 9 are nonnegative and evaluate to N, including the case N=0. The statement is self-contained, no prohibited justification occurs, and no external or fact-graph references require checking.
-### Attempt `high3:round-1`
+### Attempt `high3:None`
 
 - local premises: `[]`
 - verifier result: `PASS`
@@ -273,7 +273,7 @@ The constructions cover every N for which either 3 does not divide N or 9 divide
 Verifier summary:
 
 The proof is complete and correct. The necessity argument uses the standard factorization F=(a+b+c)(a^2+b^2+c^2-ab-bc-ca) and valid congruences modulo 3 to show that any represented multiple of 3 is divisible by 9. The sufficiency argument gives valid nonnegative-integer constructions for N=0, for both nonzero residue classes modulo 3, and for every positive multiple of 9. No external references, signed fact citations, hard-prohibition violations, critical errors, or gaps occur.
-### Attempt `xhigh4:round-1`
+### Attempt `xhigh4:None`
 
 - local premises: `[]`
 - verifier result: `PASS`
@@ -347,7 +347,7 @@ Let F(a,b,c)=a^3+b^3+c^3-3abc and Q=a^2+b^2+c^2-ab-bc-ca. Expanding gives F=(a+b
 Verifier summary:
 
 The proof is correct and complete. It proves necessity by reducing modulo 3 and using the factorization (a+b+c)(a^2+b^2+c^2-ab-bc-ca), which shows that divisibility by 3 forces divisibility by 9. It proves sufficiency with explicit nonnegative constructions for N congruent to 1 or 2 modulo 3 and for every multiple of 9, including N=0. All identities and case calculations are justified, the cases exhaust the stated condition, and there are no external references or prohibited unsupported premises.
-### Attempt `high:round-1`
+### Attempt `high:None`
 
 - local premises: `[]`
 - verifier result: `PASS`
