@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-08-28T11:30:48Z",
+  "frozen_before_first_run": true,
+  "problems": [
+    {
+      "problem_id": "putnam-2024-a1",
+      "problem_file": "putnam-2024-a1.md",
+      "statement": "Determine all positive integers \\(n\\) for which there exist positive integers \\(a\\), \\(b\\), and \\(c\\) satisfying \\[2a^n+3b^n=4c^n.\\]",
+      "statement_sha256": "7dadf7c3b65fc240d2fd20960388560e588599d3f71b3af7466198c0a10064a5",
+      "source": "MAA, 85th William Lowell Putnam Mathematical Competition (2024), Session A, Problem A1, p. 1: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Problems.pdf",
+      "reference_proof_source": "MAA official 2024 Problems & Solutions, A1, p. 1: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Solutions.pdf",
+      "selection_rationale": "Number-theory classification requiring primitive reduction, parity, a modular obstruction for n >= 3, and a separate n = 2 argument.",
+      "frozen_before_first_run": true
+    },
+    {
+      "problem_id": "putnam-2024-a2",
+      "problem_file": "putnam-2024-a2.md",
+      "statement": "For which real polynomials \\(p\\) is there a real polynomial \\(q\\) such that \\[p(p(x))-x=(p(x)-x)^2q(x)\\] for all real \\(x\\)?",
+      "statement_sha256": "0517d18b72174a3151df961bfd5986db34c8ebc21fe85d873e288ac43abebe79",
+      "source": "MAA, 85th William Lowell Putnam Mathematical Competition (2024), Session A, Problem A2, p. 1: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Problems.pdf",
+      "reference_proof_source": "MAA official 2024 Problems & Solutions, A2 Solution 1, pp. 1-2: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Solutions.pdf",
+      "selection_rationale": "Polynomial classification requiring an auxiliary polynomial, composition/divisibility reduction, degree comparison, and sufficiency checks.",
+      "frozen_before_first_run": true
+    },
+    {
+      "problem_id": "putnam-2023-b1",
+      "problem_file": "putnam-2023-b1.md",
+      "statement": "Consider an \\(m\\)-by-\\(n\\) grid of unit squares, indexed by \\((i,j)\\) with \\(1\\le i\\le m\\) and \\(1\\le j\\le n\\). There are \\((m-1)(n-1)\\) coins, which are initially placed in the squares \\((i,j)\\) with \\(1\\le i\\le m-1\\) and \\(1\\le j\\le n-1\\). If a coin occupies the square \\((i,j)\\) with \\(i\\le m-1\\) and \\(j\\le n-1\\), and the squares \\((i+1,j)\\), \\((i,j+1)\\), and \\((i+1,j+1)\\) are unoccupied, then a legal move is to slide the coin from \\((i,j)\\) to \\((i+1,j+1)\\). How many distinct configurations of coins can be reached from the initial configuration by a possibly empty sequence of legal moves?",
+      "statement_sha256": "f21221acf68b5de8c7485860936434741da89f7dc2cced7699f3f605a6bbf5bd",
+      "source": "MAA, 84th William Lowell Putnam Mathematical Competition (2023), Session B, Problem B1, p. 2: https://maa.org/wp-content/uploads/2025/02/2023-Putnam-Problems.pdf",
+      "reference_proof_source": "MAA official 2023 Problems & Solutions, B1 Solution 1, pp. 16-17: https://maa.org/wp-content/uploads/2025/02/2023-Putnam-Problems-and-Solutions.pdf",
+      "selection_rationale": "Combinatorial reachability requiring an invariant lattice-path representation, converse reachability, and path counting.",
+      "frozen_before_first_run": true
+    },
+    {
+      "problem_id": "putnam-2024-b2",
+      "problem_file": "putnam-2024-b2.md",
+      "statement": "Two convex quadrilaterals are called partners if they have three vertices in common and they can be labeled \\(ABCD\\) and \\(ABCE\\) so that \\(E\\) is the reflection of \\(D\\) across the perpendicular bisector of the diagonal \\(AC\\). Is there an infinite sequence of convex quadrilaterals such that each quadrilateral is a partner of its successor and no two elements of the sequence are congruent?",
+      "statement_sha256": "34b0b7eb5f95ee524a7dcb2435b9c457e2c1409ef71065472996f87df52d638e",
+      "source": "MAA, 85th William Lowell Putnam Mathematical Competition (2024), Session B, Problem B2, p. 2: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Problems.pdf",
+      "reference_proof_source": "MAA official 2024 Problems & Solutions, B2 Solution 2, pp. 15-17: https://maa.org/wp-content/uploads/2026/02/2024-Putnam-Solutions.pdf",
+      "selection_rationale": "Geometry yes/no proof requiring partnership invariants, finite-state reduction, and uniqueness of a congruence class.",
+      "frozen_before_first_run": true
+    }
+  ]
+}
