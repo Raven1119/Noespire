@@ -1,0 +1,1 @@
+{"branch":"high2_resolvent","note":"Let A=(Q-I)^{-1}. Orthogonality implies A^T=(Q^{-1}-I)^{-1}=(-Q^{-1}(Q-I))^{-1}=-AQ. Since A(Q-I)=I, AQ=I+A, hence A+A^T=-I. Therefore u^T A u=-1/2. For w=Au, Qw=w+u and u^TQw=1/2, so HQw=w. A invertible and u nonzero imply w nonzero."}

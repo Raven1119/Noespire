@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It validly uses the absence of nonzero fixed vectors to invert Q-I, constructs a nonzero vector w=(Q-I)^{-1}u, derives A+A^T=-I from orthogonality, obtains u^T A u=-1/2, and concludes HQw=w. The statement is self-contained, and the proof contains no external citations, fact_id dependencies, hard-prohibition violations, critical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

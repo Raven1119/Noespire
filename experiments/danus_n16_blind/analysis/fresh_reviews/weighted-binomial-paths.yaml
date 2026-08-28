@@ -1,0 +1,4 @@
+classification: STRATEGY_WASTE
+confidence: HIGH
+evidence: "Seven independent premise-free attempts all produced verifier-approved full proofs of the target, but six accepted proofs were excluded from the final supporting closure; this is redundant successful work, not inability to complete a wide claim."
+natural_intermediate_structure: "None required; the target is directly solvable by one self-contained double-counting argument using majority binary words and the position of the (k+1)-st chosen symbol."

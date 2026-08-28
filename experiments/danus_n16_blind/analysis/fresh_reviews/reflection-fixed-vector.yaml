@@ -1,0 +1,4 @@
+classification: STRATEGY_WASTE
+confidence: HIGH
+evidence: "Seven premise-free attempts independently produced verifier-passing full proofs of the target, but six accepted duplicates were outside the final supporting closure; this is repeated redundant solving, not evidence that the claim was too wide."
+natural_intermediate_structure: "None needed: the target is directly handled by constructing w = (I - Q)^{-1}u and verifying HQw = w."

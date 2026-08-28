@@ -1,0 +1,4 @@
+classification: STRATEGY_WASTE
+confidence: HIGH
+evidence: "Seven premise-free workers independently produced accepted, complete proofs of the full target; six duplicate proofs were excluded from the final supporting closure."
+natural_intermediate_structure: "None needed—the target is directly solvable via five-periodicity, admissible-pair counting, and reduction modulo 5."

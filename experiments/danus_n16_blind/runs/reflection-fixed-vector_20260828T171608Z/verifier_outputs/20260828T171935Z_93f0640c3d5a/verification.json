@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It validly derives the invertibility of I-Q from the absence of nonzero fixed vectors, constructs a nonzero w with (I-Q)w=u, uses orthogonality to obtain u^T w=1/2, and then verifies directly that HQw=w. The statement is self-contained, all hypotheses are used, and there are no citations or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

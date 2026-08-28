@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The no-fixed-vector hypothesis makes A = I - Q invertible, so w = A^{-1}u is well-defined and nonzero. Orthogonality yields A^{-1} + A^{-\u1d40} = I, from which u^{\u1d40}w = 1/2; substituting Qw = w - u into H = I - 2uu^{\u1d40} then gives HQw = w. All hypotheses are used, and there are no external references or prohibited justification patterns.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

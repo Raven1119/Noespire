@@ -1,0 +1,1 @@
+{"branch":"explicit_inverse_construction","status":"verified_complete","fact_id":"97493d8793a0006f","note":"Under ker(I-Q)=0, put A=I-Q and w=A^{-1}u. Orthogonality gives A^T=-Q^T A and A^{-T}=-A^{-1}Q=I-A^{-1}. Therefore the quadratic-form symmetric part of A^{-1} is I/2. The target follows by direct substitution."}

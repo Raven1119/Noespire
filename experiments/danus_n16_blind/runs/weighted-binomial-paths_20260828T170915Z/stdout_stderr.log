@@ -1,0 +1,96 @@
+$ bash bin/danus new n16_weighted_binomial_paths_20260828t170915z
+exit_code=0
+--- stdout ---
+created n16_weighted_binomial_paths_20260828t170915z with 7 workers: high, high2, high3, xhigh, xhigh2, xhigh3, xhigh4
+  /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/high --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/high -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/high2 --task Seek an independent alternative proof route. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/high2 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/high3 --task Identify concrete intermediate lemmas or obstructions, prove what is justified, and complete the target if possible. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/high3 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high3/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/xhigh --task Produce a complete quantified proof with assumptions and boundary cases audited. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/xhigh -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/xhigh/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/xhigh2 --task Independently audit promising routes and produce a verifier-ready proof if possible. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/xhigh2 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/xhigh2/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/xhigh3 --task Seek a structurally distinct proof and record concrete obstructions if blocked. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/xhigh3 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/xhigh3/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n16_weighted_binomial_paths_20260828t170915z/xhigh4 --task Inspect shared verified state, synthesize the strongest available route, and complete the target if possible. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n16_weighted_binomial_paths_20260828t170915z/xhigh4 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/xhigh4/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus start n16_weighted_binomial_paths_20260828t170915z
+exit_code=0
+--- stdout ---
+high: started
+high2: started
+high3: started
+xhigh: started
+xhigh2: started
+xhigh3: started
+xhigh4: started
+
+--- stderr ---
+
+
+$ bash bin/danus finalize n16_weighted_binomial_paths_20260828t170915z 0dae029f5ad942e9
+exit_code=0
+--- stdout ---
+finalized target for n16_weighted_binomial_paths_20260828t170915z: 0dae029f5ad942e9
+  wrote /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/TARGET.md
+
+--- stderr ---
+
+
+$ runtime/venv/bin/python -c from pathlib import Path; from danus.write_paper.assemble import closure_order; print(closure_order(Path('runtime/projects/n16_weighted_binomial_paths_20260828t170915z')))
+exit_code=0
+--- stdout ---
+['0dae029f5ad942e9']
+
+--- stderr ---
+
+

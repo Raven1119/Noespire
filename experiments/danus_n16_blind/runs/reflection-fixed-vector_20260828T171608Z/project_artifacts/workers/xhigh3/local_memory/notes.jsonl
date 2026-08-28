@@ -1,0 +1,1 @@
+{"timestamp":"2026-08-28 17:18:26 UTC","branch":"constructive_inverse_candidate","note":"Since ker(I-Q)={0}, define x=(I-Q)^{-1}u. From u=x-Qx and Q orthogonal, ||u||^2=2(||x||^2-x^TQx), so u^Tx=1/2. Then u^TQx=-1/2 and HQx=x. This is a direct constructive proof, avoiding determinant/eigenvalue-parity arguments."}

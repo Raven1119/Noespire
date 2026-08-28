@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It correctly identifies H as a reflection with determinant -1, proves that any real n-by-n orthogonal matrix without a nonzero fixed vector has determinant (-1)^n by analyzing its real and conjugate-paired complex eigenvalues, and applies this determinant-parity result to Q and HQ to force HQ to have a nonzero fixed vector. All hypotheses are used, and there are no unsupported references or prohibited proof patterns.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

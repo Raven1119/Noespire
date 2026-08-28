@@ -1,0 +1,1 @@
+{"timestamp":"2026-08-29T01:01:50+08:00","note_type":"proof_state","content":"Shared memory and fact graph were empty. Writing x=a_1 and y=a_2 gives the five-cycle x, y, (y+1)/x, (x+y+1)/(xy), (x+1)/y. Validity is exactly x,y in F_p minus {0,-1} and x+y+1 nonzero. Hence F(p)=(p-2)(p-3), giving residues 2,0,0,2 for p mod 5 equal to 1,2,3,4."}

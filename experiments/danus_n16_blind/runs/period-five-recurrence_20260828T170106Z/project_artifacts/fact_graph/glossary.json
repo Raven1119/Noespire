@@ -1,0 +1,20 @@
+{
+  "\\mathbb F_p": "the field of residue classes modulo the prime p",
+  "\\mathbb F_p^\\times": "the set of nonzero elements of \\mathbb F_p",
+  "x": "the first term a_1 viewed in mathbb F_p^times",
+  "y": "the second term a_2 viewed in mathbb F_p^times",
+  "b_n": "the explicitly constructed five-periodic sequence over \\mathbb F_p",
+  "p": "the fixed prime integer greater than 5",
+  "a_n": "the n-th term of a sequence counted by F(p), viewed as its nonzero residue class modulo p during the proof",
+  "F(p)": "the number of infinite sequences specified in the theorem statement",
+  "S": "the set of all ordered pairs of nonzero elements of mathbb F_p",
+  "(a_n)_{n\\ge 1}": "an infinite sequence specified in the theorem",
+  "A": "the subset of S on which y=-1",
+  "B": "the subset of S on which x=-1",
+  "C": "the subset of S on which x+y+1=0",
+  "n": "a positive integer index",
+  "mathbb F_p": "the field of residue classes modulo p",
+  "mathbb F_p^times": "the multiplicative group of nonzero elements of mathbb F_p",
+  "c_n": "the n-th term of the explicitly constructed five-periodic field-valued sequence",
+  "r": "the residue class of p modulo 5, represented by one of 1,2,3,4"
+}

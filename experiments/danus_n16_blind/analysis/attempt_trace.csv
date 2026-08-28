@@ -1,0 +1,134 @@
+problem_id,attempt_id,target_claim,predecessor_fact_ids,verifier_result,fact_id,in_final_closure,tokens,duration,exact_repeat,near_repeat
+cubic-form-image,high2:dcb8bccf898dd9f1,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,ec3d95349fa8454b,false,105141,318.860492,true,false
+cubic-form-image,xhigh3:f7ca1d3f2c684171,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,727412a401ddf3ea,false,63841,354.578986,true,false
+cubic-form-image,xhigh2:None,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,1d8ddde8d657d676,true,64563,351.244063,true,false
+cubic-form-image,high3:None,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,82e137871eec6663,false,64031,361.991005,true,false
+cubic-form-image,xhigh4:None,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,3c1ee6a958c315aa,false,97053,384.53565,true,false
+cubic-form-image,xhigh:aeac67407e9a4eed,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,bc2bbe95f5c3d68d,false,59337,503.631327,true,false
+cubic-form-image,high:None,"Characterize the nonnegative integers representable in the form
+\[
+a^3+b^3+c^3-3abc
+\]
+with \(a,b,c\) nonnegative integers. Prove that a nonnegative integer \(N\) has such a representation if and only if either \(3\nmid N\) or \(9\mid N\).",,PASS,4f01c125cb984e8c,false,102533,603.787597,true,false
+period-five-recurrence,xhigh3:a7b14e9d4c4a8859,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,bff8f135a656c1ef,false,62307,290.85471,true,false
+period-five-recurrence,high2:32378d9de256cef1,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,686ebce00d842b99,false,80811,310.637671,true,false
+period-five-recurrence,xhigh2:6204fa68d187d3e4,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,65b9237c6ebe5e0c,false,39127,324.948967,true,false
+period-five-recurrence,high:2e710f64686e6404,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,e84dff893543ed80,false,64019,326.660041,true,false
+period-five-recurrence,xhigh4:94c56a0e0543b441,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,468a414eb1af36d4,false,54914,337.882402,true,false
+period-five-recurrence,high3:6b9fd71383f0d1e8,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,499cfdc336951af2,false,53967,343.35067,true,false
+period-five-recurrence,xhigh:0b5e38503c3c8762,"Fix a prime \(p>5\). Let \(F(p)\) be the number of infinite sequences \((a_n)_{n\ge 1}\) with every \(a_n\in\{1,2,\ldots,p-1\}\) and
+\[
+a_n a_{n+2}\equiv 1+a_{n+1}\pmod p
+\]
+for every \(n\ge 1\). Prove that \(F(p)\equiv 0\) or \(2\pmod 5\).",,PASS,37d9e494a5c261a3,true,100133,433.811201,true,false
+reflection-fixed-vector,high:29f6bfbe44c6b765,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,424bc4756088dc25,false,44353,271.270299,true,false
+reflection-fixed-vector,xhigh4:17b5c8b86ded9736,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,97493d8793a0006f,false,44818,297.715303,true,false
+reflection-fixed-vector,xhigh3:316031ebef6d463c,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,1ce832a4e0572b89,true,58429,324.970934,true,false
+reflection-fixed-vector,high3:None,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,4f8e163faf723982,false,92345,335.706145,true,false
+reflection-fixed-vector,xhigh:24df43ab5449ce47,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,6bd14f7725160296,false,58245,337.474939,true,false
+reflection-fixed-vector,xhigh2:None,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,a2f4777c19fe4f71,false,52862,335.529574,true,false
+reflection-fixed-vector,high2:45a36e7f6b02b426,"Let \(Q\) be a real \(n\times n\) orthogonal matrix, and let \(u\in\mathbb R^n\) satisfy \(u^{\mathsf T}u=1\). Define
+\[
+H=I-2uu^{\mathsf T}.
+\]
+Assume there is no nonzero vector \(v\) with \(Qv=v\). Prove that there is a nonzero vector \(w\) with \(HQw=w\).",,PASS,38e6654bfc95327b,false,88398,340.826518,true,false
+weighted-binomial-paths,high2:6770298195ca3f45,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,a896e2781ba9418d,false,72691,269.735595,true,false
+weighted-binomial-paths,high:36ab6b1c3b5c6c16,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,0dae029f5ad942e9,true,53892,268.017678,true,false
+weighted-binomial-paths,xhigh3:6d5ce5ef7dd7d2eb,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,2369c3965f3b0426,false,81787,293.724926,true,false
+weighted-binomial-paths,xhigh2:004fe6dc5e65d5e9,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,45c38579a42d6d6e,false,88064,309.895844,true,false
+weighted-binomial-paths,xhigh:54cb836f3310acb0,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,6f9ce5df15dcc7a3,false,50778,323.871963,true,false
+weighted-binomial-paths,high3:a8d060c5a5e63037,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,cc8ed457a7c71c33,false,57188,344.592808,true,false
+weighted-binomial-paths,xhigh4:08b3a14e25aa0c55,"Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]",,PASS,b2c94a8f7de3fb3d,false,58606,358.883559,true,false

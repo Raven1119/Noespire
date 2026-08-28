@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "run_id": "reflection-fixed-vector_20260828T171608Z",
+  "project": "n16_reflection_fixed_vector_20260828t171608z",
+  "problem_id": "reflection-fixed-vector",
+  "problem_sha256": "0916681243c800579f8f38563c3cd5a6cb9a84c68733d008bd77bb09af91981c",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "capability_evidence": "capability_probe_20260828T162750Z",
+  "started_at_utc": "2026-08-28T17:16:09.137084Z",
+  "completed_at_utc": "2026-08-28T17:22:05.110360Z",
+  "wall_clock_seconds": 324.596088,
+  "classification": "SOLVED",
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "xhigh": "max_rounds",
+    "xhigh2": "max_rounds",
+    "xhigh3": "max_rounds",
+    "xhigh4": "max_rounds"
+  },
+  "max_rounds": 1,
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "accepted_fact_count": 7,
+  "target_fact_ids": [
+    "1ce832a4e0572b89"
+  ],
+  "supporting_closure": [
+    "1ce832a4e0572b89"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "waste_ratio": 0.8571428571,
+  "worker_tokens": 439450,
+  "verifier_tokens": 178229,
+  "total_tokens": 617679,
+  "verifier_run_ids": [
+    "20260828T171851Z_93f0640c3d5a",
+    "20260828T171856Z_93f0640c3d5a",
+    "20260828T171913Z_93f0640c3d5a",
+    "20260828T171919Z_93f0640c3d5a",
+    "20260828T171931Z_93f0640c3d5a",
+    "20260828T171935Z_93f0640c3d5a",
+    "20260828T171956Z_93f0640c3d5a"
+  ],
+  "accepted_fact_ids": [
+    "1ce832a4e0572b89",
+    "38e6654bfc95327b",
+    "424bc4756088dc25",
+    "4f8e163faf723982",
+    "6bd14f7725160296",
+    "97493d8793a0006f",
+    "a2f4777c19fe4f71"
+  ],
+  "target_selection_rule": "lexicographically smallest accepted exact normalized statement",
+  "notes": [
+    "One frozen upstream DANUS round per default worker; no retry or intervention.",
+    "External retrieval and reference-directory reads were denied by the frozen wrapper.",
+    "No target is finalized when no accepted statement exactly matches the frozen input."
+  ]
+}

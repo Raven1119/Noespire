@@ -1,0 +1,15 @@
+{
+  "verdict": "N2_TARGET_NOT_SUPPORTED",
+  "eligible_blind_runs": 4,
+  "eligible_problems": 4,
+  "credible_too_wide_regions": 0,
+  "credible_missing_lemma_regions": 0,
+  "problems_with_credible_cut_regions": 0,
+  "fresh_review_confidence": {
+    "STRATEGY_WASTE_HIGH": 4
+  },
+  "counterfactual_cuts_permitted": 0,
+  "counterfactual_cuts_performed": 0,
+  "dominant_observed_pathology": "STRATEGY_WASTE/FULL_PROOF_DUPLICATION",
+  "scope": "This verdict concerns Adaptive Cut-Set as the next target for the frozen four-problem blind diagnostic, not all possible theorem distributions."
+}

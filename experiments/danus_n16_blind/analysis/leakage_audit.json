@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "scope": "formal math traces from the four valid runs; capability-probe copies excluded",
+  "capability_evidence": "experiments/danus_n16_blind/protocol/evidence/capability_probe_20260828T162750Z/summary.json",
+  "capability_gate": "PASS",
+  "runs": [
+    {
+      "problem_id": "cubic-form-image",
+      "run_id": "cubic-form-image_20260828T164931Z",
+      "integrity": "BLIND_INTEGRITY_PASS",
+      "capability_gate": "PASS",
+      "trace_file_count": 21,
+      "wrapper_worker_roles": 7,
+      "wrapper_verifier_roles": 7,
+      "expected_worker_roles": 7,
+      "expected_verifier_roles": 7,
+      "verifier_http_200": 7,
+      "verifier_http_500": 0,
+      "policy_counts_match": true,
+      "external_call_hits": {
+        "arxiv_mcp_call": [],
+        "builtin_web_call": [],
+        "shell_url_call": [],
+        "shell_network_call": []
+      },
+      "source_lookup_hits": [],
+      "protected_path_hits": [],
+      "unexpected_url_occurrences": [],
+      "reference_overlap": {
+        "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+        "strongest": {
+          "reference_word_count": 193,
+          "generated_word_count": 456,
+          "longest_common_token_span": 16,
+          "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+          "shared_12gram_count": 5,
+          "generated_12gram_coverage": 0.011236,
+          "manual_overlap_review": false,
+          "fact_id": "3c1ee6a958c315aa"
+        },
+        "all_facts": [
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 447,
+            "longest_common_token_span": 11,
+            "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "1d8ddde8d657d676"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 456,
+            "longest_common_token_span": 16,
+            "longest_common_text": "f a b c a b c a 2 b 2 c 2 ab bc ca",
+            "shared_12gram_count": 5,
+            "generated_12gram_coverage": 0.011236,
+            "manual_overlap_review": false,
+            "fact_id": "3c1ee6a958c315aa"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 535,
+            "longest_common_token_span": 12,
+            "longest_common_text": "a b c a 2 b 2 c 2 ab bc ca",
+            "shared_12gram_count": 1,
+            "generated_12gram_coverage": 0.001984,
+            "manual_overlap_review": false,
+            "fact_id": "4f01c125cb984e8c"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 350,
+            "longest_common_token_span": 12,
+            "longest_common_text": "write f a b c a 3 b 3 c 3 3abc",
+            "shared_12gram_count": 1,
+            "generated_12gram_coverage": 0.00295,
+            "manual_overlap_review": false,
+            "fact_id": "727412a401ddf3ea"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 452,
+            "longest_common_token_span": 11,
+            "longest_common_text": "f a b c a 3 b 3 c 3 3abc",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "82e137871eec6663"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 447,
+            "longest_common_token_span": 9,
+            "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "bc2bbe95f5c3d68d"
+          },
+          {
+            "reference_word_count": 193,
+            "generated_word_count": 373,
+            "longest_common_token_span": 9,
+            "longest_common_text": "a 2 b 2 c 2 ab bc ca",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "ec3d95349fa8454b"
+          }
+        ],
+        "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+      },
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+    },
+    {
+      "problem_id": "period-five-recurrence",
+      "run_id": "period-five-recurrence_20260828T170106Z",
+      "integrity": "BLIND_INTEGRITY_PASS",
+      "capability_gate": "PASS",
+      "trace_file_count": 22,
+      "wrapper_worker_roles": 7,
+      "wrapper_verifier_roles": 7,
+      "expected_worker_roles": 7,
+      "expected_verifier_roles": 7,
+      "verifier_http_200": 7,
+      "verifier_http_500": 0,
+      "policy_counts_match": true,
+      "external_call_hits": {
+        "arxiv_mcp_call": [],
+        "builtin_web_call": [],
+        "shell_url_call": [],
+        "shell_network_call": []
+      },
+      "source_lookup_hits": [],
+      "protected_path_hits": [],
+      "unexpected_url_occurrences": [],
+      "reference_overlap": {
+        "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+        "strongest": {
+          "reference_word_count": 218,
+          "generated_word_count": 465,
+          "longest_common_token_span": 9,
+          "longest_common_text": "use of the recurrence gives a 3 frac 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "499cfdc336951af2"
+        },
+        "all_facts": [
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 735,
+            "longest_common_token_span": 5,
+            "longest_common_text": "gives a 3 frac 1",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "37d9e494a5c261a3"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 373,
+            "longest_common_token_span": 4,
+            "longest_common_text": "qquad a 4 frac",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "468a414eb1af36d4"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 465,
+            "longest_common_token_span": 9,
+            "longest_common_text": "use of the recurrence gives a 3 frac 1",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "499cfdc336951af2"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 464,
+            "longest_common_token_span": 6,
+            "longest_common_text": "qquad a 4 frac 1 a",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "65b9237c6ebe5e0c"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 479,
+            "longest_common_token_span": 5,
+            "longest_common_text": "a 4 frac 1 a",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "686ebce00d842b99"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 503,
+            "longest_common_token_span": 6,
+            "longest_common_text": "qquad a 4 frac 1 a",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "bff8f135a656c1ef"
+          },
+          {
+            "reference_word_count": 218,
+            "generated_word_count": 499,
+            "longest_common_token_span": 5,
+            "longest_common_text": "a 4 frac 1 a",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "e84dff893543ed80"
+          }
+        ],
+        "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+      },
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+    },
+    {
+      "problem_id": "reflection-fixed-vector",
+      "run_id": "reflection-fixed-vector_20260828T171608Z",
+      "integrity": "BLIND_INTEGRITY_PASS",
+      "capability_gate": "PASS",
+      "trace_file_count": 21,
+      "wrapper_worker_roles": 7,
+      "wrapper_verifier_roles": 7,
+      "expected_worker_roles": 7,
+      "expected_verifier_roles": 7,
+      "verifier_http_200": 7,
+      "verifier_http_500": 0,
+      "policy_counts_match": true,
+      "external_call_hits": {
+        "arxiv_mcp_call": [],
+        "builtin_web_call": [],
+        "shell_url_call": [],
+        "shell_network_call": []
+      },
+      "source_lookup_hits": [],
+      "protected_path_hits": [],
+      "unexpected_url_occurrences": [],
+      "reference_overlap": {
+        "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+        "strongest": {
+          "reference_word_count": 177,
+          "generated_word_count": 302,
+          "longest_common_token_span": 5,
+          "longest_common_text": "h i 2uu mathsf t",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "38e6654bfc95327b"
+        },
+        "all_facts": [
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 208,
+            "longest_common_token_span": 3,
+            "longest_common_text": "h i 2uu",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "1ce832a4e0572b89"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 302,
+            "longest_common_token_span": 5,
+            "longest_common_text": "h i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "38e6654bfc95327b"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 393,
+            "longest_common_token_span": 4,
+            "longest_common_text": "i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "424bc4756088dc25"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 451,
+            "longest_common_token_span": 4,
+            "longest_common_text": "i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "4f8e163faf723982"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 254,
+            "longest_common_token_span": 4,
+            "longest_common_text": "i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "6bd14f7725160296"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 283,
+            "longest_common_token_span": 5,
+            "longest_common_text": "h i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "97493d8793a0006f"
+          },
+          {
+            "reference_word_count": 177,
+            "generated_word_count": 263,
+            "longest_common_token_span": 5,
+            "longest_common_text": "h i 2uu mathsf t",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "a2f4777c19fe4f71"
+          }
+        ],
+        "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+      },
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+    },
+    {
+      "problem_id": "weighted-binomial-paths",
+      "run_id": "weighted-binomial-paths_20260828T170915Z",
+      "integrity": "BLIND_INTEGRITY_PASS",
+      "capability_gate": "PASS",
+      "trace_file_count": 21,
+      "wrapper_worker_roles": 7,
+      "wrapper_verifier_roles": 7,
+      "expected_worker_roles": 7,
+      "expected_verifier_roles": 7,
+      "verifier_http_200": 7,
+      "verifier_http_500": 0,
+      "policy_counts_match": true,
+      "external_call_hits": {
+        "arxiv_mcp_call": [],
+        "builtin_web_call": [],
+        "shell_url_call": [],
+        "shell_network_call": []
+      },
+      "source_lookup_hits": [],
+      "protected_path_hits": [],
+      "unexpected_url_occurrences": [],
+      "reference_overlap": {
+        "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+        "strongest": {
+          "reference_word_count": 179,
+          "generated_word_count": 309,
+          "longest_common_token_span": 15,
+          "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
+          "shared_12gram_count": 4,
+          "generated_12gram_coverage": 0.013423,
+          "manual_overlap_review": false,
+          "fact_id": "a896e2781ba9418d"
+        },
+        "all_facts": [
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 289,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "0dae029f5ad942e9"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 232,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "2369c3965f3b0426"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 391,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "45c38579a42d6d6e"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 481,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "6f9ce5df15dcc7a3"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 309,
+            "longest_common_token_span": 15,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j equating the two counts",
+            "shared_12gram_count": 4,
+            "generated_12gram_coverage": 0.013423,
+            "manual_overlap_review": false,
+            "fact_id": "a896e2781ba9418d"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 341,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "b2c94a8f7de3fb3d"
+          },
+          {
+            "reference_word_count": 179,
+            "generated_word_count": 357,
+            "longest_common_token_span": 11,
+            "longest_common_text": "sum j 0 k 2 k j binom k j j",
+            "shared_12gram_count": 0,
+            "generated_12gram_coverage": 0.0,
+            "manual_overlap_review": false,
+            "fact_id": "cc8ed457a7c71c33"
+          }
+        ],
+        "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+      },
+      "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no retrieval/source/private-path marker in formal-run traces. URL warnings and reference-proof similarity are reported separately and are not treated as tool retrieval without a call/access trace."
+    }
+  ],
+  "summary": {
+    "pass": 4,
+    "fail": 0,
+    "unexpected_url_occurrences": 0,
+    "manual_overlap_reviews": 0
+  }
+}

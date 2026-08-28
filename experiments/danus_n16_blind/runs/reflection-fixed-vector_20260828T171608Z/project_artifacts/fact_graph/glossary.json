@@ -1,0 +1,22 @@
+{
+  "A": "the inverse matrix (Q-I)^{-1}",
+  "B": "an arbitrary real n by n orthogonal matrix used in the determinant-parity argument",
+  "H": "the matrix I-2uu^{\\mathsf T}",
+  "Q": "the real n by n orthogonal matrix in the theorem",
+  "u": "the real unit column vector in the theorem",
+  "v": "a real n-dimensional column vector used in the fixed-vector hypothesis",
+  "w": "the constructed nonzero real n-dimensional column vector fixed by HQ",
+  "z": "a nonzero complex eigenvector of B associated with lambda",
+  "x": "an arbitrary vector used to prove that I-Q is injective",
+  "y": "an arbitrary vector used to prove that I-Q is injective",
+  "r": "the total algebraic multiplicity of the real eigenvalues of B",
+  "lambda": "an eigenvalue of A",
+  "n": "a positive integer, the dimension of the real vector space and the matrix size",
+  "I": "the n by n identity matrix",
+  "x^{\\mathsf T}": "the transpose of a real vector x",
+  "u^\\perp": "the subspace of real vectors orthogonal to u",
+  "\\lambda": "a complex eigenvalue of B",
+  "z^*": "the conjugate transpose of the complex vector z",
+  "\\overline\\lambda": "the complex conjugate of lambda",
+  "(·)^{\\mathsf T}": "matrix or vector transpose"
+}

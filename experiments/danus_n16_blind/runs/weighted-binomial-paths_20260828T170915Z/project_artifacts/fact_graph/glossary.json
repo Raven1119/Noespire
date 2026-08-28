@@ -1,0 +1,17 @@
+{
+  "H": "the first letter of the two-letter alphabet used in the counting proof",
+  "T": "the second letter of the two-letter alphabet used in the counting proof",
+  "A_k": "the set of binary strings of length 2k+1 containing at least k+1 ones",
+  "k": "an arbitrary nonnegative integer",
+  "j": "the integer indexing the position k+j+1 of the (k+1)-st one in the binary-word partition",
+  "\\mathcal A": "The set of length-(2k+1) words over {H,T} containing at least k+1 occurrences of H.",
+  "\\mathcal B": "The set of length-(2k+1) words over {H,T} containing at least k+1 occurrences of T.",
+  "\\mathcal A_j": "For 0<=j<=k, the subset of \\mathcal A whose (k+1)-st H occurs in position k+j+1.",
+  "binary word": "A finite sequence all of whose entries are in the two-element set {0,1}.",
+  "A_j": "For fixed k and 0<=j<=k, the set of binary words of length 2k+1 whose (k+1)-st zero occurs at position k+j+1.",
+  "Z_k": "The set of binary words of length 2k+1 containing at least k+1 zeros.",
+  "O_k": "The set of binary words of length 2k+1 containing at least k+1 ones.",
+  "\\(\\mathcal{B}_k\\)": "For a fixed nonnegative integer k, the set of binary words of length 2k+1 having at least k+1 entries equal to 1.",
+  "\\(\\mathcal{B}_{k,j}\\)": "For integers k and j with k nonnegative and 0<=j<=k, the subset of B_k whose (k+1)-st entry equal to 1 is preceded by exactly j entries equal to 0.",
+  "\\mathcal W": "the set of length-(2k+1) words over {H,T} having strictly more H occurrences than T occurrences"
+}

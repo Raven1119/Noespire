@@ -1,0 +1,21 @@
+{
+  "N": "the nonnegative integer whose representability is being characterized",
+  "a": "a nonnegative integer used as the first coordinate of a representation",
+  "b": "a nonnegative integer used as the second coordinate of a representation",
+  "c": "a nonnegative integer used as the third coordinate of a representation",
+  "S": "the sum a+b+c",
+  "Q": "The quadratic factor a^2+b^2+c^2-ab-bc-ca.",
+  "u": "An arbitrary integer used to prove the cubic congruence modulo 3.",
+  "x": "an arbitrary integer in the congruence argument, or the first input in the displayed two-variable identity",
+  "y": "the second integer input in the displayed two-variable identity",
+  "t": "A nonnegative integer quotient used for values congruent to 1 or 2 modulo 3.",
+  "m": "the positive integer N/9 in the construction for positive multiples of 9",
+  "F": "The cubic form F(a,b,c)=a^3+b^3+c^3-3abc.",
+  "s": "the sum a+b+c",
+  "p": "The pairwise-product sum p=ab+bc+ca.",
+  "q": "the quadratic factor a^2+b^2+c^2-ab-bc-ca",
+  "z": "An arbitrary integer used to prove z^3 is congruent to z modulo 3.",
+  "k": "the auxiliary integer used in the constructions for N not divisible by 3",
+  "F(a,b,c)": "the cubic integer expression a^3+b^3+c^3-3abc",
+  "r": "the auxiliary integer ab+bc+ca"
+}

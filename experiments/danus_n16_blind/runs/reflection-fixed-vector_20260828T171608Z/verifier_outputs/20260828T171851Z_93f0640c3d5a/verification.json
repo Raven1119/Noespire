@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It validly establishes that any real orthogonal matrix with no nonzero fixed vector has determinant (-1)^n, computes det(H) = -1, and obtains det(HQ) = (-1)^(n+1). If HQ had no nonzero fixed vector, the determinant-parity observation would instead force det(HQ) = (-1)^n, a contradiction. The statement is self-contained, all hypotheses are used, and no prohibited or unverifiable citations occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

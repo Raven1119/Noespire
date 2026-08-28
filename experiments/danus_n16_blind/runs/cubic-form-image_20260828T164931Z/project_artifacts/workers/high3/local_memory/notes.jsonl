@@ -1,0 +1,2 @@
+{"branch":"main","note":"Let F=(a+b+c)q with q=a^2+b^2+c^2-ab-bc-ca. If 3|F, then F≡a+b+c mod 3 gives 3|s, and q≡s^2 mod 3 gives 3|q, hence 9|F. Sufficiency: F(x+1,x,x)=3x+1; F(x-1,x,x)=3x-1 for x≥1; F(x+1,x,x-1)=9x for x≥1; F(0,0,0)=0. These cases exactly cover 3∤N or 9|N."}
+{"branch":"main","note":"Target theorem verified and written as fact 82e137871eec6663. No predecessor facts or external references were used."}

@@ -1,0 +1,21 @@
+# Effective Configuration — period-five-recurrence_20260828T170106Z
+
+- project: `n16_period_five_recurrence_20260828t170106z`
+- problem SHA-256: `2a717f69d7178eb6e7aa35f2e8485b0be801b2263235b06ea71c6ed20cdacbeb`
+- upstream commit: `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`
+- blind wrapper SHA-256: `fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a`
+- capability evidence: `capability_probe_20260828T162750Z`
+- backend: existing ChatGPT login
+- model: `gpt-5.6-sol`
+- verifier model/effort: `gpt-5.6-sol` / `xhigh`
+- roles: upstream default `high:3,xhigh:4`
+- maximum rounds: `1`
+- worker round timeout: `14400` seconds
+- verifier Codex timeout: `900` seconds
+- verifier URL: isolated loopback `127.0.0.1:51573`
+- web/browser/Matlas/apps/plugins/subagents: disabled by external wrapper
+- N1.6 control directory: filesystem read denied by `n16_blind` permission profile
+- local DANUS Fact/Memory MCP: enabled
+- DANUS prompts, retrieval algorithm, memory, FactGraph, and orchestration: unchanged
+- strategy/master formal session: not invoked, matching N1.5 run path
+- assignment template: frozen in `runtime_manifest.md` and identical across all four runs

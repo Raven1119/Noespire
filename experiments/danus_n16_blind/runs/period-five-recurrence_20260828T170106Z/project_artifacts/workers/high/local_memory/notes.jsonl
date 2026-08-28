@@ -1,0 +1,2 @@
+{"round":2,"branch":"direct proof","note":"Identify entries with F_p^*. Initial pair (x,y) gives a3=(1+y)/x, a4=(x+y+1)/(xy), a5=(x+1)/y, then a6=x,a7=y, provided y!=-1, x+y+1!=0, x!=-1. Thus exact admissible initial pairs are complement of three bad lines. Inclusion-exclusion gives F(p)=(p-2)(p-3)=p^2-5p+6, so mod 5 F=p^2+1 in {0,2}. Need target fact submission with exact PROBLEM.md statement."}
+{"round":2,"branch":"direct proof","note":"Complete verbatim target theorem accepted by verifier as fact e84dff893543ed80. No predecessors or external results used."}

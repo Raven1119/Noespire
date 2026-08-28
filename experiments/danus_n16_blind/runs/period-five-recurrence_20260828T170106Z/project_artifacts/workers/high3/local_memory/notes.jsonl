@@ -1,0 +1,1 @@
+{"branch":"exact_count","note":"Set x=a_1,y=a_2. Conditions y+1, x+y+1, x+1 nonzero are necessary and sufficient. Terms: a_3=(1+y)/x, a_4=(1+x+y)/(xy), a_5=(1+x)/y, a_6=x, a_7=y. Bad union size (p-1)+(p-1)+(p-2)-1=3p-5, hence F=(p-1)^2-(3p-5)=p^2-5p+6. Mod 5 this is p^2+1, equal to 2 for p≡±1 and 0 for p≡±2."}

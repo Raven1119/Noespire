@@ -1,0 +1,518 @@
+Reading additional input from stdin...
+OpenAI Codex v0.150.1
+--------
+workdir: /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a04959-052f-71a2-a065-1517e015b131
+--------
+user
+You are worker 'high2' on project 'n16_weighted_binomial_paths_20260828t170915z'. Continue solving the problem (this is a continuation round, not a fresh start).
+1. Read TASK.md — your current assignment (which direction/subgoal is yours).
+2. Follow AGENTS.md (worker.md) exactly — your standing contract (the adaptive control loop, memory discipline, the fact_submit gate). Drive toward a full verified result.
+3. Resume from state: gm_search relevant findings + dead ends, read the fact graph and the latest master_guidance — DO NOT restart from zero; build on what is already there.
+4. Keep going: assess -> pick skills adaptively -> act -> persist, repeatedly. An open problem is not a reason to stop. Do NOT finalize prematurely.
+5. Persist as you go: rough progress to local memory; shareable findings via gm_add; any verified result via fact_submit.
+warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+warning: Under-development features enabled: current_time_reminder. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/codex-home/config.toml.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m using the `query-memory` skill first because this is a continuation round: I’ll reload the current assignment, master guidance, shared findings, verifier feedback, and existing facts before choosing the next proof move.
+exec
+/bin/bash -lc "pwd && rg --files -g 'TASK.md' -g 'local_memory/**' -g 'global_memory/**' -g 'fact_graph/**' -g '"'!*.lock'"' | sed -n '1,160p'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 895ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+TASK.md
+
+exec
+/bin/bash -lc "sed -n '1,240p' TASK.md && find . -maxdepth 2 -mindepth 1 -printf '%y %p -> %l\\n' | sort | sed -n '1,240p'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 931ms:
+Seek an independent alternative proof route. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+d ./.agents -> 
+d ./.codex -> 
+d ./.git -> 
+d ./local_memory -> 
+d ./logs -> 
+f ./.codex/config.toml -> 
+f ./.pid -> 
+f ./.pid.lock -> 
+f ./.role -> 
+f ./.status.json -> 
+f ./TASK.md -> 
+f ./logs/loop.log -> 
+f ./logs/round_1.log -> 
+l ./.agents/skills -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker
+l ./AGENTS.md -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/contracts/worker.md
+
+exec
+/bin/bash -lc "sed -n '1,260p' .agents/skills/query-memory/SKILL.md && find local_memory -maxdepth 1 -type f -print -exec sed -n '1,220p' {} \\;" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 811ms:
+---
+name: query-memory
+description: Recall what is already known — your own prior reasoning, the swarm's shared findings (including dead ends and verifier feedback), and the verified facts — before doing new work. Use when prior conclusions, examples, dead branches, verification outcomes, or verified results may inform the current question, claim, subgoal, or branch decision.
+---
+
+# Query Memory
+
+Before spending effort, check what already exists. There are three places to
+look, in the three-memory model:
+
+1. **Your own local memory** (private): read/grep `local_memory/notes.jsonl` and
+   `events.jsonl` for your prior reasoning and what you already tried.
+2. **Global memory** (shared findings): `gm_search(query, kinds=...)` over the
+   swarm's findings. Especially useful kinds:
+   - `dead_end` / `obstacle` — paths that already died (skip them);
+   - `verification` — outcomes of others' `fact_submit` (learn from rejections);
+   - `conclusion` / `example` / `counterexample` / `plan` — others' results to build on.
+   You can also read the `global_memory/<kind>.jsonl` files directly.
+3. **Fact graph** (verified truth): `fact_search(query)` (BM25 over the verified
+   facts) to find results you can cite or that show your subgoal is already
+   proved — it returns `{fact_id, statement}`; read the full proof from
+   `fact_graph/facts/<fact_id>.md` on a relevant hit, and `fact_graph/glossary.json`
+   to reuse the project's symbol definitions. A proof may build **only** on facts
+   (cite a `fact_id`).
+
+## Procedure
+
+1. Obey the current prompt's restrictions first. If it forbids a direction, file,
+   or search, that overrides default recall. If it recommends specific results or
+   directions, raise their priority.
+2. Start with the cheapest relevant source: your own local memory for your
+   context; `gm_search` for the swarm's findings; the fact graph for verified
+   building blocks.
+3. Prefer a narrow, targeted query (specific `kinds`, a sharp query string) over
+   reading everything.
+4. **Workspace boundary:** stay inside your own working directory and the shared
+   project stores. Do not scan parent directories, other workers' private
+   `local_memory/`, or other projects.
+
+## Retrieval priority
+
+- A relevant **verified fact** (fact graph) is the strongest hit — you can build
+  on it directly by citing its `fact_id`.
+- A sibling's **`dead_end`/`obstacle`** saves you from re-walking a dead path.
+- A sibling's **`verification`** rejection tells you why a similar claim failed.
+- A `conclusion`/`example`/`counterexample` is awareness — useful, but **never a
+  brick** (only facts are). Re-verify anything you intend to build on.
+
+## Output
+
+Note what you recalled and how you used it in your local memory (`events`). Do not
+re-publish others' findings; just use them.
+
+## Tools
+
+- `gm_search` (recall shared findings; BM25 over global memory)
+- `fact_search` (recall verified facts; BM25 over the fact graph — novelty + citation lookup)
+- local memory is read directly (no tool — read/grep the files); read a fact's full
+  proof from its `fact_graph/facts/<fact_id>.md` once `fact_search` surfaces it
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+The shared memories and fact graph currently return no relevant entries, including no master guidance, so there is nothing verified to inherit yet. I’m now recovering the exact target statement from the project’s shared problem file and will develop an independent proof from that statement.
+exec
+/bin/bash -lc "sed -n '1,260p' ../PROBLEM.md && find ../global_memory ../fact_graph -maxdepth 2 -type f -printf '%p\\n' 2>/dev/null | sort | sed -n '1,240p'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ exited 2 in 884ms:
+sed: can't read ../PROBLEM.md: No such file or directory
+
+exec
+/bin/bash -lc "sed -n '1,300p' ../../PROBLEM.md && find ../../global_memory ../../fact_graph -maxdepth 2 -type f -printf '%p\\n' 2>/dev/null | sort | sed -n '1,260p'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 769ms:
+Prove that for every nonnegative integer \(k\),
+\[
+\sum_{j=0}^{k}2^{k-j}\binom{k+j}{j}=4^k.
+\]
+
+codex
+I’m using `obtain-immediate-conclusions` because the target has a clean finite counting interpretation: the summand records the first occurrence of a strict majority in an odd-length binary word. I’ll formalize that bijection, stress-test the endpoint cases, and submit the full theorem directly if it remains self-contained.
+exec
+/bin/bash -lc "sed -n '1,300p' .agents/skills/obtain-immediate-conclusions/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 861ms:
+---
+name: obtain-immediate-conclusions
+description: Derive immediate mathematical consequences from a theorem statement or subgoal. Use when starting a new problem, branch, or subgoal, or when cheap progress or a cleaner reformulation is needed before deeper proof search.
+---
+
+# Obtain Immediate Conclusions
+
+Extract direct implications before speculative reasoning.
+
+## Input Contract
+
+Read from memory and current context:
+
+- `problem_id`
+- current theorem/subgoal statement
+- memory
+
+## Procedure
+
+1. Normalize notation and restate the claim in equivalent forms.
+2. List direct consequences that follow from definitions and basic algebraic/logical manipulations.
+3. Split consequences into necessary conditions and candidate sufficient conditions.
+4. Mark each consequence with confidence and justification type.
+5. For every conclusion, explicitly decide whether it is likely fragile and should be stress-tested by counterexample.
+6. If a conclusion is fragile, record why it is fragile and indicate that `$construct-counterexamples` should be considered next.
+
+## Output Contract
+
+Publish each conclusion to global memory with `gm_add` (kind `conclusion`):
+`claim` = the conclusion's statement, `evidence` = the derivation/justification
+that makes it checkable, and carry these fields in the record:
+
+```json
+{
+  "statement": "...",
+  "justification_type": "by_definition|calculation|known_fact|logical_equivalence",
+  "confidence": 0.0,
+  "is_fragile": false,
+  "fragility_reason": "",
+  "suggested_followup": "none|construct-counterexamples",
+  "scope": "global|branch|subgoal",
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+Rules:
+
+- `is_fragile` must always be present.
+- If `is_fragile=true`, then `fragility_reason` must explain the risk and `suggested_followup` should be `construct-counterexamples`.
+- If `is_fragile=false`, use `fragility_reason=""` and `suggested_followup="none"`.
+
+## Tools
+
+- `gm_add` (publish the conclusion finding)
+- `gm_search` (recall related findings across the swarm)
+- `search_arxiv_theorems` for nontrivial consequences
+- Codex built-in web search for background definitions/terminology
+
+## Failure Logging
+
+If no meaningful consequence is found, note it in your local memory (`events`) with:
+
+- `event_type="immediate_conclusions_stalled"`
+- missing assumptions and suspected blockers
+
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+mcp: danus/gm_add started
+mcp: danus/gm_add (completed)
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2/local_memory/events.jsonl
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2/local_memory/notes.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+codex
+The bijection is complete and handles all indices without an auxiliary lemma. I’ve published it as a shared finding; I’m now sending the exact `PROBLEM.md` statement and the full counting proof through the verifier gate.
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+codex
+The verifier is still processing the submission. The proof has no external dependencies or unverified predecessors; the only possible repair surface should be presentation/glossary compliance rather than the mathematical count.
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+codex
+The verifier accepted the complete target theorem as fact `a896e2781ba9418d`. I’m using `verify-proof` for the final graph-side audit now: confirm the accepted node is searchable and record the verifier outcome in local state before handing off.
+exec
+/bin/bash -lc "sed -n '1,320p' .agents/skills/verify-proof/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2
+ succeeded in 1039ms:
+---
+name: verify-proof
+description: Verify a result and, on acceptance, write it as a fact — via the fact_submit tool. Use for the full target theorem AND for every sharply-delimited intermediate result, lemma, construction, or formula you intend to build on. The verifier is the sole authority on mathematical correctness.
+---
+
+# Verify Proof
+
+The verifier is the **canonical and sole authority on mathematical correctness**.
+Mathematics requires 100% accuracy; even though this verifier is not a formal
+proof assistant, it is the strongest correctness check in the system. No LLM
+consultation, panel, or self-critique substitutes for it.
+
+**You verify and write a fact through one tool: `fact_submit`.** It runs the
+glossary-coverage check, calls the verifier, and writes the fact to the fact graph
+**iff the verifier accepts** — there is no other way a fact enters the graph.
+
+## When to submit
+
+- **The full target theorem** — when you have assembled a complete proof of the
+  whole problem (as a self-contained statement + proof, citing its predecessors by
+  `fact_id`).
+- **Every intermediate result you intend to USE downstream** — a lemma, a
+  candidate construction, an arithmetic/closed-form claim, a saturation or
+  local-to-global claim, any sharply-delimited step. **Adopting an unverified
+  partial result as a building block is the single biggest correctness risk.** When
+  in doubt, submit.
+
+Choose a substantive mathematical boundary, not the smallest checkable line.
+Routine calculations, substitutions, and bookkeeping identities should normally
+remain internal steps in the proof of a deeper fact. The submitted fact should
+state one mathematically significant conclusion; depth must not be simulated by
+bundling several shallow or unrelated claims. Split supporting claims only when
+they have independent downstream uses, separate proof obligations, or need
+isolated verifier repair.
+
+Do **not** build on an unverified finding from global memory. A `conclusion` /
+`example` / `counterexample` there is awareness, not a brick — re-derive it as a
+self-contained statement+proof and submit it before relying on it.
+
+## Before you submit — write an "ugly-proof" fact
+
+A fact in the fact graph is written in **"ugly-but-rigorous"** form (the operator
+may call it an **"ugly-proof"**). The one goal of
+this form is that the fact is **mechanically checkable for correctness** by a
+reader with no memory and no math intuition (an agent with no recall, a human, the
+verifier). It is allowed — encouraged — to be **ugly**: redundant, machine-flavored,
+verbose. It is **not allowed** to be ambiguous, vague, or context-dependent.
+"Ugly" is the deliberate contrast with the polished arXiv paper (a separate
+pipeline); here, only mechanical correctness matters.
+
+Concretely, before you submit:
+
+- **Self-contained.** A reader using only this fact + its declared predecessors +
+  the project glossary can decide whether the math is correct. No appeal to chart
+  positions, parse status, project history, or "as we know".
+- **Define every symbol.** Each symbol used in the statement/proof is defined: in
+  this fact's `glossary_introduces`, in a cited predecessor's glossary, in the
+  project glossary, or in the **global glossary** of universal notation (Z, Q, R,
+  C, floor/ceil, gcd/lcm, intervals, Greek parameter names). Don't redefine
+  universal notation — `glossary_introduces` is for project-specific symbols only.
+  Reuse the project's existing symbol for the same object. `fact_submit` returns
+  `undefined_symbols` if you missed one.
+- **Cite every dependency by `fact_id`** — never "by the result above", never the
+  problem statement as a math source.
+- **Every quantifier explicit; every introduced parameter (epsilon, k, …) carries
+  an explicit range.**
+- **No handwave** ("obviously", "easy to see", "routine", "analogously",
+  "by some classical argument") and **no chart-position references** ("as above").
+- **Avoid duplicates.** `gm_search` the fact graph / global memory (or read
+  `fact_graph/facts/`) for an existing fact with the same statement; if one
+  exists, cite its `fact_id` instead of re-proving it.
+
+## Submit and repair
+
+Call `fact_submit(statement, proof, predecessors=[...], glossary_introduces={...})`.
+Read the result:
+
+- `accepted: true, fact_id` — the fact is written. **Cite `fact_id`** downstream.
+- `accepted: false, repair_hints` (+ `undefined_symbols`) — revise: resolve
+  critical errors first, then all remaining gaps; do not assume the fix is local —
+  change strategy or backtrack if needed; then resubmit. Treat any `wrong` verdict,
+  any critical error, or any gap as failure.
+- `verdict: "error"` — the verify service was unavailable; retry.
+- `accepted: true, write_error` (e.g. a predecessor was revoked) — the fact was not
+  written; re-prove or avoid that predecessor.
+
+Every outcome is auto-logged to global memory (kind `verification`), so the
+feedback is shared — `gm_search` it to learn from others' rejections.
+
+## The verifier is the only correctness authority
+
+If your own reasoning, the main agent's `master_guidance`, or any other LLM calls
+a result correct but `fact_submit` rejects it, the verifier wins. Always. Note the
+disagreement (a `dead_end` finding) and treat the "looks correct" opinion as the
+unreliable signal it was. A non-verifier opinion (including `master_guidance`) is
+for ideas and directions, never for correctness.
+
+## Tools
+
+- `fact_submit` (the only path to verify a result and write a fact)
+- `gm_search` (check for an existing fact before submitting; read others' verification outcomes)
+- the fact graph is read directly (`fact_graph/facts/`, `glossary.json`)
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..d9084a5bf37beb1235de2d414e8c32c26dc1ed38
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n16_weighted_binomial_paths_20260828t170915z/workers/high2/local_memory/events.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..c39d09f656b80fc19c6a146e94feb3e97791945f
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
++{"timestamp":"2026-08-29T01:12:10+08:00","event_type":"fact_accepted","fact_id":"a896e2781ba9418d","details":"Verifier accepted the exact target statement with the independent strict-majority binary-word proof; no predecessors or external results were used. A follow-up fact_search confirmed the node is present in the fact graph."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..c39d09f656b80fc19c6a146e94feb3e97791945f
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
++{"timestamp":"2026-08-29T01:12:10+08:00","event_type":"fact_accepted","fact_id":"a896e2781ba9418d","details":"Verifier accepted the exact target statement with the independent strict-majority binary-word proof; no predecessors or external results were used. A follow-up fact_search confirmed the node is present in the fact graph."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+codex
+Target theorem verified successfully.
+
+- Fact: `a896e2781ba9418d`
+- Proof: counts length-\(2k+1\) binary words with an \(H\)-majority, partitioned by the number \(j\) of \(T\)'s before the \((k+1)\)-st \(H\).
+- Dependencies: none; no external results.
+- Shared finding: `6770298195ca3f45`
+
+The accepted node was confirmed present in the fact graph.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..c39d09f656b80fc19c6a146e94feb3e97791945f
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"memory_recall","details":"Read TASK.md and queried master_guidance, global findings, verifier feedback, and fact graph. No relevant shared entries or verified facts were present. Recovered the exact theorem from the shared PROBLEM.md."}
++{"timestamp":"2026-08-29T01:09:48+08:00","event_type":"finding_published","finding_id":"6770298195ca3f45","details":"Published the strict-majority binary-word interpretation and complete counting argument."}
++{"timestamp":"2026-08-29T01:12:10+08:00","event_type":"fact_accepted","fact_id":"a896e2781ba9418d","details":"Verifier accepted the exact target statement with the independent strict-majority binary-word proof; no predecessors or external results were used. A follow-up fact_search confirmed the node is present in the fact graph."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..51bbc537723150bc0461409c2ff1630e7ee58588
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"timestamp":"2026-08-29T01:09:48+08:00","branch":"high2-majority-words","note":"Target admits a direct finite counting proof. Count length-(2k+1) words with an H-majority. Partition by j, the number of T letters before the (k+1)-st H: the prefix has k H and j T in binom(k+j,j) arrangements, the distinguished next letter is H, and k-j suffix positions are arbitrary, giving 2^(k-j)binom(k+j,j). Letter complementation shows exactly half of all 2^(2k+1) words have H-majority, hence 4^k. Endpoint k=0 works."}
+
+tokens used
+72,691
+Target theorem verified successfully.
+
+- Fact: `a896e2781ba9418d`
+- Proof: counts length-\(2k+1\) binary words with an \(H\)-majority, partitioned by the number \(j\) of \(T\)'s before the \((k+1)\)-st \(H\).
+- Dependencies: none; no external results.
+- Shared finding: `6770298195ca3f45`
+
+The accepted node was confirmed present in the fact graph.

@@ -1,0 +1,2 @@
+{"branch":"direct_binary_string_count","status":"ready_for_verification","note":"For length 2k+1, strings with at least k+1 ones are half of all strings by complementation. If the (k+1)-st one is at position k+j+1, 0<=j<=k, choose k ones among the first k+j positions and choose the final k-j bits freely, giving binomial(k+j,j)2^(k-j). Summing gives the target LHS and half of 2^(2k+1)=4^k."}
+{"branch":"direct_binary_string_count","status":"complete","fact_id":"0dae029f5ad942e9","note":"The target theorem is established in the verified fact graph."}

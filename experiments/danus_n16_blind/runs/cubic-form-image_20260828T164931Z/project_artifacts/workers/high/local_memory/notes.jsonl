@@ -1,0 +1,2 @@
+{"branch":"complete_direct_proof","status":"ready_for_verification","reasoning":"Write s=a+b+c and q=a^2+b^2+c^2-ab-bc-ca, so the form equals sq. If 3 divides the value, cube reduction modulo 3 gives 3|s, while q=s^2-3(ab+bc+ca) gives 3|q, hence 9 divides the value. For N=3k+1 use (k+1,k,k); for N=3k-1 use (k-1,k,k); for N=9m>0 use (m+1,m,m-1), whose sum is 3m and quadratic factor is 3; use (0,0,0) for N=0."}
+{"branch":"complete_direct_proof","status":"verified_complete","fact_id":"4f01c125cb984e8c"}

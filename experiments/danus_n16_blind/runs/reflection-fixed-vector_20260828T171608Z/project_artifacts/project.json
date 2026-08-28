@@ -1,0 +1,14 @@
+{
+  "name": "n16_reflection_fixed_vector_20260828t171608z",
+  "model": "gpt-5.6-sol",
+  "roles": "high:3,xhigh:4",
+  "workers": [
+    "high",
+    "high2",
+    "high3",
+    "xhigh",
+    "xhigh2",
+    "xhigh3",
+    "xhigh4"
+  ]
+}

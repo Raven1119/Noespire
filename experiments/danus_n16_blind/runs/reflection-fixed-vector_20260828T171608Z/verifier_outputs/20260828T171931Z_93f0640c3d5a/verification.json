@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It uses the absence of nonzero fixed vectors of Q to show that I-Q is invertible, constructs a nonzero vector w=(I-Q)^{-1}u, uses orthogonality of Q to derive the required inner-product identities, and then directly verifies HQw=w. Every hypothesis is used, the statement is self-contained, and there are no prohibited or unchecked references.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}
