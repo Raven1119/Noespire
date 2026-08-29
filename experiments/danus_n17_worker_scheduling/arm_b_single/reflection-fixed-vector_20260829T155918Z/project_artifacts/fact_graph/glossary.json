@@ -1,0 +1,11 @@
+{
+  "n": "the positive integer dimension of the real vector space",
+  "Q": "the given real n by n orthogonal matrix",
+  "u": "the given unit vector in real n-dimensional space",
+  "I": "the n by n identity matrix",
+  "H": "the matrix I-2uu^{\\mathsf T}",
+  "v": "a vector used in the fixed-vector hypothesis",
+  "w": "the constructed nonzero fixed vector of HQ",
+  "A": "the inverse matrix (I-Q)^{-1}",
+  "\\mathsf T": "matrix or vector transpose"
+}

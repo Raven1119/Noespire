@@ -1,0 +1,1 @@
+{"time":"2026-08-30","branch":"direct_inverse_construction","note":"Let A=(I-Q)^{-1}. Since I-Q^T=-Q^T(I-Q), A^T=-AQ; and A(I-Q)=I gives -AQ=I-A. Hence A+A^T=I and u^TAu=1/2. Taking w=Au gives Qw=w-u, u^TQw=-1/2, and HQw=w. This is a complete direct proof."}

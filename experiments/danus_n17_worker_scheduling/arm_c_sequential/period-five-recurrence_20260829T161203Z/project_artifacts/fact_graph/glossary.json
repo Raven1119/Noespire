@@ -1,0 +1,9 @@
+{
+  "p": "a prime number greater than 5",
+  "F(p)": "the number of infinite sequences specified in the theorem statement",
+  "a_n": "the nth term of a sequence counted by F(p)",
+  "F_p": "the field of residue classes modulo p",
+  "F_p^times": "the set of nonzero elements of F_p",
+  "x": "the initial value a_1, viewed as an element of F_p^times",
+  "y": "the initial value a_2, viewed as an element of F_p^times"
+}

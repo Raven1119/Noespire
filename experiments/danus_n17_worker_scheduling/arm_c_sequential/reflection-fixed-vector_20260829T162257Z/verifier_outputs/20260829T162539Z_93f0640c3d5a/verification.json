@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The absence of a nonzero fixed vector for Q makes I-Q injective and hence invertible on the finite-dimensional space. The constructed vector w=(I-Q)^{-1}u is nonzero, orthogonality of Q yields u^{\u005cmathsf T}w=1/2, and direct substitution into H=I-2uu^{\u005cmathsf T} gives HQw=w. The statement is self-contained, all hypotheses are used, and the proof contains no external citations, internal fact-ID dependencies, or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

@@ -1,0 +1,9 @@
+{
+  "F(p)": "the number of infinite sequences specified in the theorem statement",
+  "(a_n)_{n\\ge 1}": "an infinite sequence in the theorem statement",
+  "K": "the finite field \\(\\mathbb Z/p\\mathbb Z\\)",
+  "K^\\times": "the multiplicative group of nonzero elements of \\(K\\)",
+  "x": "the initial residue \\(a_1\\)",
+  "y": "the initial residue \\(a_2\\)",
+  "(b_n)_{n\\ge 1}": "the explicitly constructed 5-periodic residue sequence"
+}

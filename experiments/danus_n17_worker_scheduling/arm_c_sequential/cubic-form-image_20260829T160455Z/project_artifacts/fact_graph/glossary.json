@@ -1,0 +1,9 @@
+{
+  "F": "The integer-valued cubic form F(a,b,c)=a^3+b^3+c^3-3abc.",
+  "Q": "The quadratic polynomial Q(a,b,c)=a^2+b^2+c^2-ab-bc-ca used in the factorization of F.",
+  "N": "The nonnegative integer whose representability is characterized.",
+  "a": "A nonnegative integer coordinate in a representation.",
+  "b": "A nonnegative integer coordinate in a representation.",
+  "c": "A nonnegative integer coordinate in a representation.",
+  "t": "An integer parameter, with its range specified in each case."
+}

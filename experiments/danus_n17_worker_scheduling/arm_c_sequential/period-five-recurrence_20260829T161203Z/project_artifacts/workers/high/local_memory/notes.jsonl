@@ -1,0 +1,2 @@
+{"branch":"direct_complete_proof","status":"ready_for_verification","reasoning":"The recurrence is the period-five Lyness map. Every sequence is uniquely determined by (a_1,a_2). The nonzero conditions at a_3,a_4,a_5 are y!=-1, x+y+1!=0, x!=-1. Under them the formulas give a_6=x and a_7=y, so periodic continuation exists. Inclusion-exclusion on (F_p^*)^2 gives (p-1)^2-((p-1)+(p-1)+(p-2)-1)=p^2-5p+6=(p-2)(p-3). Modulo 5 this is 2 for p congruent 1 or 4 and 0 for p congruent 2 or 3."}
+{"branch":"direct_complete_proof","status":"verified_complete","fact_id":"984e222e1d2e3029"}

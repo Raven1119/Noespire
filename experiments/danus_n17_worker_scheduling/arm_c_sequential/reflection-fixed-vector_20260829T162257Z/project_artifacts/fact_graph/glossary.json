@@ -1,0 +1,9 @@
+{
+  "n": "the dimension of the real vector space and the size of the square matrices",
+  "Q": "the given real n-by-n orthogonal matrix",
+  "u": "the given vector in real n-space satisfying u transpose times u equals 1",
+  "I": "the n-by-n identity matrix",
+  "H": "the matrix I minus 2 times u times u transpose",
+  "v": "a vector in real n-space used in the hypothesis about fixed vectors of Q",
+  "w": "the nonzero vector in real n-space constructed as (I-Q) inverse applied to u"
+}

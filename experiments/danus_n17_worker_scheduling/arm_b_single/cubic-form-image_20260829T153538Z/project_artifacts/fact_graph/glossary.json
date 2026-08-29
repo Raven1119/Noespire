@@ -1,0 +1,12 @@
+{
+  "F": "the cubic-form value a^3+b^3+c^3-3abc",
+  "S": "the sum a+b+c",
+  "Q": "the quadratic factor a^2+b^2+c^2-ab-bc-ca",
+  "N": "the nonnegative integer whose representability is characterized",
+  "a": "a nonnegative integer variable in a representation",
+  "b": "a nonnegative integer variable in a representation",
+  "c": "a nonnegative integer variable in a representation",
+  "x": "an arbitrary integer used in the congruence x^3≡x modulo 3",
+  "t": "the nonnegative integer quotient when N is written as 3t+1 or 3t+2",
+  "k": "the nonnegative integer satisfying N=9k"
+}

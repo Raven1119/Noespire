@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is a valid double-counting argument. Complementation bijects the H-majority and T-majority words of odd length 2k+1, so there are 4^k H-majority words. Classifying an H-majority word by the number j of T symbols before its uniquely determined (k+1)-st H yields exactly 2^{k-j} binom(k+j,j) words for each j from 0 to k, and these classes are disjoint and exhaustive. The statement is self-contained, and the proof contains no external references, prohibited justification patterns, logical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

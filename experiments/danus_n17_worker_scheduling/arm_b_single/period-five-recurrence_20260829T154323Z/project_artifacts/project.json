@@ -1,0 +1,8 @@
+{
+  "name": "n17b_period_five_recurrence_20260829t154323z",
+  "model": "gpt-5.6-sol",
+  "roles": "high:1",
+  "workers": [
+    "high"
+  ]
+}

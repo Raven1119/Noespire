@@ -1,0 +1,42 @@
+$ bash bin/danus new n17b_cubic_form_image_20260829t153538z --roles high:1 --model gpt-5.6-sol
+exit_code=0
+--- stdout ---
+created n17b_cubic_form_image_20260829t153538z with 1 workers: high
+  /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n17b_cubic_form_image_20260829t153538z
+
+--- stderr ---
+
+
+$ bash bin/danus assign n17b_cubic_form_image_20260829t153538z/high --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+exit_code=0
+--- stdout ---
+assigned n17b_cubic_form_image_20260829t153538z/high -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n17b_cubic_form_image_20260829t153538z/workers/high/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus start n17b_cubic_form_image_20260829t153538z/high
+exit_code=0
+--- stdout ---
+high: started
+
+--- stderr ---
+
+
+$ bash bin/danus finalize n17b_cubic_form_image_20260829t153538z b1b22af04436d1d4
+exit_code=0
+--- stdout ---
+finalized target for n17b_cubic_form_image_20260829t153538z: b1b22af04436d1d4
+  wrote /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n17b_cubic_form_image_20260829t153538z/TARGET.md
+
+--- stderr ---
+
+
+$ runtime/venv/bin/python -c from pathlib import Path; from danus.write_paper.assemble import closure_order; print(closure_order(Path('runtime/projects/n17b_cubic_form_image_20260829t153538z')))
+exit_code=0
+--- stdout ---
+['b1b22af04436d1d4']
+
+--- stderr ---
+
+

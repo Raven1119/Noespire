@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The hypothesis that Q has no nonzero fixed vector makes I-Q invertible. Orthogonality then yields A+A^{\uD835\uDC13}=I for A=(I-Q)^{-1}, which gives u^{\uD835\uDC13}Au=1/2. The constructed nonzero vector w=Au consequently satisfies HQw=w. All hypotheses are used, and there are no external references or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

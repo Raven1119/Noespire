@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "run_id": "period-five-recurrence_20260829T154323Z",
+  "arm": "B",
+  "project": "n17b_period_five_recurrence_20260829t154323z",
+  "problem_id": "period-five-recurrence",
+  "problem_sha256": "2a717f69d7178eb6e7aa35f2e8485b0be801b2263235b06ea71c6ed20cdacbeb",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "capability_evidence": "capability_probe_20260828T162750Z",
+  "started_at_utc": "2026-08-29T15:43:24.117978Z",
+  "completed_at_utc": "2026-08-29T15:52:42.773381Z",
+  "wall_clock_seconds": 546.474958,
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "BLIND_INTEGRITY_PASS",
+  "workers_available": 1,
+  "workers_launched": 1,
+  "worker_attempts": 1,
+  "worker_sessions": 1,
+  "worker_terminal_states": {
+    "high": "max_rounds"
+  },
+  "max_rounds": 1,
+  "verifier_calls": 2,
+  "verifier_accepts": 2,
+  "verifier_rejects": 0,
+  "verified_fact_count": 2,
+  "accepted_fact_count": 2,
+  "target_fact_ids": [
+    "c4c8763f4344a031"
+  ],
+  "supporting_closure": [
+    "c4c8763f4344a031"
+  ],
+  "supporting_closure_size": 1,
+  "outside_closure_count": 1,
+  "facts_outside_closure": 1,
+  "verified_search_waste": 0.5,
+  "worker_tokens": 75632,
+  "verifier_tokens": 63020,
+  "total_tokens": 138652,
+  "worker_index_of_first_success": 1,
+  "stopped_after_success": false,
+  "unused_worker_budget": 0,
+  "attempts": [
+    {
+      "worker_index": 1,
+      "worker": "high",
+      "terminal_state": "max_rounds",
+      "rounds": 1,
+      "last_rc": 0,
+      "wall_clock_seconds": 546.465215,
+      "verifier_events_before": 0,
+      "verifier_events_after": 2,
+      "new_verifier_events": 2,
+      "target_fact_ids_after_attempt": [
+        "c4c8763f4344a031",
+        "fc1ce269a6cd4220"
+      ],
+      "solved_after_attempt": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T154722Z_13258dbea25b",
+    "20260829T155010Z_13258dbea25b"
+  ],
+  "accepted_fact_ids": [
+    "c4c8763f4344a031",
+    "fc1ce269a6cd4220"
+  ],
+  "target_selection_rule": "lexicographically smallest accepted exact normalized statement",
+  "notes": [
+    "All possible workers use one frozen direct-proof task and the high effort role.",
+    "Arm B launches exactly one worker; Arm C launches the next only after no exact accepted target.",
+    "No target is finalized when no accepted statement exactly matches the frozen input."
+  ]
+}

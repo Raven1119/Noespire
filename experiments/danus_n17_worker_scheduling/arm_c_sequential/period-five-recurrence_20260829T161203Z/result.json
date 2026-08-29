@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "run_id": "period-five-recurrence_20260829T161203Z",
+  "arm": "C",
+  "project": "n17c_period_five_recurrence_20260829t161203z",
+  "problem_id": "period-five-recurrence",
+  "problem_sha256": "2a717f69d7178eb6e7aa35f2e8485b0be801b2263235b06ea71c6ed20cdacbeb",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "capability_evidence": "capability_probe_20260828T162750Z",
+  "started_at_utc": "2026-08-29T16:12:04.296850Z",
+  "completed_at_utc": "2026-08-29T16:17:41.156319Z",
+  "wall_clock_seconds": 315.709639,
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "BLIND_INTEGRITY_PASS",
+  "workers_available": 7,
+  "workers_launched": 1,
+  "worker_attempts": 1,
+  "worker_sessions": 1,
+  "worker_terminal_states": {
+    "high": "max_rounds"
+  },
+  "max_rounds": 1,
+  "verifier_calls": 1,
+  "verifier_accepts": 1,
+  "verifier_rejects": 0,
+  "verified_fact_count": 1,
+  "accepted_fact_count": 1,
+  "target_fact_ids": [
+    "984e222e1d2e3029"
+  ],
+  "supporting_closure": [
+    "984e222e1d2e3029"
+  ],
+  "supporting_closure_size": 1,
+  "outside_closure_count": 0,
+  "facts_outside_closure": 0,
+  "verified_search_waste": 0.0,
+  "worker_tokens": 84050,
+  "verifier_tokens": 29683,
+  "total_tokens": 113733,
+  "worker_index_of_first_success": 1,
+  "stopped_after_success": true,
+  "unused_worker_budget": 6,
+  "attempts": [
+    {
+      "worker_index": 1,
+      "worker": "high",
+      "terminal_state": "max_rounds",
+      "rounds": 1,
+      "last_rc": 0,
+      "wall_clock_seconds": 315.699957,
+      "verifier_events_before": 0,
+      "verifier_events_after": 1,
+      "new_verifier_events": 1,
+      "target_fact_ids_after_attempt": [
+        "984e222e1d2e3029"
+      ],
+      "solved_after_attempt": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T161515Z_13258dbea25b"
+  ],
+  "accepted_fact_ids": [
+    "984e222e1d2e3029"
+  ],
+  "target_selection_rule": "lexicographically smallest accepted exact normalized statement",
+  "notes": [
+    "All possible workers use one frozen direct-proof task and the high effort role.",
+    "Arm B launches exactly one worker; Arm C launches the next only after no exact accepted target.",
+    "No target is finalized when no accepted statement exactly matches the frozen input."
+  ]
+}

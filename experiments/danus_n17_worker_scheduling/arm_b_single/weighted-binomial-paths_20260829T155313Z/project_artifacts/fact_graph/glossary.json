@@ -1,0 +1,6 @@
+{
+  "k": "a nonnegative integer",
+  "j": "the number of T occurrences preceding the (k+1)-st H in a word; equivalently, the summation index",
+  "H": "the first symbol in a two-symbol alphabet",
+  "T": "the second symbol in a two-symbol alphabet"
+}
