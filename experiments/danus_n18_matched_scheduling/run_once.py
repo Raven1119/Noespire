@@ -31,7 +31,6 @@ from experiments.danus_n16_blind.run_once import (  # noqa: E402
     tokens_from_logs,
     utc_now,
     wait_for_verifier,
-    worker_statuses,
 )
 from experiments.danus_n18_matched_scheduling.scheduler import (  # noqa: E402
     run_schedule,
@@ -81,12 +80,23 @@ def exact_target_events(project_dir: Path, problem_text: str) -> list[dict[str, 
     ]
 
 
+def read_worker_statuses(
+    project_dir: Path, workers: tuple[str, ...]
+) -> dict[str, dict[str, Any]]:
+    statuses = {}
+    for worker in workers:
+        path = project_dir / "workers" / worker / ".status.json"
+        if path.is_file():
+            statuses[worker] = json.loads(path.read_text(encoding="utf-8"))
+    return statuses
+
+
 def wait_for_batch(
     project_dir: Path, workers: tuple[str, ...], timeout_seconds: int = 15000
 ) -> dict[str, dict[str, Any]]:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        statuses = worker_statuses(project_dir)
+        statuses = read_worker_statuses(project_dir, workers)
         selected = {worker: statuses.get(worker, {}) for worker in workers}
         if all(status.get("state") in TERMINAL_STATES for status in selected.values()):
             return selected

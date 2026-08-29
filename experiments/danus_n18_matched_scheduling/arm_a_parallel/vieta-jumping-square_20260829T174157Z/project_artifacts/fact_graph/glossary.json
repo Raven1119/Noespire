@@ -1,0 +1,17 @@
+{
+  "a": "a positive integer coordinate of a solution; after fixing k, the notation is relabeled for a minimal-sum solution and ordered so that a is the larger coordinate",
+  "b": "a positive integer coordinate of a solution; after fixing k, the notation is relabeled for a minimal-sum solution and ordered so that b is the smaller coordinate",
+  "q": "the positive integer (a^2+b^2)/(ab+1)",
+  "D": "the positive integer ab+1",
+  "X": "an indeterminate of the polynomial P",
+  "c": "the Vieta conjugate integer kb-a of a in the quadratic equation determined by b and k",
+  "k": "the positive integer equal to (a^2+b^2)/(ab+1)",
+  "d": "the positive integer -c used under the temporary assumption c<0",
+  "u": "the first entry of a generic positive-integer solution pair for the fixed k",
+  "v": "the second entry of a generic positive-integer solution pair for the fixed k",
+  "x": "the first coordinate of a positive-integer solution chosen with minimal coordinate sum for the fixed value k",
+  "y": "the second coordinate of that minimal positive-integer solution, ordered so that x is at least y",
+  "z": "the integer ky-x, the Vieta-conjugate coordinate",
+  "P": "the monic quadratic polynomial P(X)=X^2-kbX+b^2-k",
+  "a_1": "the companion integer root kb-a of P"
+}

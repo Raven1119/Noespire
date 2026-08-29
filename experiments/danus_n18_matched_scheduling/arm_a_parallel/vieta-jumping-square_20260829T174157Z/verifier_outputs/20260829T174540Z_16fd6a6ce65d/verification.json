@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It applies a valid minimal-solution (Vieta-jumping) descent: from a minimal positive solution (x,y), it constructs z=ky-x, proves z is a positive integer with z<y, verifies that (y,z) satisfies the same equation, and obtains a contradiction to minimality unless k is a perfect square. The statement is self-contained, all hypotheses are used, no prohibited proof pattern occurs, and there are no external references or fact_id citations requiring validation.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

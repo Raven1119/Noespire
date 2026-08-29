@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 from experiments.danus_n18_matched_scheduling import run_once
@@ -70,6 +71,22 @@ class FrozenContractTests(unittest.TestCase):
             len({(item["problem_id"], item["arm"]) for item in self.manifest["run_order"]}),
             18,
         )
+
+    def test_completion_collector_uses_the_actual_high_seven_roster(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            workers = tuple("high" if i == 1 else f"high{i}" for i in range(1, 8))
+            for worker in workers:
+                worker_dir = project / "workers" / worker
+                worker_dir.mkdir(parents=True)
+                (worker_dir / ".status.json").write_text(
+                    json.dumps({"state": "max_rounds", "round": 1, "last_rc": 0}),
+                    encoding="utf-8",
+                )
+
+            statuses = run_once.read_worker_statuses(project, workers)
+
+            self.assertEqual(set(statuses), set(workers))
 
 
 if __name__ == "__main__":

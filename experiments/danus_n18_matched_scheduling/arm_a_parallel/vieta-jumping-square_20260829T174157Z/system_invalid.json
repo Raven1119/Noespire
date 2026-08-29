@@ -1,0 +1,20 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "arm": "A",
+  "problem_id": "vieta-jumping-square",
+  "error_type": "CompletionCollectorRosterMismatch",
+  "error": "The experiment imported the N1.6 status enumerator, which knows high:3,xhigh:4 and cannot observe N1.8 workers high4 through high7.",
+  "recorded_at_utc": "2026-08-29T17:55:49.207368Z",
+  "interruption": "Controller was interrupted after all seven actual workers reached max_rounds with last_rc=0; the orphan verifier was terminated.",
+  "mathematical_metrics_included": false,
+  "replacement_allowed": true,
+  "verifier_run_ids_preserved": [
+    "20260829T174522Z_16fd6a6ce65d",
+    "20260829T174532Z_16fd6a6ce65d",
+    "20260829T174533Z_16fd6a6ce65d",
+    "20260829T174540Z_16fd6a6ce65d",
+    "20260829T174556Z_16fd6a6ce65d",
+    "20260829T174606Z_16fd6a6ce65d",
+    "20260829T174619Z_16fd6a6ce65d"
+  ]
+}

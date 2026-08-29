@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It fixes the positive integer q, chooses a positive solution minimizing a+b, derives a <= b^3 from the divisibility ab+1 | b^4+1, and handles equality directly. Under the strict alternative a < b^3, the Vieta companion root c=qb-a is proved to be a positive integer with 0<c<b and to give another solution for the same q, contradicting minimality. Hence a=b^3 and q=b^2, a perfect square. No hard-prohibition violation or reference issue occurs.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}
