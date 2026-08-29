@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "status": "PRE_RUN_FROZEN",
+  "frozen_at_utc": "2026-08-29T17:25:41Z",
+  "frozen_before_first_proof_worker": true,
+  "noespire_branch": "noespire-nl-proof-v2",
+  "pre_task_noespire_head": "258f74705b5050c70ff8b0834e5d71a6a7c2f31d",
+  "required_freeze_commit_message": "experiment: freeze N1.8 matched scheduling ablation",
+  "danus": {
+    "path": "baselines/danus",
+    "commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+    "modified": false
+  },
+  "worker_contract": {
+    "assignment_path": "experiments/danus_n18_matched_scheduling/protocol/worker_assignment.txt",
+    "assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+    "model": "gpt-5.6-sol",
+    "role": "high",
+    "reasoning_effort": "high",
+    "configured_roles": "high:7",
+    "maximum_worker_slots": 7,
+    "maximum_rounds": 1,
+    "worker_hard_timeout_seconds": 14400,
+    "verifier_codex_timeout_seconds": 900
+  },
+  "verifier": {
+    "implementation": "unchanged DANUS verifier",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "xhigh",
+    "results_dir": "baselines/danus/runtime/verify-runs"
+  },
+  "blind_policy": {
+    "wrapper_path": "experiments/danus_n16_blind/protocol/codex_blind_wrapper.sh",
+    "wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+    "capability_evidence": "experiments/danus_n16_blind/protocol/evidence/capability_probe_20260828T162750Z/summary.json",
+    "capability_evidence_sha256": "2387f0455a52abeb902dc3255277357fef8ba38086a0e9617d5a7f36e76016c1",
+    "reference_isolation_evidence": "experiments/danus_n18_matched_scheduling/protocol/reference_isolation_probe.json",
+    "plaintext_reference_policy": "outside execution workspace during all proof-relevant sessions"
+  },
+  "arms": {
+    "A": {
+      "name": "Matched Parallel-7",
+      "configured_roles": "high:7",
+      "launch_policy": "launch all seven concurrently and wait for all normal terminal states",
+      "maximum_launched_workers": 7,
+      "early_cancellation": false
+    },
+    "B": {
+      "name": "Matched Single-1",
+      "configured_roles": "high:7",
+      "launch_policy": "launch worker 1 only and terminate after its normal terminal state",
+      "maximum_launched_workers": 1,
+      "early_cancellation": false
+    },
+    "C": {
+      "name": "Matched Sequential-7 Early Stop",
+      "configured_roles": "high:7",
+      "launch_policy": "launch one worker, launch the next only after failure, stop after first exact accepted target",
+      "maximum_launched_workers": 7,
+      "early_cancellation": false
+    }
+  },
+  "problems": [
+    {
+      "problem_id": "vieta-jumping-square",
+      "problem_file": "vieta-jumping-square.md",
+      "problem_sha256": "e0e4b76ac5285eb947a7ed2fb563969ebf83338ce3a44637ca997c7cc13dd247",
+      "reference_file": "vieta-jumping-square-reference.md",
+      "reference_sha256": "98af3ba083eab7b2ef688d1e0a5eb27b53fe45d3bccbe64d95bf730c980f92a5"
+    },
+    {
+      "problem_id": "hall-marriage",
+      "problem_file": "hall-marriage.md",
+      "problem_sha256": "27f2f4caed5cd736d0b413566b19cd12b6f8b75bfdf6fe7d6efd2e886419073b",
+      "reference_file": "hall-marriage-reference.md",
+      "reference_sha256": "8e12ef99462345ccf6399fc9735a34669edf0c3c21b8a17b5a4d2900627a47f5"
+    },
+    {
+      "problem_id": "primitive-pythagorean-triples",
+      "problem_file": "primitive-pythagorean-triples.md",
+      "problem_sha256": "1b70cf1554987de8b5b509022daf39ecfdaebf26566cc80157bd98d7c3744c45",
+      "reference_file": "primitive-pythagorean-triples-reference.md",
+      "reference_sha256": "a962db8f74a631c38c68513441f5c077c1a453644e7782f4f18682ba0bf465a4"
+    },
+    {
+      "problem_id": "ceva-concurrency",
+      "problem_file": "ceva-concurrency.md",
+      "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+      "reference_file": "ceva-concurrency-reference.md",
+      "reference_sha256": "b53afd52c0d7094d7826b3a35aa065bdc7aeffe0b22c043ef502080aa50725ea"
+    },
+    {
+      "problem_id": "monotone-subsequence",
+      "problem_file": "monotone-subsequence.md",
+      "problem_sha256": "d1df89b17196c2047b4f124c9238b2cfa2dec03474bc494f01b43f86d7f3251c",
+      "reference_file": "monotone-subsequence-reference.md",
+      "reference_sha256": "1ba01d5f63aad853d36b6e4787bb7487fda861ce4a5762c7264d6a60680842c6"
+    },
+    {
+      "problem_id": "eulerian-circuit",
+      "problem_file": "eulerian-circuit.md",
+      "problem_sha256": "9206ac91babcd9a760cb59c904fe35a81d717c57e56987e0e42bde02e2545433",
+      "reference_file": "eulerian-circuit-reference.md",
+      "reference_sha256": "d675fe223250a6db9478608a311d7cef065a7de47ff8ef5d1352f5b7afb85779"
+    }
+  ],
+  "run_order": [
+    {"problem_id": "vieta-jumping-square", "arm": "A"},
+    {"problem_id": "vieta-jumping-square", "arm": "B"},
+    {"problem_id": "vieta-jumping-square", "arm": "C"},
+    {"problem_id": "hall-marriage", "arm": "B"},
+    {"problem_id": "hall-marriage", "arm": "C"},
+    {"problem_id": "hall-marriage", "arm": "A"},
+    {"problem_id": "primitive-pythagorean-triples", "arm": "C"},
+    {"problem_id": "primitive-pythagorean-triples", "arm": "A"},
+    {"problem_id": "primitive-pythagorean-triples", "arm": "B"},
+    {"problem_id": "ceva-concurrency", "arm": "A"},
+    {"problem_id": "ceva-concurrency", "arm": "C"},
+    {"problem_id": "ceva-concurrency", "arm": "B"},
+    {"problem_id": "monotone-subsequence", "arm": "B"},
+    {"problem_id": "monotone-subsequence", "arm": "A"},
+    {"problem_id": "monotone-subsequence", "arm": "C"},
+    {"problem_id": "eulerian-circuit", "arm": "C"},
+    {"problem_id": "eulerian-circuit", "arm": "B"},
+    {"problem_id": "eulerian-circuit", "arm": "A"}
+  ],
+  "valid_run_target": 18,
+  "mathematical_reruns": false
+}

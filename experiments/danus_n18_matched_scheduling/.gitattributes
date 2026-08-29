@@ -1,0 +1,7 @@
+arm_a_parallel/** -text
+arm_b_single/** -text
+arm_c_sequential/** -text
+problems/** -text
+reference/*-reference.md -text
+protocol/worker_assignment.txt -text
+protocol/evidence/** -text
