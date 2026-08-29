@@ -63,7 +63,7 @@ Exact inputs and derived values are in `analysis/aggregate.json`. Tokens are obs
 
 Arm B retained the full 4/4 solve rate with exactly one launched worker and one worker attempt per problem. It used 443,101 tokens, 83.778% fewer than Arm A, while eliminating 24 of 28 worker launches relative to A.
 
-Three problems produced exactly one accepted target Fact. `period-five-recurrence` produced two independently accepted exact-target Facts inside the same single worker session; one entered the final closure and one remained outside. Thus fixed seven-worker fan-out is the dominant observed source of verified-search waste, but it is not the only possible duplication source: one autonomous worker can resubmit an already-solved target within its session.
+Three problems produced exactly one accepted target Fact. `period-five-recurrence` produced two independently accepted exact-target Facts inside the same single worker session; one entered the final closure and one remained outside. The historical A policy package accounts for 24 of the 25 outside-closure Facts observed across A and B, while B shows that one autonomous worker can also resubmit an already-solved target. The unmatched control prevents assigning that difference specifically to scheduling.
 
 ## Arm C
 
@@ -83,19 +83,19 @@ B and C realized the same scheduling path—one direct worker per problem. Their
 
 ## Interpretation
 
-Q1: **Yes.** Arm B retained 4/4. On this diagnostic distribution, the six additional Arm-A workers contributed no observable solve-rate benefit.
+Q1: **Observationally yes.** Arm B retained 4/4. On this diagnostic distribution, the historical Arm-A policy package showed no observable solve-rate benefit over one `high` direct attempt, but the unmatched prompt/effort roster prevents a scheduling-only causal claim.
 
-Q2: **Yes.** Arm C retained Arm A's 4/4 while launching 4 rather than 28 workers. This directly supports progressive or conditional compute allocation and confirms that the external early-stop seam works.
+Q2: **Mechanically yes, causally inconclusive.** Arm C retained Arm A's 4/4 while launching 4 rather than 28 workers, and the external early-stop seam worked. Because Arm A was heterogeneous while C was homogeneous, this does not by itself establish that scheduling caused the retained solve rate or cost reduction.
 
 Q3: **No demonstrated incremental value over Arm B.** Arm B had no failed problem, and Arm C never used a later worker. Since B = C = 4/4, the supported statement is only: **single-worker-first policy is sufficient on this set**. Sequential escalation remains untested as a recovery mechanism.
 
-The conclusion is distribution-specific. The archived A roster's heterogeneous extra roles also mean this result supports removal of the historical parallel policy package; it does not rank worker specialties or reasoning efforts, which were intentionally outside scope.
+The conclusion is distribution-specific. B and C are matched to each other, so they establish that both realized the same successful single-worker-first path and that C's later-worker recovery remained untested. They are not matched to A: the historical control changed prompt portfolio and reasoning-effort roster together with scheduling. The relative metrics therefore describe the observed policy packages but cannot identify scheduling as their sole cause.
 
 ## Verdict
 
-**DEMAND_DRIVEN_EXECUTION_SUPPORTED**
+**INCONCLUSIVE**
 
-B and C each retained 4/4 while reducing worker launches by 85.714%, tokens by more than 83%, and verified-search waste by at least 76.667% relative. The evidence supports a default direct attempt with additional compute allocated only after failure. It does not separately support sequential escalation, diversification, or any N2/Cut-Set mechanism.
+B and C each retained 4/4 while showing 85.714% fewer worker launches, more than 83% fewer tokens, and at least 76.667% less verified-search waste than archived A. Those measurements are real, but the task's one-variable gate is not satisfied because A used `high:3,xhigh:4` plus seven distinct assignments while B/C used only identical `high` direct assignments. The task simultaneously forbids rerunning A and forbids sequential diversification, so this run cannot repair that design conflict. It supports neither a scheduling-only causal verdict nor sequential escalation.
 
 ## Integrity
 
@@ -109,4 +109,4 @@ B and C each retained 4/4 while reducing worker launches by 85.714%, tokens by m
 
 ## Next Step
 
-Freeze a harder out-of-sample diagnostic set that produces genuine first-worker failures, then test whether identical-worker sequential escalation recovers them more cheaply than Parallel-7.
+Pre-register a new matched ablation whose parallel control and demand-driven arms use byte-identical prompts, model, and reasoning effort; use a harder out-of-sample set capable of producing genuine first-worker failures. Do not execute it in N1.7.

@@ -10,6 +10,11 @@ from typing import Any
 
 EXPERIMENT_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = EXPERIMENT_ROOT / "protocol" / "runtime_manifest.json"
+ARM_A_MATCHED_TO_BC = False
+ARM_A_CONFOUND = (
+    "Archived Arm A used a heterogeneous high:3,xhigh:4 effort roster and seven "
+    "different task assignments; B/C used identical high direct-proof attempts."
+)
 
 
 def _load_results(directory: str, arm: str) -> list[dict[str, Any]]:
@@ -142,6 +147,10 @@ def build_evidence() -> dict[str, Any]:
         run["unused_worker_budget"] for run in arm_c["runs"]
     )
     evidence = {"A": arm_a, "B": arm_b, "C": arm_c}
+    evidence["comparison_validity"] = {
+        "matched_one_variable_ablation": ARM_A_MATCHED_TO_BC,
+        "reason": ARM_A_CONFOUND,
+    }
     evidence["relative_to_A"] = {
         "B": _relative(arm_a, arm_b),
         "C": _relative(arm_a, arm_c),
@@ -150,6 +159,9 @@ def build_evidence() -> dict[str, Any]:
 
 
 def verdict(evidence: dict[str, Any]) -> str:
+    if not evidence["comparison_validity"]["matched_one_variable_ablation"]:
+        return "INCONCLUSIVE"
+
     arm_a, arm_b, arm_c = evidence["A"], evidence["B"], evidence["C"]
     b_by_problem = {run["problem_id"]: run for run in arm_b["runs"]}
     recoveries = [
@@ -191,8 +203,9 @@ def main() -> None:
         "evidence": evidence,
         "verdict": verdict(evidence),
         "material_threshold": (
-            "For the DEMAND gate, solve count must equal A and token, worker, and relative "
-            "waste reductions must each be at least 50%."
+            "A causal gate first requires a matched one-variable A/B/C comparison. Only then "
+            "may the DEMAND gate use equal solve count and at least 50% token, worker, and "
+            "relative waste reductions."
         ),
     }
     output_path = EXPERIMENT_ROOT / "analysis" / "aggregate.json"

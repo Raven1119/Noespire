@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-08-29T16:34:27.455399Z",
+  "generated_at_utc": "2026-08-29T16:47:54.656994Z",
   "evidence": {
     "A": {
       "valid_runs": 4,
@@ -202,6 +202,10 @@
       ],
       "unused_worker_budget": 24
     },
+    "comparison_validity": {
+      "matched_one_variable_ablation": false,
+      "reason": "Archived Arm A used a heterogeneous high:3,xhigh:4 effort roster and seven different task assignments; B/C used identical high direct-proof attempts."
+    },
     "relative_to_A": {
       "B": {
         "token_reduction_fraction": 0.8377842795712623,
@@ -221,6 +225,6 @@
       }
     }
   },
-  "verdict": "DEMAND_DRIVEN_EXECUTION_SUPPORTED",
-  "material_threshold": "For the DEMAND gate, solve count must equal A and token, worker, and relative waste reductions must each be at least 50%."
+  "verdict": "INCONCLUSIVE",
+  "material_threshold": "A causal gate first requires a matched one-variable A/B/C comparison. Only then may the DEMAND gate use equal solve count and at least 50% token, worker, and relative waste reductions."
 }

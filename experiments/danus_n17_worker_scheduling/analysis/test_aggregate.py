@@ -27,10 +27,13 @@ class AggregateEvidenceTests(unittest.TestCase):
         self.assertEqual(evidence["C"]["first_success_indices"], [1, 1, 1, 1])
         self.assertEqual(evidence["C"]["unused_worker_budget"], 24)
 
-    def test_gate_selects_demand_driven_not_sequential_escalation(self) -> None:
+    def test_gate_is_inconclusive_when_arm_a_is_not_matched(self) -> None:
         evidence = aggregate.build_evidence()
 
-        self.assertEqual(aggregate.verdict(evidence), "DEMAND_DRIVEN_EXECUTION_SUPPORTED")
+        self.assertFalse(
+            evidence["comparison_validity"]["matched_one_variable_ablation"]
+        )
+        self.assertEqual(aggregate.verdict(evidence), "INCONCLUSIVE")
 
 
 if __name__ == "__main__":
