@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "status": "PRE-RUN_FROZEN",
+  "frozen_at_utc": "2026-08-29T15:04:20Z",
+  "frozen_before_first_run": true,
+  "noespire_branch": "noespire-nl-proof-v2",
+  "pre_task_noespire_head": "aa8a7efff934836b297df58f0b173b643ecf8127",
+  "required_freeze_commit_message": "experiment: freeze N1.7 worker scheduling ablation",
+  "danus": {
+    "path": "baselines/danus",
+    "branch": "codex",
+    "commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+    "modified": false
+  },
+  "blind_policy": {
+    "wrapper_path": "experiments/danus_n16_blind/protocol/codex_blind_wrapper.sh",
+    "wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+    "capability_evidence": "experiments/danus_n16_blind/protocol/evidence/capability_probe_20260828T162750Z/summary.json",
+    "capability_evidence_sha256": "2387f0455a52abeb902dc3255277357fef8ba38086a0e9617d5a7f36e76016c1",
+    "automatic_gate": "PASS"
+  },
+  "runtime": {
+    "worker_model": "gpt-5.6-sol",
+    "worker_role": "high",
+    "worker_reasoning_effort": "high",
+    "verifier_model": "gpt-5.6-sol",
+    "verifier_reasoning_effort": "xhigh",
+    "maximum_rounds": 1,
+    "worker_hard_timeout_seconds": 14400,
+    "verifier_codex_timeout_seconds": 900,
+    "task": "Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target."
+  },
+  "arms": {
+    "A": {
+      "source": "experiments/danus_n16_blind/analysis/mechanical_metrics.json",
+      "rerun": false,
+      "policy": "parallel-7 historical N1.6 high:3,xhigh:4 roster",
+      "solved": 4,
+      "problems": 4,
+      "workers_launched": 28,
+      "verifier_accepts": 28,
+      "verifier_rejects": 0,
+      "verified_fact_count": 28,
+      "supporting_closure_size": 4,
+      "outside_closure_count": 24,
+      "total_tokens": 2731554,
+      "wall_clock_seconds": 1652.82449
+    },
+    "B": {
+      "roles": "high:1",
+      "maximum_worker_budget_per_problem": 1,
+      "policy": "launch exactly one worker and terminate"
+    },
+    "C": {
+      "roles": "high:7",
+      "maximum_worker_budget_per_problem": 7,
+      "policy": "launch one worker at a time and stop after first accepted exact target"
+    }
+  },
+  "run_order": [
+    "B/cubic-form-image",
+    "B/period-five-recurrence",
+    "B/weighted-binomial-paths",
+    "B/reflection-fixed-vector",
+    "C/cubic-form-image",
+    "C/period-five-recurrence",
+    "C/weighted-binomial-paths",
+    "C/reflection-fixed-vector"
+  ],
+  "problems": [
+    {
+      "problem_id": "cubic-form-image",
+      "path": "experiments/danus_n16_blind/problems/cubic-form-image.md",
+      "sha256": "51109dc012315b93ae138daf3ef059cbb7a1ee5c11f2db53ef7962374d17d632"
+    },
+    {
+      "problem_id": "period-five-recurrence",
+      "path": "experiments/danus_n16_blind/problems/period-five-recurrence.md",
+      "sha256": "2a717f69d7178eb6e7aa35f2e8485b0be801b2263235b06ea71c6ed20cdacbeb"
+    },
+    {
+      "problem_id": "weighted-binomial-paths",
+      "path": "experiments/danus_n16_blind/problems/weighted-binomial-paths.md",
+      "sha256": "6baac13f257def1abcde219c457de62f4610600e64ea453f3ba836288eb2c80a"
+    },
+    {
+      "problem_id": "reflection-fixed-vector",
+      "path": "experiments/danus_n16_blind/problems/reflection-fixed-vector.md",
+      "sha256": "0916681243c800579f8f38563c3cd5a6cb9a84c68733d008bd77bb09af91981c"
+    }
+  ]
+}
