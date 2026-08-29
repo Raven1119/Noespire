@@ -1,0 +1,14 @@
+INFO:     Started server process [372]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:50095 (Press CTRL+C to quit)
+INFO:     127.0.0.1:52946 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57200 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:38376 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:58794 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:46582 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     Shutting down
+INFO:     127.0.0.1:38548 - "POST /verify HTTP/1.1" 500 Internal Server Error
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [372]

@@ -1,0 +1,15 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "arm": "B",
+  "problem_id": "cubic-form-image",
+  "error_type": "RuntimeError",
+  "error": "verifier service returned HTTP 500; run is system-invalid",
+  "recorded_at_utc": "2026-08-29T15:28:47.199150Z",
+  "cleanup_error": null,
+  "artifact_preservation_error": null,
+  "verifier_run_ids_preserved": [
+    "20260829T151305Z_244161b9311e",
+    "20260829T151741Z_244161b9311e",
+    "20260829T152354Z_244161b9311e"
+  ]
+}

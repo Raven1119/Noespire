@@ -48,6 +48,26 @@ ARM_CONFIG = {
 }
 
 
+def runtime_overrides(
+    wrapper: Path, wrapper_log: Path, port: int, verify_runs_dir: Path
+) -> dict[str, str]:
+    """Return the frozen external runtime settings, including verifier output scope."""
+    return {
+        "DANUS_CODEX_BIN": str(wrapper),
+        "N16_BLIND_WRAPPER_LOG": str(wrapper_log),
+        "N16_DISABLE_AUTHORING_MCP": "1",
+        "DANUS_MAX_ROUNDS": "1",
+        "DANUS_ROUND_HARD_TIMEOUT": "14400",
+        "DANUS_MAX_CONSEC_FAILURES": "5",
+        "CODEX_TIMEOUT_SECONDS": "900",
+        "VERIFY_HOST": "127.0.0.1",
+        "VERIFY_PORT": str(port),
+        "DANUS_VERIFY_URL": f"http://127.0.0.1:{port}/verify",
+        "VERIFIER_RESULTS_DIR": str(verify_runs_dir),
+        "PYTHONUNBUFFERED": "1",
+    }
+
+
 def wait_for_worker(
     project_dir: Path, worker: str, timeout_seconds: int = 15000
 ) -> dict[str, Any]:
@@ -133,24 +153,10 @@ def main() -> None:
     run_dir.mkdir(parents=True, exist_ok=False)
     wrapper_log = run_dir / "blind_wrapper.log"
     port = allocate_loopback_port()
-    env = os.environ.copy()
-    env.update(
-        {
-            "DANUS_CODEX_BIN": str(wrapper),
-            "N16_BLIND_WRAPPER_LOG": str(wrapper_log),
-            "N16_DISABLE_AUTHORING_MCP": "1",
-            "DANUS_MAX_ROUNDS": "1",
-            "DANUS_ROUND_HARD_TIMEOUT": "14400",
-            "DANUS_MAX_CONSEC_FAILURES": "5",
-            "CODEX_TIMEOUT_SECONDS": "900",
-            "VERIFY_HOST": "127.0.0.1",
-            "VERIFY_PORT": str(port),
-            "DANUS_VERIFY_URL": f"http://127.0.0.1:{port}/verify",
-            "PYTHONUNBUFFERED": "1",
-        }
-    )
-    recorder = CommandRecorder(danus_root, run_dir / "stdout_stderr.log", env)
     verify_runs_dir = danus_root / "runtime" / "verify-runs"
+    env = os.environ.copy()
+    env.update(runtime_overrides(wrapper, wrapper_log, port, verify_runs_dir))
+    recorder = CommandRecorder(danus_root, run_dir / "stdout_stderr.log", env)
     before_verifier_runs = {
         path.name for path in verify_runs_dir.iterdir() if path.is_dir()
     }

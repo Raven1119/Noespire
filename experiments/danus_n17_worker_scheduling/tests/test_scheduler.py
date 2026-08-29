@@ -28,6 +28,13 @@ class SchedulingPolicyTests(unittest.TestCase):
             path = run_once.NOESPIRE_ROOT / Path(problem["path"])
             self.assertEqual(run_once.sha256(path), problem["sha256"])
 
+    def test_verifier_results_are_pinned_to_the_wrapper_write_scope(self) -> None:
+        overrides = run_once.runtime_overrides(
+            Path("/wrapper"), Path("/wrapper.log"), 4321, Path("/runtime/verify-runs")
+        )
+
+        self.assertEqual(overrides["VERIFIER_RESULTS_DIR"], "/runtime/verify-runs")
+
     def test_single_worker_never_escalates_after_failure(self) -> None:
         launched: list[int] = []
 

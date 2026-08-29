@@ -1,11 +1,17 @@
 {
   "schema_version": 1,
-  "status": "PRE-RUN_FROZEN",
+  "status": "PRE-VALID-RUN_FROZEN_WITH_ENVIRONMENT_CORRECTION",
   "frozen_at_utc": "2026-08-29T15:04:20Z",
   "frozen_before_first_run": true,
   "noespire_branch": "noespire-nl-proof-v2",
   "pre_task_noespire_head": "aa8a7efff934836b297df58f0b173b643ecf8127",
   "required_freeze_commit_message": "experiment: freeze N1.7 worker scheduling ablation",
+  "pre_valid_run_correction": {
+    "reason": "The excluded first attempt did not inherit VERIFIER_RESULTS_DIR and defaulted into the DANUS source tree, outside the frozen wrapper write scope.",
+    "change": "Pin VERIFIER_RESULTS_DIR to baselines/danus/runtime/verify-runs.",
+    "scheduling_semantics_changed": false,
+    "invalid_run": "arm_b_single/cubic-form-image_20260829T150856Z"
+  },
   "danus": {
     "path": "baselines/danus",
     "branch": "codex",
@@ -28,6 +34,7 @@
     "maximum_rounds": 1,
     "worker_hard_timeout_seconds": 14400,
     "verifier_codex_timeout_seconds": 900,
+    "verifier_results_dir": "baselines/danus/runtime/verify-runs",
     "task": "Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target."
   },
   "arms": {
