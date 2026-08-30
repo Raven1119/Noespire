@@ -1,0 +1,1 @@
+2026-08-30T09:50:57Z	pid=366	role=verifier	cwd=/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/danus/verify/agent	policy=n19a-native-sandbox-proxy,deny-default,loopback=127.19.0.1:9,web-off,external-mcp-off	search_surface=cli-disabled:web,arxiv,apps,plugins

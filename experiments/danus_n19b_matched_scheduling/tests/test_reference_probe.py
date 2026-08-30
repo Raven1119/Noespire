@@ -22,6 +22,7 @@ class ReferenceProbeTests(unittest.TestCase):
             "windows_interop=DENIED\n"
             "windows_git_history=DENIED\n"
             "otel_export=DISABLED\n"
+            "verifier_output=WRITABLE\n"
             "workspace_reference=UNAVAILABLE\n"
             "private_store=DENIED\n"
         )
@@ -39,6 +40,10 @@ class ReferenceProbeTests(unittest.TestCase):
         )
         self.assertEqual(
             evaluate(0, trace(passing.replace("otel_export=DISABLED", "otel_export=ENABLED"))),
+            "FAIL",
+        )
+        self.assertEqual(
+            evaluate(0, trace(passing.replace("verifier_output=WRITABLE", "verifier_output=DENIED"))),
             "FAIL",
         )
 

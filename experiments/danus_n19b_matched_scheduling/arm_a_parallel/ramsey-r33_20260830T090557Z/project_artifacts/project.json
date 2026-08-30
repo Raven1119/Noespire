@@ -1,0 +1,14 @@
+{
+  "name": "n19ba_ramsey_r33_20260830t090557z",
+  "model": "gpt-5.6-sol",
+  "roles": "high:7",
+  "workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ]
+}

@@ -74,6 +74,13 @@ class FrozenContractTests(unittest.TestCase):
         self.assertEqual(identity["codex_uid_gid"], "1000:1000")
         self.assertEqual(identity["supplementary_groups"], "cleared")
         self.assertIs(identity["no_new_privileges"], True)
+        self.assertEqual(
+            identity["verifier_additional_writable_root"],
+            "baselines/danus/runtime/verify-runs",
+        )
+        shim = source.read_text(encoding="utf-8")
+        self.assertIn('"$PWD" == "/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/danus/verify/agent"', shim)
+        self.assertIn("baselines/danus/runtime/verify-runs", shim)
 
     def test_counterbalanced_order_contains_every_pair_once(self) -> None:
         expected = [list(order) for order in ("ABC", "BCA", "CAB", "ACB", "BAC", "CBA")]

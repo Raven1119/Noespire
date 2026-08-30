@@ -55,9 +55,10 @@
     "codex_uid_gid": "1000:1000",
     "supplementary_groups": "cleared",
     "no_new_privileges": true,
+    "verifier_additional_writable_root": "baselines/danus/runtime/verify-runs",
     "privilege_drop_shim_source": "experiments/danus_n19b_matched_scheduling/protocol/codex_nonroot_shim.sh",
     "privilege_drop_shim_installed": "/usr/local/libexec/noespire-n19b-codex",
-    "privilege_drop_shim_sha256": "c8f40e80a2df405d98310a0ddcf2803b18416c37c55921db51d0c4c1d679e225"
+    "privilege_drop_shim_sha256": "d5e5dcbf6488dfb4fc8c671da127982cb9b5c2f066a52967bbf74d857761675f"
   },
   "arms": {
     "A": {

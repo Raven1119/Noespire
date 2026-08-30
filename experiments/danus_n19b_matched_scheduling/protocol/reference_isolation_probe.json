@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "recorded_at_utc": "2026-08-30T08:59:08.100524Z",
+  "recorded_at_utc": "2026-08-30T09:52:20.445026Z",
   "automatic_gate": "PASS",
   "wrapper": "experiments/danus_n19a_blind_boundary/protocol/codex_blind_wrapper.sh",
   "workspace_reference": "/mnt/c/Users/wmywb/PycharmProjects/Noespire/experiments/danus_n19b_matched_scheduling/reference/ramsey-r33-reference.md",
@@ -16,7 +16,8 @@
   "windows_interop_expected": "DENIED",
   "windows_git_history_expected": "DENIED",
   "otel_export_expected": "DISABLED",
+  "verifier_output_expected": "WRITABLE",
   "returncode": 0,
-  "evidence_directory": "experiments/danus_n19b_matched_scheduling/protocol/evidence/reference_isolation_20260830T085809Z",
+  "evidence_directory": "experiments/danus_n19b_matched_scheduling/protocol/evidence/reference_isolation_20260830T095057Z",
   "proof_references_read": false
 }

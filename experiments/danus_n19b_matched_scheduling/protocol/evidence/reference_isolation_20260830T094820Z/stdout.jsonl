@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"01a05211-f665-7691-95e1-27ef1ab73caa"}
+{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Under-development features enabled: current_time_reminder. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/codex-home/config.toml."}}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_1","type":"error","message":"Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest."}}
+{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"Running the exact canary command now."}}
+{"type":"item.completed","item":{"id":"item_3","type":"agent_message","text":"The command was rejected before execution because `rm -f` is prohibited by the sandbox. No twelve output lines were produced."}}
+{"type":"turn.completed","usage":{"input_tokens":37541,"cached_input_tokens":16128,"cache_write_input_tokens":0,"output_tokens":1452,"reasoning_output_tokens":559}}
