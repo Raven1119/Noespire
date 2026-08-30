@@ -14,6 +14,7 @@ from experiments.danus_n18_matched_scheduling import run_once as base
 
 EXPERIMENT_ROOT = Path(__file__).resolve().parent
 VERIFIER_HOST = "127.19.0.1"
+NONROOT_CODEX_SHIM = Path("/usr/local/libexec/noespire-n19b-codex")
 
 
 def runtime_overrides(
@@ -21,7 +22,7 @@ def runtime_overrides(
 ) -> dict[str, str]:
     return {
         "DANUS_CODEX_BIN": str(wrapper),
-        "N19A_REAL_CODEX_BIN": str(base.NOESPIRE_ROOT / "baselines/danus/bin/codex"),
+        "N19A_REAL_CODEX_BIN": str(NONROOT_CODEX_SHIM),
         "N19A_BLIND_WRAPPER_LOG": str(wrapper_log),
         "N19A_ALLOWED_LOOPBACK_PORT": str(port),
         "DANUS_MAX_ROUNDS": "1",
@@ -121,6 +122,13 @@ def finish_pending_run() -> object:
 
 
 def main() -> None:
+    manifest = json.loads(
+        (EXPERIMENT_ROOT / "protocol/runtime_manifest.json").read_text(encoding="utf-8")
+    )
+    if base.sha256(NONROOT_CODEX_SHIM) != manifest["execution_identity"][
+        "privilege_drop_shim_sha256"
+    ]:
+        raise SystemExit("frozen Codex privilege-drop shim hash mismatch")
     configure_base_runner()
     base.main()
     finish_pending_run()

@@ -62,6 +62,16 @@ class FrozenContractTests(unittest.TestCase):
         )
         self.assertEqual(policy["allowed_loopback_host"], "127.19.0.1")
 
+    def test_codex_privilege_drop_is_frozen(self) -> None:
+        identity = self.manifest["execution_identity"]
+        source = NOESPIRE / identity["privilege_drop_shim_source"]
+        installed = Path(identity["privilege_drop_shim_installed"])
+        self.assertEqual(digest(source), identity["privilege_drop_shim_sha256"])
+        if installed.exists():
+            self.assertEqual(digest(installed), identity["privilege_drop_shim_sha256"])
+        self.assertEqual(identity["host_orchestrator"], "root")
+        self.assertEqual(identity["codex_user"], "noespire_n19b")
+
     def test_counterbalanced_order_contains_every_pair_once(self) -> None:
         expected = [list(order) for order in ("ABC", "BCA", "CAB", "ACB", "BAC", "CBA")]
         by_problem: dict[str, list[str]] = {}

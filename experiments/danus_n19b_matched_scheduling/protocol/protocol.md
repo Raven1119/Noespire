@@ -14,7 +14,7 @@ All seven TASK files are assigned before any launch. Later C workers receive the
 
 ## Blind and reference contract
 
-Every proof-relevant Codex process uses the byte-identical N1.9a wrapper. `SEARCH_INTENT_BLOCKED` and mechanically denied outbound attempts pass; any external connection, result, or bytes fail the cell. The frozen N1.9a capability artifact is the precondition gate, and each completed cell receives an automatic live audit.
+Every proof-relevant Codex process uses the byte-identical N1.9a wrapper. The deterministic host orchestrator runs as root so it alone can read private references during audit, while a frozen hash-checked, root-owned shim creates a private mount namespace, hides the parent Noespire `.git` object database and WSL interop sockets, disables Windows executable interoperability, and then drops every Codex process to the dedicated unprivileged `noespire_n19b` identity. That identity has no `sudo`/`docker` group or readable Docker socket; the isolation canary verifies those properties plus Linux and Windows-native parent-Git/history denial. Host Git, Windows interoperability, and the nested frozen DANUS repository are unchanged outside the child namespace. `SEARCH_INTENT_BLOCKED` and mechanically denied outbound attempts pass; any external connection, result, or bytes fail the cell. The frozen N1.9a capability artifact is the precondition gate, and each completed cell receives an automatic live audit.
 
 Plaintext references are committed for reproducibility, moved to the root-only private store before the first mathematical run, read only by deterministic host-side audits, and restored after all cells terminate. Proof projects receive problem statements only.
 

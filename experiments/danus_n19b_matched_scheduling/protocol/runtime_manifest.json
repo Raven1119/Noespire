@@ -49,6 +49,13 @@
     "reference_isolation_evidence": "experiments/danus_n19b_matched_scheduling/protocol/reference_isolation_probe.json"
   },
   "private_reference_store": "/root/noespire-n19b-references-6b9d662e",
+  "execution_identity": {
+    "host_orchestrator": "root",
+    "codex_user": "noespire_n19b",
+    "privilege_drop_shim_source": "experiments/danus_n19b_matched_scheduling/protocol/codex_nonroot_shim.sh",
+    "privilege_drop_shim_installed": "/usr/local/libexec/noespire-n19b-codex",
+    "privilege_drop_shim_sha256": "59cbee8e2d67ca35f1d46802278f3b2c62a7dcdda0ff54cc80db8948f613ebfd"
+  },
   "arms": {
     "A": {
       "name": "Parallel-7",

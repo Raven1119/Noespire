@@ -30,6 +30,10 @@ class RuntimeAdapterTests(unittest.TestCase):
             self.assertEqual(values["VERIFY_HOST"], "127.19.0.1")
             self.assertEqual(values["DANUS_VERIFY_URL"], "http://127.19.0.1:12345/verify")
             self.assertEqual(values["N19A_ALLOWED_LOOPBACK_PORT"], "12345")
+            self.assertEqual(
+                values["N19A_REAL_CODEX_BIN"],
+                "/usr/local/libexec/noespire-n19b-codex",
+            )
             self.assertIn("N19A_BLIND_WRAPPER_LOG", values)
         finally:
             (
