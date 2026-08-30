@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and self-contained. It validly assumes a minimal nonsquare counterexample, excludes b=1, proves that c=kb-a is positive, derives 0<c<b, and verifies that (b,c) has the same quotient k while having a smaller sum, contradicting minimality. No external references, hard-prohibition violations, logical errors, or justification gaps occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

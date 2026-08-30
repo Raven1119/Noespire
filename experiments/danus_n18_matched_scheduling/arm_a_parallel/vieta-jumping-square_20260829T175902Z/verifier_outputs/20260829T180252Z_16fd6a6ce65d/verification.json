@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct. It sets up a minimal-counterexample descent, uses the second root c = kb - a of the associated monic quadratic, proves c is a positive integer with c < b, and obtains a strictly smaller positive solution with the same nonsquare quotient, contradicting minimality. All algebraic and order arguments are justified, the statement is self-contained, and there are no external references or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

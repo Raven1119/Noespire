@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines the lengths of the longest increasing and decreasing subsequences ending at each position, proves that distinct positions yield distinct ordered pairs of such lengths, and applies the pigeonhole principle to n^2+1 pairs lying in a set of size n^2 under the contrary assumption. All maxima and extension steps are justified, the distinctness hypothesis is used correctly, and there are no external references or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

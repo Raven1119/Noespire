@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines the maximal increasing and decreasing subsequence lengths ending at each position, bounds both by n under the contradictory assumption, and applies the pigeonhole principle to obtain two indices i<j with the same pair. Distinctness then gives either x_i<x_j or x_i>x_j, and appending x_j produces the required contradiction in the corresponding coordinate. The statement is self-contained, all hypotheses are used, and there are no external references, fact_id citations, prohibited source appeals, critical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

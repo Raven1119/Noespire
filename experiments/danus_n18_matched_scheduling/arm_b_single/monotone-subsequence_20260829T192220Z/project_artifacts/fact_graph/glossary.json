@@ -1,0 +1,5 @@
+{
+  "x_i": "the term in position i of the arbitrary sequence of n^2+1 distinct real numbers",
+  "P_i": "the maximum length of a strictly increasing subsequence ending at x_i",
+  "D_i": "the maximum length of a strictly decreasing subsequence ending at x_i"
+}

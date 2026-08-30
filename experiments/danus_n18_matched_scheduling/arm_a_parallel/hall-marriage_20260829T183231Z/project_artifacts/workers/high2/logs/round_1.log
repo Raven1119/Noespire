@@ -1,0 +1,795 @@
+Reading additional input from stdin...
+OpenAI Codex v0.150.1
+--------
+workdir: /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a04ecb-a1f4-7d11-b480-8682e1d184ee
+--------
+user
+You are worker 'high2' on project 'n18a_hall_marriage_20260829t183231z'. Continue solving the problem (this is a continuation round, not a fresh start).
+1. Read TASK.md — your current assignment (which direction/subgoal is yours).
+2. Follow AGENTS.md (worker.md) exactly — your standing contract (the adaptive control loop, memory discipline, the fact_submit gate). Drive toward a full verified result.
+3. Resume from state: gm_search relevant findings + dead ends, read the fact graph and the latest master_guidance — DO NOT restart from zero; build on what is already there.
+4. Keep going: assess -> pick skills adaptively -> act -> persist, repeatedly. An open problem is not a reason to stop. Do NOT finalize prematurely.
+5. Persist as you go: rough progress to local memory; shareable findings via gm_add; any verified result via fact_submit.
+warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+warning: Under-development features enabled: current_time_reminder. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/codex-home/config.toml.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m resuming from the assigned branch and shared state first. I’ll use the query-memory procedure to avoid duplicating prior work, then select the next proof technique based on the current verified facts and verifier feedback.
+exec
+/bin/bash -lc "pwd && rg --files -g 'TASK.md' -g 'local_memory/**' -g 'global_memory/**' -g 'fact_graph/**' -g '"'!*.pyc'"' | head -200" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 1019ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+TASK.md
+
+exec
+/bin/bash -lc 'cat /home/wmywb/.agents/skills/worker/query-memory/SKILL.md' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+exec
+/bin/bash -lc 'cat TASK.md && find . -maxdepth 2 -type f -o -type l | sort' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ exited 1 in 1095ms:
+cat: /home/wmywb/.agents/skills/worker/query-memory/SKILL.md: No such file or directory
+
+ succeeded in 1101ms:
+Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+./.agents/skills
+./.codex/config.toml
+./.pid
+./.pid.lock
+./.role
+./.status.json
+./AGENTS.md
+./TASK.md
+./logs/loop.log
+./logs/round_1.log
+
+codex
+The assignment is to deliver the full theorem, not merely an auxiliary lemma. The local skill alias points elsewhere than the catalog path I first tried, so I’m resolving the worker-local alias and continuing the memory audit before proving anything.
+exec
+/bin/bash -lc 'readlink -f .agents/skills && find -L .agents/skills -maxdepth 2 -name SKILL.md -print | sort' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 1566ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker
+.agents/skills/construct-counterexamples/SKILL.md
+.agents/skills/construct-toy-examples/SKILL.md
+.agents/skills/direct-proving/SKILL.md
+.agents/skills/identify-key-failures/SKILL.md
+.agents/skills/obtain-immediate-conclusions/SKILL.md
+.agents/skills/propose-subgoal-decomposition-plans/SKILL.md
+.agents/skills/query-memory/SKILL.md
+.agents/skills/search-math-results/SKILL.md
+.agents/skills/verify-proof/SKILL.md
+
+exec
+/bin/bash -lc 'cat .agents/skills/query-memory/SKILL.md' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 986ms:
+---
+name: query-memory
+description: Recall what is already known — your own prior reasoning, the swarm's shared findings (including dead ends and verifier feedback), and the verified facts — before doing new work. Use when prior conclusions, examples, dead branches, verification outcomes, or verified results may inform the current question, claim, subgoal, or branch decision.
+---
+
+# Query Memory
+
+Before spending effort, check what already exists. There are three places to
+look, in the three-memory model:
+
+1. **Your own local memory** (private): read/grep `local_memory/notes.jsonl` and
+   `events.jsonl` for your prior reasoning and what you already tried.
+2. **Global memory** (shared findings): `gm_search(query, kinds=...)` over the
+   swarm's findings. Especially useful kinds:
+   - `dead_end` / `obstacle` — paths that already died (skip them);
+   - `verification` — outcomes of others' `fact_submit` (learn from rejections);
+   - `conclusion` / `example` / `counterexample` / `plan` — others' results to build on.
+   You can also read the `global_memory/<kind>.jsonl` files directly.
+3. **Fact graph** (verified truth): `fact_search(query)` (BM25 over the verified
+   facts) to find results you can cite or that show your subgoal is already
+   proved — it returns `{fact_id, statement}`; read the full proof from
+   `fact_graph/facts/<fact_id>.md` on a relevant hit, and `fact_graph/glossary.json`
+   to reuse the project's symbol definitions. A proof may build **only** on facts
+   (cite a `fact_id`).
+
+## Procedure
+
+1. Obey the current prompt's restrictions first. If it forbids a direction, file,
+   or search, that overrides default recall. If it recommends specific results or
+   directions, raise their priority.
+2. Start with the cheapest relevant source: your own local memory for your
+   context; `gm_search` for the swarm's findings; the fact graph for verified
+   building blocks.
+3. Prefer a narrow, targeted query (specific `kinds`, a sharp query string) over
+   reading everything.
+4. **Workspace boundary:** stay inside your own working directory and the shared
+   project stores. Do not scan parent directories, other workers' private
+   `local_memory/`, or other projects.
+
+## Retrieval priority
+
+- A relevant **verified fact** (fact graph) is the strongest hit — you can build
+  on it directly by citing its `fact_id`.
+- A sibling's **`dead_end`/`obstacle`** saves you from re-walking a dead path.
+- A sibling's **`verification`** rejection tells you why a similar claim failed.
+- A `conclusion`/`example`/`counterexample` is awareness — useful, but **never a
+  brick** (only facts are). Re-verify anything you intend to build on.
+
+## Output
+
+Note what you recalled and how you used it in your local memory (`events`). Do not
+re-publish others' findings; just use them.
+
+## Tools
+
+- `gm_search` (recall shared findings; BM25 over global memory)
+- `fact_search` (recall verified facts; BM25 over the fact graph — novelty + citation lookup)
+- local memory is read directly (no tool — read/grep the files); read a fact's full
+  proof from its `fact_graph/facts/<fact_id>.md` once `fact_search` surfaces it
+
+exec
+/bin/bash -lc 'cat ../../PROBLEM.md; if [ -f local_memory/notes.jsonl ]; then cat local_memory/notes.jsonl; fi; if [ -f local_memory/events.jsonl ]; then cat local_memory/events.jsonl; fi' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 956ms:
+Let (G=(X\sqcup Y,E)) be a finite bipartite graph. For (S\subseteq X), let
+
+\[
+N(S)=\{y\in Y: \text{(y) is adjacent to at least one vertex of (S)}\}.
+\]
+
+Prove that (G) has a matching saturating every vertex of (X) if and only if
+
+\[
+|N(S)|\ge |S|
+\]
+
+for every subset (S\subseteq X).
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+No prior findings, verifier outcomes, or accepted facts exist for this project, and no master guidance has been posted. The clean route is the standard strong induction on \(|X|\), split by whether a nonempty proper Hall-tight subset exists. I’m now grounding the key theorem search as required, then I’ll write and verifier-test the complete proof.
+exec
+/bin/bash -lc 'cat .agents/skills/search-math-results/SKILL.md && cat .agents/skills/obtain-immediate-conclusions/SKILL.md && cat .agents/skills/direct-proving/SKILL.md && cat .agents/skills/verify-proof/SKILL.md' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 1013ms:
+---
+name: search-math-results
+description: Find program-conditioned math results, constructions, examples, counterexamples, analogies, and background references. Use when the current active program needs repair, mutation, analogy, a program shift, or carefully gated obstruction search.
+---
+
+# Search Math Results
+
+Use this skill as the default retrieval workflow for mathematical background and related results, conditioned on the live research program currently being pursued.
+
+## Input Contract
+
+Read:
+
+- the current target statement, subgoal, lemma, or claim
+- the `program_stage`, chosen from:
+  - `fresh_orientation`
+  - `active_program`
+  - `mature_subproblem`
+- the current `active_program`, meaning the live research program currently being pursued, such as a construction route, globalization route, mutation route, or other proof strategy
+- the current `missing_mechanism`, meaning the specific mechanism, construction, lemma, bridge, or proof move that is missing
+- the `search_mode`, chosen from:
+  - `repair`
+  - `mutation`
+  - `analogy`
+  - `program_shift`
+  - `theorem_level_blocker`
+- the search intent:
+  - `theorem`
+  - `construction`
+  - `example`
+  - `counterexample`
+  - `background`
+- relevant branch/subgoal context from memory
+
+If the prompt explicitly declares the `program_stage`, `active_program`, `missing_mechanism`, or blocker policy, obey those declarations. If the prompt does not declare the stage, default to `fresh_orientation` for a new problem, first-pass search, or no mature program yet; use `active_program` when the run already has a live named program, branch, or missing mechanism; and use `mature_subproblem` only when the run is already narrowed to a repeatedly failed mature subproblem or mature active program.
+
+## Search Modes
+
+- `repair`: search for results or constructions that directly repair a specific missing step in the current active program.
+- `mutation`: search for nearby constructions or variants that modify the current active program while preserving continuity with it.
+- `analogy`: search broadly, including in apparently unrelated areas, for mechanisms, lemmas, constructions, examples, or proof ideas that might transfer to the current missing mechanism after translation or modest modification.
+- `program_shift`: search for a genuinely new program after repeated failure of the current one, while explaining the possible splice point or bridge back to the current problem.
+- `theorem_level_blocker`: search for obstruction or impossibility results only under the activation rule below.
+
+`theorem_level_blocker` is not a default mode. It is disallowed by default in `fresh_orientation`. It is allowed in `mature_subproblem` when the blocker search targets that narrowed mature subproblem or mature active program rather than the whole original goal. It is also allowed whenever the prompt explicitly asks for obstructions, impossibility results, blocker theorems, or negative evidence. If blocker mode is not allowed, downgrade to `repair`, `mutation`, `analogy`, or `program_shift`.
+
+Broad and creative search is allowed. Do not restrict yourself to the surface vocabulary of the current problem or only the literal keywords in the prompt. Cross-field and apparently unrelated analogy search is acceptable when it targets the same missing mechanism. Theorem-level, proof-level, theory-level, and more abstract analogy search are all allowed when tied to a plausible transfer idea.
+
+## Procedure
+
+1. Identify the current `program_stage`, `active_program`, `missing_mechanism`, and `search_mode` before searching.
+2. For non-blocker modes, usually generate searches in multiple layers. In `fresh_orientation`, allow broad object-level, theorem-level, proof-pattern, and theory-pattern queries. In `active_program` and `mature_subproblem`, still allow broad queries, but tie them to the active program or a plausible program shift.
+3. Start with `search_arxiv_theorems`.
+4. When using `search_arxiv_theorems`, phrase the query as a complete mathematical statement whenever possible, but also issue mechanism- and analogy-driven queries when they better target the missing mechanism. Each hit carries `title`, the full verbatim `theorem` text, `arxiv_id`, and the in-paper `theorem_id`; use `arxiv_id` to pull the exact paper.
+5. Inspect the returned items and decide whether they are useful for the current active program.
+6. Do not use broad recursive scans of `downloads/` as a theorem-search engine. If an exact local paper/file is already known or prompt-recommended, read that exact path. Otherwise search externally first. If relevant long-term papers already exist in `downloads/common`, prefer those exact files before re-downloading.
+7. If a genuinely new technical branch is opened (a new class of objects, a new construction regime, or a new body of machinery), then before killing that branch normally do at least one of the following: download and read at least one exact paper about that direction; read an exact local paper already present in `downloads/common` or another exact prompt-recommended path; or explicitly justify why no extra literature layer is needed because the branch has already reduced to a previously audited regime.
+8. External search first is still the default, but once a genuinely new direction is chosen, exact paper download/read is expected before final branch rejection. This rule is about depth of engagement with a new direction: use a small number of exact relevant papers, not no papers and not many-paper rummaging.
+9. Keep all downloaded PDFs and extracted text files organized inside `downloads/` in the current working directory.
+10. If a useful theorem/example/counterexample is found and it comes from a paper, download that paper into the workspace, extract its text, and read the extracted text before relying on the result.
+11. If a useful theorem is found, do not stop at the statement alone. Read the proof of that theorem as well and extract any techniques, constructions, reductions, or proof patterns that may help with the current target statement.
+12. Expand the definitions and concepts appearing in that theorem using the surrounding context of the paper, and check carefully whether the theorem is actually applicable to the current situation. Be explicit about terminology that may shift across contexts. If the theorem is only a partial result for the current target, also analyze why its method does not prove the full statement — which extra hypotheses it needs, where the proof breaks without them, and what obstruction this reveals (do not merely force the current object to satisfy the extra hypotheses).
+13. Record not only what the theorem says, but also what its proof suggests for the current active program and missing mechanism.
+14. If the theorem search returns no useful information, switch to Codex's built-in web search.
+15. Use the built-in web search either to look for specific math results or to gather background information, terminology, standard references, canonical constructions/examples/counterexamples, or remote analogies.
+16. If the built-in web search reveals a useful paper, again download it, extract its text, and read the relevant extracted text before using it in reasoning.
+17. If the built-in web search reveals a useful theorem, also read its proof, expand its local definitions from the paper context, and extract the techniques that look adaptable to the current active program. Apply the same partial-result analysis if the web result is only a partial result.
+18. Summarize the most useful findings and explain why they matter for the current proof state.
+19. If a result may later be used in a proof, preserve its full statement and source identifiers (`title`, `authors`, `arxiv_id`, `theorem_id`, year) so downstream proof steps can cite it explicitly — and so it can be passed as a structured `external_refs` entry when the proof that uses it is submitted via `fact_submit`.
+
+## Usefulness Test
+
+For `fresh_orientation`, treat search results as useful if they do at least one of the following:
+
+- provide a theorem/lemma/definition close to the target statement
+- provide a construction/example/counterexample that can be adapted
+- suggest a standard technique or reformulation relevant to the current branch or problem
+- provide a proof-level analogy
+- provide a theory-level analogy
+- provide a remote analogy together with a plausible transfer idea
+
+For `active_program`, treat search results as useful if they do at least one of the following:
+
+- repair a concrete missing mechanism in the active program
+- provide a mutation of the current program
+- provide a remote analogy that can plausibly transfer
+- provide a new program together with a plausible splice point or bridge to the current problem
+- provide a proof-pattern or theory-pattern transfer hypothesis that could plausibly be migrated into the active program
+
+For `mature_subproblem`, use the `active_program` criteria and additionally allow gated blocker search.
+
+A result can be strategically useful even if it does not yet directly repair the missing mechanism, provided it includes a plausible transfer hypothesis explaining how its construction, proof, or theory might transfer.
+
+Treat results as not useful if they are vague, merely generic survey material, or a whole-goal obstruction search when blocker mode is not allowed. If the results are too weak to guide the next step, fall back to the built-in web search.
+
+## Output Contract
+
+Note a summary of the search in your local memory (`events`) — search is process,
+not a shared finding. (A *useful reference you actually use* is recorded inside the
+proof step that cites it, with its complete statement + `paper_id`/`theorem_id`/
+`arXiv id`.) Summary record:
+
+```json
+{
+  "event_type": "search_math_results",
+  "query": "...",
+  "program_stage": "fresh_orientation|active_program|mature_subproblem",
+  "active_program": "...",
+  "missing_mechanism": "...",
+  "search_mode": "repair|mutation|analogy|program_shift|theorem_level_blocker",
+  "blocker_search_allowed": false,
+  "usefulness_tier": "direct|strategic|discard",
+  "analogy_depth": "theorem|proof|theory|meta",
+  "transfer_hypothesis": "optional plausible transfer idea; analogy_depth is descriptive bookkeeping, not a ranking of importance",
+  "new_direction_requires_exact_paper": false,
+  "literature_depth_reached": "none|local_exact|downloaded_exact",
+  "search_intent": "theorem|construction|example|counterexample|background",
+  "primary_tool": "search_arxiv_theorems",
+  "fallback_used": false,
+  "splice_point": "optional bridge back to the current problem",
+  "results_summary": ["..."],
+  "useful_references": [
+    {
+      "title": "...",
+      "complete_statement": "...",
+      "url_or_id": "...",
+      "paper_id": "...",
+      "arxiv_id": "...",
+      "theorem_id": "...",
+      "local_pdf_path": "optional",
+      "local_text_path": "optional",
+      "expanded_definitions": ["paper-context expansions of terms/concepts used in the statement"],
+      "applicability_check": ["why the statement does or does not apply in the current setting"],
+      "partial_result_analysis": ["if only a partial result: extra hypotheses, where the method fails for the full problem, and what difficulty this reveals"],
+      "proof_insights": ["optional extracted techniques or ideas from the proof"],
+      "why_useful": "..."
+    }
+  ],
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+## Tools
+
+- `search_arxiv_theorems` (Matlas arXiv theorem search — verbatim statements)
+- `gm_search` (check whether a sibling already found/used this result)
+- Codex built-in web search (fallback when the theorem search is too weak)
+- local memory (`events`) for the search log — direct file write
+
+## Failure Logging
+
+If neither theorem search nor web search yields useful information, note in local memory (`events`):
+
+- `event_type="search_math_results_stalled"`
+- the attempted queries
+- the reason the results were not useful
+---
+name: obtain-immediate-conclusions
+description: Derive immediate mathematical consequences from a theorem statement or subgoal. Use when starting a new problem, branch, or subgoal, or when cheap progress or a cleaner reformulation is needed before deeper proof search.
+---
+
+# Obtain Immediate Conclusions
+
+Extract direct implications before speculative reasoning.
+
+## Input Contract
+
+Read from memory and current context:
+
+- `problem_id`
+- current theorem/subgoal statement
+- memory
+
+## Procedure
+
+1. Normalize notation and restate the claim in equivalent forms.
+2. List direct consequences that follow from definitions and basic algebraic/logical manipulations.
+3. Split consequences into necessary conditions and candidate sufficient conditions.
+4. Mark each consequence with confidence and justification type.
+5. For every conclusion, explicitly decide whether it is likely fragile and should be stress-tested by counterexample.
+6. If a conclusion is fragile, record why it is fragile and indicate that `$construct-counterexamples` should be considered next.
+
+## Output Contract
+
+Publish each conclusion to global memory with `gm_add` (kind `conclusion`):
+`claim` = the conclusion's statement, `evidence` = the derivation/justification
+that makes it checkable, and carry these fields in the record:
+
+```json
+{
+  "statement": "...",
+  "justification_type": "by_definition|calculation|known_fact|logical_equivalence",
+  "confidence": 0.0,
+  "is_fragile": false,
+  "fragility_reason": "",
+  "suggested_followup": "none|construct-counterexamples",
+  "scope": "global|branch|subgoal",
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+Rules:
+
+- `is_fragile` must always be present.
+- If `is_fragile=true`, then `fragility_reason` must explain the risk and `suggested_followup` should be `construct-counterexamples`.
+- If `is_fragile=false`, use `fragility_reason=""` and `suggested_followup="none"`.
+
+## Tools
+
+- `gm_add` (publish the conclusion finding)
+- `gm_search` (recall related findings across the swarm)
+- `search_arxiv_theorems` for nontrivial consequences
+- Codex built-in web search for background definitions/terminology
+
+## Failure Logging
+
+If no meaningful consequence is found, note it in your local memory (`events`) with:
+
+- `event_type="immediate_conclusions_stalled"`
+- missing assumptions and suspected blockers
+---
+name: direct-proving
+description: Screen a decomposition plan by first trying to prove all of its subgoals directly, then identifying the key stuck points if the plan does not fully go through. Use when a decomposition plan is created.
+---
+
+# Direct Proving
+
+Use this skill to screen decomposition plans by first trying to carry the whole plan through, and if it does not fully go through, then identify the key stuck points.
+
+
+## Input Contract
+
+Read:
+
+- one decomposition plan from `subgoals`
+- relevant `immediate_conclusions`, `toy_examples`, `counterexamples`, and `failed_paths`
+- relevant search results and references
+- any previously identified external statements whose proofs may be adaptable
+
+## Procedure
+
+1. Take one decomposition plan at a time.
+2. For each subgoal, actively use the searched results, toy examples, and counterexamples that are most relevant to that subgoal.
+3. When a similar theorem has been found, try to adapt its proof idea, construction, or reduction to the current subgoal instead of treating it as a black-box citation.
+4. If the adapted theorem is only a partial result with extra hypotheses, first analyze why its method needs those hypotheses and where it fails for the current subgoal — do not skip this by merely trying to show the current object satisfies the extra hypotheses and applying the partial result directly.
+5. First attempt to prove all subgoals in that plan directly.
+6. Try to carry the whole plan through before switching into failure diagnosis mode.
+7. For each subgoal, record whether it is:
+   - already solved directly
+   - partially advanced
+   - blocked
+8. If a subgoal is blocked or you get stuck on it, FIRST invoke `$construct-counterexamples` for that subgoal — test whether it is false, too strong, or missing hypotheses (not merely hard). If no counterexample emerges and the subgoal still resists after at least two genuine direct attempts, do not grind indefinitely: record the stuck point as an `obstacle`/`dead_end` finding (`gm_add`) so siblings skip it and the next round's `master_guidance` can bring fresh direction.
+9. If a proof adaptation attempt fails, identify why the migration fails. Be concrete: for example, note which hypothesis is missing, which construction does not transfer, which step breaks, which counterexample blocks the migration, or which part of the searched proof depends on structure absent in the current setting.
+10. If a subgoal is solved with a self-contained partial result that the rest of the plan will USE downstream, partial-verify that result with `$verify-proof` in partial-candidate mode before treating it as established. Adopting unverified partial results as building blocks is the single biggest correctness risk; the verifier is the sole authority on whether the partial result really holds.
+11. If all subgoals are solved directly AND the partial results that compose into a full proof have each been partial-verified as needed, mark the plan as solved and assemble the proof draft.
+12. When a direction remains viable and supports sustained progress, work on it
+    deeply for 1–2 hours and try to establish one mathematically deep result that
+    resolves a genuine obstacle or materially advances the main problem. Do not
+    turn each routine calculation into its own fact, and do not bundle shallow
+    observations merely to imitate depth; use supporting steps to prove the one
+    substantive conclusion.
+13. If the plan does not fully go through, then identify the key stuck points as concretely as possible.
+14. Focus on locating the decisive failure modes of the plan after this first full attempt, not on polishing a full proof.
+
+## Output Contract
+
+Publish one record per attempted subgoal to global memory with `gm_add` (kind
+`proof_attempt`): `claim` = the subgoal + its status, `evidence` = the attempt /
+the partial proof if solved, plus these fields:
+
+```json
+{
+  "plan_id": "...",
+  "attempt_type": "direct",
+  "subgoal": "...",
+  "attempt_summary": "...",
+  "status": "solved|partial|stuck",
+  "used_examples": ["..."],
+  "used_counterexamples": ["..."],
+  "counterexample_search_for_stuck_subgoal": {
+    "performed": true,
+    "summary": "...",
+    "result": "refuted|not_refuted|inconclusive|not_needed"
+  },
+  "key_stuck_points": ["..."],
+  "used_results": ["..."],
+  "adapted_from": ["relevant statements or proofs whose ideas were migrated"],
+  "migration_failures": ["why a proof adaptation or migration failed"],
+  "branch_id": "optional"
+}
+```
+
+Record the plan's updated status (`screening` / `screened` / `solved`) in your
+local memory or as a follow-up `plan` finding.
+
+## Tools
+
+- `gm_add` (publish the proof-attempt finding)
+- `gm_search` (recall examples, counterexamples, dead-ends, and verified facts)
+- `fact_submit` (verify any self-contained partial result before building on it; see `$verify-proof`)
+- `search_arxiv_theorems`
+
+## Failure Logging
+
+If a decomposition plan does not solve the problem directly after attempting all of its subgoals, publish a `dead_end` finding (`gm_add`) that summarizes the plan-local stuck points and any important proof-migration failures, so siblings skip them.
+---
+name: verify-proof
+description: Verify a result and, on acceptance, write it as a fact — via the fact_submit tool. Use for the full target theorem AND for every sharply-delimited intermediate result, lemma, construction, or formula you intend to build on. The verifier is the sole authority on mathematical correctness.
+---
+
+# Verify Proof
+
+The verifier is the **canonical and sole authority on mathematical correctness**.
+Mathematics requires 100% accuracy; even though this verifier is not a formal
+proof assistant, it is the strongest correctness check in the system. No LLM
+consultation, panel, or self-critique substitutes for it.
+
+**You verify and write a fact through one tool: `fact_submit`.** It runs the
+glossary-coverage check, calls the verifier, and writes the fact to the fact graph
+**iff the verifier accepts** — there is no other way a fact enters the graph.
+
+## When to submit
+
+- **The full target theorem** — when you have assembled a complete proof of the
+  whole problem (as a self-contained statement + proof, citing its predecessors by
+  `fact_id`).
+- **Every intermediate result you intend to USE downstream** — a lemma, a
+  candidate construction, an arithmetic/closed-form claim, a saturation or
+  local-to-global claim, any sharply-delimited step. **Adopting an unverified
+  partial result as a building block is the single biggest correctness risk.** When
+  in doubt, submit.
+
+Choose a substantive mathematical boundary, not the smallest checkable line.
+Routine calculations, substitutions, and bookkeeping identities should normally
+remain internal steps in the proof of a deeper fact. The submitted fact should
+state one mathematically significant conclusion; depth must not be simulated by
+bundling several shallow or unrelated claims. Split supporting claims only when
+they have independent downstream uses, separate proof obligations, or need
+isolated verifier repair.
+
+Do **not** build on an unverified finding from global memory. A `conclusion` /
+`example` / `counterexample` there is awareness, not a brick — re-derive it as a
+self-contained statement+proof and submit it before relying on it.
+
+## Before you submit — write an "ugly-proof" fact
+
+A fact in the fact graph is written in **"ugly-but-rigorous"** form (the operator
+may call it an **"ugly-proof"**). The one goal of
+this form is that the fact is **mechanically checkable for correctness** by a
+reader with no memory and no math intuition (an agent with no recall, a human, the
+verifier). It is allowed — encouraged — to be **ugly**: redundant, machine-flavored,
+verbose. It is **not allowed** to be ambiguous, vague, or context-dependent.
+"Ugly" is the deliberate contrast with the polished arXiv paper (a separate
+pipeline); here, only mechanical correctness matters.
+
+Concretely, before you submit:
+
+- **Self-contained.** A reader using only this fact + its declared predecessors +
+  the project glossary can decide whether the math is correct. No appeal to chart
+  positions, parse status, project history, or "as we know".
+- **Define every symbol.** Each symbol used in the statement/proof is defined: in
+  this fact's `glossary_introduces`, in a cited predecessor's glossary, in the
+  project glossary, or in the **global glossary** of universal notation (Z, Q, R,
+  C, floor/ceil, gcd/lcm, intervals, Greek parameter names). Don't redefine
+  universal notation — `glossary_introduces` is for project-specific symbols only.
+  Reuse the project's existing symbol for the same object. `fact_submit` returns
+  `undefined_symbols` if you missed one.
+- **Cite every dependency by `fact_id`** — never "by the result above", never the
+  problem statement as a math source.
+- **Every quantifier explicit; every introduced parameter (epsilon, k, …) carries
+  an explicit range.**
+- **No handwave** ("obviously", "easy to see", "routine", "analogously",
+  "by some classical argument") and **no chart-position references** ("as above").
+- **Avoid duplicates.** `gm_search` the fact graph / global memory (or read
+  `fact_graph/facts/`) for an existing fact with the same statement; if one
+  exists, cite its `fact_id` instead of re-proving it.
+
+## Submit and repair
+
+Call `fact_submit(statement, proof, predecessors=[...], glossary_introduces={...})`.
+Read the result:
+
+- `accepted: true, fact_id` — the fact is written. **Cite `fact_id`** downstream.
+- `accepted: false, repair_hints` (+ `undefined_symbols`) — revise: resolve
+  critical errors first, then all remaining gaps; do not assume the fix is local —
+  change strategy or backtrack if needed; then resubmit. Treat any `wrong` verdict,
+  any critical error, or any gap as failure.
+- `verdict: "error"` — the verify service was unavailable; retry.
+- `accepted: true, write_error` (e.g. a predecessor was revoked) — the fact was not
+  written; re-prove or avoid that predecessor.
+
+Every outcome is auto-logged to global memory (kind `verification`), so the
+feedback is shared — `gm_search` it to learn from others' rejections.
+
+## The verifier is the only correctness authority
+
+If your own reasoning, the main agent's `master_guidance`, or any other LLM calls
+a result correct but `fact_submit` rejects it, the verifier wins. Always. Note the
+disagreement (a `dead_end` finding) and treat the "looks correct" opinion as the
+unreliable signal it was. A non-verifier opinion (including `master_guidance`) is
+for ideas and directions, never for correctness.
+
+## Tools
+
+- `fact_submit` (the only path to verify a result and write a fact)
+- `gm_search` (check for an existing fact before submitting; read others' verification outcomes)
+- the fact graph is read directly (`fact_graph/facts/`, `glossary.json`)
+
+exec
+/bin/bash -lc 'mkdir -p local_memory' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 1057ms:
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2/local_memory/events.jsonl
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2/local_memory/notes.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+codex
+The induction closes in both branches: a tight subset lets the problem split into two smaller Hall instances, while absence of a tight proper subset gives one unit of slack, enough to delete an adjacent pair and induct. I’m recording that proof path in shared memory and sending the complete self-contained theorem to the verifier.
+mcp: danus/gm_add started
+mcp: danus/gm_add (completed)
+mcp: danus/gm_add started
+mcp: danus/gm_add (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+codex
+The full theorem is now with the verifier. The submitted proof is dependency-free and includes both induction cases explicitly, including the residual-neighborhood cardinality calculation where Hall proofs most often hide a gap.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+codex
+The verifier is still processing; no rejection or repair hint has returned yet. I’ll keep the submission active and repair immediately if it identifies any formal gap.
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+codex
+The verifier accepted the complete theorem as fact `009b318ded4cac7a`. I’m doing the final fact-graph lookup now to confirm the target node is indexed and persisted, then I’ll hand back the verified result.
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+exec
+/bin/bash -lc 'tail -20 local_memory/events.jsonl' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2
+ succeeded in 1044ms:
+{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
+{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc8eda7d832ae08bb6e8400692f1a009056b825
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_hall_marriage_20260829t183231z/workers/high2/local_memory/events.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..47d0dedbcb2fc4f5106e8c71ddb02f2a57a6452b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
++{"event_type":"fact_accepted","fact_id":"009b318ded4cac7a","source_finding_id":"576c2411a2a34dfd","statement_scope":"complete target theorem verbatim from PROBLEM.md","verification":"accepted and confirmed present through fact_search","predecessors":[]}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..47d0dedbcb2fc4f5106e8c71ddb02f2a57a6452b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
++{"event_type":"fact_accepted","fact_id":"009b318ded4cac7a","source_finding_id":"576c2411a2a34dfd","statement_scope":"complete target theorem verbatim from PROBLEM.md","verification":"accepted and confirmed present through fact_search","predecessors":[]}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+codex
+Complete target theorem proved and verifier-accepted.
+
+- Fact ID: `009b318ded4cac7a`
+- Proof: strong induction using Hall-tight subset decomposition or adjacent-pair deletion
+- Predecessors: none
+- Confirmed indexed in the shared fact graph
+- Supporting finding: `576c2411a2a34dfd`
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..47d0dedbcb2fc4f5106e8c71ddb02f2a57a6452b
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,3 @@
++{"event_type":"memory_recall","assignment":"Prove the complete target theorem and submit its verbatim statement","results":"No master_guidance, global findings, verification outcomes, or fact-graph facts were present; local memory was initially empty.","decision":"Use a self-contained strong-induction proof with a Hall-tight-set split."}
++{"event_type":"search_math_results_stalled","query":"Hall's marriage theorem for finite bipartite graphs; tight-set induction proof","program_stage":"fresh_orientation","active_program":"strong induction on the left vertex class, splitting on a nonempty proper tight set","missing_mechanism":"none; literature search was required for grounding","search_mode":"analogy","blocker_search_allowed":false,"search_intent":"theorem","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external theorem is needed by the self-contained proof."}
++{"event_type":"fact_accepted","fact_id":"009b318ded4cac7a","source_finding_id":"576c2411a2a34dfd","statement_scope":"complete target theorem verbatim from PROBLEM.md","verification":"accepted and confirmed present through fact_search","predecessors":[]}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..56cd9e90d6db58176d557c98cbdff4022be1161d
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"tight-set induction","status":"complete draft","reasoning":"Necessity follows by injecting S into distinct matched neighbors. For sufficiency induct on n=|X|. If a nonempty proper A is tight, match A inside A union N(A), then match X\\A after deleting N(A); Hall for the residual graph follows from Hall on A union T and |N(A)|=|A|. If no such A exists, every nonempty proper A has integer slack at least one; delete an arbitrary x and one neighbor y, apply induction to the remainder, then add xy."}
+
+tokens used
+59,638
+Complete target theorem proved and verifier-accepted.
+
+- Fact ID: `009b318ded4cac7a`
+- Proof: strong induction using Hall-tight subset decomposition or adjacent-pair deletion
+- Predecessors: none
+- Confirmed indexed in the shared fact graph
+- Supporting finding: `576c2411a2a34dfd`

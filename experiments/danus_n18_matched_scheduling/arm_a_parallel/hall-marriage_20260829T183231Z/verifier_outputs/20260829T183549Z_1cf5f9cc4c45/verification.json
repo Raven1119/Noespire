@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof correctly establishes necessity by injecting each subset of X into its matched neighbors and establishes sufficiency by induction on |X|. In Case 1, both induced subgraphs satisfy the neighborhood inequality and their matchings combine disjointly; in Case 2, deleting an adjacent pair preserves the inequality for the smaller graph. The statement is self-contained, all assumptions are used appropriately, and there are no external references or hard-prohibition violations.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

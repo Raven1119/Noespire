@@ -1,0 +1,1 @@
+{"branch":"direct_barycentric","note":"Interior hypotheses give p,q,r>0. Necessity: a common P has barycentrics satisfying z=py, x=qz, y=rx. If y=0 then z=0 and x=0 from x=qz, impossible since x+y+z=1; hence y != 0 and y=rpqy gives pqr=1. Sufficiency: if pqr=1, normalize (x,y,z)=(pq,1,p); all three line equations hold, so the corresponding point P lies on AD, BE, CF."}

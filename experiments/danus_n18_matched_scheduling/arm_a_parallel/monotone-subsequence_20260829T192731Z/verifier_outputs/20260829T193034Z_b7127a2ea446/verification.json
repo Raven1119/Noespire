@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines the maximal increasing and decreasing subsequence lengths ending at each position, shows under the contrary assumption that all resulting pairs lie in an n-by-n set, and proves the pairs are pairwise distinct by extending an increasing or decreasing subsequence according to the comparison of two distinct terms. The resulting pigeonhole contradiction establishes the claimed alternative. The statement is self-contained, all hypotheses are used appropriately, no prohibited justification occurs, and there are no external or internal references requiring validation.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "run_id": "vieta-jumping-square_20260829T175902Z",
+  "arm": "A",
+  "project": "n18a_vieta_jumping_square_20260829t175902z",
+  "problem_id": "vieta-jumping-square",
+  "problem_sha256": "e0e4b76ac5285eb947a7ed2fb563969ebf83338ce3a44637ca997c7cc13dd247",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-29T17:59:02.584764Z",
+  "schedule_started_at_utc": "2026-08-29T17:59:11.713434Z",
+  "completed_at_utc": "2026-08-29T18:05:51.094382Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "workers_configured": 7,
+  "workers_launched": 7,
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "high4": "max_rounds",
+    "high5": "max_rounds",
+    "high6": "max_rounds",
+    "high7": "max_rounds"
+  },
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "verified_fact_count": 7,
+  "supporting_closure": [
+    "359ac8a02408e1ec"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "verified_search_waste": 0.8571428571,
+  "worker_tokens": 403844,
+  "verifier_tokens": 247491,
+  "total_tokens": 651335,
+  "time_to_first_verified_target_seconds": 298.058564,
+  "time_to_terminal_run_seconds": 385.669822,
+  "wall_clock_seconds": 385.669822,
+  "first_worker_result": "NOT_APPLICABLE",
+  "first_success_index": null,
+  "workers_saved": 0,
+  "stopped_after_success": false,
+  "number_of_successful_workers": 7,
+  "successful_workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ],
+  "target_fact_ids": [
+    "359ac8a02408e1ec",
+    "8a3a4ff17435dcb4",
+    "9f22b381b3086d8a",
+    "a0579c4f3ec0ebae",
+    "ad8724a2c7b30331",
+    "ae713d3094d6a45d",
+    "e9411345d0339670"
+  ],
+  "selected_target_fact_id": "359ac8a02408e1ec",
+  "accepted_fact_ids": [
+    "359ac8a02408e1ec",
+    "8a3a4ff17435dcb4",
+    "9f22b381b3086d8a",
+    "a0579c4f3ec0ebae",
+    "ad8724a2c7b30331",
+    "ae713d3094d6a45d",
+    "e9411345d0339670"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workers": [
+        "high",
+        "high2",
+        "high3",
+        "high4",
+        "high5",
+        "high6",
+        "high7"
+      ],
+      "started_at_utc": "2026-08-29T17:59:11.714291Z",
+      "wall_clock_seconds": 385.66184,
+      "verifier_events_before": 0,
+      "verifier_events_after": 7,
+      "new_verifier_events": 7,
+      "target_fact_ids_after_batch": [
+        "359ac8a02408e1ec",
+        "8a3a4ff17435dcb4",
+        "9f22b381b3086d8a",
+        "a0579c4f3ec0ebae",
+        "ad8724a2c7b30331",
+        "ae713d3094d6a45d",
+        "e9411345d0339670"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T180239Z_16fd6a6ce65d",
+    "20260829T180242Z_16fd6a6ce65d",
+    "20260829T180246Z_16fd6a6ce65d",
+    "20260829T180250Z_16fd6a6ce65d",
+    "20260829T180252Z_16fd6a6ce65d",
+    "20260829T180307Z_16fd6a6ce65d",
+    "20260829T180334Z_16fd6a6ce65d"
+  ],
+  "initial_state_sha256": "351375975488089ec066d4aa9a0af0644406ef73948b9d0c267cbd3018740c6f",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ]
+}

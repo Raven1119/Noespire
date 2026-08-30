@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines the maximal increasing and decreasing subsequence lengths ending at each term, shows under the contrary assumption that each associated pair lies in a set of size n^2, and proves these pairs are pairwise distinct by appending a later term according to its comparison with an earlier one. This gives n^2+1 distinct pairs in a set of size n^2, a contradiction. The statement is self-contained, all hypotheses are used appropriately, and no prohibited or unverifiable references occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

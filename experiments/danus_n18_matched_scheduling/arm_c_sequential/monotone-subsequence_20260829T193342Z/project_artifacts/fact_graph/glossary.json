@@ -1,0 +1,11 @@
+{
+  "n": "the arbitrary positive integer in the theorem",
+  "x_i": "the real number at index i in the arbitrary sequence",
+  "i": "an index in the sequence",
+  "j": "a second index in the sequence",
+  "k": "the length of a candidate subsequence",
+  "i_r": "the index of the r-th term of a candidate subsequence",
+  "r": "a position within a candidate subsequence",
+  "a_i": "the maximum length of a strictly increasing subsequence ending at x_i",
+  "b_i": "the maximum length of a strictly decreasing subsequence ending at x_i"
+}

@@ -1,0 +1,23 @@
+{
+  "A": "first vertex of the nondegenerate triangle",
+  "B": "second vertex of the nondegenerate triangle",
+  "C": "third vertex of the nondegenerate triangle",
+  "D": "interior point of segment BC",
+  "E": "interior point of segment CA",
+  "F": "interior point of segment AB",
+  "P": "common point constructed or assumed in the proof",
+  "Q": "an arbitrary point of the affine plane",
+  "a": "position vector of A",
+  "b": "position vector of B",
+  "c": "position vector of C",
+  "d": "position vector of D",
+  "e": "position vector of E",
+  "f": "position vector of F",
+  "p": "position vector of P",
+  "q": "position vector of Q",
+  "x": "positive ratio BD/DC",
+  "y": "positive ratio CE/EA",
+  "z": "positive ratio AF/FB",
+  "t": "real segment parameter in (0,1) locating D between B and C",
+  "S": "positive normalizing scalar xy+1+x"
+}

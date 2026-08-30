@@ -1,0 +1,1142 @@
+Reading additional input from stdin...
+OpenAI Codex v0.150.1
+--------
+workdir: /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a04ee5-2059-7bc1-b93f-d46d5acdff7f
+--------
+user
+You are worker 'high4' on project 'n18a_ceva_concurrency_20260829t190022z'. Continue solving the problem (this is a continuation round, not a fresh start).
+1. Read TASK.md — your current assignment (which direction/subgoal is yours).
+2. Follow AGENTS.md (worker.md) exactly — your standing contract (the adaptive control loop, memory discipline, the fact_submit gate). Drive toward a full verified result.
+3. Resume from state: gm_search relevant findings + dead ends, read the fact graph and the latest master_guidance — DO NOT restart from zero; build on what is already there.
+4. Keep going: assess -> pick skills adaptively -> act -> persist, repeatedly. An open problem is not a reason to stop. Do NOT finalize prematurely.
+5. Persist as you go: rough progress to local memory; shareable findings via gm_add; any verified result via fact_submit.
+warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+warning: Under-development features enabled: current_time_reminder. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/codex-home/config.toml.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m resuming from the assigned lane and shared state. I’ll use the query-memory workflow first to avoid duplicating prior work, then select the next proof skill based on `TASK.md`, verifier history, and existing facts.
+exec
+/bin/bash -lc "pwd && rg --files -g 'TASK.md' -g 'local_memory/**' -g 'global_memory/**' -g 'fact_graph/**' -g '"'!*.pyc'"' | sed -n '1,240p'" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 1517ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+TASK.md
+
+exec
+/bin/bash -lc "sed -n '1,240p' TASK.md && find . -maxdepth 2 -type d -print | sort && find . -maxdepth 2 -type l -printf '%p -> %l\\n' | sort" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 969ms:
+Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+.
+./.agents
+./.codex
+./.git
+./local_memory
+./logs
+./.agents/skills -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/skills/worker
+./AGENTS.md -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/agents/contracts/worker.md
+
+codex
+`TASK.md` assigns the full direct proof, with the original theorem statement required verbatim. The shared stores are outside the worker folder but explicitly in scope; I’m loading the problem, master guidance, recent findings, verifier outcomes, and accepted fact inventory before attempting any proof step.
+exec
+/bin/bash -lc "sed -n '1,260p' .agents/skills/query-memory/SKILL.md && printf '\\n--- immediate conclusions skill ---\\n' && sed -n '1,260p' .agents/skills/obtain-immediate-conclusions/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 738ms:
+---
+name: query-memory
+description: Recall what is already known — your own prior reasoning, the swarm's shared findings (including dead ends and verifier feedback), and the verified facts — before doing new work. Use when prior conclusions, examples, dead branches, verification outcomes, or verified results may inform the current question, claim, subgoal, or branch decision.
+---
+
+# Query Memory
+
+Before spending effort, check what already exists. There are three places to
+look, in the three-memory model:
+
+1. **Your own local memory** (private): read/grep `local_memory/notes.jsonl` and
+   `events.jsonl` for your prior reasoning and what you already tried.
+2. **Global memory** (shared findings): `gm_search(query, kinds=...)` over the
+   swarm's findings. Especially useful kinds:
+   - `dead_end` / `obstacle` — paths that already died (skip them);
+   - `verification` — outcomes of others' `fact_submit` (learn from rejections);
+   - `conclusion` / `example` / `counterexample` / `plan` — others' results to build on.
+   You can also read the `global_memory/<kind>.jsonl` files directly.
+3. **Fact graph** (verified truth): `fact_search(query)` (BM25 over the verified
+   facts) to find results you can cite or that show your subgoal is already
+   proved — it returns `{fact_id, statement}`; read the full proof from
+   `fact_graph/facts/<fact_id>.md` on a relevant hit, and `fact_graph/glossary.json`
+   to reuse the project's symbol definitions. A proof may build **only** on facts
+   (cite a `fact_id`).
+
+## Procedure
+
+1. Obey the current prompt's restrictions first. If it forbids a direction, file,
+   or search, that overrides default recall. If it recommends specific results or
+   directions, raise their priority.
+2. Start with the cheapest relevant source: your own local memory for your
+   context; `gm_search` for the swarm's findings; the fact graph for verified
+   building blocks.
+3. Prefer a narrow, targeted query (specific `kinds`, a sharp query string) over
+   reading everything.
+4. **Workspace boundary:** stay inside your own working directory and the shared
+   project stores. Do not scan parent directories, other workers' private
+   `local_memory/`, or other projects.
+
+## Retrieval priority
+
+- A relevant **verified fact** (fact graph) is the strongest hit — you can build
+  on it directly by citing its `fact_id`.
+- A sibling's **`dead_end`/`obstacle`** saves you from re-walking a dead path.
+- A sibling's **`verification`** rejection tells you why a similar claim failed.
+- A `conclusion`/`example`/`counterexample` is awareness — useful, but **never a
+  brick** (only facts are). Re-verify anything you intend to build on.
+
+## Output
+
+Note what you recalled and how you used it in your local memory (`events`). Do not
+re-publish others' findings; just use them.
+
+## Tools
+
+- `gm_search` (recall shared findings; BM25 over global memory)
+- `fact_search` (recall verified facts; BM25 over the fact graph — novelty + citation lookup)
+- local memory is read directly (no tool — read/grep the files); read a fact's full
+  proof from its `fact_graph/facts/<fact_id>.md` once `fact_search` surfaces it
+
+--- immediate conclusions skill ---
+---
+name: obtain-immediate-conclusions
+description: Derive immediate mathematical consequences from a theorem statement or subgoal. Use when starting a new problem, branch, or subgoal, or when cheap progress or a cleaner reformulation is needed before deeper proof search.
+---
+
+# Obtain Immediate Conclusions
+
+Extract direct implications before speculative reasoning.
+
+## Input Contract
+
+Read from memory and current context:
+
+- `problem_id`
+- current theorem/subgoal statement
+- memory
+
+## Procedure
+
+1. Normalize notation and restate the claim in equivalent forms.
+2. List direct consequences that follow from definitions and basic algebraic/logical manipulations.
+3. Split consequences into necessary conditions and candidate sufficient conditions.
+4. Mark each consequence with confidence and justification type.
+5. For every conclusion, explicitly decide whether it is likely fragile and should be stress-tested by counterexample.
+6. If a conclusion is fragile, record why it is fragile and indicate that `$construct-counterexamples` should be considered next.
+
+## Output Contract
+
+Publish each conclusion to global memory with `gm_add` (kind `conclusion`):
+`claim` = the conclusion's statement, `evidence` = the derivation/justification
+that makes it checkable, and carry these fields in the record:
+
+```json
+{
+  "statement": "...",
+  "justification_type": "by_definition|calculation|known_fact|logical_equivalence",
+  "confidence": 0.0,
+  "is_fragile": false,
+  "fragility_reason": "",
+  "suggested_followup": "none|construct-counterexamples",
+  "scope": "global|branch|subgoal",
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+Rules:
+
+- `is_fragile` must always be present.
+- If `is_fragile=true`, then `fragility_reason` must explain the risk and `suggested_followup` should be `construct-counterexamples`.
+- If `is_fragile=false`, use `fragility_reason=""` and `suggested_followup="none"`.
+
+## Tools
+
+- `gm_add` (publish the conclusion finding)
+- `gm_search` (recall related findings across the swarm)
+- `search_arxiv_theorems` for nontrivial consequences
+- Codex built-in web search for background definitions/terminology
+
+## Failure Logging
+
+If no meaningful consequence is found, note it in your local memory (`events`) with:
+
+- `event_type="immediate_conclusions_stalled"`
+- missing assumptions and suspected blockers
+
+exec
+/bin/bash -lc 'proj_root=$(realpath ../..); printf '"'%s\\n' \""'$proj_root"; find "$proj_root" -maxdepth 2 -type f '"\\( -name 'PROBLEM.md' -o -name '*.jsonl' -o -name 'glossary.json' -o -name 'manifest.json' \\) -print | sort | sed -n '1,260p'; printf '\\n--- local notes ---\\n'; test -f local_memory/notes.jsonl && tail -n 120 local_memory/notes.jsonl || true; printf '\\n--- local events ---\\n'; test -f local_memory/events.jsonl && tail -n 120 local_memory/events.jsonl || true" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 786ms:
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/PROBLEM.md
+
+--- local notes ---
+
+--- local events ---
+
+exec
+/bin/bash -lc 'proj_root=$(realpath ../..); find "$proj_root" -maxdepth 2 -mindepth 1 -printf '"'%y %p\\n' | sort | sed -n '1,320p'; printf '\\n--- PROBLEM ---\\n'; sed -n '1,320p' \""'$proj_root/PROBLEM.md"' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 723ms:
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/fact_graph
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/global_memory
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high2
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high3
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high5
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high6
+d /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high7
+f /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/PROBLEM.md
+f /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/project.json
+
+--- PROBLEM ---
+Let (ABC) be a nondegenerate triangle, and let (D,E,F) lie in the interiors of (BC,CA,AB), respectively. Prove that the cevians (AD,BE,CF) are concurrent if and only if
+
+\[
+\frac{BD}{DC}\cdot\frac{CE}{EA}\cdot\frac{AF}{FB}=1.
+\]
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+codex
+The shared memory and fact graph are empty, so there is no predecessor to cite and no rejected route to repair. I’m using affine barycentric coordinates: each cevian becomes one homogeneous ratio equation, and the three equations are compatible exactly when the ratio product is \(1\). This avoids any hidden appeal to Ceva’s theorem itself. The requested arXiv theorem-search endpoint is not available in this session, so the proof will remain fully elementary and self-contained.
+exec
+/bin/bash -lc "sed -n '1,320p' .agents/skills/search-math-results/SKILL.md && printf '\\n--- verify proof skill ---\\n' && sed -n '1,360p' .agents/skills/verify-proof/SKILL.md" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 845ms:
+---
+name: search-math-results
+description: Find program-conditioned math results, constructions, examples, counterexamples, analogies, and background references. Use when the current active program needs repair, mutation, analogy, a program shift, or carefully gated obstruction search.
+---
+
+# Search Math Results
+
+Use this skill as the default retrieval workflow for mathematical background and related results, conditioned on the live research program currently being pursued.
+
+## Input Contract
+
+Read:
+
+- the current target statement, subgoal, lemma, or claim
+- the `program_stage`, chosen from:
+  - `fresh_orientation`
+  - `active_program`
+  - `mature_subproblem`
+- the current `active_program`, meaning the live research program currently being pursued, such as a construction route, globalization route, mutation route, or other proof strategy
+- the current `missing_mechanism`, meaning the specific mechanism, construction, lemma, bridge, or proof move that is missing
+- the `search_mode`, chosen from:
+  - `repair`
+  - `mutation`
+  - `analogy`
+  - `program_shift`
+  - `theorem_level_blocker`
+- the search intent:
+  - `theorem`
+  - `construction`
+  - `example`
+  - `counterexample`
+  - `background`
+- relevant branch/subgoal context from memory
+
+If the prompt explicitly declares the `program_stage`, `active_program`, `missing_mechanism`, or blocker policy, obey those declarations. If the prompt does not declare the stage, default to `fresh_orientation` for a new problem, first-pass search, or no mature program yet; use `active_program` when the run already has a live named program, branch, or missing mechanism; and use `mature_subproblem` only when the run is already narrowed to a repeatedly failed mature subproblem or mature active program.
+
+## Search Modes
+
+- `repair`: search for results or constructions that directly repair a specific missing step in the current active program.
+- `mutation`: search for nearby constructions or variants that modify the current active program while preserving continuity with it.
+- `analogy`: search broadly, including in apparently unrelated areas, for mechanisms, lemmas, constructions, examples, or proof ideas that might transfer to the current missing mechanism after translation or modest modification.
+- `program_shift`: search for a genuinely new program after repeated failure of the current one, while explaining the possible splice point or bridge back to the current problem.
+- `theorem_level_blocker`: search for obstruction or impossibility results only under the activation rule below.
+
+`theorem_level_blocker` is not a default mode. It is disallowed by default in `fresh_orientation`. It is allowed in `mature_subproblem` when the blocker search targets that narrowed mature subproblem or mature active program rather than the whole original goal. It is also allowed whenever the prompt explicitly asks for obstructions, impossibility results, blocker theorems, or negative evidence. If blocker mode is not allowed, downgrade to `repair`, `mutation`, `analogy`, or `program_shift`.
+
+Broad and creative search is allowed. Do not restrict yourself to the surface vocabulary of the current problem or only the literal keywords in the prompt. Cross-field and apparently unrelated analogy search is acceptable when it targets the same missing mechanism. Theorem-level, proof-level, theory-level, and more abstract analogy search are all allowed when tied to a plausible transfer idea.
+
+## Procedure
+
+1. Identify the current `program_stage`, `active_program`, `missing_mechanism`, and `search_mode` before searching.
+2. For non-blocker modes, usually generate searches in multiple layers. In `fresh_orientation`, allow broad object-level, theorem-level, proof-pattern, and theory-pattern queries. In `active_program` and `mature_subproblem`, still allow broad queries, but tie them to the active program or a plausible program shift.
+3. Start with `search_arxiv_theorems`.
+4. When using `search_arxiv_theorems`, phrase the query as a complete mathematical statement whenever possible, but also issue mechanism- and analogy-driven queries when they better target the missing mechanism. Each hit carries `title`, the full verbatim `theorem` text, `arxiv_id`, and the in-paper `theorem_id`; use `arxiv_id` to pull the exact paper.
+5. Inspect the returned items and decide whether they are useful for the current active program.
+6. Do not use broad recursive scans of `downloads/` as a theorem-search engine. If an exact local paper/file is already known or prompt-recommended, read that exact path. Otherwise search externally first. If relevant long-term papers already exist in `downloads/common`, prefer those exact files before re-downloading.
+7. If a genuinely new technical branch is opened (a new class of objects, a new construction regime, or a new body of machinery), then before killing that branch normally do at least one of the following: download and read at least one exact paper about that direction; read an exact local paper already present in `downloads/common` or another exact prompt-recommended path; or explicitly justify why no extra literature layer is needed because the branch has already reduced to a previously audited regime.
+8. External search first is still the default, but once a genuinely new direction is chosen, exact paper download/read is expected before final branch rejection. This rule is about depth of engagement with a new direction: use a small number of exact relevant papers, not no papers and not many-paper rummaging.
+9. Keep all downloaded PDFs and extracted text files organized inside `downloads/` in the current working directory.
+10. If a useful theorem/example/counterexample is found and it comes from a paper, download that paper into the workspace, extract its text, and read the extracted text before relying on the result.
+11. If a useful theorem is found, do not stop at the statement alone. Read the proof of that theorem as well and extract any techniques, constructions, reductions, or proof patterns that may help with the current target statement.
+12. Expand the definitions and concepts appearing in that theorem using the surrounding context of the paper, and check carefully whether the theorem is actually applicable to the current situation. Be explicit about terminology that may shift across contexts. If the theorem is only a partial result for the current target, also analyze why its method does not prove the full statement — which extra hypotheses it needs, where the proof breaks without them, and what obstruction this reveals (do not merely force the current object to satisfy the extra hypotheses).
+13. Record not only what the theorem says, but also what its proof suggests for the current active program and missing mechanism.
+14. If the theorem search returns no useful information, switch to Codex's built-in web search.
+15. Use the built-in web search either to look for specific math results or to gather background information, terminology, standard references, canonical constructions/examples/counterexamples, or remote analogies.
+16. If the built-in web search reveals a useful paper, again download it, extract its text, and read the relevant extracted text before using it in reasoning.
+17. If the built-in web search reveals a useful theorem, also read its proof, expand its local definitions from the paper context, and extract the techniques that look adaptable to the current active program. Apply the same partial-result analysis if the web result is only a partial result.
+18. Summarize the most useful findings and explain why they matter for the current proof state.
+19. If a result may later be used in a proof, preserve its full statement and source identifiers (`title`, `authors`, `arxiv_id`, `theorem_id`, year) so downstream proof steps can cite it explicitly — and so it can be passed as a structured `external_refs` entry when the proof that uses it is submitted via `fact_submit`.
+
+## Usefulness Test
+
+For `fresh_orientation`, treat search results as useful if they do at least one of the following:
+
+- provide a theorem/lemma/definition close to the target statement
+- provide a construction/example/counterexample that can be adapted
+- suggest a standard technique or reformulation relevant to the current branch or problem
+- provide a proof-level analogy
+- provide a theory-level analogy
+- provide a remote analogy together with a plausible transfer idea
+
+For `active_program`, treat search results as useful if they do at least one of the following:
+
+- repair a concrete missing mechanism in the active program
+- provide a mutation of the current program
+- provide a remote analogy that can plausibly transfer
+- provide a new program together with a plausible splice point or bridge to the current problem
+- provide a proof-pattern or theory-pattern transfer hypothesis that could plausibly be migrated into the active program
+
+For `mature_subproblem`, use the `active_program` criteria and additionally allow gated blocker search.
+
+A result can be strategically useful even if it does not yet directly repair the missing mechanism, provided it includes a plausible transfer hypothesis explaining how its construction, proof, or theory might transfer.
+
+Treat results as not useful if they are vague, merely generic survey material, or a whole-goal obstruction search when blocker mode is not allowed. If the results are too weak to guide the next step, fall back to the built-in web search.
+
+## Output Contract
+
+Note a summary of the search in your local memory (`events`) — search is process,
+not a shared finding. (A *useful reference you actually use* is recorded inside the
+proof step that cites it, with its complete statement + `paper_id`/`theorem_id`/
+`arXiv id`.) Summary record:
+
+```json
+{
+  "event_type": "search_math_results",
+  "query": "...",
+  "program_stage": "fresh_orientation|active_program|mature_subproblem",
+  "active_program": "...",
+  "missing_mechanism": "...",
+  "search_mode": "repair|mutation|analogy|program_shift|theorem_level_blocker",
+  "blocker_search_allowed": false,
+  "usefulness_tier": "direct|strategic|discard",
+  "analogy_depth": "theorem|proof|theory|meta",
+  "transfer_hypothesis": "optional plausible transfer idea; analogy_depth is descriptive bookkeeping, not a ranking of importance",
+  "new_direction_requires_exact_paper": false,
+  "literature_depth_reached": "none|local_exact|downloaded_exact",
+  "search_intent": "theorem|construction|example|counterexample|background",
+  "primary_tool": "search_arxiv_theorems",
+  "fallback_used": false,
+  "splice_point": "optional bridge back to the current problem",
+  "results_summary": ["..."],
+  "useful_references": [
+    {
+      "title": "...",
+      "complete_statement": "...",
+      "url_or_id": "...",
+      "paper_id": "...",
+      "arxiv_id": "...",
+      "theorem_id": "...",
+      "local_pdf_path": "optional",
+      "local_text_path": "optional",
+      "expanded_definitions": ["paper-context expansions of terms/concepts used in the statement"],
+      "applicability_check": ["why the statement does or does not apply in the current setting"],
+      "partial_result_analysis": ["if only a partial result: extra hypotheses, where the method fails for the full problem, and what difficulty this reveals"],
+      "proof_insights": ["optional extracted techniques or ideas from the proof"],
+      "why_useful": "..."
+    }
+  ],
+  "branch_id": "optional",
+  "subgoal_id": "optional"
+}
+```
+
+## Tools
+
+- `search_arxiv_theorems` (Matlas arXiv theorem search — verbatim statements)
+- `gm_search` (check whether a sibling already found/used this result)
+- Codex built-in web search (fallback when the theorem search is too weak)
+- local memory (`events`) for the search log — direct file write
+
+## Failure Logging
+
+If neither theorem search nor web search yields useful information, note in local memory (`events`):
+
+- `event_type="search_math_results_stalled"`
+- the attempted queries
+- the reason the results were not useful
+
+--- verify proof skill ---
+---
+name: verify-proof
+description: Verify a result and, on acceptance, write it as a fact — via the fact_submit tool. Use for the full target theorem AND for every sharply-delimited intermediate result, lemma, construction, or formula you intend to build on. The verifier is the sole authority on mathematical correctness.
+---
+
+# Verify Proof
+
+The verifier is the **canonical and sole authority on mathematical correctness**.
+Mathematics requires 100% accuracy; even though this verifier is not a formal
+proof assistant, it is the strongest correctness check in the system. No LLM
+consultation, panel, or self-critique substitutes for it.
+
+**You verify and write a fact through one tool: `fact_submit`.** It runs the
+glossary-coverage check, calls the verifier, and writes the fact to the fact graph
+**iff the verifier accepts** — there is no other way a fact enters the graph.
+
+## When to submit
+
+- **The full target theorem** — when you have assembled a complete proof of the
+  whole problem (as a self-contained statement + proof, citing its predecessors by
+  `fact_id`).
+- **Every intermediate result you intend to USE downstream** — a lemma, a
+  candidate construction, an arithmetic/closed-form claim, a saturation or
+  local-to-global claim, any sharply-delimited step. **Adopting an unverified
+  partial result as a building block is the single biggest correctness risk.** When
+  in doubt, submit.
+
+Choose a substantive mathematical boundary, not the smallest checkable line.
+Routine calculations, substitutions, and bookkeeping identities should normally
+remain internal steps in the proof of a deeper fact. The submitted fact should
+state one mathematically significant conclusion; depth must not be simulated by
+bundling several shallow or unrelated claims. Split supporting claims only when
+they have independent downstream uses, separate proof obligations, or need
+isolated verifier repair.
+
+Do **not** build on an unverified finding from global memory. A `conclusion` /
+`example` / `counterexample` there is awareness, not a brick — re-derive it as a
+self-contained statement+proof and submit it before relying on it.
+
+## Before you submit — write an "ugly-proof" fact
+
+A fact in the fact graph is written in **"ugly-but-rigorous"** form (the operator
+may call it an **"ugly-proof"**). The one goal of
+this form is that the fact is **mechanically checkable for correctness** by a
+reader with no memory and no math intuition (an agent with no recall, a human, the
+verifier). It is allowed — encouraged — to be **ugly**: redundant, machine-flavored,
+verbose. It is **not allowed** to be ambiguous, vague, or context-dependent.
+"Ugly" is the deliberate contrast with the polished arXiv paper (a separate
+pipeline); here, only mechanical correctness matters.
+
+Concretely, before you submit:
+
+- **Self-contained.** A reader using only this fact + its declared predecessors +
+  the project glossary can decide whether the math is correct. No appeal to chart
+  positions, parse status, project history, or "as we know".
+- **Define every symbol.** Each symbol used in the statement/proof is defined: in
+  this fact's `glossary_introduces`, in a cited predecessor's glossary, in the
+  project glossary, or in the **global glossary** of universal notation (Z, Q, R,
+  C, floor/ceil, gcd/lcm, intervals, Greek parameter names). Don't redefine
+  universal notation — `glossary_introduces` is for project-specific symbols only.
+  Reuse the project's existing symbol for the same object. `fact_submit` returns
+  `undefined_symbols` if you missed one.
+- **Cite every dependency by `fact_id`** — never "by the result above", never the
+  problem statement as a math source.
+- **Every quantifier explicit; every introduced parameter (epsilon, k, …) carries
+  an explicit range.**
+- **No handwave** ("obviously", "easy to see", "routine", "analogously",
+  "by some classical argument") and **no chart-position references** ("as above").
+- **Avoid duplicates.** `gm_search` the fact graph / global memory (or read
+  `fact_graph/facts/`) for an existing fact with the same statement; if one
+  exists, cite its `fact_id` instead of re-proving it.
+
+## Submit and repair
+
+Call `fact_submit(statement, proof, predecessors=[...], glossary_introduces={...})`.
+Read the result:
+
+- `accepted: true, fact_id` — the fact is written. **Cite `fact_id`** downstream.
+- `accepted: false, repair_hints` (+ `undefined_symbols`) — revise: resolve
+  critical errors first, then all remaining gaps; do not assume the fix is local —
+  change strategy or backtrack if needed; then resubmit. Treat any `wrong` verdict,
+  any critical error, or any gap as failure.
+- `verdict: "error"` — the verify service was unavailable; retry.
+- `accepted: true, write_error` (e.g. a predecessor was revoked) — the fact was not
+  written; re-prove or avoid that predecessor.
+
+Every outcome is auto-logged to global memory (kind `verification`), so the
+feedback is shared — `gm_search` it to learn from others' rejections.
+
+## The verifier is the only correctness authority
+
+If your own reasoning, the main agent's `master_guidance`, or any other LLM calls
+a result correct but `fact_submit` rejects it, the verifier wins. Always. Note the
+disagreement (a `dead_end` finding) and treat the "looks correct" opinion as the
+unreliable signal it was. A non-verifier opinion (including `master_guidance`) is
+for ideas and directions, never for correctness.
+
+## Tools
+
+- `fact_submit` (the only path to verify a result and write a fact)
+- `gm_search` (check for an existing fact before submitting; read others' verification outcomes)
+- the fact graph is read directly (`fact_graph/facts/`, `glossary.json`)
+
+exec
+/bin/bash -lc 'proj_root=$(realpath ../..); find "$proj_root/fact_graph" -maxdepth 3 -type f -print -exec sed -n '"'1,220p' {} \\; ; find \""'$proj_root/global_memory" -maxdepth 2 -type f -print -exec tail -n 40 {} '"\\;" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 1160ms:
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4/local_memory/events.jsonl
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4/local_memory/notes.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+exec
+/bin/bash -lc "sed -n '1,20p' local_memory/events.jsonl && sed -n '1,20p' local_memory/notes.jsonl" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 1375ms:
+{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
+{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+mcp: danus/gm_add started
+mcp: danus/gm_add (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+codex
+The direct argument is now fully written and stress-checked in both directions, including the usually omitted edge case that the common point’s barycentric coordinates cannot vanish. I’m submitting the complete theorem as one self-contained fact; no intermediate fact is needed because the coordinate construction and compatibility calculation form a single proof obligation.
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+codex
+The verifier is still processing the complete fact. I’ll use its verdict as the correctness gate and repair any specific issue it identifies.
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+codex
+The verifier accepted the full theorem as fact `ccfb91a39c3bee00`. I’m doing the final integrity check now: confirming the node was written, the statement remained verbatim, and the shared verification record is visible.
+mcp: danus/fact_search started
+mcp: danus/fact_search (completed)
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+exec
+/bin/bash -lc 'proj_root=$(realpath ../..); fact_file="$proj_root/fact_graph/facts/ccfb91a39c3bee00.md"; test -f "$fact_file" && sed -n '"'1,320p' \""'$fact_file"' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 870ms:
+---
+fact_id: ccfb91a39c3bee00
+problem_id: n18a_ceva_concurrency_20260829t190022z
+author: high4
+predecessors: []
+glossary_introduces:
+  A: first vertex of the nondegenerate triangle ABC
+  ABC: the nondegenerate triangle with vertices A, B, and C
+  AD: the line through A and D
+  B: second vertex of the nondegenerate triangle ABC
+  BE: the line through B and E
+  C: third vertex of the nondegenerate triangle ABC
+  CF: the line through C and F
+  D: interior point of side BC
+  E: interior point of side CA
+  F: interior point of side AB
+  N: the positive normalization constant ed+1+d
+  P: the proposed or assumed common point of the three cevians
+  X: an arbitrary point in the plane of triangle ABC
+  d: the positive ratio BD/DC
+  e: the positive ratio CE/EA
+  f: the positive ratio AF/FB
+  s: a real affine-line parameter
+  x: first normalized affine barycentric coordinate relative to ABC
+  y: second normalized affine barycentric coordinate relative to ABC
+  z: third normalized affine barycentric coordinate relative to ABC
+external_refs: []
+---
+
+## statement
+Let (ABC) be a nondegenerate triangle, and let (D,E,F) lie in the interiors of (BC,CA,AB), respectively. Prove that the cevians (AD,BE,CF) are concurrent if and only if
+
+\[
+\frac{BD}{DC}\cdot\frac{CE}{EA}\cdot\frac{AF}{FB}=1.
+\]
+
+## proof
+All segment lengths occurring below are ordinary positive Euclidean lengths. Since (D,E,F) are interior points of their respective sides, the six lengths (BD,DC,CE,EA,AF,FB) are positive.
+
+We first define the coordinate system used in the proof. Because (ABC) is nondegenerate, the vectors (B-A) and (C-A) are linearly independent. Hence each point (X) in the plane has unique real numbers (y,z) such that
+[
+X=A+y(B-A)+z(C-A).
+]
+Writing (x=1-y-z), this is equivalently
+[
+X=xA+yB+zC,qquad x+y+z=1.
+]
+We call ((x,y,z)) the normalized affine barycentric coordinates of (X) relative to (ABC). In particular,
+[
+A=(1,0,0),qquad B=(0,1,0),qquad C=(0,0,1).
+]
+
+Since (D) lies between (B) and (C), (BC=BD+DC), and the section formula obtained by writing (D=B+(BD/BC)(C-B)) gives
+[
+D=left(0,rac{DC}{BD+DC},rac{BD}{BD+DC}ight).
+]
+A point of the line (AD) has the form (A+s(D-A)) for some real (s). Its coordinates therefore satisfy (DC,z=BD,y). Conversely, if normalized coordinates ((x,y,z)) satisfy (DC,z=BD,y), set
+[
+s=rac{BD+DC}{DC},y.
+]
+Then (y=sDC/(BD+DC)), the displayed equation gives (z=sBD/(BD+DC)), and (x=1-y-z=1-s); thus the point equals (A+s(D-A)). Therefore
+[
+Xin ADquadLongleftrightarrowquad DC,z=BD,y. 	ag{1}
+]
+
+Similarly, because (E) lies between (C) and (A),
+[
+E=left(rac{CE}{CE+EA},0,rac{EA}{CE+EA}ight).
+]
+For a point (X=B+s(E-B)), its coordinates satisfy (EA,x=CE,z). Conversely, if normalized coordinates satisfy (EA,x=CE,z), then with
+[
+s=rac{CE+EA}{CE},x
+]
+one has (x=sCE/(CE+EA)), (z=sEA/(CE+EA)), and (y=1-s), so (X=B+s(E-B)). Consequently
+[
+Xin BEquadLongleftrightarrowquad EA,x=CE,z. 	ag{2}
+]
+
+Because (F) lies between (A) and (B),
+[
+F=left(rac{FB}{AF+FB},rac{AF}{AF+FB},0ight).
+]
+For a point (X=C+s(F-C)), its coordinates satisfy (FB,y=AF,x). Conversely, if normalized coordinates satisfy (FB,y=AF,x), then with
+[
+s=rac{AF+FB}{FB},x
+]
+one has (x=sFB/(AF+FB)), (y=sAF/(AF+FB)), and (z=1-s), so (X=C+s(F-C)). Hence
+[
+Xin CFquadLongleftrightarrowquad FB,y=AF,x. 	ag{3}
+]
+
+Assume first that (AD,BE,CF) are concurrent at a point (P), and write the normalized coordinates of (P) as ((x,y,z)). By (1)--(3),
+[
+DC,z=BD,y,qquad EA,x=CE,z,qquad FB,y=AF,x. 	ag{4}
+]
+If (x=0), then the second equation in (4), together with (CE>0), gives (z=0), and the third equation, together with (FB>0), gives (y=0). This contradicts (x+y+z=1). Thus (x
+e0). The second and third equations in (4), with all segment lengths positive, then imply (z
+e0) and (y
+e0). Division in (4) is therefore valid and yields
+[
+rac{z}{y}=rac{BD}{DC},qquad
+rac{x}{z}=rac{CE}{EA},qquad
+rac{y}{x}=rac{AF}{FB}.
+]
+Multiplying these three equalities, the left-hand side is ((z/y)(x/z)(y/x)=1), proving
+[
+rac{BD}{DC}rac{CE}{EA}rac{AF}{FB}=1.
+]
+
+Conversely, assume
+[
+rac{BD}{DC}rac{CE}{EA}rac{AF}{FB}=1.
+]
+Define the positive real numbers
+[
+d=rac{BD}{DC},qquad e=rac{CE}{EA},qquad f=rac{AF}{FB}.
+]
+Then (def=1). Let (N=ed+1+d>0), and let (P) be the unique point with normalized affine barycentric coordinates
+[
+(x,y,z)=left(rac{ed}{N},rac1N,rac dNight).
+]
+These three coordinates sum to (1), so the point exists by the coordinate construction above. They satisfy
+[
+z=dy,qquad x=ez,qquad y=fx,
+]
+where the last equality follows from (fed=1). Replacing (d,e,f) by their definitions shows
+[
+DC,z=BD,y,qquad EA,x=CE,z,qquad FB,y=AF,x.
+]
+By (1), (2), and (3), respectively, (Pin AD), (Pin BE), and (Pin CF). Thus the three cevians are concurrent at (P). This proves both implications.
+
+## intuition
+In affine barycentric coordinates, each cevian fixes one ratio of two coordinates. The three cyclic ratio equations are compatible exactly when their product is one.
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+codex
+The integrity check found a serialization issue in the stored proof: JavaScript interpreted several LaTeX backslash sequences as control characters, even though the verifier reconstructed and accepted the mathematics. I’m resubmitting the same proof with raw-string encoding so the fact graph contains a clean, human-readable proof; I will treat the clean node as the deliverable.
+mcp: danus/fact_submit started
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+mcp: danus/fact_submit (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+exec
+/bin/bash -lc 'proj_root=$(realpath ../..); fact_file="$proj_root/fact_graph/facts/315b3d7b2af22fa6.md"; test -f "$fact_file" && sed -n '"'1,320p' \""'$fact_file"' in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4
+ succeeded in 833ms:
+---
+fact_id: 315b3d7b2af22fa6
+problem_id: n18a_ceva_concurrency_20260829t190022z
+author: high4
+predecessors: []
+glossary_introduces:
+  A: first vertex of the nondegenerate triangle ABC
+  ABC: the nondegenerate triangle with vertices A, B, and C
+  AD: the line through A and D
+  B: second vertex of the nondegenerate triangle ABC
+  BE: the line through B and E
+  C: third vertex of the nondegenerate triangle ABC
+  CF: the line through C and F
+  D: interior point of side BC
+  E: interior point of side CA
+  F: interior point of side AB
+  N: the positive normalization constant ed+1+d
+  P: the proposed or assumed common point of the three cevians
+  X: an arbitrary point in the plane of triangle ABC
+  d: the positive ratio BD/DC
+  e: the positive ratio CE/EA
+  f: the positive ratio AF/FB
+  s: a real affine-line parameter
+  x: first normalized affine barycentric coordinate relative to ABC
+  y: second normalized affine barycentric coordinate relative to ABC
+  z: third normalized affine barycentric coordinate relative to ABC
+external_refs: []
+---
+
+## statement
+Let (ABC) be a nondegenerate triangle, and let (D,E,F) lie in the interiors of (BC,CA,AB), respectively. Prove that the cevians (AD,BE,CF) are concurrent if and only if
+
+\[
+\frac{BD}{DC}\cdot\frac{CE}{EA}\cdot\frac{AF}{FB}=1.
+\]
+
+## proof
+All segment lengths occurring below are ordinary positive Euclidean lengths. Since \(D,E,F\) are interior points of their respective sides, the six lengths \(BD,DC,CE,EA,AF,FB\) are positive.
+
+We first define the coordinate system used in the proof. Because \(ABC\) is nondegenerate, the vectors \(B-A\) and \(C-A\) are linearly independent. Hence each point \(X\) in the plane has unique real numbers \(y,z\) such that
+\[
+X=A+y(B-A)+z(C-A).
+\]
+Writing \(x=1-y-z\), this is equivalently
+\[
+X=xA+yB+zC,\qquad x+y+z=1.
+\]
+We call \((x,y,z)\) the normalized affine barycentric coordinates of \(X\) relative to \(ABC\). In particular,
+\[
+A=(1,0,0),\qquad B=(0,1,0),\qquad C=(0,0,1).
+\]
+
+Since \(D\) lies between \(B\) and \(C\), \(BC=BD+DC\), and writing \(D=B+(BD/BC)(C-B)\) gives
+\[
+D=\left(0,\frac{DC}{BD+DC},\frac{BD}{BD+DC}\right).
+\]
+A point of the line \(AD\) has the form \(A+s(D-A)\) for some real \(s\). Its coordinates therefore satisfy \(DC\,z=BD\,y\). Conversely, if normalized coordinates \((x,y,z)\) satisfy \(DC\,z=BD\,y\), set
+\[
+s=\frac{BD+DC}{DC}\,y.
+\]
+Then \(y=sDC/(BD+DC)\), the displayed equation gives \(z=sBD/(BD+DC)\), and \(x=1-y-z=1-s\); thus the point equals \(A+s(D-A)\). Therefore
+\[
+X\in AD\quad\Longleftrightarrow\quad DC\,z=BD\,y. \tag{1}
+\]
+
+Because \(E\) lies between \(C\) and \(A\),
+\[
+E=\left(\frac{CE}{CE+EA},0,\frac{EA}{CE+EA}\right).
+\]
+A point of the line \(BE\) has the form \(B+s(E-B)\), so its coordinates satisfy \(EA\,x=CE\,z\). Conversely, if normalized coordinates satisfy \(EA\,x=CE\,z\), set
+\[
+s=\frac{CE+EA}{CE}\,x.
+\]
+Then \(x=sCE/(CE+EA)\), the displayed equation gives \(z=sEA/(CE+EA)\), and \(y=1-x-z=1-s\); thus the point equals \(B+s(E-B)\). Consequently
+\[
+X\in BE\quad\Longleftrightarrow\quad EA\,x=CE\,z. \tag{2}
+\]
+
+Because \(F\) lies between \(A\) and \(B\),
+\[
+F=\left(\frac{FB}{AF+FB},\frac{AF}{AF+FB},0\right).
+\]
+A point of the line \(CF\) has the form \(C+s(F-C)\), so its coordinates satisfy \(FB\,y=AF\,x\). Conversely, if normalized coordinates satisfy \(FB\,y=AF\,x\), set
+\[
+s=\frac{AF+FB}{FB}\,x.
+\]
+Then \(x=sFB/(AF+FB)\), the displayed equation gives \(y=sAF/(AF+FB)\), and \(z=1-x-y=1-s\); thus the point equals \(C+s(F-C)\). Hence
+\[
+X\in CF\quad\Longleftrightarrow\quad FB\,y=AF\,x. \tag{3}
+\]
+
+Assume first that \(AD,BE,CF\) are concurrent at a point \(P\), and write the normalized coordinates of \(P\) as \((x,y,z)\). By (1)--(3),
+\[
+DC\,z=BD\,y,\qquad EA\,x=CE\,z,\qquad FB\,y=AF\,x. \tag{4}
+\]
+If \(x=0\), then the second equation in (4), together with \(CE>0\), gives \(z=0\), and the third equation, together with \(FB>0\), gives \(y=0\). This contradicts \(x+y+z=1\). Thus \(x\ne0\). The second and third equations in (4), with all segment lengths positive, then imply \(z\ne0\) and \(y\ne0\). Division in (4) is therefore valid and yields
+\[
+\frac{z}{y}=\frac{BD}{DC},\qquad
+\frac{x}{z}=\frac{CE}{EA},\qquad
+\frac{y}{x}=\frac{AF}{FB}.
+\]
+Multiplying these three equalities, the left-hand side is \((z/y)(x/z)(y/x)=1\), proving
+\[
+\frac{BD}{DC}\frac{CE}{EA}\frac{AF}{FB}=1.
+\]
+
+Conversely, assume
+\[
+\frac{BD}{DC}\frac{CE}{EA}\frac{AF}{FB}=1.
+\]
+Define the positive real numbers
+\[
+d=\frac{BD}{DC},\qquad e=\frac{CE}{EA},\qquad f=\frac{AF}{FB}.
+\]
+Then \(def=1\). Let \(N=ed+1+d>0\), and let \(P\) be the unique point with normalized affine barycentric coordinates
+\[
+(x,y,z)=\left(\frac{ed}{N},\frac1N,\frac dN\right).
+\]
+These three coordinates sum to \(1\), so the point exists by the coordinate construction above. They satisfy
+\[
+z=dy,\qquad x=ez,\qquad y=fx,
+\]
+where the last equality follows from \(fed=1\). Replacing \(d,e,f\) by their definitions shows
+\[
+DC\,z=BD\,y,\qquad EA\,x=CE\,z,\qquad FB\,y=AF\,x.
+\]
+By (1), (2), and (3), respectively, \(P\in AD\), \(P\in BE\), and \(P\in CF\). Thus the three cevians are concurrent at \(P\). This proves both implications.
+
+## intuition
+In affine barycentric coordinates, each cevian fixes one ratio of two coordinates. The three cyclic ratio equations are compatible exactly when their product is one.
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..66b98339f0cd241f2da327c95dacc0739ec13c51
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,2 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+apply patch
+patch: completed
+/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/workers/high4/local_memory/events.jsonl
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba4f44272f614ad073c452be9fe0892c5f275929
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
++{"event_type":"fact_verified","fact_id":"ccfb91a39c3bee00","verdict":"correct","note":"Initial target submission was accepted, but inspection found JavaScript control-character corruption in LaTeX sequences in the stored proof. This node should not be preferred for presentation."}
++{"event_type":"fact_verified","fact_id":"315b3d7b2af22fa6","verdict":"correct","note":"Clean raw-string resubmission accepted. Inspected fact_graph/facts/315b3d7b2af22fa6.md: target statement is verbatim and the complete affine-barycentric proof is correctly serialized. This is the deliverable fact."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba4f44272f614ad073c452be9fe0892c5f275929
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
++{"event_type":"fact_verified","fact_id":"ccfb91a39c3bee00","verdict":"correct","note":"Initial target submission was accepted, but inspection found JavaScript control-character corruption in LaTeX sequences in the stored proof. This node should not be preferred for presentation."}
++{"event_type":"fact_verified","fact_id":"315b3d7b2af22fa6","verdict":"correct","note":"Clean raw-string resubmission accepted. Inspected fact_graph/facts/315b3d7b2af22fa6.md: target statement is verbatim and the complete affine-barycentric proof is correctly serialized. This is the deliverable fact."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+mcp: danus/gm_search started
+mcp: danus/gm_search (completed)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba4f44272f614ad073c452be9fe0892c5f275929
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
++{"event_type":"fact_verified","fact_id":"ccfb91a39c3bee00","verdict":"correct","note":"Initial target submission was accepted, but inspection found JavaScript control-character corruption in LaTeX sequences in the stored proof. This node should not be preferred for presentation."}
++{"event_type":"fact_verified","fact_id":"315b3d7b2af22fa6","verdict":"correct","note":"Clean raw-string resubmission accepted. Inspected fact_graph/facts/315b3d7b2af22fa6.md: target statement is verbatim and the complete affine-barycentric proof is correctly serialized. This is the deliverable fact."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+codex
+Target theorem established as verified fact `315b3d7b2af22fa6`.
+
+- Complete verbatim statement
+- Self-contained affine-barycentric proof
+- No predecessors or external references
+- Verifier verdict: correct
+- Critical errors/gaps: none
+- Stored proof inspected and serialization confirmed clean
+
+Fact: [315b3d7b2af22fa6.md](/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/fact_graph/facts/315b3d7b2af22fa6.md)
+diff --git a/local_memory/events.jsonl b/local_memory/events.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..ba4f44272f614ad073c452be9fe0892c5f275929
+--- /dev/null
++++ b/local_memory/events.jsonl
+@@ -0,0 +1,4 @@
++{"event_type":"query_memory","summary":"Read TASK.md and PROBLEM.md; local memory was empty. Targeted gm_search found no master guidance, findings, dead ends, or verification records. fact_search found no verified facts. Therefore the direct target proof must be self-contained with no predecessors."}
++{"event_type":"search_math_results_stalled","attempted_queries":["Ceva concurrency triangle cevians product ratios equals one","affine barycentric coordinate proof of Ceva theorem"],"program_stage":"fresh_orientation","active_program":"direct affine-barycentric proof","missing_mechanism":"none; the coordinate equations already give the equivalence","search_mode":"analogy","search_intent":"background","primary_tool":"search_arxiv_theorems","reason":"The required search_arxiv_theorems tool and built-in web search are not available in this session. No external theorem is needed or used because the argument is derived directly from affine coordinates."}
++{"event_type":"fact_verified","fact_id":"ccfb91a39c3bee00","verdict":"correct","note":"Initial target submission was accepted, but inspection found JavaScript control-character corruption in LaTeX sequences in the stored proof. This node should not be preferred for presentation."}
++{"event_type":"fact_verified","fact_id":"315b3d7b2af22fa6","verdict":"correct","note":"Clean raw-string resubmission accepted. Inspected fact_graph/facts/315b3d7b2af22fa6.md: target statement is verbatim and the complete affine-barycentric proof is correctly serialized. This is the deliverable fact."}
+diff --git a/local_memory/notes.jsonl b/local_memory/notes.jsonl
+new file mode 100644
+index 0000000000000000000000000000000000000000..9f08a1c01326482e70df3817882f67d8ca3d1352
+--- /dev/null
++++ b/local_memory/notes.jsonl
+@@ -0,0 +1 @@
++{"branch":"direct_barycentric","note":"For normalized barycentric coordinates P=(x,y,z), the cevian lines are AD: z=(BD/DC)y; BE: x=(CE/EA)z; CF: y=(AF/FB)x. Positivity of all six subsegment lengths means a common point cannot have any of x,y,z equal to zero. Multiplication gives necessity. For sufficiency, with d=BD/DC, e=CE/EA, f=AF/FB and def=1, normalize the positive triple (ed,1,d); it satisfies all three line equations."}
+
+tokens used
+112,796
+Target theorem established as verified fact `315b3d7b2af22fa6`.
+
+- Complete verbatim statement
+- Self-contained affine-barycentric proof
+- No predecessors or external references
+- Verifier verdict: correct
+- Critical errors/gaps: none
+- Stored proof inspected and serialization confirmed clean
+
+Fact: [315b3d7b2af22fa6.md](/mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n18a_ceva_concurrency_20260829t190022z/fact_graph/facts/315b3d7b2af22fa6.md)

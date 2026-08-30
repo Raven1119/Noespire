@@ -1,0 +1,11 @@
+{
+  "a": "a positive integer from the theorem statement; in the minimal-counterexample argument, the larger of the two entries after a possible swap",
+  "b": "a positive integer from the theorem statement; in the minimal-counterexample argument, the smaller of the two entries after a possible swap",
+  "k": "the positive integer (a^2+b^2)/(ab+1), fixed throughout the descent",
+  "c": "the conjugate integer kb-a associated with a minimal-sum solution",
+  "d": "the positive integer -c in the temporary case c<0",
+  "P": "the quadratic polynomial P(x)=x^2-kbx+b^2-k",
+  "x": "a real variable used as the input of f",
+  "a'": "the integer kb-a, the second root of P",
+  "f": "the monic quadratic polynomial f(x)=x^2-kbx+b^2-k"
+}

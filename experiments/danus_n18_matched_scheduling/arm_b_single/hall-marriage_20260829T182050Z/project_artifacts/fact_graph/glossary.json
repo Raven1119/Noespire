@@ -1,0 +1,19 @@
+{
+  "G": "the given finite bipartite graph",
+  "X": "the left part of G",
+  "Y": "the right part of G",
+  "E": "the edge set of G",
+  "N(S)": "the set of vertices in Y adjacent to at least one vertex of S",
+  "matching": "a set of edges no two of which share an endpoint",
+  "saturating X": "incident with every vertex of X",
+  "n": "the cardinality of X",
+  "A": "a nonempty proper subset of X with neighborhood cardinality equal to its own cardinality",
+  "H": "the subgraph induced by the left part A and right part N(A)",
+  "K": "the subgraph induced by the left part X minus A and right part Y minus N(A)",
+  "M_1": "a matching in H saturating A",
+  "M_2": "a matching in K saturating X minus A",
+  "G'": "the graph obtained from G by deleting the vertices x and y",
+  "X'": "the left part X minus {x} of G'",
+  "Y'": "the right part Y minus {y} of G'",
+  "M'": "a matching in G' saturating X'"
+}

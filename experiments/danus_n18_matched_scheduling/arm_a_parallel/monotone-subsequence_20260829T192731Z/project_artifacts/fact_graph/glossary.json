@@ -1,0 +1,20 @@
+{
+  "x_i": "The real number in position i of the given sequence.",
+  "p_i": "the maximum length of a strictly increasing subsequence ending at x_i",
+  "q_i": "the maximum length of a strictly decreasing subsequence ending at x_i",
+  "i": "An index of a term in the sequence, between 1 and n^2+1.",
+  "j": "An index of a term in the sequence later than i.",
+  "N": "the total number n^2+1 of terms in the given sequence",
+  "a_i": "the real number at index i in the given sequence",
+  "I_i": "The maximum length of a strictly increasing subsequence ending at x_i.",
+  "D_i": "The maximum length of a strictly decreasing subsequence ending at x_i.",
+  "n": "The positive integer appearing in the theorem statement.",
+  "t_r": "the final index of a displayed subsequence of length r",
+  "r": "the length variable used in the definition of p_i",
+  "s": "the length variable used in the definition of q_i",
+  "i_t": "the t-th selected index in a strictly increasing subsequence",
+  "j_t": "the t-th selected index in a strictly decreasing subsequence",
+  "x_j": "The real number in position j of the given sequence.",
+  "I_j": "The maximum length of a strictly increasing subsequence ending at x_j.",
+  "D_j": "The maximum length of a strictly decreasing subsequence ending at x_j."
+}

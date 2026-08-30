@@ -1,0 +1,1 @@
+Let (n) be a positive integer. Prove that every sequence of (n^2+1) distinct real numbers contains either a strictly increasing subsequence of length (n+1) or a strictly decreasing subsequence of length (n+1).

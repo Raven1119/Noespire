@@ -1,0 +1,7 @@
+{
+  "a": "a positive integer from the theorem statement",
+  "b": "a positive integer from the theorem statement",
+  "k": "the positive integer (a^2+b^2)/(ab+1)",
+  "c": "the integer kb-a used for the Vieta descent",
+  "d": "the nonnegative integer a-kb used when testing whether c can be nonpositive"
+}

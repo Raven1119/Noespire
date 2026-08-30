@@ -1,0 +1,23 @@
+{
+  "G": "the given finite bipartite graph",
+  "X": "the left vertex class of G",
+  "Y": "the right vertex class of G",
+  "E": "the edge set of G",
+  "N": "the neighborhood map defined in the statement",
+  "N_G(C)": "the set of vertices in Y adjacent in G to at least one vertex of C",
+  "S": "an arbitrary subset of X in the theorem statement",
+  "M": "a matching saturating X in the necessity direction",
+  "m": "the injection sending each x in X to its matching partner in Y",
+  "n": "the cardinality of X",
+  "A": "a nonempty proper subset of X where the neighborhood inequality is tight",
+  "B": "an arbitrary subset of A",
+  "T": "an arbitrary subset of X minus A, or later of X minus {x}, as locally specified",
+  "G_1": "the subgraph induced by A union N_G(A)",
+  "G_2": "the subgraph induced by (X minus A) union (Y minus N_G(A))",
+  "M_1": "an inductively obtained matching in G_1 saturating A",
+  "M_2": "an inductively obtained matching in G_2 saturating X minus A",
+  "x": "a chosen vertex of X",
+  "y": "a chosen neighbor of x",
+  "G'": "the subgraph induced after deleting x and y",
+  "M'": "an inductively obtained matching in G' saturating X minus {x}"
+}

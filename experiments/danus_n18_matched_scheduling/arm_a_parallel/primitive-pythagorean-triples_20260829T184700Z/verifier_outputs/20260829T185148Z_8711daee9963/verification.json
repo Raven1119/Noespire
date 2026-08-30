@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It first derives pairwise coprimality and the necessary parity pattern, then factors ((z+x)/2)((z-x)/2) as a square with coprime positive factors to obtain coprime parameters m>n of opposite parity and the stated formulas. The converse verifies the Pythagorean identity, positivity, and primitivity. The statement is self-contained, no hard prohibition is triggered, and no external references or fact_id citations require checking.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

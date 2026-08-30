@@ -1,0 +1,12 @@
+{
+  "G": "the finite connected undirected graph in the theorem",
+  "s": "the initial vertex of the first greedily constructed trail",
+  "t": "the terminal vertex of the first greedily constructed trail",
+  "T": "a closed trail in G with the largest possible number of edges",
+  "H": "a connected component containing an edge in the residual graph obtained by deleting the edges of T",
+  "x": "a vertex of H incident with a residual edge",
+  "y": "the first vertex on a chosen path from x that lies on T",
+  "z": "the vertex immediately preceding y on that path",
+  "v": "a vertex common to H and T",
+  "U": "a nonempty closed trail in H based at v"
+}

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "run_id": "ceva-concurrency_20260829T190022Z",
+  "arm": "A",
+  "project": "n18a_ceva_concurrency_20260829t190022z",
+  "problem_id": "ceva-concurrency",
+  "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-29T19:00:22.273001Z",
+  "schedule_started_at_utc": "2026-08-29T19:00:30.227841Z",
+  "completed_at_utc": "2026-08-29T19:08:56.873897Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "workers_configured": 7,
+  "workers_launched": 7,
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "high4": "max_rounds",
+    "high5": "max_rounds",
+    "high6": "max_rounds",
+    "high7": "max_rounds"
+  },
+  "verifier_calls": 8,
+  "verifier_accepts": 8,
+  "verifier_rejects": 0,
+  "verified_fact_count": 8,
+  "supporting_closure": [
+    "058f823b114559e0"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 7,
+  "verified_search_waste": 0.875,
+  "worker_tokens": 484307,
+  "verifier_tokens": 153680,
+  "total_tokens": 637987,
+  "time_to_first_verified_target_seconds": 281.496749,
+  "time_to_terminal_run_seconds": 483.211382,
+  "wall_clock_seconds": 483.211382,
+  "first_worker_result": "NOT_APPLICABLE",
+  "first_success_index": null,
+  "workers_saved": 0,
+  "stopped_after_success": false,
+  "number_of_successful_workers": 7,
+  "successful_workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ],
+  "target_fact_ids": [
+    "058f823b114559e0",
+    "144b61ff70b74c70",
+    "315b3d7b2af22fa6",
+    "771675389145b9f6",
+    "7988d418c240a5b8",
+    "7fa3985655cb332e",
+    "bd8b62c2e27ad3bc",
+    "ccfb91a39c3bee00"
+  ],
+  "selected_target_fact_id": "058f823b114559e0",
+  "accepted_fact_ids": [
+    "058f823b114559e0",
+    "144b61ff70b74c70",
+    "315b3d7b2af22fa6",
+    "771675389145b9f6",
+    "7988d418c240a5b8",
+    "7fa3985655cb332e",
+    "bd8b62c2e27ad3bc",
+    "ccfb91a39c3bee00"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workers": [
+        "high",
+        "high2",
+        "high3",
+        "high4",
+        "high5",
+        "high6",
+        "high7"
+      ],
+      "started_at_utc": "2026-08-29T19:00:30.232822Z",
+      "wall_clock_seconds": 483.189101,
+      "verifier_events_before": 0,
+      "verifier_events_after": 8,
+      "new_verifier_events": 8,
+      "target_fact_ids_after_batch": [
+        "058f823b114559e0",
+        "144b61ff70b74c70",
+        "315b3d7b2af22fa6",
+        "771675389145b9f6",
+        "7988d418c240a5b8",
+        "7fa3985655cb332e",
+        "bd8b62c2e27ad3bc",
+        "ccfb91a39c3bee00"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T190343Z_b75861ba2e53",
+    "20260829T190344Z_b75861ba2e53",
+    "20260829T190356Z_b75861ba2e53",
+    "20260829T190403Z_b75861ba2e53",
+    "20260829T190431Z_b75861ba2e53",
+    "20260829T190431Z_b75861ba2e53_2",
+    "20260829T190443Z_b75861ba2e53",
+    "20260829T190645Z_b75861ba2e53"
+  ],
+  "initial_state_sha256": "152099e52921814c72a834aba92908cef679e3bd489b6576034e82233d36c910",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ]
+}

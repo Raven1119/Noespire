@@ -1,0 +1,11 @@
+{
+  "x": "a positive integer leg in the Pythagorean triple",
+  "y": "the other positive integer leg in the Pythagorean triple",
+  "z": "the positive integer hypotenuse in the Pythagorean triple",
+  "A": "the half-sum (z+x)/2 used in the forward parametrization",
+  "B": "the half-difference (z-x)/2 used in the forward parametrization",
+  "m": "the larger positive integer parameter in the parametrization",
+  "n": "the smaller positive integer parameter in the parametrization",
+  "p": "a prime integer used in divisibility arguments",
+  "d": "a positive integer used as a possible common divisor of m and n"
+}

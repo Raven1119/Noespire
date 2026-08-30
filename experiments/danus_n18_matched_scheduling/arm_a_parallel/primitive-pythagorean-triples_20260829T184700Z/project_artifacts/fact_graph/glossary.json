@@ -1,0 +1,17 @@
+{
+  "x": "A positive integer leg of the Pythagorean triple.",
+  "y": "A positive integer leg, chosen to be the even leg in the forward direction.",
+  "z": "The positive integer hypotenuse.",
+  "m": "The larger positive parameter in the Euclidean representation.",
+  "n": "The smaller positive parameter in the Euclidean representation.",
+  "A": "The positive integer (z+x)/2.",
+  "B": "The positive integer (z-x)/2.",
+  "p": "A prime integer used in divisibility arguments.",
+  "d": "the greatest common divisor of z-y and z+y",
+  "a": "the positive odd square root of z+y",
+  "b": "the positive odd square root of z-y",
+  "r": "The positive odd integer whose square is z+y.",
+  "s": "The positive odd integer whose square is z-y.",
+  "q": "a prime divisor used in the converse",
+  "k": "The positive integer y/2."
+}

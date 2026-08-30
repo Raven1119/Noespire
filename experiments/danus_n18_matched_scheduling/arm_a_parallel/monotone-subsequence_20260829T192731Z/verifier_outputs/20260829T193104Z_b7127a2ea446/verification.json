@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines the maximal increasing and decreasing subsequence lengths ending at each position, shows that distinct indices yield distinct ordered pairs of these lengths, and applies the pigeonhole principle to n^2+1 pairs lying in a set of size n^2. All hypotheses are appropriately used, and there are no external references, signed fact citations, hard-prohibition violations, critical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

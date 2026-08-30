@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "run_id": "primitive-pythagorean-triples_20260829T184700Z",
+  "arm": "A",
+  "project": "n18a_primitive_pythagorean_triples_20260829t184700z",
+  "problem_id": "primitive-pythagorean-triples",
+  "problem_sha256": "1b70cf1554987de8b5b509022daf39ecfdaebf26566cc80157bd98d7c3744c45",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-29T18:47:02.193457Z",
+  "schedule_started_at_utc": "2026-08-29T18:47:10.647438Z",
+  "completed_at_utc": "2026-08-29T18:54:41.454032Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "workers_configured": 7,
+  "workers_launched": 7,
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "high4": "max_rounds",
+    "high5": "max_rounds",
+    "high6": "max_rounds",
+    "high7": "max_rounds"
+  },
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "verified_fact_count": 7,
+  "supporting_closure": [
+    "1b38119184181360"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "verified_search_waste": 0.8571428571,
+  "worker_tokens": 481360,
+  "verifier_tokens": 276045,
+  "total_tokens": 757405,
+  "time_to_first_verified_target_seconds": 246.391338,
+  "time_to_terminal_run_seconds": 433.292414,
+  "wall_clock_seconds": 433.292414,
+  "first_worker_result": "NOT_APPLICABLE",
+  "first_success_index": null,
+  "workers_saved": 0,
+  "stopped_after_success": false,
+  "number_of_successful_workers": 7,
+  "successful_workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ],
+  "target_fact_ids": [
+    "1b38119184181360",
+    "5d5a83512b66bced",
+    "6831471190ec6a51",
+    "7a3db94a68ffa68f",
+    "a932ff05f46ca574",
+    "cf7a255dd82482aa",
+    "d62bcb94836b2528"
+  ],
+  "selected_target_fact_id": "1b38119184181360",
+  "accepted_fact_ids": [
+    "1b38119184181360",
+    "5d5a83512b66bced",
+    "6831471190ec6a51",
+    "7a3db94a68ffa68f",
+    "a932ff05f46ca574",
+    "cf7a255dd82482aa",
+    "d62bcb94836b2528"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workers": [
+        "high",
+        "high2",
+        "high3",
+        "high4",
+        "high5",
+        "high6",
+        "high7"
+      ],
+      "started_at_utc": "2026-08-29T18:47:10.648331Z",
+      "wall_clock_seconds": 433.28245,
+      "verifier_events_before": 0,
+      "verifier_events_after": 7,
+      "new_verifier_events": 7,
+      "target_fact_ids_after_batch": [
+        "1b38119184181360",
+        "5d5a83512b66bced",
+        "6831471190ec6a51",
+        "7a3db94a68ffa68f",
+        "a932ff05f46ca574",
+        "cf7a255dd82482aa",
+        "d62bcb94836b2528"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T184935Z_8711daee9963",
+    "20260829T185034Z_8711daee9963",
+    "20260829T185042Z_8711daee9963",
+    "20260829T185057Z_8711daee9963",
+    "20260829T185107Z_8711daee9963",
+    "20260829T185116Z_8711daee9963",
+    "20260829T185148Z_8711daee9963"
+  ],
+  "initial_state_sha256": "3d104d7bd8561bea9b187c7fb4597d6dc02e68d3e9663aa6522a52876a59b776",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ]
+}

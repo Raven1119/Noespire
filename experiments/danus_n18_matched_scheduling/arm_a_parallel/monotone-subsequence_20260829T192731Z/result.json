@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "run_id": "monotone-subsequence_20260829T192731Z",
+  "arm": "A",
+  "project": "n18a_monotone_subsequence_20260829t192731z",
+  "problem_id": "monotone-subsequence",
+  "problem_sha256": "d1df89b17196c2047b4f124c9238b2cfa2dec03474bc494f01b43f86d7f3251c",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-29T19:27:33.751458Z",
+  "schedule_started_at_utc": "2026-08-29T19:27:41.131680Z",
+  "completed_at_utc": "2026-08-29T19:33:19.401193Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "workers_configured": 7,
+  "workers_launched": 7,
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "high4": "max_rounds",
+    "high5": "max_rounds",
+    "high6": "max_rounds",
+    "high7": "max_rounds"
+  },
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "verified_fact_count": 7,
+  "supporting_closure": [
+    "3ce6a8b772910bbe"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "verified_search_waste": 0.8571428571,
+  "worker_tokens": 356492,
+  "verifier_tokens": 223798,
+  "total_tokens": 580290,
+  "time_to_first_verified_target_seconds": 215.395763,
+  "time_to_terminal_run_seconds": 332.311784,
+  "wall_clock_seconds": 332.311784,
+  "first_worker_result": "NOT_APPLICABLE",
+  "first_success_index": null,
+  "workers_saved": 0,
+  "stopped_after_success": false,
+  "number_of_successful_workers": 7,
+  "successful_workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ],
+  "target_fact_ids": [
+    "3ce6a8b772910bbe",
+    "5387b33eda4d9cb2",
+    "72903798991195ce",
+    "7a7a140c1261c107",
+    "7cd5327a3edc9603",
+    "9cfdb8830b0422e2",
+    "bfc886410b9f5b7d"
+  ],
+  "selected_target_fact_id": "3ce6a8b772910bbe",
+  "accepted_fact_ids": [
+    "3ce6a8b772910bbe",
+    "5387b33eda4d9cb2",
+    "72903798991195ce",
+    "7a7a140c1261c107",
+    "7cd5327a3edc9603",
+    "9cfdb8830b0422e2",
+    "bfc886410b9f5b7d"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workers": [
+        "high",
+        "high2",
+        "high3",
+        "high4",
+        "high5",
+        "high6",
+        "high7"
+      ],
+      "started_at_utc": "2026-08-29T19:27:41.132433Z",
+      "wall_clock_seconds": 332.303992,
+      "verifier_events_before": 0,
+      "verifier_events_after": 7,
+      "new_verifier_events": 7,
+      "target_fact_ids_after_batch": [
+        "3ce6a8b772910bbe",
+        "5387b33eda4d9cb2",
+        "72903798991195ce",
+        "7a7a140c1261c107",
+        "7cd5327a3edc9603",
+        "9cfdb8830b0422e2",
+        "bfc886410b9f5b7d"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T192957Z_b7127a2ea446",
+    "20260829T193004Z_b7127a2ea446",
+    "20260829T193019Z_b7127a2ea446",
+    "20260829T193026Z_b7127a2ea446",
+    "20260829T193034Z_b7127a2ea446",
+    "20260829T193040Z_b7127a2ea446",
+    "20260829T193104Z_b7127a2ea446"
+  ],
+  "initial_state_sha256": "7ec42b7d915309433078e84746f4b736ea11d0092e27d269c8f80ef8fd5e5738",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ]
+}

@@ -1,0 +1,2 @@
+{"timestamp":"2026-08-29T19:01:01Z","branch_id":"affine-direct","note":"Parameterize D=(1-t)B+tC, E=sA+(1-s)C, F=(1-u)A+uB with t,s,u in (0,1). For q=1-s+st, AD and BE meet uniquely at P=(st/q)A+((1-s)(1-t)/q)B+(t(1-s)/q)C. P lies on CF iff u/(1-u)=((1-s)(1-t))/(st), equivalent to the target product being 1. This proves both directions at once."}
+{"timestamp":"2026-08-29T19:03:00Z","branch_id":"affine-direct","note":"Target theorem verified and written as fact 144b61ff70b74c70 with no predecessors or external references. Goal complete."}

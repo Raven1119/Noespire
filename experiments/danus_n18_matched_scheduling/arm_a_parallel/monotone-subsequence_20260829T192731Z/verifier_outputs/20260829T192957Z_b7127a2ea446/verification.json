@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It defines, for each sequence position, the maximal lengths of increasing and decreasing subsequences ending there, shows under the contrary assumption that both lengths lie in {1, ..., n}, proves that the resulting n^2+1 ordered pairs are pairwise distinct, and obtains a contradiction because only n^2 such pairs are available. All hypotheses are properly used, and there are no external references or prohibited justification patterns.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

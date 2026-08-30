@@ -1,0 +1,13 @@
+{
+  "a": "an arbitrary positive integer from the theorem hypothesis",
+  "b": "an arbitrary positive integer from the theorem hypothesis",
+  "k": "the positive integer (a^2+b^2)/(ab+1)",
+  "S": "the nonempty set of ordered positive-integer pairs satisfying r^2+s^2=k(rs+1)",
+  "r": "the first coordinate of a generic pair in S",
+  "s": "the second coordinate of a generic pair in S",
+  "x": "the larger coordinate of a pair in S minimizing the maximum coordinate",
+  "y": "the smaller coordinate of a pair in S minimizing the maximum coordinate",
+  "z": "the integer conjugate root ky-x",
+  "P": "the quadratic polynomial P(t)=t^2-kyt+y^2-k",
+  "t": "the indeterminate of the polynomial P"
+}

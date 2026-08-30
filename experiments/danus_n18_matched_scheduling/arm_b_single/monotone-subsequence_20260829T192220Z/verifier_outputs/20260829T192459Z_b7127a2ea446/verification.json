@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It assigns to each term the maximum lengths of increasing and decreasing subsequences ending there, shows under the contrary assumption that both lengths lie in {1, ..., n}, proves that distinct indices yield distinct ordered pairs of these lengths, and obtains a contradiction because only n^2 such pairs exist. All hypotheses are used appropriately, and there are no external references, prohibited justifications, critical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

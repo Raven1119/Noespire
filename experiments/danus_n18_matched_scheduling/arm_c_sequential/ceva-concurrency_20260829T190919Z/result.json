@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "run_id": "ceva-concurrency_20260829T190919Z",
+  "arm": "C",
+  "project": "n18c_ceva_concurrency_20260829t190919z",
+  "problem_id": "ceva-concurrency",
+  "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-29T19:09:20.457919Z",
+  "schedule_started_at_utc": "2026-08-29T19:09:28.930754Z",
+  "completed_at_utc": "2026-08-29T19:16:00.219042Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "workers_configured": 7,
+  "workers_launched": 1,
+  "worker_attempts": 1,
+  "worker_sessions": 1,
+  "worker_terminal_states": {
+    "high": "max_rounds"
+  },
+  "verifier_calls": 1,
+  "verifier_accepts": 1,
+  "verifier_rejects": 0,
+  "verified_fact_count": 1,
+  "supporting_closure": [
+    "915e816cbc2d5e77"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 0,
+  "verified_search_waste": 0.0,
+  "worker_tokens": 42349,
+  "verifier_tokens": 54387,
+  "total_tokens": 96736,
+  "time_to_first_verified_target_seconds": 333.759182,
+  "time_to_terminal_run_seconds": 372.222581,
+  "wall_clock_seconds": 372.222581,
+  "first_worker_result": "PASS",
+  "first_success_index": 1,
+  "workers_saved": 6,
+  "stopped_after_success": true,
+  "number_of_successful_workers": 1,
+  "successful_workers": [
+    "high"
+  ],
+  "target_fact_ids": [
+    "915e816cbc2d5e77"
+  ],
+  "selected_target_fact_id": "915e816cbc2d5e77",
+  "accepted_fact_ids": [
+    "915e816cbc2d5e77"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1
+      ],
+      "workers": [
+        "high"
+      ],
+      "started_at_utc": "2026-08-29T19:09:28.932788Z",
+      "wall_clock_seconds": 372.143557,
+      "verifier_events_before": 0,
+      "verifier_events_after": 1,
+      "new_verifier_events": 1,
+      "target_fact_ids_after_batch": [
+        "915e816cbc2d5e77"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260829T191303Z_b75861ba2e53"
+  ],
+  "initial_state_sha256": "152099e52921814c72a834aba92908cef679e3bd489b6576034e82233d36c910",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ]
+}

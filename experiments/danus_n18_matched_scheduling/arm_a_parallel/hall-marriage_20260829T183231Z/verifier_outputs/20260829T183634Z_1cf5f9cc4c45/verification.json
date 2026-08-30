@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The forward implication constructs an injection from X into Y along a matching saturating X, which immediately gives the neighborhood inequalities. For the converse, the strong-induction argument is valid: a nonempty proper tight subset permits compatible matchings on the induced tight part and its complement, while in the absence of a proper tight subset, deleting an arbitrary left vertex together with one of its neighbors preserves Hall's inequalities for the remaining graph. The two cases are exhaustive, all uses of finiteness and induction are justified, and no external references or prohibited unsupported premises occur.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

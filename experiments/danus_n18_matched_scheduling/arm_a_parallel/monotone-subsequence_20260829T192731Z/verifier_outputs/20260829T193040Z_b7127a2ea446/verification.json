@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof correctly defines the longest increasing and decreasing subsequence lengths ending at each index, proves that the associated ordered pairs are pairwise distinct, and derives the required counting contradiction. All hypotheses are used, and there are no unsupported citations, hard-prohibition violations, logical errors, or gaps.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}
