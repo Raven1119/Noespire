@@ -70,7 +70,10 @@ class FrozenContractTests(unittest.TestCase):
         if installed.exists():
             self.assertEqual(digest(installed), identity["privilege_drop_shim_sha256"])
         self.assertEqual(identity["host_orchestrator"], "root")
-        self.assertEqual(identity["codex_user"], "noespire_n19b")
+        self.assertEqual(identity["codex_user"], "wmywb")
+        self.assertEqual(identity["codex_uid_gid"], "1000:1000")
+        self.assertEqual(identity["supplementary_groups"], "cleared")
+        self.assertIs(identity["no_new_privileges"], True)
 
     def test_counterbalanced_order_contains_every_pair_once(self) -> None:
         expected = [list(order) for order in ("ABC", "BCA", "CAB", "ACB", "BAC", "CBA")]

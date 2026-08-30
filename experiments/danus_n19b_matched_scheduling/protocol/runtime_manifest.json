@@ -51,10 +51,13 @@
   "private_reference_store": "/root/noespire-n19b-references-6b9d662e",
   "execution_identity": {
     "host_orchestrator": "root",
-    "codex_user": "noespire_n19b",
+    "codex_user": "wmywb",
+    "codex_uid_gid": "1000:1000",
+    "supplementary_groups": "cleared",
+    "no_new_privileges": true,
     "privilege_drop_shim_source": "experiments/danus_n19b_matched_scheduling/protocol/codex_nonroot_shim.sh",
     "privilege_drop_shim_installed": "/usr/local/libexec/noespire-n19b-codex",
-    "privilege_drop_shim_sha256": "59cbee8e2d67ca35f1d46802278f3b2c62a7dcdda0ff54cc80db8948f613ebfd"
+    "privilege_drop_shim_sha256": "c8f40e80a2df405d98310a0ddcf2803b18416c37c55921db51d0c4c1d679e225"
   },
   "arms": {
     "A": {

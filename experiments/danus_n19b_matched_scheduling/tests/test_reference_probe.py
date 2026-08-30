@@ -13,7 +13,7 @@ def trace(output: str) -> str:
 class ReferenceProbeTests(unittest.TestCase):
     def test_only_both_denials_pass(self) -> None:
         passing = (
-            "effective_user=noespire_n19b\n"
+            "effective_user=wmywb\n"
             "privileged_groups=ABSENT\n"
             "sudo_noninteractive=DENIED\n"
             "docker_socket=DENIED\n"
@@ -21,19 +21,24 @@ class ReferenceProbeTests(unittest.TestCase):
             "parent_git_history=DENIED\n"
             "windows_interop=DENIED\n"
             "windows_git_history=DENIED\n"
+            "otel_export=DISABLED\n"
             "workspace_reference=UNAVAILABLE\n"
             "private_store=DENIED\n"
         )
         self.assertEqual(evaluate(0, trace(passing)), "PASS")
         self.assertEqual(evaluate(0, trace(passing.replace("DENIED", "READABLE", 1))), "FAIL")
         self.assertEqual(evaluate(0, trace(passing.replace("ABSENT", "PRESENT"))), "FAIL")
-        self.assertEqual(evaluate(0, trace(passing.replace("noespire_n19b", "root"))), "FAIL")
+        self.assertEqual(evaluate(0, trace(passing.replace("wmywb", "root"))), "FAIL")
         self.assertEqual(
             evaluate(0, trace(passing.replace("parent_git_history=DENIED", "parent_git_history=READABLE"))),
             "FAIL",
         )
         self.assertEqual(
             evaluate(0, trace(passing.replace("windows_interop=DENIED", "windows_interop=AVAILABLE"))),
+            "FAIL",
+        )
+        self.assertEqual(
+            evaluate(0, trace(passing.replace("otel_export=DISABLED", "otel_export=ENABLED"))),
             "FAIL",
         )
 
