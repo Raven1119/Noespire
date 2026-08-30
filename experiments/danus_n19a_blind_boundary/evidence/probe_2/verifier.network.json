@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "session": "probe_2",
+  "role": "verifier",
+  "verifier_url": "http://127.19.0.1:36461/verify",
+  "observations": [
+    {
+      "capability": "external_http",
+      "name": "curl",
+      "url": "https://example.com/",
+      "attempted": true,
+      "blocked": true,
+      "connected": false,
+      "bytes_received": 0,
+      "returncode": -1,
+      "trace_error": "Network access to \"example.com\" was blocked: domain is not on the allowlist for the current sandbox mode."
+    },
+    {
+      "capability": "external_http",
+      "name": "wget",
+      "url": "https://example.com/",
+      "attempted": true,
+      "blocked": true,
+      "connected": false,
+      "bytes_received": 0,
+      "returncode": -1,
+      "trace_error": "Network access to \"example.com\" was blocked: domain is not on the allowlist for the current sandbox mode."
+    },
+    {
+      "capability": "external_http",
+      "name": "urllib_external",
+      "url": "https://example.com/",
+      "attempted": true,
+      "blocked": true,
+      "connected": false,
+      "bytes_received": 0,
+      "returncode": -1,
+      "trace_error": "Network access to \"example.com\" was blocked: domain is not on the allowlist for the current sandbox mode."
+    },
+    {
+      "capability": "external_http",
+      "name": "localhost_bypass",
+      "url": "http://localhost:36461/verify",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "URLError: <urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "capability": "external_dns",
+      "name": "getaddrinfo:example.com",
+      "url": "dns://example.com",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "gaierror: [Errno -3] Temporary failure in name resolution"
+    },
+    {
+      "capability": "external_dns",
+      "name": "getaddrinfo:github.com",
+      "url": "dns://github.com",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "gaierror: [Errno -3] Temporary failure in name resolution"
+    },
+    {
+      "capability": "external_socket",
+      "name": "hostname_socket",
+      "url": "tcp://example.com:443",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "gaierror: [Errno -3] Temporary failure in name resolution"
+    },
+    {
+      "capability": "direct_ip",
+      "name": "ipv4_socket",
+      "url": "tcp://93.184.216.34:443",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "OSError: [Errno 101] Network is unreachable"
+    },
+    {
+      "capability": "direct_ip",
+      "name": "ipv6_socket",
+      "url": "tcp://2606:4700:4700::1111:443",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "error": "OSError: [Errno 101] Network is unreachable"
+    },
+    {
+      "capability": "git_network",
+      "name": "git_network",
+      "url": "https://github.com/frenzymath/Danus",
+      "attempted": true,
+      "blocked": true,
+      "connected": false,
+      "bytes_received": 0,
+      "returncode": -1,
+      "trace_error": "Network access to \"github.com\" was blocked: domain is not on the allowlist for the current sandbox mode."
+    },
+    {
+      "capability": "package_network",
+      "name": "package_network",
+      "url": "https://pypi.org/simple/pip/",
+      "attempted": true,
+      "blocked": true,
+      "connected": false,
+      "bytes_received": 0,
+      "returncode": -1,
+      "trace_error": "Network access to \"pypi.org\" was blocked: domain is not on the allowlist for the current sandbox mode."
+    },
+    {
+      "capability": "external_search",
+      "name": "effective_codex_search_surface",
+      "attempted": true,
+      "blocked": true,
+      "succeeded": false,
+      "bytes_received": 0,
+      "policy_marker": "cli-disabled:web,arxiv,apps,plugins"
+    },
+    {
+      "capability": "verifier_loopback",
+      "name": "danus_verify_post",
+      "url": "http://127.19.0.1:36461/verify",
+      "attempted": true,
+      "connected": true,
+      "bytes_received": 169,
+      "status": 200,
+      "verdict": "correct",
+      "response_sha256": "9940c5f265a637682712a0f133f86a340f4f6c1ce0e18d38928cc14ab020b04b"
+    }
+  ]
+}

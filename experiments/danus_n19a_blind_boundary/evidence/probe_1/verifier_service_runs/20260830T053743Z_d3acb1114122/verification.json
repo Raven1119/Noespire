@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "FAKE stub verdict (plumbing test): no error marker; accepting.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

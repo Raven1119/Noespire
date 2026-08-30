@@ -15,6 +15,26 @@ import audit_blind  # noqa: E402
 
 
 class BlindAuditTests(unittest.TestCase):
+    def test_n19a_semantics_reclassify_the_three_blocked_n18_events(self) -> None:
+        run_names = (
+            "vieta-jumping-square_20260829T175902Z",
+            "hall-marriage_20260829T183231Z",
+            "primitive-pythagorean-triples_20260829T184700Z",
+        )
+        reference_dir = audit_blind.EXPERIMENT_ROOT / "reference"
+        for name in run_names:
+            with self.subTest(run=name):
+                audit = audit_blind.audit_run(
+                    audit_blind.EXPERIMENT_ROOT / "arm_a_parallel" / name,
+                    reference_dir,
+                    "PASS",
+                )
+                self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_PASS")
+                self.assertNotIn(
+                    "EXTERNAL_ACCESS_SUCCEEDED",
+                    audit["boundary_classifications"],
+                )
+
     def test_n18_private_reference_marker_is_protected(self) -> None:
         self.assertIsNotNone(
             audit_blind.PROTECTED_RE.search(

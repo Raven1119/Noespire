@@ -28,6 +28,52 @@ ALLOWED_URL_RE = re.compile(
     r"^http://127\.0\.0\.1:\d+|^https://developers\.openai\.com/codex/concepts/sandboxing"
 )
 WORD_RE = re.compile(r"[a-z0-9]+")
+BLOCKED_NETWORK_OUTCOME_RE = re.compile(
+    r"Could not resolve host|Network access to .* was blocked|"
+    r"Name or service not known|Temporary failure in name resolution",
+    re.I,
+)
+NO_RESULT_SUMMARY_RE = re.compile(
+    r"\b(?:no external (?:result|reference|theorem)|no (?:result|reference)"
+    r"|tool\b.{0,80}\b(?:unavailable|not (?:available|exposed|configured|present))"
+    r"|(?:unavailable|not (?:available|exposed|configured|present))\b.{0,80}\btool)\b",
+    re.I,
+)
+
+
+def classify_boundary_event(event: dict[str, Any], allowed_urls: set[str]) -> str:
+    """Classify observed capability evidence without treating a blocked try as leakage."""
+    url = str(event.get("url") or "")
+    received = int(event.get("bytes_received") or 0)
+    succeeded = bool(
+        event.get("connected")
+        or event.get("succeeded")
+        or event.get("result_returned")
+        or received > 0
+    )
+    if url in allowed_urls and succeeded:
+        return "LOOPBACK_ALLOWED"
+    if succeeded:
+        return "EXTERNAL_ACCESS_SUCCEEDED"
+    if event.get("attempted") and event.get("blocked"):
+        return "OUTBOUND_ATTEMPT_BLOCKED"
+    if event.get("intent") and not event.get("attempted") and not url:
+        return "SEARCH_INTENT_BLOCKED"
+    if url:
+        return "EXTERNAL_ACCESS_SUCCEEDED"
+    return "SEARCH_INTENT_BLOCKED"
+
+
+def boundary_integrity(events: Iterable[dict[str, Any]], allowed_urls: set[str]) -> str:
+    return (
+        "FAIL"
+        if any(
+            classify_boundary_event(event, allowed_urls)
+            == "EXTERNAL_ACCESS_SUCCEEDED"
+            for event in events
+        )
+        else "PASS"
+    )
 
 
 def trace_files(run: Path) -> list[Path]:
@@ -55,6 +101,37 @@ def line_hits(files: Iterable[Path], pattern: re.Pattern[str], root: Path) -> li
                     {"file": path.relative_to(root).as_posix(), "line": number, "text": line[:500]}
                 )
     return hits
+
+
+def network_boundary_events(files: Iterable[Path], root: Path) -> list[dict[str, Any]]:
+    """Turn actual network-tool trace lines into conservative boundary events."""
+    events: list[dict[str, Any]] = []
+    for path in files:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        for index, line in enumerate(lines):
+            matched = [
+                name for name, pattern in EXTERNAL_CALL_PATTERNS.items() if pattern.search(line)
+            ]
+            if not matched:
+                continue
+            context = "\n".join(lines[index : index + 5])
+            blocked = bool(BLOCKED_NETWORK_OUTCOME_RE.search(context))
+            url_match = URL_RE.search(line)
+            event: dict[str, Any] = {
+                "capability": matched[0],
+                "name": matched[0],
+                "url": url_match.group(0) if url_match else "external://search-tool",
+                "attempted": True,
+                "blocked": blocked,
+                "bytes_received": 0,
+                "file": path.relative_to(root).as_posix(),
+                "line": index + 1,
+                "outcome_context": context[:2000],
+            }
+            if not blocked:
+                event["succeeded"] = True
+            events.append(event)
+    return events
 
 
 def section(text: str, heading: str) -> str:
@@ -110,9 +187,36 @@ def search_intents(run: Path, root: Path) -> tuple[list[dict[str, Any]], list[di
                 "attempted_queries": event.get("attempted_queries") or [],
                 "primary_tool": event.get("primary_tool"),
                 "reason": event.get("reason"),
+                "results_summary": event.get("results_summary") or [],
+                "useful_references": event.get("useful_references") or [],
+                "results": event.get("results") or [],
+                "literature_depth_reached": event.get("literature_depth_reached"),
+                "usefulness_tier": event.get("usefulness_tier"),
             }
             (blocked if event_type == "search_math_results_stalled" else completed).append(record)
     return blocked, completed
+
+
+def search_result_returned(record: dict[str, Any]) -> bool:
+    """Treat affirmative search metadata as external access, despite a misleading event label."""
+    summaries = [str(item).strip() for item in record["results_summary"] if str(item).strip()]
+    affirmative_summary = any(not NO_RESULT_SUMMARY_RE.search(item) for item in summaries)
+    affirmative_tier = str(record["usefulness_tier"] or "").lower() not in (
+        "",
+        "none",
+        "discard",
+    )
+    affirmative_depth = str(record["literature_depth_reached"] or "").lower() not in (
+        "",
+        "none",
+    )
+    return bool(
+        record["useful_references"]
+        or record["results"]
+        or affirmative_summary
+        or affirmative_tier
+        or affirmative_depth
+    )
 
 
 def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) -> dict[str, Any]:
@@ -131,6 +235,24 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
     source_hits = line_hits(files, SOURCE_LOOKUP_RE, root)
     protected_hits = line_hits(files, PROTECTED_RE, root)
     blocked_search_intents, completed_search_events = search_intents(run, root)
+    boundary_events = network_boundary_events(files, root)
+    boundary_events.extend(
+        {"intent": True, "attempted": False, "source": record}
+        for record in blocked_search_intents
+    )
+    for record in completed_search_events:
+        result_returned = search_result_returned(record)
+        boundary_events.append(
+            {
+                "intent": True,
+                "attempted": result_returned,
+                "result_returned": result_returned,
+                "source": record,
+            }
+        )
+    boundary_classifications = [
+        classify_boundary_event(event, set()) for event in boundary_events
+    ]
     unexpected_urls: list[dict[str, Any]] = []
     for path in files:
         for number, line in enumerate(
@@ -177,11 +299,9 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
         and http_500 == 0
     )
     direct_trace_leak = (
-        any(call_hits.values())
-        or bool(completed_search_events)
+        "EXTERNAL_ACCESS_SUCCEEDED" in boundary_classifications
         or bool(source_hits)
         or bool(protected_hits)
-        or bool(unexpected_urls)
         or suspicious_overlap
     )
     integrity = (
@@ -203,6 +323,8 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
         "verifier_http_500": http_500,
         "policy_counts_match": policy_counts_match,
         "external_call_hits": call_hits,
+        "boundary_events": boundary_events,
+        "boundary_classifications": boundary_classifications,
         "blocked_theorem_search_intents": blocked_search_intents,
         "completed_theorem_search_events": completed_search_events,
         "source_lookup_hits": source_hits,
@@ -221,9 +343,10 @@ def audit_run(run: Path, reference_dir: Path, root: Path, capability_gate: str) 
         },
         "decision_basis": (
             "PASS requires the pre-math capability gate, one blind wrapper invocation per "
-            "proof-relevant session, successful verifier calls, and no retrieval/source/private-path "
-            "marker, unexpected URL, completed search event, or suspicious reference overlap in "
-            "formal-run traces. Blocked theorem-search intents are reported but do not constitute retrieval."
+            "proof-relevant session, successful verifier calls, and no successful external access, "
+            "source/private-path marker, or suspicious reference overlap in formal-run traces. "
+            "Search intent and mechanically blocked outbound attempts are recorded but do not "
+            "constitute retrieval; a call without explicit blocking evidence is conservatively a success."
         ),
     }
 

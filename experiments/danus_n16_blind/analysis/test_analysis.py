@@ -75,6 +75,36 @@ def rejected_run(tmp_path: Path) -> Path:
     return run
 
 
+def auditable_run(
+    tmp_path: Path,
+    *,
+    worker_log: str = "",
+    search_events: list[dict[str, object]] | None = None,
+) -> dict[str, object]:
+    run = rejected_run(tmp_path)
+    (run / "project_artifacts/workers/high/logs/round_1.log").write_text(
+        worker_log, encoding="utf-8"
+    )
+    (run / "blind_wrapper.log").write_text(
+        "x\trole=worker\tpolicy=blind\nx\trole=verifier\tpolicy=blind\n",
+        encoding="utf-8",
+    )
+    (run / "verifier_service.log").write_text(
+        'INFO POST /verify HTTP/1.1" 200\n', encoding="utf-8"
+    )
+    if search_events:
+        write_jsonl(
+            run / "project_artifacts/workers/high/local_memory/events.jsonl",
+            search_events,
+        )
+    reference_dir = tmp_path / "reference"
+    reference_dir.mkdir()
+    (reference_dir / "rejected-reference.md").write_text(
+        "# Private\n\n## Reference proof\n\nA private proof.\n", encoding="utf-8"
+    )
+    return audit_leakage.audit_run(run, reference_dir, tmp_path, "PASS")
+
+
 class AnalysisTests(unittest.TestCase):
     def test_analyzer_preserves_rejected_attempt(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -99,31 +129,15 @@ class AnalysisTests(unittest.TestCase):
     def test_leakage_audit_handles_zero_facts_and_records_blocked_search(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             tmp_path = Path(directory)
-            run = rejected_run(tmp_path)
-            (run / "blind_wrapper.log").write_text(
-                "x\trole=worker\tpolicy=blind\nx\trole=verifier\tpolicy=blind\n",
-                encoding="utf-8",
-            )
-            (run / "verifier_service.log").write_text(
-                'INFO POST /verify HTTP/1.1" 200\n', encoding="utf-8"
-            )
-            event_path = run / "project_artifacts/workers/high/local_memory/events.jsonl"
-            write_jsonl(
-                event_path,
-                [{
+            audit = auditable_run(
+                tmp_path,
+                search_events=[{
                     "event_type": "search_math_results_stalled",
                     "attempted_queries": ["exact target theorem lookup"],
                     "primary_tool": "search_arxiv_theorems",
                     "reason": "tool is not exposed",
                 }],
             )
-            reference_dir = tmp_path / "reference"
-            reference_dir.mkdir()
-            (reference_dir / "rejected-reference.md").write_text(
-                "# Private\n\n## Reference proof\n\nA private proof.\n", encoding="utf-8"
-            )
-
-            audit = audit_leakage.audit_run(run, reference_dir, tmp_path, "PASS")
 
         self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_PASS")
         self.assertIsNone(audit["reference_overlap"]["accepted_facts"]["strongest"])
@@ -131,6 +145,77 @@ class AnalysisTests(unittest.TestCase):
             audit["blocked_theorem_search_intents"][0]["attempted_queries"],
             ["exact target theorem lookup"],
         )
+
+    def test_live_audit_allows_mechanically_blocked_curl(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            audit = auditable_run(
+                Path(directory),
+                worker_log=(
+                    '/bin/bash -lc "curl https://example.com"\n'
+                    "curl: (6) Could not resolve host: example.com\n"
+                ),
+            )
+
+        self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_PASS")
+        self.assertIn("OUTBOUND_ATTEMPT_BLOCKED", audit["boundary_classifications"])
+
+    def test_live_audit_fails_curl_without_blocking_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            audit = auditable_run(
+                Path(directory),
+                worker_log=(
+                    '/bin/bash -lc "curl https://example.com"\n'
+                    '{"external":"response"}\n'
+                ),
+            )
+
+        self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_FAIL")
+        self.assertIn("EXTERNAL_ACCESS_SUCCEEDED", audit["boundary_classifications"])
+
+    def test_live_audit_treats_connection_refused_as_external_contact(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            audit = auditable_run(
+                Path(directory),
+                worker_log=(
+                    '/bin/bash -lc "curl https://203.0.113.1"\n'
+                    "curl: (7) Failed to connect: Connection refused\n"
+                ),
+            )
+
+        self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_FAIL")
+        self.assertIn("EXTERNAL_ACCESS_SUCCEEDED", audit["boundary_classifications"])
+
+    def test_live_audit_allows_completed_label_with_no_result(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            audit = auditable_run(
+                Path(directory),
+                search_events=[{
+                    "event_type": "search_math_results",
+                    "results_summary": ["tool unavailable; no external result returned"],
+                    "useful_references": [],
+                    "literature_depth_reached": "none",
+                    "usefulness_tier": "discard",
+                }],
+            )
+
+        self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_PASS")
+        self.assertIn("SEARCH_INTENT_BLOCKED", audit["boundary_classifications"])
+
+    def test_live_audit_fails_affirmative_search_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            audit = auditable_run(
+                Path(directory),
+                search_events=[{
+                    "event_type": "search_math_results",
+                    "results_summary": ["A matching theorem and proof outline were returned."],
+                    "useful_references": [],
+                    "literature_depth_reached": "none",
+                    "usefulness_tier": "direct",
+                }],
+            )
+
+        self.assertEqual(audit["integrity"], "BLIND_INTEGRITY_FAIL")
+        self.assertIn("EXTERNAL_ACCESS_SUCCEEDED", audit["boundary_classifications"])
 
     def test_failure_snapshot_excludes_caches_and_keeps_verifier_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

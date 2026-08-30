@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "session": "probe_1",
+  "started_from_stamp": "20260830T053553Z",
+  "roles": {
+    "worker": {
+      "exit_code": 0,
+      "probes_seen": [
+        "curl",
+        "direct_ipv4",
+        "direct_ipv6",
+        "dns_example",
+        "dns_github",
+        "git_network",
+        "hostname_socket",
+        "localhost_bypass",
+        "package_network",
+        "search_surface",
+        "urllib_external",
+        "verifier_loopback",
+        "wget"
+      ],
+      "all_probes_seen": true
+    },
+    "verifier": {
+      "exit_code": 0,
+      "probes_seen": [
+        "curl",
+        "direct_ipv4",
+        "direct_ipv6",
+        "dns_example",
+        "dns_github",
+        "git_network",
+        "hostname_socket",
+        "localhost_bypass",
+        "package_network",
+        "search_surface",
+        "urllib_external",
+        "verifier_loopback",
+        "wget"
+      ],
+      "all_probes_seen": true,
+      "probe_home": "experiments/danus_n19a_blind_boundary/protocol/verifier_probe_home"
+    },
+    "strategy_master_main": "NOT_IN_EXECUTION_PATH"
+  },
+  "verifier": {
+    "url": "http://127.19.0.1:53943/verify",
+    "health": {
+      "status": "ok",
+      "pid": 354
+    },
+    "persisted_verification_count": 2,
+    "persisted_files": [
+      "verifier_service_runs/20260830T053743Z_d3acb1114122/verification.json",
+      "verifier_service_runs/20260830T054031Z_d3acb1114122/verification.json"
+    ]
+  },
+  "loopback_decoy": {
+    "url": "http://127.0.0.1:53943/",
+    "host_control": "PASS",
+    "sandbox_result": "BLOCKED"
+  },
+  "search_surface_policy_records": 2,
+  "summary": {
+    "external_dns": "BLOCKED",
+    "external_http": "BLOCKED",
+    "external_socket": "BLOCKED",
+    "direct_ip": "BLOCKED",
+    "git_network": "BLOCKED",
+    "package_network": "BLOCKED",
+    "verifier_loopback": "PASS",
+    "external_search": "BLOCKED",
+    "danus_local_mcp": "PASS",
+    "persistence": "PASS",
+    "audit_integrity": "PASS",
+    "automatic_gate": "PASS"
+  },
+  "evidence": {
+    "worker_trace": "evidence/probe_1/worker.stdout.jsonl",
+    "worker_network": "evidence/probe_1/worker.network.json",
+    "verifier_trace": "evidence/probe_1/verifier.stdout.jsonl",
+    "verifier_network": "evidence/probe_1/verifier.network.json",
+    "wrapper_log": "evidence/probe_1/wrapper.log",
+    "verifier_runs": "evidence/probe_1/verifier_service_runs",
+    "loopback_decoy": "evidence/probe_1/loopback_decoy.stderr.log"
+  }
+}
