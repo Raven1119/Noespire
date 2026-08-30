@@ -1,0 +1,8 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "error_type": "BlindIntegrityFailure",
+  "run_id": "primitive-pythagorean-triples_20260829T184700Z",
+  "replacement_allowed": false,
+  "mathematical_result_preserved": true,
+  "audit_evidence": "experiments/danus_n18_matched_scheduling/analysis/blind_audit.json"
+}

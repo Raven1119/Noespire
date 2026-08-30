@@ -11,7 +11,7 @@
   "completed_at_utc": "2026-08-29T18:12:18.736313Z",
   "classification": "SOLVED",
   "solved": true,
-  "blind_integrity": "PENDING_POST_RUN_AUDIT",
+  "blind_integrity": "BLIND_INTEGRITY_PASS",
   "workers_configured": 7,
   "workers_launched": 1,
   "worker_attempts": 1,

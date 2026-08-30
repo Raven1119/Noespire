@@ -1,0 +1,1960 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-30T03:03:34.665266Z",
+  "material_reduction_threshold": 0.5,
+  "evidence": {
+    "integrity_pass": false,
+    "pass_count": 15,
+    "fail_count": 3,
+    "failed_run_ids": [
+      "hall-marriage_20260829T183231Z",
+      "primitive-pythagorean-triples_20260829T184700Z",
+      "vieta-jumping-square_20260829T175902Z"
+    ],
+    "frozen_counterbalance_match": true,
+    "matched_initial_states": true,
+    "A": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 3,
+      "integrity_failed_runs": 3,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 42,
+      "worker_attempts": 42,
+      "verifier_calls": 43,
+      "verifier_accepts": 43,
+      "verifier_rejects": 0,
+      "verified_fact_count": 43,
+      "supporting_closure_size": 6,
+      "facts_outside_closure": 37,
+      "verified_search_waste": 0.8604651163,
+      "worker_tokens": 2626242,
+      "verifier_tokens": 1393129,
+      "total_tokens": 4019371,
+      "mean_time_to_first_verified_target_seconds": 276.028938,
+      "total_terminal_time_seconds": 2497.026537,
+      "mean_terminal_time_seconds": 416.17109,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "ceva-concurrency_20260829T190022Z",
+          "arm": "A",
+          "project": "n18a_ceva_concurrency_20260829t190022z",
+          "problem_id": "ceva-concurrency",
+          "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:00:22.273001Z",
+          "schedule_started_at_utc": "2026-08-29T19:00:30.227841Z",
+          "completed_at_utc": "2026-08-29T19:08:56.873897Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 8,
+          "verifier_accepts": 8,
+          "verifier_rejects": 0,
+          "verified_fact_count": 8,
+          "supporting_closure": [
+            "058f823b114559e0"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 7,
+          "verified_search_waste": 0.875,
+          "worker_tokens": 484307,
+          "verifier_tokens": 153680,
+          "total_tokens": 637987,
+          "time_to_first_verified_target_seconds": 281.496749,
+          "time_to_terminal_run_seconds": 483.211382,
+          "wall_clock_seconds": 483.211382,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "058f823b114559e0",
+            "144b61ff70b74c70",
+            "315b3d7b2af22fa6",
+            "771675389145b9f6",
+            "7988d418c240a5b8",
+            "7fa3985655cb332e",
+            "bd8b62c2e27ad3bc",
+            "ccfb91a39c3bee00"
+          ],
+          "selected_target_fact_id": "058f823b114559e0",
+          "accepted_fact_ids": [
+            "058f823b114559e0",
+            "144b61ff70b74c70",
+            "315b3d7b2af22fa6",
+            "771675389145b9f6",
+            "7988d418c240a5b8",
+            "7fa3985655cb332e",
+            "bd8b62c2e27ad3bc",
+            "ccfb91a39c3bee00"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-29T19:00:30.232822Z",
+              "wall_clock_seconds": 483.189101,
+              "verifier_events_before": 0,
+              "verifier_events_after": 8,
+              "new_verifier_events": 8,
+              "target_fact_ids_after_batch": [
+                "058f823b114559e0",
+                "144b61ff70b74c70",
+                "315b3d7b2af22fa6",
+                "771675389145b9f6",
+                "7988d418c240a5b8",
+                "7fa3985655cb332e",
+                "bd8b62c2e27ad3bc",
+                "ccfb91a39c3bee00"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T190343Z_b75861ba2e53",
+            "20260829T190344Z_b75861ba2e53",
+            "20260829T190356Z_b75861ba2e53",
+            "20260829T190403Z_b75861ba2e53",
+            "20260829T190431Z_b75861ba2e53",
+            "20260829T190431Z_b75861ba2e53_2",
+            "20260829T190443Z_b75861ba2e53",
+            "20260829T190645Z_b75861ba2e53"
+          ],
+          "initial_state_sha256": "152099e52921814c72a834aba92908cef679e3bd489b6576034e82233d36c910",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "eulerian-circuit_20260830T022143Z",
+          "arm": "A",
+          "project": "n18a_eulerian_circuit_20260830t022143z",
+          "problem_id": "eulerian-circuit",
+          "problem_sha256": "9206ac91babcd9a760cb59c904fe35a81d717c57e56987e0e42bde02e2545433",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T02:21:46.170531Z",
+          "schedule_started_at_utc": "2026-08-30T02:21:54.614319Z",
+          "completed_at_utc": "2026-08-30T02:28:58.796683Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "6bd3d6a099d79d78"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 444890,
+          "verifier_tokens": 243249,
+          "total_tokens": 688139,
+          "time_to_first_verified_target_seconds": 301.749267,
+          "time_to_terminal_run_seconds": 397.314982,
+          "wall_clock_seconds": 397.314982,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "6bd3d6a099d79d78",
+            "6e64e174d0e175b5",
+            "75f9b48e684f5089",
+            "b14a2c45d5387c3f",
+            "bb53b76128ce4f99",
+            "be22885258be8063",
+            "f6bdc8c9ef1a7c62"
+          ],
+          "selected_target_fact_id": "6bd3d6a099d79d78",
+          "accepted_fact_ids": [
+            "6bd3d6a099d79d78",
+            "6e64e174d0e175b5",
+            "75f9b48e684f5089",
+            "b14a2c45d5387c3f",
+            "bb53b76128ce4f99",
+            "be22885258be8063",
+            "f6bdc8c9ef1a7c62"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-30T02:21:54.616225Z",
+              "wall_clock_seconds": 397.276075,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "6bd3d6a099d79d78",
+                "6e64e174d0e175b5",
+                "75f9b48e684f5089",
+                "b14a2c45d5387c3f",
+                "bb53b76128ce4f99",
+                "be22885258be8063",
+                "f6bdc8c9ef1a7c62"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T022454Z_fbdd2ba87b3d",
+            "20260830T022527Z_fbdd2ba87b3d",
+            "20260830T022545Z_fbdd2ba87b3d",
+            "20260830T022545Z_fbdd2ba87b3d_2",
+            "20260830T022553Z_fbdd2ba87b3d",
+            "20260830T022615Z_fbdd2ba87b3d",
+            "20260830T022623Z_fbdd2ba87b3d"
+          ],
+          "initial_state_sha256": "57271386d6671927de766f86f0b64783aec3451464d4d4364564220635dceb61",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "hall-marriage_20260829T183231Z",
+          "arm": "A",
+          "project": "n18a_hall_marriage_20260829t183231z",
+          "problem_id": "hall-marriage",
+          "problem_sha256": "27f2f4caed5cd736d0b413566b19cd12b6f8b75bfdf6fe7d6efd2e886419073b",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:32:32.445186Z",
+          "schedule_started_at_utc": "2026-08-29T18:32:39.179551Z",
+          "completed_at_utc": "2026-08-29T18:40:28.274190Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_FAIL",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "009b318ded4cac7a"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 455349,
+          "verifier_tokens": 248866,
+          "total_tokens": 704215,
+          "time_to_first_verified_target_seconds": 313.081949,
+          "time_to_terminal_run_seconds": 465.226153,
+          "wall_clock_seconds": 465.226153,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "009b318ded4cac7a",
+            "30007fde426f393b",
+            "35a0e28a6cd684b9",
+            "59767b78a413df1a",
+            "67efa8e341b09276",
+            "7f9ea0003974a42f",
+            "84fdfe1a70aa80c0"
+          ],
+          "selected_target_fact_id": "009b318ded4cac7a",
+          "accepted_fact_ids": [
+            "009b318ded4cac7a",
+            "30007fde426f393b",
+            "35a0e28a6cd684b9",
+            "59767b78a413df1a",
+            "67efa8e341b09276",
+            "7f9ea0003974a42f",
+            "84fdfe1a70aa80c0"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-29T18:32:39.180557Z",
+              "wall_clock_seconds": 465.217958,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "009b318ded4cac7a",
+                "30007fde426f393b",
+                "35a0e28a6cd684b9",
+                "59767b78a413df1a",
+                "67efa8e341b09276",
+                "7f9ea0003974a42f",
+                "84fdfe1a70aa80c0"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T183549Z_1cf5f9cc4c45",
+            "20260829T183559Z_1cf5f9cc4c45",
+            "20260829T183613Z_1cf5f9cc4c45",
+            "20260829T183626Z_1cf5f9cc4c45",
+            "20260829T183634Z_1cf5f9cc4c45",
+            "20260829T183731Z_1cf5f9cc4c45",
+            "20260829T183738Z_1cf5f9cc4c45"
+          ],
+          "initial_state_sha256": "283832b72d2c4e66d2e6921d17f8f51bbecad4d58794ddc729a0a49c186f845e",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "monotone-subsequence_20260829T192731Z",
+          "arm": "A",
+          "project": "n18a_monotone_subsequence_20260829t192731z",
+          "problem_id": "monotone-subsequence",
+          "problem_sha256": "d1df89b17196c2047b4f124c9238b2cfa2dec03474bc494f01b43f86d7f3251c",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:27:33.751458Z",
+          "schedule_started_at_utc": "2026-08-29T19:27:41.131680Z",
+          "completed_at_utc": "2026-08-29T19:33:19.401193Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "3ce6a8b772910bbe"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 356492,
+          "verifier_tokens": 223798,
+          "total_tokens": 580290,
+          "time_to_first_verified_target_seconds": 215.395763,
+          "time_to_terminal_run_seconds": 332.311784,
+          "wall_clock_seconds": 332.311784,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "3ce6a8b772910bbe",
+            "5387b33eda4d9cb2",
+            "72903798991195ce",
+            "7a7a140c1261c107",
+            "7cd5327a3edc9603",
+            "9cfdb8830b0422e2",
+            "bfc886410b9f5b7d"
+          ],
+          "selected_target_fact_id": "3ce6a8b772910bbe",
+          "accepted_fact_ids": [
+            "3ce6a8b772910bbe",
+            "5387b33eda4d9cb2",
+            "72903798991195ce",
+            "7a7a140c1261c107",
+            "7cd5327a3edc9603",
+            "9cfdb8830b0422e2",
+            "bfc886410b9f5b7d"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-29T19:27:41.132433Z",
+              "wall_clock_seconds": 332.303992,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "3ce6a8b772910bbe",
+                "5387b33eda4d9cb2",
+                "72903798991195ce",
+                "7a7a140c1261c107",
+                "7cd5327a3edc9603",
+                "9cfdb8830b0422e2",
+                "bfc886410b9f5b7d"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T192957Z_b7127a2ea446",
+            "20260829T193004Z_b7127a2ea446",
+            "20260829T193019Z_b7127a2ea446",
+            "20260829T193026Z_b7127a2ea446",
+            "20260829T193034Z_b7127a2ea446",
+            "20260829T193040Z_b7127a2ea446",
+            "20260829T193104Z_b7127a2ea446"
+          ],
+          "initial_state_sha256": "7ec42b7d915309433078e84746f4b736ea11d0092e27d269c8f80ef8fd5e5738",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "primitive-pythagorean-triples_20260829T184700Z",
+          "arm": "A",
+          "project": "n18a_primitive_pythagorean_triples_20260829t184700z",
+          "problem_id": "primitive-pythagorean-triples",
+          "problem_sha256": "1b70cf1554987de8b5b509022daf39ecfdaebf26566cc80157bd98d7c3744c45",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:47:02.193457Z",
+          "schedule_started_at_utc": "2026-08-29T18:47:10.647438Z",
+          "completed_at_utc": "2026-08-29T18:54:41.454032Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_FAIL",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "1b38119184181360"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 481360,
+          "verifier_tokens": 276045,
+          "total_tokens": 757405,
+          "time_to_first_verified_target_seconds": 246.391338,
+          "time_to_terminal_run_seconds": 433.292414,
+          "wall_clock_seconds": 433.292414,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "1b38119184181360",
+            "5d5a83512b66bced",
+            "6831471190ec6a51",
+            "7a3db94a68ffa68f",
+            "a932ff05f46ca574",
+            "cf7a255dd82482aa",
+            "d62bcb94836b2528"
+          ],
+          "selected_target_fact_id": "1b38119184181360",
+          "accepted_fact_ids": [
+            "1b38119184181360",
+            "5d5a83512b66bced",
+            "6831471190ec6a51",
+            "7a3db94a68ffa68f",
+            "a932ff05f46ca574",
+            "cf7a255dd82482aa",
+            "d62bcb94836b2528"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-29T18:47:10.648331Z",
+              "wall_clock_seconds": 433.28245,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "1b38119184181360",
+                "5d5a83512b66bced",
+                "6831471190ec6a51",
+                "7a3db94a68ffa68f",
+                "a932ff05f46ca574",
+                "cf7a255dd82482aa",
+                "d62bcb94836b2528"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T184935Z_8711daee9963",
+            "20260829T185034Z_8711daee9963",
+            "20260829T185042Z_8711daee9963",
+            "20260829T185057Z_8711daee9963",
+            "20260829T185107Z_8711daee9963",
+            "20260829T185116Z_8711daee9963",
+            "20260829T185148Z_8711daee9963"
+          ],
+          "initial_state_sha256": "3d104d7bd8561bea9b187c7fb4597d6dc02e68d3e9663aa6522a52876a59b776",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vieta-jumping-square_20260829T175902Z",
+          "arm": "A",
+          "project": "n18a_vieta_jumping_square_20260829t175902z",
+          "problem_id": "vieta-jumping-square",
+          "problem_sha256": "e0e4b76ac5285eb947a7ed2fb563969ebf83338ce3a44637ca997c7cc13dd247",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T17:59:02.584764Z",
+          "schedule_started_at_utc": "2026-08-29T17:59:11.713434Z",
+          "completed_at_utc": "2026-08-29T18:05:51.094382Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_FAIL",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "359ac8a02408e1ec"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 403844,
+          "verifier_tokens": 247491,
+          "total_tokens": 651335,
+          "time_to_first_verified_target_seconds": 298.058564,
+          "time_to_terminal_run_seconds": 385.669822,
+          "wall_clock_seconds": 385.669822,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": null,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "359ac8a02408e1ec",
+            "8a3a4ff17435dcb4",
+            "9f22b381b3086d8a",
+            "a0579c4f3ec0ebae",
+            "ad8724a2c7b30331",
+            "ae713d3094d6a45d",
+            "e9411345d0339670"
+          ],
+          "selected_target_fact_id": "359ac8a02408e1ec",
+          "accepted_fact_ids": [
+            "359ac8a02408e1ec",
+            "8a3a4ff17435dcb4",
+            "9f22b381b3086d8a",
+            "a0579c4f3ec0ebae",
+            "ad8724a2c7b30331",
+            "ae713d3094d6a45d",
+            "e9411345d0339670"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-29T17:59:11.714291Z",
+              "wall_clock_seconds": 385.66184,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "359ac8a02408e1ec",
+                "8a3a4ff17435dcb4",
+                "9f22b381b3086d8a",
+                "a0579c4f3ec0ebae",
+                "ad8724a2c7b30331",
+                "ae713d3094d6a45d",
+                "e9411345d0339670"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T180239Z_16fd6a6ce65d",
+            "20260829T180242Z_16fd6a6ce65d",
+            "20260829T180246Z_16fd6a6ce65d",
+            "20260829T180250Z_16fd6a6ce65d",
+            "20260829T180252Z_16fd6a6ce65d",
+            "20260829T180307Z_16fd6a6ce65d",
+            "20260829T180334Z_16fd6a6ce65d"
+          ],
+          "initial_state_sha256": "351375975488089ec066d4aa9a0af0644406ef73948b9d0c267cbd3018740c6f",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        }
+      ]
+    },
+    "B": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 6,
+      "integrity_failed_runs": 0,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 6,
+      "worker_attempts": 6,
+      "verifier_calls": 6,
+      "verifier_accepts": 6,
+      "verifier_rejects": 0,
+      "verified_fact_count": 6,
+      "supporting_closure_size": 6,
+      "facts_outside_closure": 0,
+      "verified_search_waste": 0.0,
+      "worker_tokens": 286297,
+      "verifier_tokens": 184232,
+      "total_tokens": 470529,
+      "mean_time_to_first_verified_target_seconds": 280.765738,
+      "total_terminal_time_seconds": 1846.949369,
+      "mean_terminal_time_seconds": 307.824895,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "ceva-concurrency_20260829T191621Z",
+          "arm": "B",
+          "project": "n18b_ceva_concurrency_20260829t191621z",
+          "problem_id": "ceva-concurrency",
+          "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:16:22.138369Z",
+          "schedule_started_at_utc": "2026-08-29T19:16:30.771795Z",
+          "completed_at_utc": "2026-08-29T19:22:04.379417Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "3c6d3a3f78d48470"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 36155,
+          "verifier_tokens": 34551,
+          "total_tokens": 70706,
+          "time_to_first_verified_target_seconds": 300.465899,
+          "time_to_terminal_run_seconds": 317.816902,
+          "wall_clock_seconds": 317.816902,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "3c6d3a3f78d48470"
+          ],
+          "selected_target_fact_id": "3c6d3a3f78d48470",
+          "accepted_fact_ids": [
+            "3c6d3a3f78d48470"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:16:30.773493Z",
+              "wall_clock_seconds": 317.734667,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "3c6d3a3f78d48470"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T191942Z_b75861ba2e53"
+          ],
+          "initial_state_sha256": "152099e52921814c72a834aba92908cef679e3bd489b6576034e82233d36c910",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "eulerian-circuit_20260829T194621Z",
+          "arm": "B",
+          "project": "n18b_eulerian_circuit_20260829t194621z",
+          "problem_id": "eulerian-circuit",
+          "problem_sha256": "9206ac91babcd9a760cb59c904fe35a81d717c57e56987e0e42bde02e2545433",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:46:21.894246Z",
+          "schedule_started_at_utc": "2026-08-29T19:46:29.445156Z",
+          "completed_at_utc": "2026-08-29T19:52:02.782934Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "f0d49c473cf76fda"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 52901,
+          "verifier_tokens": 30025,
+          "total_tokens": 82926,
+          "time_to_first_verified_target_seconds": 300.75027,
+          "time_to_terminal_run_seconds": 320.207327,
+          "wall_clock_seconds": 320.207327,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "f0d49c473cf76fda"
+          ],
+          "selected_target_fact_id": "f0d49c473cf76fda",
+          "accepted_fact_ids": [
+            "f0d49c473cf76fda"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:46:29.445961Z",
+              "wall_clock_seconds": 320.198595,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "f0d49c473cf76fda"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T194946Z_fbdd2ba87b3d"
+          ],
+          "initial_state_sha256": "57271386d6671927de766f86f0b64783aec3451464d4d4364564220635dceb61",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "hall-marriage_20260829T182050Z",
+          "arm": "B",
+          "project": "n18b_hall_marriage_20260829t182050z",
+          "problem_id": "hall-marriage",
+          "problem_sha256": "27f2f4caed5cd736d0b413566b19cd12b6f8b75bfdf6fe7d6efd2e886419073b",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:20:50.490136Z",
+          "schedule_started_at_utc": "2026-08-29T18:21:08.552438Z",
+          "completed_at_utc": "2026-08-29T18:26:39.603504Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "f0ebace359310808"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 41798,
+          "verifier_tokens": 16940,
+          "total_tokens": 58738,
+          "time_to_first_verified_target_seconds": 286.70423,
+          "time_to_terminal_run_seconds": 321.070053,
+          "wall_clock_seconds": 321.070053,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "f0ebace359310808"
+          ],
+          "selected_target_fact_id": "f0ebace359310808",
+          "accepted_fact_ids": [
+            "f0ebace359310808"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:21:08.566765Z",
+              "wall_clock_seconds": 321.037012,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "f0ebace359310808"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T182425Z_1cf5f9cc4c45"
+          ],
+          "initial_state_sha256": "283832b72d2c4e66d2e6921d17f8f51bbecad4d58794ddc729a0a49c186f845e",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "monotone-subsequence_20260829T192220Z",
+          "arm": "B",
+          "project": "n18b_monotone_subsequence_20260829t192220z",
+          "problem_id": "monotone-subsequence",
+          "problem_sha256": "d1df89b17196c2047b4f124c9238b2cfa2dec03474bc494f01b43f86d7f3251c",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:22:21.107080Z",
+          "schedule_started_at_utc": "2026-08-29T19:22:35.280469Z",
+          "completed_at_utc": "2026-08-29T19:27:14.077122Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "e3cd5686b39fd720"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 51560,
+          "verifier_tokens": 26127,
+          "total_tokens": 77687,
+          "time_to_first_verified_target_seconds": 231.326029,
+          "time_to_terminal_run_seconds": 268.170179,
+          "wall_clock_seconds": 268.170179,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "e3cd5686b39fd720"
+          ],
+          "selected_target_fact_id": "e3cd5686b39fd720",
+          "accepted_fact_ids": [
+            "e3cd5686b39fd720"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:22:35.281350Z",
+              "wall_clock_seconds": 268.161636,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "e3cd5686b39fd720"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T192459Z_b7127a2ea446"
+          ],
+          "initial_state_sha256": "7ec42b7d915309433078e84746f4b736ea11d0092e27d269c8f80ef8fd5e5738",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "primitive-pythagorean-triples_20260829T185505Z",
+          "arm": "B",
+          "project": "n18b_primitive_pythagorean_triples_20260829t185505z",
+          "problem_id": "primitive-pythagorean-triples",
+          "problem_sha256": "1b70cf1554987de8b5b509022daf39ecfdaebf26566cc80157bd98d7c3744c45",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:55:06.035747Z",
+          "schedule_started_at_utc": "2026-08-29T18:55:13.274613Z",
+          "completed_at_utc": "2026-08-29T19:00:01.809202Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "64ec5c50a3aadc41"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 43740,
+          "verifier_tokens": 38063,
+          "total_tokens": 81803,
+          "time_to_first_verified_target_seconds": 242.592435,
+          "time_to_terminal_run_seconds": 275.970745,
+          "wall_clock_seconds": 275.970745,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "64ec5c50a3aadc41"
+          ],
+          "selected_target_fact_id": "64ec5c50a3aadc41",
+          "accepted_fact_ids": [
+            "64ec5c50a3aadc41"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:55:13.275578Z",
+              "wall_clock_seconds": 275.961883,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "64ec5c50a3aadc41"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T185727Z_8711daee9963"
+          ],
+          "initial_state_sha256": "3d104d7bd8561bea9b187c7fb4597d6dc02e68d3e9663aa6522a52876a59b776",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vieta-jumping-square_20260829T180614Z",
+          "arm": "B",
+          "project": "n18b_vieta_jumping_square_20260829t180614z",
+          "problem_id": "vieta-jumping-square",
+          "problem_sha256": "e0e4b76ac5285eb947a7ed2fb563969ebf83338ce3a44637ca997c7cc13dd247",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:06:14.663402Z",
+          "schedule_started_at_utc": "2026-08-29T18:06:21.427973Z",
+          "completed_at_utc": "2026-08-29T18:12:18.736313Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "da477078306b7201"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 60143,
+          "verifier_tokens": 38526,
+          "total_tokens": 98669,
+          "time_to_first_verified_target_seconds": 322.755565,
+          "time_to_terminal_run_seconds": 343.714163,
+          "wall_clock_seconds": 343.714163,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "da477078306b7201"
+          ],
+          "selected_target_fact_id": "da477078306b7201",
+          "accepted_fact_ids": [
+            "da477078306b7201"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:06:21.428688Z",
+              "wall_clock_seconds": 343.688615,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "da477078306b7201"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T180953Z_16fd6a6ce65d"
+          ],
+          "initial_state_sha256": "351375975488089ec066d4aa9a0af0644406ef73948b9d0c267cbd3018740c6f",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        }
+      ]
+    },
+    "C": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 6,
+      "integrity_failed_runs": 0,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 6,
+      "worker_attempts": 6,
+      "verifier_calls": 6,
+      "verifier_accepts": 6,
+      "verifier_rejects": 0,
+      "verified_fact_count": 6,
+      "supporting_closure_size": 6,
+      "facts_outside_closure": 0,
+      "verified_search_waste": 0.0,
+      "worker_tokens": 359601,
+      "verifier_tokens": 227831,
+      "total_tokens": 587432,
+      "mean_time_to_first_verified_target_seconds": 314.40463,
+      "total_terminal_time_seconds": 2099.73573,
+      "mean_terminal_time_seconds": 349.955955,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "ceva-concurrency_20260829T190919Z",
+          "arm": "C",
+          "project": "n18c_ceva_concurrency_20260829t190919z",
+          "problem_id": "ceva-concurrency",
+          "problem_sha256": "40e22edd86f867310af1c45ce69e305fbd64fdf8b8142550d29e845f5287b558",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:09:20.457919Z",
+          "schedule_started_at_utc": "2026-08-29T19:09:28.930754Z",
+          "completed_at_utc": "2026-08-29T19:16:00.219042Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "915e816cbc2d5e77"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 42349,
+          "verifier_tokens": 54387,
+          "total_tokens": 96736,
+          "time_to_first_verified_target_seconds": 333.759182,
+          "time_to_terminal_run_seconds": 372.222581,
+          "wall_clock_seconds": 372.222581,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "915e816cbc2d5e77"
+          ],
+          "selected_target_fact_id": "915e816cbc2d5e77",
+          "accepted_fact_ids": [
+            "915e816cbc2d5e77"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:09:28.932788Z",
+              "wall_clock_seconds": 372.143557,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "915e816cbc2d5e77"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T191303Z_b75861ba2e53"
+          ],
+          "initial_state_sha256": "152099e52921814c72a834aba92908cef679e3bd489b6576034e82233d36c910",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "eulerian-circuit_20260829T193918Z",
+          "arm": "C",
+          "project": "n18c_eulerian_circuit_20260829t193918z",
+          "problem_id": "eulerian-circuit",
+          "problem_sha256": "9206ac91babcd9a760cb59c904fe35a81d717c57e56987e0e42bde02e2545433",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:39:18.930619Z",
+          "schedule_started_at_utc": "2026-08-29T19:39:36.861936Z",
+          "completed_at_utc": "2026-08-29T19:45:57.296923Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "bdf0dd54a8e11eae"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 53987,
+          "verifier_tokens": 34047,
+          "total_tokens": 88034,
+          "time_to_first_verified_target_seconds": 350.662845,
+          "time_to_terminal_run_seconds": 366.720673,
+          "wall_clock_seconds": 366.720673,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "bdf0dd54a8e11eae"
+          ],
+          "selected_target_fact_id": "bdf0dd54a8e11eae",
+          "accepted_fact_ids": [
+            "bdf0dd54a8e11eae"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:39:36.873813Z",
+              "wall_clock_seconds": 366.700793,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "bdf0dd54a8e11eae"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T194344Z_fbdd2ba87b3d"
+          ],
+          "initial_state_sha256": "57271386d6671927de766f86f0b64783aec3451464d4d4364564220635dceb61",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "hall-marriage_20260829T182656Z",
+          "arm": "C",
+          "project": "n18c_hall_marriage_20260829t182656z",
+          "problem_id": "hall-marriage",
+          "problem_sha256": "27f2f4caed5cd736d0b413566b19cd12b6f8b75bfdf6fe7d6efd2e886419073b",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:26:59.323650Z",
+          "schedule_started_at_utc": "2026-08-29T18:27:05.482035Z",
+          "completed_at_utc": "2026-08-29T18:32:12.282966Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "c5d795b96f65c6de"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 47368,
+          "verifier_tokens": 25581,
+          "total_tokens": 72949,
+          "time_to_first_verified_target_seconds": 258.945895,
+          "time_to_terminal_run_seconds": 297.748922,
+          "wall_clock_seconds": 297.748922,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "c5d795b96f65c6de"
+          ],
+          "selected_target_fact_id": "c5d795b96f65c6de",
+          "accepted_fact_ids": [
+            "c5d795b96f65c6de"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:27:05.482824Z",
+              "wall_clock_seconds": 297.739683,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "c5d795b96f65c6de"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T182934Z_1cf5f9cc4c45"
+          ],
+          "initial_state_sha256": "283832b72d2c4e66d2e6921d17f8f51bbecad4d58794ddc729a0a49c186f845e",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "monotone-subsequence_20260829T193342Z",
+          "arm": "C",
+          "project": "n18c_monotone_subsequence_20260829t193342z",
+          "problem_id": "monotone-subsequence",
+          "problem_sha256": "d1df89b17196c2047b4f124c9238b2cfa2dec03474bc494f01b43f86d7f3251c",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T19:33:42.874277Z",
+          "schedule_started_at_utc": "2026-08-29T19:33:51.362234Z",
+          "completed_at_utc": "2026-08-29T19:38:57.721122Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "0ce585faa37b7c9f"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 54852,
+          "verifier_tokens": 31163,
+          "total_tokens": 86015,
+          "time_to_first_verified_target_seconds": 259.723649,
+          "time_to_terminal_run_seconds": 304.063188,
+          "wall_clock_seconds": 304.063188,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "0ce585faa37b7c9f"
+          ],
+          "selected_target_fact_id": "0ce585faa37b7c9f",
+          "accepted_fact_ids": [
+            "0ce585faa37b7c9f"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T19:33:51.363075Z",
+              "wall_clock_seconds": 304.046256,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "0ce585faa37b7c9f"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T193632Z_b7127a2ea446"
+          ],
+          "initial_state_sha256": "7ec42b7d915309433078e84746f4b736ea11d0092e27d269c8f80ef8fd5e5738",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "primitive-pythagorean-triples_20260829T184051Z",
+          "arm": "C",
+          "project": "n18c_primitive_pythagorean_triples_20260829t184051z",
+          "problem_id": "primitive-pythagorean-triples",
+          "problem_sha256": "1b70cf1554987de8b5b509022daf39ecfdaebf26566cc80157bd98d7c3744c45",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:40:53.018791Z",
+          "schedule_started_at_utc": "2026-08-29T18:41:03.494013Z",
+          "completed_at_utc": "2026-08-29T18:46:45.607503Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "721aa37554238f30"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 55444,
+          "verifier_tokens": 29629,
+          "total_tokens": 85073,
+          "time_to_first_verified_target_seconds": 300.348774,
+          "time_to_terminal_run_seconds": 328.224519,
+          "wall_clock_seconds": 328.224519,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "721aa37554238f30"
+          ],
+          "selected_target_fact_id": "721aa37554238f30",
+          "accepted_fact_ids": [
+            "721aa37554238f30"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:41:03.502304Z",
+              "wall_clock_seconds": 328.194434,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "721aa37554238f30"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T184421Z_8711daee9963"
+          ],
+          "initial_state_sha256": "3d104d7bd8561bea9b187c7fb4597d6dc02e68d3e9663aa6522a52876a59b776",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vieta-jumping-square_20260829T181235Z",
+          "arm": "C",
+          "project": "n18c_vieta_jumping_square_20260829t181235z",
+          "problem_id": "vieta-jumping-square",
+          "problem_sha256": "e0e4b76ac5285eb947a7ed2fb563969ebf83338ce3a44637ca997c7cc13dd247",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-29T18:12:36.571459Z",
+          "schedule_started_at_utc": "2026-08-29T18:12:45.381267Z",
+          "completed_at_utc": "2026-08-29T18:20:12.656517Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "c16f4ee93ffaf9fb"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 105601,
+          "verifier_tokens": 53024,
+          "total_tokens": 158625,
+          "time_to_first_verified_target_seconds": 382.987437,
+          "time_to_terminal_run_seconds": 430.755847,
+          "wall_clock_seconds": 430.755847,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "c16f4ee93ffaf9fb"
+          ],
+          "selected_target_fact_id": "c16f4ee93ffaf9fb",
+          "accepted_fact_ids": [
+            "c16f4ee93ffaf9fb"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-29T18:12:45.383335Z",
+              "wall_clock_seconds": 430.743966,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "c16f4ee93ffaf9fb"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260829T181640Z_16fd6a6ce65d"
+          ],
+          "initial_state_sha256": "351375975488089ec066d4aa9a0af0644406ef73948b9d0c267cbd3018740c6f",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "fa3e48e3603a747e744367e1cdfaecbc81c30fe015290119c2e59ec6147de96a",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ]
+        }
+      ]
+    },
+    "first_worker_failures": [],
+    "sequential_recoveries": [],
+    "relative_to_A": {
+      "B": {
+        "worker_reduction_fraction": 0.8571428571428571,
+        "token_reduction_fraction": 0.882934668135885
+      },
+      "C": {
+        "worker_reduction_fraction": 0.8571428571428571,
+        "token_reduction_fraction": 0.853849769031025
+      }
+    }
+  },
+  "verdict": "INCONCLUSIVE"
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -25,7 +26,7 @@ PROTECTED_RE = re.compile(
 )
 
 
-def valid_runs() -> list[Path]:
+def result_bearing_runs() -> list[Path]:
     return sorted(
         result.parent
         for directory in ARM_DIRECTORIES
@@ -66,17 +67,47 @@ def apply_integrity(result_path: Path, audit: dict[str, Any]) -> None:
         raise RuntimeError(f"audit mutated non-integrity evidence in {audit['run_id']}")
 
 
+def verify_reference_hashes(manifest: dict[str, Any], reference_dir: Path) -> None:
+    for item in manifest["problems"]:
+        path = reference_dir / item["reference_file"]
+        if not path.is_file():
+            raise ValueError(f"restored reference missing: {item['reference_file']}")
+        observed = hashlib.sha256(path.read_bytes()).hexdigest()
+        if observed != item["reference_sha256"]:
+            raise ValueError(f"reference hash mismatch: {item['reference_file']}")
+
+
+def write_integrity_sidecar(run: Path, audit: dict[str, Any]) -> None:
+    if audit["integrity"] != "BLIND_INTEGRITY_FAIL":
+        return
+    value = {
+        "classification": "SYSTEM_INVALID_RUN",
+        "error_type": "BlindIntegrityFailure",
+        "run_id": audit["run_id"],
+        "replacement_allowed": False,
+        "mathematical_result_preserved": True,
+        "audit_evidence": (
+            "experiments/danus_n18_matched_scheduling/analysis/blind_audit.json"
+        ),
+    }
+    path = run / "system_invalid.json"
+    if path.is_file():
+        existing = json.loads(path.read_text(encoding="utf-8"))
+        if existing != value:
+            raise ValueError(f"refusing to overwrite different invalid evidence: {run.name}")
+        return
+    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+
+
 def main() -> None:
-    runs = valid_runs()
+    runs = result_bearing_runs()
     if len(runs) != 18:
-        raise SystemExit(f"expected 18 valid runs, found {len(runs)}")
+        raise SystemExit(f"expected 18 result-bearing runs, found {len(runs)}")
     reference_dir = EXPERIMENT_ROOT / "reference"
     manifest = json.loads(
         (EXPERIMENT_ROOT / "protocol" / "runtime_manifest.json").read_text(encoding="utf-8")
     )
-    for item in manifest["problems"]:
-        if not (reference_dir / item["reference_file"]).is_file():
-            raise SystemExit(f"restored reference missing: {item['reference_file']}")
+    verify_reference_hashes(manifest, reference_dir)
     isolation = json.loads(
         (EXPERIMENT_ROOT / "protocol" / "reference_isolation_probe.json").read_text(
             encoding="utf-8"
@@ -87,7 +118,7 @@ def main() -> None:
     output = {
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "scope": "all 18 valid N1.8 formal math runs; system-invalid evidence excluded",
+        "scope": "all 18 result-bearing N1.8 formal math runs; execution-invalid attempts excluded",
         "capability_gate": gate,
         "runs": audits,
         "summary": {
@@ -112,6 +143,7 @@ def main() -> None:
     output_path.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
     for run, audit in zip(runs, audits, strict=True):
         apply_integrity(run / "result.json", audit)
+        write_integrity_sidecar(run, audit)
     print(json.dumps(output["summary"], indent=2))
 
 
