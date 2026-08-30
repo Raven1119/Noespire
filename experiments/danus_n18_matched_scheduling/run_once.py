@@ -38,7 +38,6 @@ from experiments.danus_n18_matched_scheduling.scheduler import (  # noqa: E402
 
 
 UPSTREAM_COMMIT = "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c"
-CAPABILITY_EVIDENCE = "capability_probe_20260828T162750Z"
 TERMINAL_STATES = {"max_rounds", "stopped", "failed", "error", "deadline"}
 ARM_DIRECTORIES = {
     "A": "arm_a_parallel",
@@ -49,6 +48,15 @@ ROLES = "high:7"
 MODEL = "gpt-5.6-sol"
 EFFORT = "high"
 MAX_WORKERS = 7
+
+
+def control_paths(manifest: dict[str, Any]) -> tuple[Path, Path]:
+    """Resolve frozen blind controls without coupling the runner to one experiment."""
+    policy = manifest["blind_policy"]
+    return (
+        NOESPIRE_ROOT / policy["wrapper_path"],
+        NOESPIRE_ROOT / policy["capability_evidence"],
+    )
 
 
 def runtime_overrides(
@@ -155,16 +163,12 @@ def main() -> None:
     args = parser.parse_args()
 
     danus_root = NOESPIRE_ROOT / "baselines" / "danus"
-    n16_root = NOESPIRE_ROOT / "experiments" / "danus_n16_blind"
-    wrapper = n16_root / "protocol" / "codex_blind_wrapper.sh"
-    evidence_summary = (
-        n16_root / "protocol" / "evidence" / CAPABILITY_EVIDENCE / "summary.json"
-    )
     manifest = json.loads(
         (EXPERIMENT_ROOT / "protocol" / "runtime_manifest.json").read_text(
             encoding="utf-8"
         )
     )
+    wrapper, evidence_summary = control_paths(manifest)
     entries = {item["problem_id"]: item for item in manifest["problems"]}
     if args.problem_id not in entries:
         raise SystemExit(f"problem is not frozen: {args.problem_id}")
@@ -180,6 +184,9 @@ def main() -> None:
         raise SystemExit("frozen worker assignment hash mismatch")
     if sha256(wrapper) != manifest["blind_policy"]["wrapper_sha256"]:
         raise SystemExit("frozen blind wrapper hash mismatch")
+    expected_capability_hash = manifest["blind_policy"].get("capability_evidence_sha256")
+    if expected_capability_hash and sha256(evidence_summary) != expected_capability_hash:
+        raise SystemExit("frozen capability evidence hash mismatch")
     capability = json.loads(evidence_summary.read_text(encoding="utf-8"))
     if capability.get("automatic_gate") != "PASS":
         raise SystemExit("canonical N1.6 capability gate is not PASS")
@@ -228,7 +235,8 @@ def main() -> None:
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     # The timestamp text is only an identifier; mathematical state excludes it.
-    project = f"n18{args.arm.lower()}_{args.problem_id.replace('-', '_')}_{stamp.lower()}"
+    project_prefix = manifest.get("project_prefix", "n18")
+    project = f"{project_prefix}{args.arm.lower()}_{args.problem_id.replace('-', '_')}_{stamp.lower()}"
     project_dir = danus_root / "runtime" / "projects" / project
     if project_dir.exists():
         raise SystemExit(f"fresh project path already exists: {project_dir}")
@@ -347,6 +355,7 @@ def main() -> None:
         def launch_batch(indices: tuple[int, ...]) -> bool:
             nonlocal first_worker_result
             batch_workers = tuple(workers[index - 1] for index in indices)
+            before_facts = len(list((project_dir / "fact_graph" / "facts").glob("*.md")))
             before_events = len(
                 load_jsonl(project_dir / "global_memory" / "verification.jsonl")
             )
@@ -375,6 +384,10 @@ def main() -> None:
                     "workers": list(batch_workers),
                     "started_at_utc": batch_started_at,
                     "wall_clock_seconds": round(duration, 6),
+                    "verified_facts_before": before_facts,
+                    "verified_facts_after": len(
+                        list((project_dir / "fact_graph" / "facts").glob("*.md"))
+                    ),
                     "verifier_events_before": before_events,
                     "verifier_events_after": len(events),
                     "new_verifier_events": len(events) - before_events,

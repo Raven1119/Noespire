@@ -50,6 +50,18 @@ class FrozenContractTests(unittest.TestCase):
         wrapper = run_once.NOESPIRE_ROOT / self.manifest["blind_policy"]["wrapper_path"]
         self.assertEqual(digest(wrapper), self.manifest["blind_policy"]["wrapper_sha256"])
 
+    def test_runner_resolves_blind_controls_from_manifest(self) -> None:
+        wrapper, evidence = run_once.control_paths(self.manifest)
+
+        self.assertEqual(
+            wrapper,
+            run_once.NOESPIRE_ROOT / self.manifest["blind_policy"]["wrapper_path"],
+        )
+        self.assertEqual(
+            evidence,
+            run_once.NOESPIRE_ROOT / self.manifest["blind_policy"]["capability_evidence"],
+        )
+
     def test_counterbalanced_order_contains_every_pair_once(self) -> None:
         expected_orders = [
             ["A", "B", "C"],

@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "experiment": "N1.9b Fresh Strictly Matched Scheduling Ablation",
+  "status": "PRE_RUN_FROZEN",
+  "frozen_at_utc": "2026-08-30T06:37:27Z",
+  "frozen_before_first_proof_worker": true,
+  "noespire_branch": "noespire-nl-proof-v2",
+  "pre_task_noespire_head": "6b9d662ec0c33c6e4b19ae4e841e17603f59b2d5",
+  "blind_boundary_commit": "6b9d662ec0c33c6e4b19ae4e841e17603f59b2d5",
+  "blind_boundary_tag": "noespire-n19a-blind-boundary",
+  "required_freeze_commit_message": "experiment: freeze N1.9b matched scheduling ablation",
+  "project_prefix": "n19b",
+  "danus": {
+    "path": "baselines/danus",
+    "commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+    "modified": false
+  },
+  "worker_contract": {
+    "assignment_path": "experiments/danus_n19b_matched_scheduling/protocol/worker_assignment.txt",
+    "assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+    "model": "gpt-5.6-sol",
+    "role": "high",
+    "reasoning_effort": "high",
+    "configured_roles": "high:7",
+    "maximum_worker_slots": 7,
+    "maximum_rounds": 1,
+    "worker_hard_timeout_seconds": 14400,
+    "verifier_codex_timeout_seconds": 900
+  },
+  "verifier": {
+    "implementation": "unchanged frozen DANUS verifier",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "xhigh",
+    "host": "127.19.0.1",
+    "results_dir": "baselines/danus/runtime/verify-runs"
+  },
+  "blind_policy": {
+    "wrapper_path": "experiments/danus_n19a_blind_boundary/protocol/codex_blind_wrapper.sh",
+    "wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+    "capability_evidence": "experiments/danus_n19a_blind_boundary/reports/mechanical_audit.json",
+    "capability_evidence_sha256": "f3e4340551b4d1ffd617a940821f5a2e22a4d7225838e3ecd29b0bf558cc754a",
+    "external_policy": "deny by default",
+    "allowed_loopback_host": "127.19.0.1",
+    "audit_semantics": {
+      "SEARCH_INTENT_BLOCKED": "PASS",
+      "OUTBOUND_ATTEMPT_BLOCKED": "PASS",
+      "EXTERNAL_ACCESS_SUCCEEDED": "FAIL"
+    },
+    "reference_isolation_evidence": "experiments/danus_n19b_matched_scheduling/protocol/reference_isolation_probe.json"
+  },
+  "private_reference_store": "/root/noespire-n19b-references-6b9d662e",
+  "arms": {
+    "A": {
+      "name": "Parallel-7",
+      "configured_roles": "high:7",
+      "launch_policy": "launch all seven concurrently and wait for all normal terminal states",
+      "maximum_launched_workers": 7,
+      "early_cancellation": false
+    },
+    "B": {
+      "name": "Single-1",
+      "configured_roles": "high:7",
+      "launch_policy": "launch worker 1 only and terminate after its verified terminal result",
+      "maximum_launched_workers": 1,
+      "early_cancellation": false
+    },
+    "C": {
+      "name": "Sequential-7",
+      "configured_roles": "high:7",
+      "launch_policy": "launch singleton workers in order after failure and stop after first exact accepted target",
+      "maximum_launched_workers": 7,
+      "early_cancellation": false
+    }
+  },
+  "problems": [
+    {
+      "problem_id": "ramsey-r33",
+      "problem_file": "ramsey-r33.md",
+      "problem_sha256": "bc047d7eda75187e04cbed6e2632cc58226d88ee15ab224613ac5f03e693365e",
+      "reference_file": "ramsey-r33-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/ramsey-r33-reference.md",
+      "reference_sha256": "259a50793f93676fce49d36dad74b29c071acc732051379a5fafbf15f9db6a6e"
+    },
+    {
+      "problem_id": "chinese-remainder",
+      "problem_file": "chinese-remainder.md",
+      "problem_sha256": "0fe8ac3f288c7c81bf3dc563b9a263d0960351c3c206d4eafb67ede3bde86c52",
+      "reference_file": "chinese-remainder-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/chinese-remainder-reference.md",
+      "reference_sha256": "7a16a1692cbd6059a8039283001eb354ed95b690e1398fbf88993f05f10f44c3"
+    },
+    {
+      "problem_id": "sperner-antichain",
+      "problem_file": "sperner-antichain.md",
+      "problem_sha256": "22f16b658815286dc4b76b7c4b6b74bb6c70f65123d5fc7e17fb593b5c5384cc",
+      "reference_file": "sperner-antichain-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/sperner-antichain-reference.md",
+      "reference_sha256": "b40ea61f3f000209c798997991fe1a30044d4bc4288f5af9c331cff10b57566e"
+    },
+    {
+      "problem_id": "vandermonde-determinant",
+      "problem_file": "vandermonde-determinant.md",
+      "problem_sha256": "3aaaef36d74edfae70e8cc6dcb586dd5b1ff596dd5748c21584542aa77e9a508",
+      "reference_file": "vandermonde-determinant-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/vandermonde-determinant-reference.md",
+      "reference_sha256": "2c944f14dfe4a43cc81b0afbca91f17b8eed154efa0e8339c90444f1b3f1a93b"
+    },
+    {
+      "problem_id": "p-group-center",
+      "problem_file": "p-group-center.md",
+      "problem_sha256": "86da3d2eda7c35fd448e7d60d4306479123f53adca3630d720d5d7ecdc82d624",
+      "reference_file": "p-group-center-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/p-group-center-reference.md",
+      "reference_sha256": "82bbfc3254ea140ac7859e1e87692b8516aa8a16117bc290fa70677946448084"
+    },
+    {
+      "problem_id": "bipartite-odd-cycle",
+      "problem_file": "bipartite-odd-cycle.md",
+      "problem_sha256": "83ad8ea770804cf68de3f47822e66eca2567a75a458c8e2c9a8251c655b6193e",
+      "reference_file": "bipartite-odd-cycle-reference.md",
+      "private_source": "/root/noespire-n19b-references-6b9d662e/bipartite-odd-cycle-reference.md",
+      "reference_sha256": "aec2c75c9c647856973e4f10e9fbf90d4fc948c0ac8e2e0c17a7dc56d82bdcd4"
+    }
+  ],
+  "run_order": [
+    {"problem_id": "ramsey-r33", "arm": "A"},
+    {"problem_id": "ramsey-r33", "arm": "B"},
+    {"problem_id": "ramsey-r33", "arm": "C"},
+    {"problem_id": "chinese-remainder", "arm": "B"},
+    {"problem_id": "chinese-remainder", "arm": "C"},
+    {"problem_id": "chinese-remainder", "arm": "A"},
+    {"problem_id": "sperner-antichain", "arm": "C"},
+    {"problem_id": "sperner-antichain", "arm": "A"},
+    {"problem_id": "sperner-antichain", "arm": "B"},
+    {"problem_id": "vandermonde-determinant", "arm": "A"},
+    {"problem_id": "vandermonde-determinant", "arm": "C"},
+    {"problem_id": "vandermonde-determinant", "arm": "B"},
+    {"problem_id": "p-group-center", "arm": "B"},
+    {"problem_id": "p-group-center", "arm": "A"},
+    {"problem_id": "p-group-center", "arm": "C"},
+    {"problem_id": "bipartite-odd-cycle", "arm": "C"},
+    {"problem_id": "bipartite-odd-cycle", "arm": "B"},
+    {"problem_id": "bipartite-odd-cycle", "arm": "A"}
+  ],
+  "analysis": {
+    "valid_run_target": 18,
+    "material_compute_reduction_fraction": 0.5,
+    "metrics": [
+      "solved",
+      "workers_launched",
+      "worker_attempts",
+      "verifier_accepts",
+      "verifier_rejects",
+      "verified_fact_count",
+      "supporting_closure_size",
+      "facts_outside_closure",
+      "worker_tokens",
+      "verifier_tokens",
+      "total_tokens",
+      "time_to_first_verified_target",
+      "terminal_wall_clock"
+    ],
+    "verdicts": [
+      "SINGLE_WORKER_FIRST_SUPPORTED",
+      "DEMAND_DRIVEN_EXECUTION_SUPPORTED",
+      "SEQUENTIAL_RECOVERY_SUPPORTED",
+      "PARALLEL_REDUNDANCY_SUPPORTED",
+      "INCONCLUSIVE"
+    ]
+  },
+  "mathematical_reruns": false,
+  "system_invalid_replacement_limit_per_cell": 1
+}
