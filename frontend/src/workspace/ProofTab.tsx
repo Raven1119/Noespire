@@ -98,6 +98,7 @@ export function ProofTab({ model, onInspectFact }: Props) {
           title="Main theorem"
           names={names}
           onFactRef={setFocusedFactId}
+          onInspect={onInspectFact}
         />
       )}
 

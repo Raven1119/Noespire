@@ -203,15 +203,19 @@ describe("Attempts tab — verdict registers", () => {
     mockedApi.listProblems.mockResolvedValue({ problems: [] });
   });
 
-  it("PASS on a SOLVED problem reads Accepted with the LLM-verified badge", async () => {
+  it("PASS on a SOLVED problem keeps the candidate as the accepted historical artifact", async () => {
     mockedApi.getProblem.mockResolvedValue(solvedMultiFactModel());
     await renderWorkspace();
     fireEvent.click(screen.getByRole("tab", { name: "Attempts" }));
 
     expect(screen.getByText("Accepted")).toBeTruthy();
     expect(screen.getAllByText("LLM-verified").length).toBeGreaterThan(0);
+    // The candidate is still shown — as the artifact that became the target
+    // Fact, never under the Unverified banner (task card §19).
     expect(screen.queryByText("Unverified — candidate proof")).toBeNull();
-    expect(screen.getByText(/Proof tab/)).toBeTruthy();
+    expect(screen.getByText(/Accepted candidate/)).toBeTruthy();
+    expect(screen.getByText(/became the target Fact/)).toBeTruthy();
+    expect(screen.getAllByText(/Every even perfect number is triangular/).length).toBeGreaterThan(0);
   });
 
   it("RUNNING shows the phase line marked as inferred", async () => {

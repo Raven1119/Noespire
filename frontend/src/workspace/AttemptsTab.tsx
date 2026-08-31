@@ -10,14 +10,29 @@ type Props = {
   onInspectAttempt: (attempt: Attempt, ordinal: number) => void;
 };
 
-/** Candidate proof in the unverified register — always with the banner. */
-function CandidateCard({ attempt }: { attempt: Attempt }) {
+/** Candidate proof register. Unverified attempts get the dashed/amber
+ *  "Unverified" banner; a PASS attempt keeps the candidate visible as the
+ *  accepted historical artifact that became the target Fact (never
+ *  disguised as a second proof). */
+function CandidateCard({
+  attempt,
+  accepted = false,
+}: {
+  attempt: Attempt;
+  accepted?: boolean;
+}) {
   if (attempt.candidate === null) return null;
   return (
-    <div className="candidate-card">
+    <div className={`candidate-card${accepted ? " candidate-card--accepted" : ""}`}>
       <div className="candidate-card__banner">
-        <span>Unverified — candidate proof</span>
-        <span>not a Fact</span>
+        {accepted ? (
+          <span>Accepted candidate · became the target Fact</span>
+        ) : (
+          <>
+            <span>Unverified — candidate proof</span>
+            <span>not a Fact</span>
+          </>
+        )}
       </div>
       <div className="candidate-card__statement">
         <MathText text={attempt.candidate.statement} />
@@ -43,14 +58,13 @@ function AttemptBody({
   return (
     <div className="attempt-card__body">
       {accepted ? (
-        <div className="attempt-accepted">
-          <span className="attempt-accepted__label">Accepted</span>
-          <LlmVerifiedBadge />
-          <p className="attempt-accepted__note">
-            This candidate passed verification; the verified proof lives in the
-            Proof tab.
-          </p>
-        </div>
+        <>
+          <div className="attempt-accepted">
+            <span className="attempt-accepted__label">Accepted</span>
+            <LlmVerifiedBadge />
+          </div>
+          <CandidateCard attempt={attempt} accepted />
+        </>
       ) : (
         <CandidateCard attempt={attempt} />
       )}

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../api";
 import { InspectorDrawer } from "../inspector/InspectorDrawer";
 import { WorkspaceShell } from "./WorkspaceShell";
-import { makeModel, solvedMultiFactModel } from "../test-support/workspaceFixtures";
+import { makeModel, solvedMultiFactModel, solvedSingleFactModel } from "../test-support/workspaceFixtures";
 
 vi.mock("../api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../api")>();
@@ -142,8 +142,20 @@ describe("WorkspaceShell — Fact inspector (proof document ⓘ)", () => {
     mockedApi.listProblems.mockResolvedValue({ problems: [] });
   });
 
-  it("shows fact_id, predecessors, and statement — never an author", async () => {
-    mockedApi.getProblem.mockResolvedValue(solvedMultiFactModel());
+  it("opens the Fact inspector from the Main theorem — even with a single-fact closure", async () => {
+    mockedApi.getProblem.mockResolvedValue(solvedSingleFactModel());
+    await renderWorkspace();
+
+    // Single-fact closure renders no closure list, so the main theorem's own
+    // ⓘ is the ONLY way to inspect the target Fact (Slice 4 acceptance fix).
+    expect(document.querySelector(".closure-list")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Inspect Main theorem" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Fact" });
+    expect(dialog.textContent).toContain("ffffffffffffffff");
+  });
+
+  it("shows fact_id, predecessors, and statement — never an author", async () => {    mockedApi.getProblem.mockResolvedValue(solvedMultiFactModel());
     await renderWorkspace();
 
     // Focus Lemma 1 via its closure entry, then open its inspector.

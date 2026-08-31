@@ -574,6 +574,18 @@ body {
   line-height: 1.6;
 }
 
+/* PASS attempt: the candidate stays visible as the accepted historical
+   artifact — solid neutral border, not the unverified register. */
+.candidate-card--accepted {
+  border-style: solid;
+  border-color: hsl(var(--border-strong));
+  background: hsl(var(--surface-raised));
+}
+
+.candidate-card--accepted .candidate-card__banner {
+  color: hsl(var(--text-tertiary));
+}
+
 .candidate-card__banner {
   display: flex;
   justify-content: space-between;
@@ -603,13 +615,6 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: hsl(var(--status-verified));
-}
-
-.attempt-accepted__note {
-  font-size: 13px;
-  color: hsl(var(--text-tertiary));
-  margin: 0;
-  flex-basis: 100%;
 }
 
 /* ---------- failure panels ---------- */
