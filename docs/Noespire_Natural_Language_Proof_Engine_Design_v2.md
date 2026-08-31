@@ -12,9 +12,11 @@
 ## Current Evidence and Implementation Status
 
 - Experimental default: **single-worker-first**, supported by the N1.9b strictly matched scheduling ablation (`SINGLE_WORKER_FIRST_SUPPORTED`).
+- Implemented N1.11 product seam: `ProblemSpec -> root ProofObligation -> execute_obligation -> verified target Fact -> SupportingClosure -> ProblemResult`.
+- This is a **minimal direct-proof MVP**: the complete theorem statement is the root goal, with no parsing, planning, decomposition, or graph-search policy.
 - Current N1 execution: one open Proof Obligation launches exactly one direct worker; a well-formed candidate receives one fresh verifier decision.
 - PASS: admit exactly one content-addressed Fact and mark the obligation `DISCHARGED`.
-- FAIL: admit no Fact, clear no truth, return the obligation to `OPEN`, and launch no automatic retry or fan-out.
+- FAIL: persist attempt evidence, admit no Fact, return the root obligation to `OPEN`, and launch no automatic retry or fan-out.
 - Adaptive Cut-Set, failure classification, GraphPatch, and Local Graph Surgery: **not implemented and currently unsupported by observed diagnostics**. They remain unvalidated design hypotheses, not current runtime behavior.
 
 ---

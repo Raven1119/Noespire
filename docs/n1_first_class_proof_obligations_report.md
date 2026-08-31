@@ -36,6 +36,18 @@ The detailed source comparison is in `docs/n1_danus_reuse_audit.md`. No frozen D
 - later retry: only a new explicit caller invocation; no recovery policy is implied
 - Adaptive Cut-Set, GraphPatch, failure classification, and Local Graph Surgery: `NOT IMPLEMENTED`; current diagnostics provide no evidence for a specific automatic escalation policy
 
+## N1.11 Minimal Direct-Proof MVP
+
+- public interface: `solve_problem_once(...)`
+- input: `ProblemSpec(problem_id, complete theorem statement, optional accepted premise Fact IDs)`
+- root: stable `root:<problem_id>` obligation on route `root`; reusing a problem ID for a different theorem or premise set is rejected mechanically
+- execution: delegates one OPEN root to the existing `execute_obligation(...)` single-worker-first seam
+- solved result: only reconstructed from a `DISCHARGED` root whose accepted target Fact is readable from `FactGraph`; closure comes directly from `FactGraph.supporting_closure(...)`
+- open result: FactGraph unchanged, root `OPEN`, `resolved_by_fact_id` null, and one durable JSON attempt record linking problem, obligation, candidate, verifier verdict, and outcome
+- resume: a reloaded solved root returns the existing target and closure with zero worker/verifier calls; a reloaded failed root remains `OPEN` until another explicit call
+- source audit: `docs/n111_e2e_mvp_source_audit.md`
+- scope: no parser, planner, scheduler, retry loop, failure classifier, Cut-Set, GraphPatch, Local Graph Surgery, Lean, or mapping
+
 ## Reused DANUS Infrastructure
 
 - Existing content-addressed `Fact` and file-backed `FactGraph` adaptation.
@@ -67,11 +79,12 @@ The detailed source comparison is in `docs/n1_danus_reuse_audit.md`. No frozen D
 ## Tests
 
 - command: `wsl -e bash -lc 'cd /mnt/c/Users/wmywb/PycharmProjects/Noespire && PYTHONPATH=src baselines/danus/runtime/venv/bin/python -m unittest discover -s tests -v'`
-- passed: 28
+- passed: 53
 - skipped: 1 pre-existing opt-in Phase 0A real-Codex smoke
 - failed: 0
 - compile check: `baselines/danus/runtime/venv/bin/python -m compileall -q src tests experiments/n1_triangular_sum_smoke/run.py` -> PASS
 - single-worker-first controls: worker calls = 1, verifier calls = 1, and verifier FAIL launches no second worker
+- N1.11 controls: root/PASS/FAIL/reload semantics, linked attempt evidence, exception recovery, and evidence-write preflight
 - deterministic controls: scripted two-premise PASS and FAIL paths both PASS; an explicit FAIL -> OPEN -> retry -> PASS control admits exactly one Fact and ends `DISCHARGED`
 
 ## Real Smoke
