@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -6,9 +7,12 @@ import unittest
 
 from application.workspace_read_model import build_problem_list, build_read_model
 
+from research.fact import CandidateFact
 from research.obligation import ObligationStatus
 
 from application_fixtures import (
+    ScriptedVerifier,
+    ScriptedWorker,
     WorkspaceBuilder,
     add_fact,
     add_open_obligation,
@@ -17,6 +21,7 @@ from application_fixtures import (
     registry_for,
     run_attempt,
     run_error_attempt,
+    wait_for,
     write_residual_running_attempt,
 )
 
@@ -340,6 +345,153 @@ class RecoveryProjectionTests(unittest.TestCase):
         self.assertEqual(second["attempt_id"], live_id)
         self.assertIsNone(second["failure_class"])
         self.assertNotIn("verifier_called", second)
+
+
+class LiveExecutionReadModelTests(unittest.TestCase):
+    """Slice 3: status RUNNING is live-table authoritative; ``live`` object."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.builder = WorkspaceBuilder(Path(self.temporary.name))
+
+    def test_live_execution_makes_status_running_with_live_object(self) -> None:
+        import threading
+
+        from application.execution import ExecutionService
+        from application_fixtures import BlockingWorker, wait_for
+        from research.fact import CandidateFact
+
+        self.builder.add_problem("p-live", "Live theorem.")
+        started, release = threading.Event(), threading.Event()
+        service = ExecutionService(
+            self.builder.root,
+            worker_factory=lambda: BlockingWorker(
+                CandidateFact("Live theorem.", "A candidate proof.", ()), started, release
+            ),
+            verifier_factory=lambda: ScriptedVerifier(True),
+        )
+        service.start_attempt("p-live")
+        self.assertTrue(started.wait(timeout=5))
+
+        model = build_read_model(self.builder.root, "p-live", execution_service=service)
+
+        self.assertEqual(model["status"], "RUNNING")
+        self.assertEqual(
+            model["live"],
+            {"running": True, "current_attempt_id": "attempt-000001"},
+        )
+        release.set()
+        self.assertTrue(wait_for(lambda: not service.is_running("p-live")))
+        model = build_read_model(self.builder.root, "p-live", execution_service=service)
+        self.assertEqual(model["status"], "SOLVED")
+        self.assertNotIn("live", model)
+
+    def test_live_execution_before_attempt_file_reports_null_attempt(self) -> None:
+        """Claim reserved but solve not yet started: the service table still
+        says RUNNING (it is authoritative, spec §5), with current_attempt_id
+        null until _start_attempt writes the file. Deterministic: the
+        verifier factory runs before the solve and blocks the thread there."""
+        import threading
+
+        from application.execution import ExecutionService
+
+        self.builder.add_problem("p-early", "Early theorem.")
+        factory_entered, release = threading.Event(), threading.Event()
+
+        def blocking_verifier_factory():
+            factory_entered.set()
+            release.wait(timeout=10)
+            return ScriptedVerifier(True)
+
+        service = ExecutionService(
+            self.builder.root,
+            worker_factory=lambda: ScriptedWorker(
+                CandidateFact("Early theorem.", "A candidate proof.", ())
+            ),
+            verifier_factory=blocking_verifier_factory,
+        )
+        service.start_attempt("p-early")
+        self.assertTrue(factory_entered.wait(timeout=5))
+
+        model = build_read_model(self.builder.root, "p-early", execution_service=service)
+
+        self.assertEqual(model["status"], "RUNNING")
+        self.assertEqual(model["live"], {"running": True, "current_attempt_id": None})
+        release.set()
+        # Let the released thread finish before the temp dir is cleaned up.
+        self.assertTrue(wait_for(lambda: not service.is_running("p-early")))
+
+    def test_pre_recovery_running_window_has_live_object(self) -> None:
+        problem_dir = self.builder.add_problem("p-crash", "Crash theorem.")
+        add_open_obligation(problem_dir, "p-crash", "Crash theorem.")
+        registry_for(problem_dir).transition("root:p-crash", ObligationStatus.RUNNING)
+        attempt_id = write_residual_running_attempt(problem_dir, "p-crash")
+
+        model = build_read_model(self.builder.root, "p-crash")
+
+        self.assertEqual(model["status"], "RUNNING")
+        self.assertEqual(
+            model["live"], {"running": True, "current_attempt_id": attempt_id}
+        )
+
+    def test_open_problem_has_no_live_object(self) -> None:
+        self.builder.add_problem("p-open", "Open theorem.")
+
+        model = build_read_model(self.builder.root, "p-open")
+
+        self.assertEqual(model["status"], "OPEN")
+        self.assertNotIn("live", model)
+
+
+class CorruptLogLineTests(unittest.TestCase):
+    """Slice 3 read-model rule: only a corrupt FINAL line is tolerated."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.builder = WorkspaceBuilder(Path(self.temporary.name))
+
+    def test_unparseable_final_line_is_skipped(self) -> None:
+        problem_dir = self.builder.add_problem("p-fail", "Hard theorem.")
+        result = run_attempt(problem_dir, "p-fail", "Hard theorem.", accepted=False)
+        append_log(
+            problem_dir,
+            {
+                "kind": "ATTEMPT_FINISHED",
+                "execution_id": "exec-1",
+                "problem_id": "p-fail",
+                "attempt_id": result.attempt_id,
+                "started_at": "t1",
+                "finished_at": "t2",
+                "outcome_stage": "FRESH_VERIFIER_REJECT",
+                "verifier_called": True,
+            },
+        )
+        # Crash mid-append artifact: a truncated final line, no newline.
+        with (problem_dir / "_execution_log.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write('{"kind": "ATTEMPT_FINI')
+
+        attempt = build_read_model(self.builder.root, "p-fail")["attempts"][0]
+
+        self.assertEqual(attempt["failure_class"], "rejection")
+
+    def test_corrupt_non_final_line_raises(self) -> None:
+        problem_dir = self.builder.add_problem("p-fail", "Hard theorem.")
+        run_attempt(problem_dir, "p-fail", "Hard theorem.", accepted=False)
+        append_log(
+            problem_dir,
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-1", "problem_id": "p-fail", "ts": "t1"},
+        )
+        with (problem_dir / "_execution_log.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write("NOT JSON\n")
+        append_log(
+            problem_dir,
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-2", "problem_id": "p-fail", "ts": "t2"},
+        )
+
+        with self.assertRaises(json.JSONDecodeError):
+            build_read_model(self.builder.root, "p-fail")
 
 
 class ProblemListTests(unittest.TestCase):

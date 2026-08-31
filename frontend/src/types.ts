@@ -33,6 +33,12 @@ export interface CreateProblemResponse {
   archived: boolean;
 }
 
+/** POST /api/problems/{id}/attempts → 202. The body carries no attempt id
+ *  (freeze ruling 3); the frontend learns it by polling the read model. */
+export interface StartAttemptResponse {
+  status: string;
+}
+
 export interface Obligation {
   obligation_id: string;
   goal: string;
@@ -85,4 +91,6 @@ export interface WorkspaceReadModel {
   target_fact: Fact | null;
   supporting_closure: Fact[];
   running_phase_hint: "generating" | "checking" | null;
+  /** Live execution state (spec §5); present only when status == RUNNING. */
+  live?: { running: boolean; current_attempt_id: string | null };
 }

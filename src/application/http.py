@@ -1,18 +1,22 @@
 """FastAPI adapter over the application read/write modules (spec §6).
 
 Thin by construction: this module only translates ``KeyError`` into 404,
-``ValueError`` into 400, and serializes payloads. All validation and
-status/failure semantics live in ``problem_index`` / ``workspace_read_model``.
+``ValueError`` into 400, and claim-state errors into 409, and serializes
+payloads. All validation, status/failure, and execution semantics live in
+``problem_index`` / ``workspace_read_model`` / ``execution``.
 """
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from .execution import AlreadyRunningError, AlreadySolvedError, ExecutionService
 from .problem_index import ProblemIndex
 from .workspace_read_model import build_problem_list, build_read_model
 
@@ -21,13 +25,24 @@ class CreateProblemRequest(BaseModel):
     statement: str
 
 
-def create_app(workspaces_root: Path) -> FastAPI:
+def create_app(
+    workspaces_root: Path,
+    execution_service: Optional[ExecutionService] = None,
+) -> FastAPI:
     root = Path(workspaces_root)
-    app = FastAPI(title="noespire", docs_url=None, redoc_url=None)
+    service = execution_service or ExecutionService(root)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Crash-consistency recovery, once per server start (spec §7.3).
+        service.recover_stale_running()
+        yield
+
+    app = FastAPI(title="noespire", docs_url=None, redoc_url=None, lifespan=lifespan)
 
     @app.get("/api/problems")
     def list_problems() -> dict:
-        return {"problems": build_problem_list(root)}
+        return {"problems": build_problem_list(root, execution_service=service)}
 
     @app.post("/api/problems")
     def create_problem(request: CreateProblemRequest):
@@ -52,11 +67,28 @@ def create_app(workspaces_root: Path) -> FastAPI:
     @app.get("/api/problems/{problem_id}")
     def get_problem(problem_id: str):
         try:
-            return build_read_model(root, problem_id)
+            return build_read_model(root, problem_id, execution_service=service)
         except KeyError:
             return JSONResponse(
                 status_code=404,
                 content={"error": f"unknown problem: {problem_id}"},
             )
+
+    @app.post("/api/problems/{problem_id}/attempts")
+    def start_attempt(problem_id: str):
+        try:
+            service.start_attempt(problem_id)
+        except KeyError:
+            return JSONResponse(
+                status_code=404,
+                content={"error": f"unknown problem: {problem_id}"},
+            )
+        except AlreadySolvedError:
+            return JSONResponse(status_code=409, content={"error": "already_solved"})
+        except AlreadyRunningError:
+            return JSONResponse(status_code=409, content={"error": "already_running"})
+        # No attempt id in the response (freeze ruling 3): the attempt file
+        # only exists once execution starts; the UI polls the read model.
+        return JSONResponse(status_code=202, content={"status": "accepted"})
 
     return app

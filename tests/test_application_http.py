@@ -51,6 +51,8 @@ class HttpApiTests(unittest.TestCase):
         self.assertEqual(model["attempts"][0]["verdict"], "PASS")
         self.assertEqual(model["target_fact"]["statement"], "Solved theorem.")
         self.assertEqual(len(model["supporting_closure"]), 1)
+        # `live` is present only while RUNNING (Slice 3); absence on SOLVED is
+        # asserted here, presence is covered by the execution/read-model tests.
         self.assertNotIn("live", model)
 
     def test_get_unknown_problem_returns_404(self) -> None:

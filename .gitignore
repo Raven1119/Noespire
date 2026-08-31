@@ -5,3 +5,4 @@ __pycache__/
 baselines/danus/
 experiments/danus_baseline_a/
 experiments/n1_triangular_sum_smoke/artifacts/
+docs/kimi_noespire_project_understanding.md

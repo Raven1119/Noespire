@@ -1,28 +1,35 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError, getProblem } from "../api";
+import { ApiError, getProblem, startAttempt } from "../api";
 import type { WorkspaceReadModel } from "../types";
 import { KatexStatement } from "../components/KatexStatement";
 import { LlmVerifiedBadge } from "../components/LlmVerifiedBadge";
+import { RunningIndicator } from "../components/RunningIndicator";
 import { StatusBadge } from "../components/StatusBadge";
+import { FAILURE_CLASS_LABELS } from "../workspace/failureMeta";
+import { useWorkspacePolling } from "./useWorkspacePolling";
 
 type Tab = "proof" | "attempts";
 
 /**
- * Minimal workspace shell (Slice 2): back link, statement, status, and the
- * empty `Proof | Attempts` tab bar. Slice 4 builds the real panes; until then
- * they hold honest placeholders only.
+ * Workspace shell (Slice 3): header with state-gated start/Retry action,
+ * `Proof | Attempts` tabs, polling while RUNNING, and a minimal RUNNING /
+ * latest-attempt display. Slice 4 builds the real tab panes; until then they
+ * hold honest minimal content only.
  */
 export function WorkspaceShell() {
   const { problemId } = useParams<{ problemId: string }>();
   const [model, setModel] = useState<WorkspaceReadModel | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const [tab, setTab] = useState<Tab>("attempts");
+  const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!problemId) return;
     setModel(null);
     setError(null);
+    setStartError(null);
     getProblem(problemId)
       .then((data) => {
         setModel(data);
@@ -37,6 +44,60 @@ export function WorkspaceShell() {
         )
       );
   }, [problemId]);
+
+  // Interval polling swallows transient failures: the last known state stays
+  // on screen and the next tick retries.
+  const poll = useCallback((): void => {
+    if (!problemId) return;
+    getProblem(problemId)
+      .then(setModel)
+      .catch(() => undefined);
+  }, [problemId]);
+
+  useWorkspacePolling(model?.status ?? null, poll);
+
+  // User-triggered refresh surfaces failures inline instead of silently.
+  const refresh = useCallback((): Promise<void> => {
+    if (!problemId) return Promise.resolve();
+    return getProblem(problemId)
+      .then(setModel)
+      .catch(() =>
+        setStartError(
+          "Could not refresh the workspace. Reload the page to see the latest state."
+        )
+      );
+  }, [problemId]);
+
+  const handleStartAttempt = useCallback(async (): Promise<void> => {
+    if (!problemId || starting) return;
+    setStartError(null);
+    setStarting(true);
+    try {
+      await startAttempt(problemId);
+      // 202 accepted — refetch to pick up RUNNING; polling takes over.
+      await refresh();
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.status === 409 && err.code === "already_running") {
+        // Someone else started it — follow the run by polling as usual.
+        await refresh();
+      } else if (err instanceof ApiError && err.status === 409 && err.code === "already_solved") {
+        // Single refetch to show the solved state; no polling follows.
+        await refresh();
+      } else if (err instanceof ApiError && err.status === 404) {
+        setStartError(
+          "The server does not know this problem (404). Nothing is ever deleted — it may never have existed."
+        );
+      } else {
+        setStartError(
+          err instanceof ApiError
+            ? err.message
+            : "Could not start the attempt. Try again."
+        );
+      }
+    } finally {
+      setStarting(false);
+    }
+  }, [problemId, starting, refresh]);
 
   let body: React.ReactNode;
   if (error !== null) {
@@ -78,12 +139,35 @@ export function WorkspaceShell() {
       </div>
     );
   } else {
+    const latestAttempt =
+      model.attempts.length > 0 ? model.attempts[model.attempts.length - 1] : null;
     body = (
       <>
         <div className="workspace-header">
           <StatusBadge status={model.display_status} />
           {model.status === "SOLVED" && <LlmVerifiedBadge />}
+          {model.status !== "SOLVED" && (
+            <div className="workspace-actions">
+              <button
+                className="button button--primary"
+                disabled={model.status === "RUNNING" || starting}
+                onClick={() => void handleStartAttempt()}
+              >
+                {latestAttempt === null ? "Start attempt" : "Retry"}
+              </button>
+              {model.status === "RUNNING" && (
+                <span className="workspace-actions__hint">
+                  An attempt is already running.
+                </span>
+              )}
+            </div>
+          )}
         </div>
+        {startError !== null && (
+          <p className="workspace-actions__error" role="alert">
+            {startError}
+          </p>
+        )}
         <p className="workspace-statement">
           <KatexStatement statement={model.statement} />
         </p>
@@ -106,9 +190,19 @@ export function WorkspaceShell() {
           </button>
         </div>
         <div className="workspace-pane" role="tabpanel">
-          {tab === "proof"
-            ? "The proof document appears here once the problem is solved."
-            : "Attempts appear here once the first attempt has run."}
+          {tab === "proof" ? (
+            "The proof document appears here once the problem is solved."
+          ) : model.status === "RUNNING" ? (
+            <RunningIndicator phaseHint={model.running_phase_hint} />
+          ) : latestAttempt !== null ? (
+            <p className="attempt-line">
+              Latest attempt {latestAttempt.attempt_id}: {latestAttempt.verdict}
+              {latestAttempt.failure_class !== null &&
+                ` — ${FAILURE_CLASS_LABELS[latestAttempt.failure_class]}`}
+            </p>
+          ) : (
+            "Attempts appear here once the first attempt has run."
+          )}
         </div>
       </>
     );

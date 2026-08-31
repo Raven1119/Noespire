@@ -29,8 +29,17 @@ from .problem_index import (
 )
 
 
-def build_read_model(workspaces_root: Path, problem_id: str) -> dict:
-    """The spec §5 aggregate for one problem. Raises KeyError if unknown."""
+def build_read_model(
+    workspaces_root: Path,
+    problem_id: str,
+    execution_service=None,
+) -> dict:
+    """The spec §5 aggregate for one problem. Raises KeyError if unknown.
+
+    ``execution_service`` (optional) is the live-execution table: status is
+    RUNNING iff a live execution exists for the problem (authoritative,
+    spec §5) or the obligation is RUNNING in the pre-recovery window.
+    """
     index = ProblemIndex(workspaces_root)
     entry = index.get(problem_id)
     problem_dir = index.root / problem_id
@@ -45,7 +54,8 @@ def build_read_model(workspaces_root: Path, problem_id: str) -> dict:
     # naming the LATEST attempt suppresses live-RUNNING; earlier recovery
     # history must not affect a new attempt of the same problem.
     latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
-    status = _status(obligation, latest_recovered)
+    live_execution = execution_service is not None and execution_service.is_running(problem_id)
+    status = _status(obligation, latest_recovered, live_execution)
     target_fact = None
     supporting_closure: List[dict] = []
     if status == "SOLVED":
@@ -55,7 +65,7 @@ def build_read_model(workspaces_root: Path, problem_id: str) -> dict:
         supporting_closure = [
             _fact_payload(item) for item in graph.supporting_closure(fact.fact_id)
         ]
-    return {
+    model = {
         "problem_id": entry.problem_id,
         "statement": entry.statement,
         "status": status,
@@ -68,22 +78,51 @@ def build_read_model(workspaces_root: Path, problem_id: str) -> dict:
         "supporting_closure": supporting_closure,
         "running_phase_hint": _running_phase_hint(status, attempts),
     }
+    if status == "RUNNING":
+        model["live"] = {
+            "running": True,
+            "current_attempt_id": _current_attempt_id(
+                execution_service, live_execution, problem_id, attempts
+            ),
+        }
+    return model
 
 
-def build_problem_list(workspaces_root: Path) -> List[dict]:
+def _current_attempt_id(
+    execution_service,
+    live_execution: bool,
+    problem_id: str,
+    attempts: List[dict],
+) -> Optional[str]:
+    """The live execution's attempt (None until _start_attempt writes it);
+    in the pre-recovery window, the residual RUNNING attempt."""
+    if live_execution:
+        current = execution_service.current_attempt_id(problem_id)
+        if current is not None:
+            return current
+    if attempts and attempts[-1]["verdict"] == "RUNNING":
+        return attempts[-1]["attempt_id"]
+    return None
+
+
+def build_problem_list(workspaces_root: Path, execution_service=None) -> List[dict]:
     """The spec §6 list payload, in ProblemIndex (last-activity) order."""
     index = ProblemIndex(workspaces_root)
     return [
-        _summarize(index.root / entry.problem_id, entry) for entry in index.list()
+        _summarize(index.root / entry.problem_id, entry, execution_service)
+        for entry in index.list()
     ]
 
 
-def _summarize(problem_dir: Path, entry: ProblemEntry) -> dict:
+def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -> dict:
     obligation = _root_obligation(problem_dir, entry.problem_id)
     events = _read_events(problem_dir)
     attempts = [_project_attempt(raw, events) for raw in _read_attempts(problem_dir)]
     latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
-    status = _status(obligation, latest_recovered)
+    live_execution = (
+        execution_service is not None and execution_service.is_running(entry.problem_id)
+    )
+    status = _status(obligation, latest_recovered, live_execution)
     activity = workspace_last_activity(problem_dir)
     return {
         "problem_id": entry.problem_id,
@@ -161,14 +200,24 @@ def _read_attempts(problem_dir: Path) -> List[dict]:
 
 
 def _read_events(problem_dir: Path) -> List[dict]:
+    """Execution-log events. Only an unparseable FINAL line is tolerated
+    (crash mid-append artifact — skipped); a corrupt non-final line means
+    genuine corruption and raises — the read model never guesses (§5)."""
     log = problem_dir / EXECUTION_LOG_NAME
     if not log.is_file():
         return []
-    return [
-        json.loads(line)
-        for line in log.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+    lines = [
+        line for line in log.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
+    events = []
+    for position, line in enumerate(lines):
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            if position == len(lines) - 1:
+                continue
+            raise
+    return events
 
 
 def _project_attempt(raw: dict, events: List[dict]) -> dict:
@@ -253,13 +302,21 @@ def _interrupted_verifier_called(attempt_id: str, events: List[dict]) -> bool:
     )
 
 
-def _status(obligation: Optional[ProofObligation], latest_recovered: bool) -> str:
-    """RUNNING iff the obligation is RUNNING and the latest attempt is not
-    covered by a RECOVERED_INTERRUPTED naming it (spec §7.2 per-attempt binding)."""
+def _status(
+    obligation: Optional[ProofObligation],
+    latest_recovered: bool,
+    live_execution: bool = False,
+) -> str:
+    """RUNNING iff a live execution exists (in-memory table is authoritative,
+    spec §5) or the obligation is RUNNING and the latest attempt is not
+    covered by a RECOVERED_INTERRUPTED naming it (§7.2 per-attempt binding;
+    the pre-recovery window)."""
     if obligation is None:
-        return "OPEN"
+        return "RUNNING" if live_execution else "OPEN"
     if obligation.status is ObligationStatus.DISCHARGED:
         return "SOLVED"
+    if live_execution:
+        return "RUNNING"
     if obligation.status is ObligationStatus.RUNNING and not latest_recovered:
         return "RUNNING"
     return "OPEN"

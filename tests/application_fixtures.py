@@ -14,6 +14,7 @@ hand-written with a comment pointing at the core writer they mirror:
 
 import json
 from pathlib import Path
+import time
 from typing import Iterable, Optional
 
 from research.fact import CandidateFact, Fact
@@ -80,6 +81,40 @@ class ScriptedVerifier:
 class ExplodingWorker:
     def propose(self, *, problem, existing_facts, subgoal):
         raise RuntimeError("scripted worker error")
+
+
+class ExplodingVerifier:
+    def verify(self, problem, candidate, predecessors):
+        raise RuntimeError("scripted verifier error")
+
+
+class BlockingWorker:
+    """propose() blocks until ``release`` is set; ``started`` signals entry.
+
+    Lets concurrency tests hold an execution in the live window instead of
+    racing a scripted worker that returns in microseconds.
+    """
+
+    def __init__(self, candidate: CandidateFact, started, release) -> None:
+        self.candidate = candidate
+        self.started = started
+        self.release = release
+
+    def propose(self, *, problem, existing_facts, subgoal):
+        self.started.set()
+        if not self.release.wait(timeout=10):
+            raise RuntimeError("test release timeout")
+        return self.candidate
+
+
+def wait_for(predicate, timeout: float = 10.0, interval: float = 0.01) -> bool:
+    """Poll ``predicate`` until it holds; False on timeout (never a hard sleep)."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(interval)
+    return predicate()
 
 
 def registry_for(problem_dir: Path) -> ObligationRegistry:
@@ -154,6 +189,40 @@ def write_residual_running_attempt(
         "candidate_artifact": candidate,
         "verifier_artifact": None,
         "verdict": "RUNNING",
+        "error": None,
+    }
+    (attempts_dir / f"{attempt_id}.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return attempt_id
+
+
+def write_pass_attempt(
+    problem_dir: Path,
+    problem_id: str,
+    statement: str,
+    *,
+    proof: str = "A candidate proof.",
+    predecessors: Iterable[str] = (),
+    sequence: int = 1,
+    reason: str = "scripted verdict",
+) -> str:
+    """Attempt file a crash AFTER verifier PASS would leave behind.
+
+    Payload mirrors src/research/problem.py:_start_attempt/_update_attempt with
+    the verifier verdict persisted (problem.py:85-90) and verdict "PASS".
+    """
+    attempts_dir = problem_dir / "attempts"
+    attempts_dir.mkdir(parents=True, exist_ok=True)
+    attempt_id = f"attempt-{sequence:06d}"
+    payload = {
+        "attempt_id": attempt_id,
+        "problem_id": problem_id,
+        "obligation_id": f"root:{problem_id}",
+        "candidate_artifact": candidate_artifact(statement, proof, predecessors),
+        "verifier_artifact": {"accepted": True, "reason": reason},
+        "verdict": "PASS",
         "error": None,
     }
     (attempts_dir / f"{attempt_id}.json").write_text(
