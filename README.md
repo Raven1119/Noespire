@@ -208,3 +208,23 @@ See [`docs/Dual_DAG_Math_Research_Architecture.md`](docs/Dual_DAG_Math_Research_
 ## Current Status
 
 Architecture and MVP boundaries are defined. Implementation should proceed through Codex-first, skills-driven, experimentally validated minimal vertical slices.
+
+## Local Development (Frontend V1)
+
+The current product surface is the natural-language proof workspace
+(`src/application/` + `frontend/`); the Dual-DAG/Lean pipeline above is the
+deferred research direction. To run the workspace locally:
+
+```powershell
+pip install -e .
+cd frontend
+npm install
+cd ..
+python -m application.dev
+```
+
+This starts the FastAPI backend on http://127.0.0.1:8173 and the Vite
+frontend on http://localhost:5173; Ctrl+C stops both. Browsing the UI needs
+nothing else. Running a real proof attempt additionally requires Docker and
+the `noespire-codex-isolated:local` image (`docker/codex-isolated/`); without
+them, attempts fail closed as runtime errors.
