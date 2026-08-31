@@ -9,6 +9,16 @@
 
 ---
 
+## Current Evidence and Implementation Status
+
+- Experimental default: **single-worker-first**, supported by the N1.9b strictly matched scheduling ablation (`SINGLE_WORKER_FIRST_SUPPORTED`).
+- Current N1 execution: one open Proof Obligation launches exactly one direct worker; a well-formed candidate receives one fresh verifier decision.
+- PASS: admit exactly one content-addressed Fact and mark the obligation `DISCHARGED`.
+- FAIL: admit no Fact, clear no truth, return the obligation to `OPEN`, and launch no automatic retry or fan-out.
+- Adaptive Cut-Set, failure classification, GraphPatch, and Local Graph Surgery: **not implemented and currently unsupported by observed diagnostics**. They remain unvalidated design hypotheses, not current runtime behavior.
+
+---
+
 # 0. Executive Summary
 
 The current phase of Noespire should solve one narrow problem:

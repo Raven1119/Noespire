@@ -45,6 +45,10 @@ class ProofObligationTests(unittest.TestCase):
         before = graph.list_facts()
         registry = ObligationRegistry(root / "obligations.json")
         registry.add(ProofObligation("o-target", (premise.fact_id,), "Target T", "route-a"))
+        worker = ScriptedWorker(
+            CandidateFact("Target T", "An invalid proof.", (premise.fact_id,))
+        )
+        verifier = ObservingVerifier(graph, accepted=False)
         result = execute_obligation(
             registry=registry,
             obligation_id="o-target",
@@ -52,12 +56,10 @@ class ProofObligationTests(unittest.TestCase):
             problem_id="p",
             problem="Prove Target T.",
             author="worker",
-            worker=ScriptedWorker(
-                CandidateFact("Target T", "An invalid proof.", (premise.fact_id,))
-            ),
-            verifier=ObservingVerifier(graph, accepted=False),
+            worker=worker,
+            verifier=verifier,
         )
-        return graph, registry, before, result
+        return graph, registry, before, worker, verifier, result
 
     def test_open_obligation_is_not_fact(self) -> None:
         with TemporaryDirectory() as directory:
@@ -149,7 +151,7 @@ class ProofObligationTests(unittest.TestCase):
     def test_verifier_failure_does_not_mutate_fact_graph(self) -> None:
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            graph, registry, before, result = self._execute_verifier_failure(root)
+            graph, registry, before, _, _, result = self._execute_verifier_failure(root)
 
             self.assertFalse(result.verification.accepted)
             self.assertIsNone(result.fact)
@@ -158,17 +160,37 @@ class ProofObligationTests(unittest.TestCase):
 
     def test_verifier_failure_returns_obligation_to_open(self) -> None:
         with TemporaryDirectory() as directory:
-            _, registry, _, result = self._execute_verifier_failure(Path(directory))
+            _, registry, _, _, _, result = self._execute_verifier_failure(Path(directory))
 
             self.assertEqual(result.obligation.status, ObligationStatus.OPEN)
             self.assertEqual(registry.get("o-target").status, ObligationStatus.OPEN)
 
     def test_verifier_failure_keeps_resolved_fact_id_null(self) -> None:
         with TemporaryDirectory() as directory:
-            _, registry, _, result = self._execute_verifier_failure(Path(directory))
+            _, registry, _, _, _, result = self._execute_verifier_failure(Path(directory))
 
             self.assertIsNone(result.obligation.resolved_by_fact_id)
             self.assertIsNone(registry.get("o-target").resolved_by_fact_id)
+
+    def test_execute_obligation_invokes_worker_once(self) -> None:
+        with TemporaryDirectory() as directory:
+            _, _, _, worker, _, _ = self._execute_verifier_failure(Path(directory))
+
+            self.assertEqual(worker.calls, 1)
+
+    def test_execute_obligation_invokes_verifier_once(self) -> None:
+        with TemporaryDirectory() as directory:
+            _, _, _, _, verifier, _ = self._execute_verifier_failure(Path(directory))
+
+            self.assertEqual(verifier.calls, 1)
+
+    def test_failure_does_not_launch_second_worker(self) -> None:
+        with TemporaryDirectory() as directory:
+            _, _, _, worker, verifier, result = self._execute_verifier_failure(Path(directory))
+
+            self.assertEqual(worker.calls, 1)
+            self.assertEqual(verifier.calls, 1)
+            self.assertEqual(result.obligation.status, ObligationStatus.OPEN)
 
     def test_failed_attempt_can_be_retried_and_discharged(self) -> None:
         with TemporaryDirectory() as directory:

@@ -24,6 +24,18 @@ The detailed source comparison is in `docs/n1_danus_reuse_audit.md`. No frozen D
 - ObligationRegistry: deterministic JSON add/get/list, guarded transitions, exact duplicate protection, accepted-Fact resolution, and reload.
 - execution seam: `execute_obligation(...)` loads accepted premises, supplies the complete AND input to the existing worker, validates the returned goal and predecessor identity, submits through the existing verifier gate, and resolves only after the admitted Fact is readable from `FactGraph`.
 
+## Current Execution Policy
+
+- experimental default: `single-worker-first`
+- evidence: N1.9b strictly matched scheduling ablation, verdict `SINGLE_WORKER_FIRST_SUPPORTED`
+- normal OPEN attempt: exactly one `ResearchWorker.propose(...)` call; no loop, pool, fan-out, or retry exists in `execute_obligation(...)`
+- well-formed candidate: exactly one fresh verifier call through `submit_candidate(...)`
+- malformed goal/predecessor identity: deterministic rejection before the truth gate, with no verifier cost
+- PASS: exactly one content-addressed Fact is admitted and the obligation becomes `DISCHARGED`
+- FAIL: FactGraph is unchanged, `resolved_by_fact_id` remains null, the obligation returns to `OPEN`, and no second worker is launched automatically
+- later retry: only a new explicit caller invocation; no recovery policy is implied
+- Adaptive Cut-Set, GraphPatch, failure classification, and Local Graph Surgery: `NOT IMPLEMENTED`; current diagnostics provide no evidence for a specific automatic escalation policy
+
 ## Reused DANUS Infrastructure
 
 - Existing content-addressed `Fact` and file-backed `FactGraph` adaptation.
@@ -54,11 +66,12 @@ The detailed source comparison is in `docs/n1_danus_reuse_audit.md`. No frozen D
 
 ## Tests
 
-- command: `wsl -e bash -lc 'cd /mnt/c/Users/wmywb/PycharmProjects/Noespire && PYTHONPATH=src python3 -m unittest discover -s tests -v'`
-- passed: 25
+- command: `wsl -e bash -lc 'cd /mnt/c/Users/wmywb/PycharmProjects/Noespire && PYTHONPATH=src baselines/danus/runtime/venv/bin/python -m unittest discover -s tests -v'`
+- passed: 28
 - skipped: 1 pre-existing opt-in Phase 0A real-Codex smoke
 - failed: 0
-- compile check: `python3 -m compileall -q src tests experiments/n1_triangular_sum_smoke/run.py` -> PASS
+- compile check: `baselines/danus/runtime/venv/bin/python -m compileall -q src tests experiments/n1_triangular_sum_smoke/run.py` -> PASS
+- single-worker-first controls: worker calls = 1, verifier calls = 1, and verifier FAIL launches no second worker
 - deterministic controls: scripted two-premise PASS and FAIL paths both PASS; an explicit FAIL -> OPEN -> retry -> PASS control admits exactly one Fact and ends `DISCHARGED`
 
 ## Real Smoke
