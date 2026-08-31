@@ -30,14 +30,6 @@ from application_fixtures import (
 )
 
 
-class FakeCodexExec:
-    """Stands in for CodexExec so workdir wiring is testable without the
-    Codex CLI on PATH (records the resolved workdir, never spawns anything)."""
-
-    def __init__(self, *, workdir, **kwargs) -> None:
-        self.workdir = Path(workdir).resolve()
-
-
 def read_log(problem_dir: Path) -> list:
     log = problem_dir / "_execution_log.jsonl"
     if not log.is_file():
@@ -437,48 +429,73 @@ class ExecutionOutcomeTests(unittest.TestCase):
         self.assertIn("ts", event)
 
 
-class ExecutionWorkdirIsolationTests(unittest.TestCase):
-    """Production Codex isolation: the read-only sandbox workdir must not be
-    the workspaces root and must contain no problem data."""
+class DefaultFactoryIsolationTests(unittest.TestCase):
+    """Production wiring: the default factories build worker/verifier over
+    fresh IsolatedCodexInvoker instances (Docker is the boundary), and an
+    isolation failure fails closed — RUNTIME_ERROR + claim released."""
 
     def setUp(self) -> None:
         self.temporary = TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.builder = WorkspaceBuilder(Path(self.temporary.name))
 
-    def test_default_execution_workdir_is_a_dedicated_empty_dir(self) -> None:
-        self.builder.add_problem("p-data", "Secret theorem.")
-        service = ExecutionService(self.builder.root)
-
-        self.assertNotEqual(service.execution_workdir, service.workspaces_root)
-        # A dedicated child dir: problem workspaces are its siblings, never
-        # inside it, so the read-only sandbox sees no problem data.
-        self.assertEqual(service.execution_workdir.parent, service.workspaces_root)
-        # Lazy: constructing the service does not create it.
-        self.assertFalse(service.execution_workdir.exists())
-
+    def test_default_factories_build_separate_isolated_invokers(self) -> None:
         import application.execution as execution_module
 
-        with mock.patch.object(execution_module, "CodexExec", FakeCodexExec):
+        created = []
+
+        class RecordingInvoker:
+            def __init__(self, **kwargs):
+                created.append(kwargs)
+
+        service = ExecutionService(self.builder.root)
+        with mock.patch.object(execution_module, "IsolatedCodexInvoker", RecordingInvoker):
             worker = service.worker_factory()
             verifier = service.verifier_factory()
-        self.assertEqual(worker.codex.workdir, service.execution_workdir.resolve())
-        self.assertEqual(verifier.codex.workdir, service.execution_workdir.resolve())
-        # Separate fresh CodexExec instances for worker and verifier.
-        self.assertIsNot(worker.codex, verifier.codex)
-        # Created on demand, and empty: no problem workspace inside.
-        self.assertEqual(list(service.execution_workdir.iterdir()), [])
 
-    def test_custom_execution_workdir_is_respected(self) -> None:
+        self.assertIsInstance(worker.codex, RecordingInvoker)
+        self.assertIsInstance(verifier.codex, RecordingInvoker)
+        # Separate fresh invoker instances, constructed with production
+        # defaults (the service passes no overrides).
+        self.assertIsNot(worker.codex, verifier.codex)
+        self.assertEqual(created, [{}, {}])
+
+    def test_invoker_constructor_defaults_are_the_settled_production_values(self) -> None:
+        import inspect
+
+        from application.codex_isolation import IsolatedCodexInvoker
+
+        parameters = inspect.signature(IsolatedCodexInvoker.__init__).parameters
+        self.assertEqual(parameters["image"].default, "noespire-codex-isolated:local")
+        self.assertEqual(parameters["auth_dir"].default, Path.home() / ".codex")
+        self.assertEqual(parameters["timeout_seconds"].default, 600)
+
+    def test_isolation_unavailable_fails_closed_and_releases_claim(self) -> None:
         import application.execution as execution_module
 
-        custom = Path(self.temporary.name) / "custom-exec"
-        service = ExecutionService(self.builder.root, execution_workdir=custom)
+        from application.codex_isolation import IsolationUnavailableError
 
-        self.assertEqual(service.execution_workdir, custom)
-        with mock.patch.object(execution_module, "CodexExec", FakeCodexExec):
-            worker = service.worker_factory()
-        self.assertEqual(worker.codex.workdir, custom.resolve())
+        problem_dir = self.builder.add_problem("p-iso", "Isolated theorem.")
+        service = ExecutionService(self.builder.root)
+
+        def raising_invoker(**kwargs):
+            raise IsolationUnavailableError("docker daemon unavailable")
+
+        with mock.patch.object(execution_module, "IsolatedCodexInvoker", raising_invoker):
+            service.start_attempt("p-iso")
+            self.assertTrue(wait_for(lambda: not service.is_running("p-iso")))
+
+            (event,) = finished_events(problem_dir)
+            self.assertEqual(event["outcome_stage"], "RUNTIME_ERROR")
+            self.assertIsNone(event["attempt_id"])  # no attempt was ever allocated
+
+            # The claim was released: a retry is accepted (not 409), and also
+            # fails closed while isolation stays unavailable.
+            service.start_attempt("p-iso")
+            self.assertTrue(wait_for(lambda: not service.is_running("p-iso")))
+
+        outcomes = [e["outcome_stage"] for e in finished_events(problem_dir)]
+        self.assertEqual(outcomes, ["RUNTIME_ERROR", "RUNTIME_ERROR"])
 
 
 if __name__ == "__main__":

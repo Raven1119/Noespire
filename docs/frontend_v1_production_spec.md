@@ -261,17 +261,52 @@ at a time, guarded by an in-memory `{problem_id: task}` table) that calls
 polls `GET /api/problems/{id}` every 2 s while `status == RUNNING`.
 
 No job scheduler, no queue, no cancellation. A thread that outlives the
-Codex subprocess timeout (600 s default in `CodexExec`) finishes on its own;
+Codex container timeout (600 s default in `IsolatedCodexInvoker`) finishes on its own;
 that is the only timeout story in V1.
 
-Codex isolation (Slice 3 freeze amendment): the production worker and
-verifier factories build separate fresh `CodexExec` instances whose sandbox
-workdir is a dedicated **empty** directory (default
-`<workspaces_root>/_execution`, overridable via `ExecutionService`'s
-`execution_workdir`) — never the workspaces root. The fresh verifier must
-depend only on the candidate/predecessors in its prompt; giving its
-read-only sandbox sight of other problems' facts/attempts would be
-unnecessary evidence leakage.
+Codex isolation (Slice 3 freeze amendment, final): **a cwd is not a
+security boundary** — an earlier draft relied on an empty execution
+workdir, which constrains context but not read access. Production workers
+and verifiers therefore run `codex exec` inside one-shot Docker containers
+(`IsolatedCodexInvoker`, image `noespire-codex-isolated:local`, built from
+`docker/codex-isolated/Dockerfile`), not as host `CodexExec` processes.
+
+- **Boundary:** the container's filesystem namespace. The ONLY read-write
+  mount is a fresh empty host temp dir per invocation at `/work`;
+  `~/.codex/auth.json` (mandatory) and `~/.codex/config.toml` (when
+  present) are mounted read-only — nothing else from the host is visible:
+  no `workspaces/`, no other problems' facts/attempts, no repository
+  source, no home directory. Worker and verifier invocations get separate
+  temp dirs, so they cannot share files; every invocation is a fresh
+  ephemeral `codex exec --ephemeral` process, so no conversational context
+  is reused. The temp dir is deleted on every exit path (success, nonzero
+  rc, timeout — the container is `docker rm -f`'d — and parse error).
+- **Inside the container** codex runs with `--sandbox danger-full-access`,
+  deliberately: codex's own bubblewrap sandbox cannot create namespaces
+  inside Docker (`bwrap: No permissions to create a new namespace`), which
+  would break all shell tool execution. The container alone is the read
+  boundary; codex's sandbox flag is not relied upon.
+- **Fail-closed:** any missing prerequisite (docker executable, daemon,
+  image, `auth.json`) raises `IsolationUnavailableError` at invoker
+  construction, inside `_run`'s try → `ATTEMPT_FINISHED` with
+  `outcome_stage: RUNTIME_ERROR`, `attempt_id: null`, claim released. There
+  is NO fallback to host execution of any kind.
+- **Evidence (sentinel escape experiment, this machine):** with only an
+  empty dir mounted, a container-side probe attempting a relative parent
+  escape (`cat /work/../secret_problem/DO_NOT_READ.txt`), absolute-path
+  guesses, and a filesystem-wide `find` for the sentinel all fail
+  mechanically (no such file / empty result), and a real adversarially
+  prompted `codex exec` session confirmed the same through the agent path —
+  the sentinel never appeared in any output while the model call itself
+  succeeded (codex-cli 0.151.0).
+- **Auth boundary (recorded, accepted):** the agent process inside the
+  container can read its own `auth.json` — the Codex CLI architecture
+  requires the credential in-container to authenticate. Only that exact
+  file (plus `config.toml`) is exposed; no other host secrets are mounted.
+- Integration tests (`tests/test_codex_isolation.py`) run the sentinel and
+  workspace-inaccessibility probes against real containers whenever the
+  daemon and image are present (skip otherwise); an opt-in real-Codex smoke
+  (`NOESPIRE_RUN_ISOLATION_SMOKE=1`) covers live model invocation.
 
 ### 7.2 Execution log (application-owned evidence)
 

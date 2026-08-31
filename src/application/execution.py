@@ -32,12 +32,13 @@ from threading import Lock, Thread
 from typing import Callable, Dict, FrozenSet, Optional, Set
 from uuid import uuid4
 
-from research.agents import CodexExec, ResearchVerifier, ResearchWorker
+from research.agents import ResearchVerifier, ResearchWorker
 from research.fact import Fact
 from research.graph import FactGraph
 from research.obligation import ObligationRegistry, ObligationStatus
 from research.problem import ProblemSpec, solve_problem_once
 
+from .codex_isolation import IsolatedCodexInvoker
 from .problem_index import EXECUTION_LOG_NAME, ProblemIndex, read_execution_events
 
 
@@ -152,13 +153,11 @@ class ExecutionService:
     """One instance per app. Owns the claim table, the execution log, and
     startup recovery. ``worker_factory`` / ``verifier_factory`` are the DI
     seam: no-arg callables returning objects with ``.propose(...)`` /
-    ``.verify(...)``; the production defaults build Codex-backed agents.
-
-    ``execution_workdir`` is the production Codex sandbox workdir: a
-    dedicated EMPTY directory (default ``<workspaces_root>/_execution``,
-    created on demand at first execution) so the read-only sandbox never
-    sees any problem's facts/attempts. Worker and verifier get separate
-    fresh CodexExec instances.
+    ``.verify(...)``; the production defaults build Codex-backed agents over
+    fresh ``IsolatedCodexInvoker`` instances (Docker-isolated; the container
+    is the security boundary — see codex_isolation.py). Isolation is
+    fail-closed: if the invoker cannot be constructed, the factory raises
+    inside ``_run``'s try, landing as RUNTIME_ERROR with the claim released.
     """
 
     def __init__(
@@ -166,28 +165,22 @@ class ExecutionService:
         workspaces_root: Path,
         worker_factory: Optional[Callable[[], object]] = None,
         verifier_factory: Optional[Callable[[], object]] = None,
-        execution_workdir: Optional[Path] = None,
     ) -> None:
         self.workspaces_root = Path(workspaces_root)
-        self.execution_workdir = (
-            Path(execution_workdir)
-            if execution_workdir is not None
-            else self.workspaces_root / "_execution"
-        )
         self.worker_factory = worker_factory or (
-            lambda: ResearchWorker(self._codex_exec())
+            lambda: ResearchWorker(self._isolated_invoker())
         )
         self.verifier_factory = verifier_factory or (
-            lambda: ResearchVerifier(self._codex_exec())
+            lambda: ResearchVerifier(self._isolated_invoker())
         )
         self._lock = Lock()
         self._active: Dict[str, _ActiveExecution] = {}
         self._log_locks: Dict[Path, Lock] = {}
 
-    def _codex_exec(self) -> CodexExec:
-        """Fresh CodexExec in the dedicated empty workdir (created on demand)."""
-        self.execution_workdir.mkdir(parents=True, exist_ok=True)
-        return CodexExec(workdir=self.execution_workdir)
+    def _isolated_invoker(self) -> IsolatedCodexInvoker:
+        """Fresh invoker per call: per-invocation isolation (a new empty rw
+        mount) and fail-fast construction checks."""
+        return IsolatedCodexInvoker()
 
     # -- claim lifecycle ---------------------------------------------------
 
