@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The statement is self-contained, and the proof correctly establishes both implications. In the forward direction, bipartite part membership alternates along every cycle, excluding odd cycles. In the converse direction, each connected component is given a spanning tree, vertices are partitioned by parity of tree depth, and any edge joining equal-parity vertices would create an odd cycle. The componentwise partitions therefore combine into a valid bipartition of G. No external references or fact_id citations occur, and no critical errors, gaps, or hard-prohibition violations were found.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

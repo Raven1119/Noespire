@@ -1,0 +1,20 @@
+{
+  "G": "the finite undirected graph in the theorem",
+  "W": "the closed walk (v_0,v_1,...,v_m)",
+  "m": "the positive odd integer equal to the length of W",
+  "v_i": "the vertex at index i on an arbitrary cycle",
+  "i": "an integer index along the arbitrary cycle",
+  "j": "an integer index greater than i with v_i=v_j",
+  "V(G)": "the vertex set of G",
+  "A": "one class of the bipartition constructed or assumed for G",
+  "B": "the other class of the bipartition constructed or assumed for G",
+  "H": "a connected component of G",
+  "r_H": "the chosen root vertex of the connected component H",
+  "z": "an arbitrary vertex of G",
+  "d(z)": "the minimum length of a path from the chosen root of z's component to z",
+  "k": "the length of the arbitrary cycle",
+  "x": "one endpoint of an arbitrary edge xy",
+  "y": "the other endpoint of an arbitrary edge xy",
+  "P_x": "a shortest path from r_H to x",
+  "P_y": "a shortest path from r_H to y"
+}

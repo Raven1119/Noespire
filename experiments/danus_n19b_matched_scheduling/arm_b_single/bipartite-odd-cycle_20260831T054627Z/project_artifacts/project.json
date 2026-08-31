@@ -1,0 +1,14 @@
+{
+  "name": "n19bb_bipartite_odd_cycle_20260831t054627z",
+  "model": "gpt-5.6-sol",
+  "roles": "high:7",
+  "workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "run_id": "bipartite-odd-cycle_20260831T055252Z",
+  "arm": "A",
+  "project": "n19ba_bipartite_odd_cycle_20260831t055252z",
+  "problem_id": "bipartite-odd-cycle",
+  "problem_sha256": "83ad8ea770804cf68de3f47822e66eca2567a75a458c8e2c9a8251c655b6193e",
+  "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "started_at_utc": "2026-08-31T05:52:53.024064Z",
+  "schedule_started_at_utc": "2026-08-31T05:53:00.297131Z",
+  "completed_at_utc": "2026-08-31T06:01:01.992849Z",
+  "classification": "SOLVED",
+  "solved": true,
+  "blind_integrity": "BLIND_INTEGRITY_PASS",
+  "workers_configured": 7,
+  "workers_launched": 7,
+  "worker_attempts": 7,
+  "worker_sessions": 7,
+  "worker_terminal_states": {
+    "high": "max_rounds",
+    "high2": "max_rounds",
+    "high3": "max_rounds",
+    "high4": "max_rounds",
+    "high5": "max_rounds",
+    "high6": "max_rounds",
+    "high7": "max_rounds"
+  },
+  "verifier_calls": 7,
+  "verifier_accepts": 7,
+  "verifier_rejects": 0,
+  "verified_fact_count": 7,
+  "supporting_closure": [
+    "24669735399752ca"
+  ],
+  "supporting_closure_size": 1,
+  "facts_outside_closure": 6,
+  "verified_search_waste": 0.8571428571,
+  "worker_tokens": 510135,
+  "verifier_tokens": 264064,
+  "total_tokens": 774199,
+  "time_to_first_verified_target_seconds": 336.095795,
+  "time_to_terminal_run_seconds": 472.554636,
+  "wall_clock_seconds": 472.554636,
+  "first_worker_result": "NOT_APPLICABLE",
+  "first_success_index": 2,
+  "workers_saved": 0,
+  "stopped_after_success": false,
+  "number_of_successful_workers": 7,
+  "successful_workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ],
+  "target_fact_ids": [
+    "24669735399752ca",
+    "282c461879fcb0b1",
+    "3b78cf611e3621f7",
+    "674672750ce53052",
+    "bbc2c290a51cd95a",
+    "edc5bcc634460776",
+    "f77acd936a8f078a"
+  ],
+  "selected_target_fact_id": "24669735399752ca",
+  "accepted_fact_ids": [
+    "24669735399752ca",
+    "282c461879fcb0b1",
+    "3b78cf611e3621f7",
+    "674672750ce53052",
+    "bbc2c290a51cd95a",
+    "edc5bcc634460776",
+    "f77acd936a8f078a"
+  ],
+  "batch_records": [
+    {
+      "worker_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "workers": [
+        "high",
+        "high2",
+        "high3",
+        "high4",
+        "high5",
+        "high6",
+        "high7"
+      ],
+      "started_at_utc": "2026-08-31T05:53:00.303094Z",
+      "wall_clock_seconds": 472.49882,
+      "verified_facts_before": 0,
+      "verified_facts_after": 7,
+      "verifier_events_before": 0,
+      "verifier_events_after": 7,
+      "new_verifier_events": 7,
+      "target_fact_ids_after_batch": [
+        "24669735399752ca",
+        "282c461879fcb0b1",
+        "3b78cf611e3621f7",
+        "674672750ce53052",
+        "bbc2c290a51cd95a",
+        "edc5bcc634460776",
+        "f77acd936a8f078a"
+      ],
+      "solved_after_batch": true
+    }
+  ],
+  "verifier_run_ids": [
+    "20260831T055610Z_f8c7a964a392",
+    "20260831T055613Z_f8c7a964a392",
+    "20260831T055633Z_f8c7a964a392",
+    "20260831T055635Z_f8c7a964a392",
+    "20260831T055750Z_f8c7a964a392",
+    "20260831T055801Z_f8c7a964a392",
+    "20260831T055815Z_f8c7a964a392"
+  ],
+  "initial_state_sha256": "b78d4e8a4bcab4dc5f71c99d1ecb465928b136fe4859d3b1961940567dd86f64",
+  "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+  "worker_model": "gpt-5.6-sol",
+  "worker_role": "high",
+  "worker_reasoning_effort": "high",
+  "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+  "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+  "notes": [
+    "Every arm configured seven identical high workers from a fresh empty project.",
+    "Only launch scheduling differs across A, B, and C.",
+    "No failure text, feedback, hints, decomposition, or route change was supplied."
+  ],
+  "successful_worker_count": 7,
+  "redundant_verified_targets": 6
+}

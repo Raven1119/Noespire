@@ -1,0 +1,610 @@
+{
+  "problem_id": "bipartite-odd-cycle",
+  "run_id": "bipartite-odd-cycle_20260831T055252Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 36,
+  "wrapper_worker_roles": 7,
+  "wrapper_verifier_roles": 7,
+  "expected_worker_roles": 7,
+  "expected_verifier_roles": 7,
+  "verifier_http_200": 7,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Let G be a finite undirected graph. G is bipartite if and only if G contains no cycle of odd length.",
+        "attempted_queries": [],
+        "primary_tool": "search_arxiv_theorems",
+        "reason": "The required search_arxiv_theorems tool is unavailable on this worker's tool surface. The bridge admits an elementary minimal-counterexample proof, so no external result will be used.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "A finite undirected graph is bipartite if and only if it contains no odd cycle",
+          "spanning-tree parity proof of bipartite odd-cycle characterization"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems service is not exposed in this worker session. The target is elementary and will be proved self-containedly without any external result.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high7/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "bipartite graph iff no odd cycle"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. The target is elementary and the proof is self-contained, so no external theorem will be used.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Let G be a finite undirected graph. G is bipartite if and only if G contains no cycle of odd length.",
+      "attempted_queries": [],
+      "primary_tool": "search_arxiv_theorems",
+      "reason": "The required search_arxiv_theorems tool is unavailable on this worker's tool surface. The bridge admits an elementary minimal-counterexample proof, so no external result will be used.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "A finite undirected graph is bipartite if and only if it contains no odd cycle",
+        "spanning-tree parity proof of bipartite odd-cycle characterization"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems service is not exposed in this worker session. The target is elementary and will be proved self-containedly without any external result.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high7/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "bipartite graph iff no odd cycle"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. The target is elementary and the proof is self-contained, so no external theorem will be used.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:45751"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 239,
+        "generated_word_count": 540,
+        "longest_common_token_span": 7,
+        "longest_common_text": "odd closed walk contains an odd cycle",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "674672750ce53052"
+      },
+      "all": [
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 566,
+          "longest_common_token_span": 4,
+          "longest_common_text": "choose a root r",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "24669735399752ca"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 791,
+          "longest_common_token_span": 5,
+          "longest_common_text": "in one connected component and",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "282c461879fcb0b1"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 536,
+          "longest_common_token_span": 4,
+          "longest_common_text": "from r to the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "3b78cf611e3621f7"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 540,
+          "longest_common_token_span": 7,
+          "longest_common_text": "odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "674672750ce53052"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 744,
+          "longest_common_token_span": 6,
+          "longest_common_text": "one connected component and choose a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "bbc2c290a51cd95a"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 711,
+          "longest_common_token_span": 4,
+          "longest_common_text": "for each vertex v",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "edc5bcc634460776"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 605,
+          "longest_common_token_span": 5,
+          "longest_common_text": "paths from r to v",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "f77acd936a8f078a"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 36,
+      "strongest": {
+        "reference_word_count": 239,
+        "generated_word_count": 159,
+        "longest_common_token_span": 14,
+        "longest_common_text": "two shorter closed walks whose lengths sum to an odd number so one is",
+        "shared_12gram_count": 3,
+        "generated_12gram_coverage": 0.02027,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 700,
+          "longest_common_token_span": 2,
+          "longest_common_text": "odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 2246,
+          "longest_common_token_span": 8,
+          "longest_common_text": "every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 240,
+          "longest_common_token_span": 5,
+          "longest_common_text": "an odd closed walk thus",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/global_memory/plan.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 3357,
+          "longest_common_token_span": 9,
+          "longest_common_text": "that every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 1084,
+          "longest_common_token_span": 9,
+          "longest_common_text": "that every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 85,
+          "longest_common_token_span": 2,
+          "longest_common_text": "of the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 123,
+          "longest_common_token_span": 2,
+          "longest_common_text": "odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 6834,
+          "longest_common_token_span": 5,
+          "longest_common_text": "between the two vertex classes",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 233,
+          "longest_common_token_span": 4,
+          "longest_common_text": "an odd closed walk",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 159,
+          "longest_common_token_span": 14,
+          "longest_common_text": "two shorter closed walks whose lengths sum to an odd number so one is",
+          "shared_12gram_count": 3,
+          "generated_12gram_coverage": 0.02027,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 11449,
+          "longest_common_token_span": 14,
+          "longest_common_text": "two shorter closed walks whose lengths sum to an odd number so one is",
+          "shared_12gram_count": 3,
+          "generated_12gram_coverage": 0.000518,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high2/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 126,
+          "longest_common_token_span": 3,
+          "longest_common_text": "no odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 144,
+          "longest_common_token_span": 4,
+          "longest_common_text": "that g is bipartite",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 7631,
+          "longest_common_token_span": 4,
+          "longest_common_text": "that g is bipartite",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high3/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 143,
+          "longest_common_token_span": 2,
+          "longest_common_text": "the same",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high4/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 149,
+          "longest_common_token_span": 9,
+          "longest_common_text": "that every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high4/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 9866,
+          "longest_common_token_span": 9,
+          "longest_common_text": "that every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high4/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 122,
+          "longest_common_token_span": 4,
+          "longest_common_text": "that g is bipartite",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high5/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 103,
+          "longest_common_token_span": 4,
+          "longest_common_text": "would form an odd",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high5/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 9547,
+          "longest_common_token_span": 4,
+          "longest_common_text": "would form an odd",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high5/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 130,
+          "longest_common_token_span": 2,
+          "longest_common_text": "and the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high6/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 145,
+          "longest_common_token_span": 4,
+          "longest_common_text": "alternates between the two",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high6/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 7450,
+          "longest_common_token_span": 4,
+          "longest_common_text": "an odd closed walk",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high6/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 232,
+          "longest_common_token_span": 3,
+          "longest_common_text": "no odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high7/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 131,
+          "longest_common_token_span": 4,
+          "longest_common_text": "has no odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high7/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 10033,
+          "longest_common_token_span": 4,
+          "longest_common_text": "has no odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/project_artifacts/workers/high7/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 696,
+          "longest_common_token_span": 2,
+          "longest_common_text": "odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 4110,
+          "longest_common_token_span": 4,
+          "longest_common_text": "from r to the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055610Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 7054,
+          "longest_common_token_span": 5,
+          "longest_common_text": "in one connected component and",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055613Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 6540,
+          "longest_common_token_span": 9,
+          "longest_common_text": "that every odd closed walk contains an odd cycle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055633Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 6811,
+          "longest_common_token_span": 5,
+          "longest_common_text": "paths from r to v",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055635Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 4492,
+          "longest_common_token_span": 4,
+          "longest_common_text": "choose a root r",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055750Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 4414,
+          "longest_common_token_span": 4,
+          "longest_common_text": "for each vertex v",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055801Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 5077,
+          "longest_common_token_span": 6,
+          "longest_common_text": "one connected component and choose a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_outputs/20260831T055815Z_f8c7a964a392/log.md"
+        },
+        {
+          "reference_word_count": 239,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "to",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/bipartite-odd-cycle_20260831T055252Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

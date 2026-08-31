@@ -1,0 +1,2031 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-31T06:04:23.376408Z",
+  "material_reduction_threshold": 0.5,
+  "evidence": {
+    "integrity_pass": true,
+    "pass_count": 18,
+    "fail_count": 0,
+    "failed_run_ids": [],
+    "frozen_counterbalance_match": true,
+    "matched_initial_states": true,
+    "A": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 6,
+      "integrity_failed_runs": 0,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 42,
+      "worker_attempts": 42,
+      "verifier_calls": 42,
+      "verifier_accepts": 42,
+      "verifier_rejects": 0,
+      "verified_fact_count": 42,
+      "supporting_closure_size": 6,
+      "facts_outside_closure": 36,
+      "verified_search_waste": 0.8571428571,
+      "worker_tokens": 3129824,
+      "verifier_tokens": 1449680,
+      "total_tokens": 4579504,
+      "mean_time_to_first_verified_target_seconds": 287.89465,
+      "total_terminal_time_seconds": 2364.213554,
+      "mean_terminal_time_seconds": 394.035592,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "bipartite-odd-cycle_20260831T055252Z",
+          "arm": "A",
+          "project": "n19ba_bipartite_odd_cycle_20260831t055252z",
+          "problem_id": "bipartite-odd-cycle",
+          "problem_sha256": "83ad8ea770804cf68de3f47822e66eca2567a75a458c8e2c9a8251c655b6193e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-31T05:52:53.024064Z",
+          "schedule_started_at_utc": "2026-08-31T05:53:00.297131Z",
+          "completed_at_utc": "2026-08-31T06:01:01.992849Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "24669735399752ca"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 510135,
+          "verifier_tokens": 264064,
+          "total_tokens": 774199,
+          "time_to_first_verified_target_seconds": 336.095795,
+          "time_to_terminal_run_seconds": 472.554636,
+          "wall_clock_seconds": 472.554636,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 2,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "24669735399752ca",
+            "282c461879fcb0b1",
+            "3b78cf611e3621f7",
+            "674672750ce53052",
+            "bbc2c290a51cd95a",
+            "edc5bcc634460776",
+            "f77acd936a8f078a"
+          ],
+          "selected_target_fact_id": "24669735399752ca",
+          "accepted_fact_ids": [
+            "24669735399752ca",
+            "282c461879fcb0b1",
+            "3b78cf611e3621f7",
+            "674672750ce53052",
+            "bbc2c290a51cd95a",
+            "edc5bcc634460776",
+            "f77acd936a8f078a"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-31T05:53:00.303094Z",
+              "wall_clock_seconds": 472.49882,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "24669735399752ca",
+                "282c461879fcb0b1",
+                "3b78cf611e3621f7",
+                "674672750ce53052",
+                "bbc2c290a51cd95a",
+                "edc5bcc634460776",
+                "f77acd936a8f078a"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260831T055610Z_f8c7a964a392",
+            "20260831T055613Z_f8c7a964a392",
+            "20260831T055633Z_f8c7a964a392",
+            "20260831T055635Z_f8c7a964a392",
+            "20260831T055750Z_f8c7a964a392",
+            "20260831T055801Z_f8c7a964a392",
+            "20260831T055815Z_f8c7a964a392"
+          ],
+          "initial_state_sha256": "b78d4e8a4bcab4dc5f71c99d1ecb465928b136fe4859d3b1961940567dd86f64",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        },
+        {
+          "schema_version": 1,
+          "run_id": "chinese-remainder_20260830T103118Z",
+          "arm": "A",
+          "project": "n19ba_chinese_remainder_20260830t103118z",
+          "problem_id": "chinese-remainder",
+          "problem_sha256": "0fe8ac3f288c7c81bf3dc563b9a263d0960351c3c206d4eafb67ede3bde86c52",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:31:19.279674Z",
+          "schedule_started_at_utc": "2026-08-30T10:31:30.455197Z",
+          "completed_at_utc": "2026-08-30T10:37:43.601301Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "34b8067870350db8"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 488330,
+          "verifier_tokens": 179644,
+          "total_tokens": 667974,
+          "time_to_first_verified_target_seconds": 271.897108,
+          "time_to_terminal_run_seconds": 358.490587,
+          "wall_clock_seconds": 358.490587,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 6,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "34b8067870350db8",
+            "4262f3277e703273",
+            "77a806c07d86fcd8",
+            "846cb19f13a31a7d",
+            "93c59409c0851af6",
+            "b4394f1e7e021f26",
+            "cf8f476a36d4206e"
+          ],
+          "selected_target_fact_id": "34b8067870350db8",
+          "accepted_fact_ids": [
+            "34b8067870350db8",
+            "4262f3277e703273",
+            "77a806c07d86fcd8",
+            "846cb19f13a31a7d",
+            "93c59409c0851af6",
+            "b4394f1e7e021f26",
+            "cf8f476a36d4206e"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-30T10:31:30.457503Z",
+              "wall_clock_seconds": 358.475368,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "34b8067870350db8",
+                "4262f3277e703273",
+                "77a806c07d86fcd8",
+                "846cb19f13a31a7d",
+                "93c59409c0851af6",
+                "b4394f1e7e021f26",
+                "cf8f476a36d4206e"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T103434Z_9c3c808650b5",
+            "20260830T103448Z_9c3c808650b5",
+            "20260830T103448Z_9c3c808650b5_2",
+            "20260830T103450Z_9c3c808650b5",
+            "20260830T103500Z_9c3c808650b5",
+            "20260830T103503Z_9c3c808650b5",
+            "20260830T103526Z_9c3c808650b5"
+          ],
+          "initial_state_sha256": "4d30d519db8cd8ec1a2517d45e0b1fc0e012ef0f683570bb589a850343cef83c",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        },
+        {
+          "schema_version": 1,
+          "run_id": "p-group-center_20260831T050325Z",
+          "arm": "A",
+          "project": "n19ba_p_group_center_20260831t050325z",
+          "problem_id": "p-group-center",
+          "problem_sha256": "86da3d2eda7c35fd448e7d60d4306479123f53adca3630d720d5d7ecdc82d624",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-31T05:03:29.395769Z",
+          "schedule_started_at_utc": "2026-08-31T05:03:43.514600Z",
+          "completed_at_utc": "2026-08-31T05:11:44.908898Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "02e0c2c064b780a2"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 562135,
+          "verifier_tokens": 237255,
+          "total_tokens": 799390,
+          "time_to_first_verified_target_seconds": 357.503454,
+          "time_to_terminal_run_seconds": 459.291255,
+          "wall_clock_seconds": 459.291255,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 3,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "02e0c2c064b780a2",
+            "0362c38893af8f96",
+            "1dbb0e55cead0ef6",
+            "6755847422926d62",
+            "6da5d6d10a31b361",
+            "83d9a62b15ff6dc0",
+            "a2e6ca370d02e17a"
+          ],
+          "selected_target_fact_id": "02e0c2c064b780a2",
+          "accepted_fact_ids": [
+            "02e0c2c064b780a2",
+            "0362c38893af8f96",
+            "1dbb0e55cead0ef6",
+            "6755847422926d62",
+            "6da5d6d10a31b361",
+            "83d9a62b15ff6dc0",
+            "a2e6ca370d02e17a"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-31T05:03:43.520297Z",
+              "wall_clock_seconds": 459.255058,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "02e0c2c064b780a2",
+                "0362c38893af8f96",
+                "1dbb0e55cead0ef6",
+                "6755847422926d62",
+                "6da5d6d10a31b361",
+                "83d9a62b15ff6dc0",
+                "a2e6ca370d02e17a"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260831T050604Z_5818d22286bd",
+            "20260831T050604Z_5818d22286bd_2",
+            "20260831T050636Z_5818d22286bd",
+            "20260831T050636Z_5818d22286bd_2",
+            "20260831T050637Z_5818d22286bd",
+            "20260831T050656Z_5818d22286bd",
+            "20260831T050701Z_5818d22286bd"
+          ],
+          "initial_state_sha256": "a6274151180025a5e9505045d05f7d64a841c6a6db6e002dd5234819a9ffca72",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        },
+        {
+          "schema_version": 1,
+          "run_id": "ramsey-r33_20260830T100017Z",
+          "arm": "A",
+          "project": "n19ba_ramsey_r33_20260830t100017z",
+          "problem_id": "ramsey-r33",
+          "problem_sha256": "bc047d7eda75187e04cbed6e2632cc58226d88ee15ab224613ac5f03e693365e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:00:18.447548Z",
+          "schedule_started_at_utc": "2026-08-30T10:00:29.374129Z",
+          "completed_at_utc": "2026-08-30T10:07:22.871041Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "499c2ad121614d79"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 611084,
+          "verifier_tokens": 255603,
+          "total_tokens": 866687,
+          "time_to_first_verified_target_seconds": 253.750322,
+          "time_to_terminal_run_seconds": 386.014503,
+          "wall_clock_seconds": 386.014503,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 7,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "499c2ad121614d79",
+            "59fba783ac994f23",
+            "7d4af4197a8dd1f1",
+            "b21489ec3fbf47e5",
+            "b4b1503841f17fde",
+            "bba071057758bb68",
+            "fc9449efd3455db4"
+          ],
+          "selected_target_fact_id": "499c2ad121614d79",
+          "accepted_fact_ids": [
+            "499c2ad121614d79",
+            "59fba783ac994f23",
+            "7d4af4197a8dd1f1",
+            "b21489ec3fbf47e5",
+            "b4b1503841f17fde",
+            "bba071057758bb68",
+            "fc9449efd3455db4"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-30T10:00:29.379247Z",
+              "wall_clock_seconds": 385.965027,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "499c2ad121614d79",
+                "59fba783ac994f23",
+                "7d4af4197a8dd1f1",
+                "b21489ec3fbf47e5",
+                "b4b1503841f17fde",
+                "bba071057758bb68",
+                "fc9449efd3455db4"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T100303Z_c5a72aa2ee86",
+            "20260830T100309Z_c5a72aa2ee86",
+            "20260830T100318Z_c5a72aa2ee86",
+            "20260830T100324Z_c5a72aa2ee86",
+            "20260830T100357Z_c5a72aa2ee86",
+            "20260830T100359Z_c5a72aa2ee86",
+            "20260830T100411Z_c5a72aa2ee86"
+          ],
+          "initial_state_sha256": "f1670b64c93df3cc79ef666670f76ad187ed56a674b469604f477339dc499064",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        },
+        {
+          "schema_version": 1,
+          "run_id": "sperner-antichain_20260830T104456Z",
+          "arm": "A",
+          "project": "n19ba_sperner_antichain_20260830t104456z",
+          "problem_id": "sperner-antichain",
+          "problem_sha256": "22f16b658815286dc4b76b7c4b6b74bb6c70f65123d5fc7e17fb593b5c5384cc",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:44:56.863989Z",
+          "schedule_started_at_utc": "2026-08-30T10:45:06.532134Z",
+          "completed_at_utc": "2026-08-30T10:51:09.340820Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "01d5f7cce8e69015"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 460125,
+          "verifier_tokens": 276193,
+          "total_tokens": 736318,
+          "time_to_first_verified_target_seconds": 265.75816,
+          "time_to_terminal_run_seconds": 335.729277,
+          "wall_clock_seconds": 335.729277,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 4,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "01d5f7cce8e69015",
+            "34a2de81f0cd6305",
+            "39085573c7228cc9",
+            "3fb4a8364356b550",
+            "4e6a0ae444666b6b",
+            "5f849f00006c32a7",
+            "a46f9fed7f38b52f"
+          ],
+          "selected_target_fact_id": "01d5f7cce8e69015",
+          "accepted_fact_ids": [
+            "01d5f7cce8e69015",
+            "34a2de81f0cd6305",
+            "39085573c7228cc9",
+            "3fb4a8364356b550",
+            "4e6a0ae444666b6b",
+            "5f849f00006c32a7",
+            "a46f9fed7f38b52f"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-30T10:45:06.542756Z",
+              "wall_clock_seconds": 335.708896,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "01d5f7cce8e69015",
+                "34a2de81f0cd6305",
+                "39085573c7228cc9",
+                "3fb4a8364356b550",
+                "4e6a0ae444666b6b",
+                "5f849f00006c32a7",
+                "a46f9fed7f38b52f"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T104754Z_869b0ac4eb81",
+            "20260830T104804Z_869b0ac4eb81",
+            "20260830T104805Z_869b0ac4eb81",
+            "20260830T104814Z_869b0ac4eb81",
+            "20260830T104816Z_869b0ac4eb81",
+            "20260830T104834Z_869b0ac4eb81",
+            "20260830T104845Z_869b0ac4eb81"
+          ],
+          "initial_state_sha256": "226e3515507ea2b4660e1333bb981a275afcc9dc124049ad5cec850a317f03c9",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vandermonde-determinant_20260830T105830Z",
+          "arm": "A",
+          "project": "n19ba_vandermonde_determinant_20260830t105830z",
+          "problem_id": "vandermonde-determinant",
+          "problem_sha256": "3aaaef36d74edfae70e8cc6dcb586dd5b1ff596dd5748c21584542aa77e9a508",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:58:30.630453Z",
+          "schedule_started_at_utc": "2026-08-30T10:58:39.482120Z",
+          "completed_at_utc": "2026-08-30T11:04:43.436301Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 7,
+          "worker_attempts": 7,
+          "worker_sessions": 7,
+          "worker_terminal_states": {
+            "high": "max_rounds",
+            "high2": "max_rounds",
+            "high3": "max_rounds",
+            "high4": "max_rounds",
+            "high5": "max_rounds",
+            "high6": "max_rounds",
+            "high7": "max_rounds"
+          },
+          "verifier_calls": 7,
+          "verifier_accepts": 7,
+          "verifier_rejects": 0,
+          "verified_fact_count": 7,
+          "supporting_closure": [
+            "050883499820bf3e"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 6,
+          "verified_search_waste": 0.8571428571,
+          "worker_tokens": 498015,
+          "verifier_tokens": 236921,
+          "total_tokens": 734936,
+          "time_to_first_verified_target_seconds": 242.363061,
+          "time_to_terminal_run_seconds": 352.133296,
+          "wall_clock_seconds": 352.133296,
+          "first_worker_result": "NOT_APPLICABLE",
+          "first_success_index": 6,
+          "workers_saved": 0,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 7,
+          "successful_workers": [
+            "high",
+            "high2",
+            "high3",
+            "high4",
+            "high5",
+            "high6",
+            "high7"
+          ],
+          "target_fact_ids": [
+            "050883499820bf3e",
+            "0b7d1a06656098fe",
+            "6ab8638474a44a45",
+            "7c2961a5909277c1",
+            "8e752b5ef32eefe8",
+            "c17836aa77edd312",
+            "eadaec484176a582"
+          ],
+          "selected_target_fact_id": "050883499820bf3e",
+          "accepted_fact_ids": [
+            "050883499820bf3e",
+            "0b7d1a06656098fe",
+            "6ab8638474a44a45",
+            "7c2961a5909277c1",
+            "8e752b5ef32eefe8",
+            "c17836aa77edd312",
+            "eadaec484176a582"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "workers": [
+                "high",
+                "high2",
+                "high3",
+                "high4",
+                "high5",
+                "high6",
+                "high7"
+              ],
+              "started_at_utc": "2026-08-30T10:58:39.501660Z",
+              "wall_clock_seconds": 352.086451,
+              "verified_facts_before": 0,
+              "verified_facts_after": 7,
+              "verifier_events_before": 0,
+              "verifier_events_after": 7,
+              "new_verifier_events": 7,
+              "target_fact_ids_after_batch": [
+                "050883499820bf3e",
+                "0b7d1a06656098fe",
+                "6ab8638474a44a45",
+                "7c2961a5909277c1",
+                "8e752b5ef32eefe8",
+                "c17836aa77edd312",
+                "eadaec484176a582"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T110129Z_8b514239f6d1",
+            "20260830T110148Z_8b514239f6d1",
+            "20260830T110159Z_8b514239f6d1",
+            "20260830T110159Z_8b514239f6d1_2",
+            "20260830T110207Z_8b514239f6d1",
+            "20260830T110217Z_8b514239f6d1",
+            "20260830T110224Z_8b514239f6d1"
+          ],
+          "initial_state_sha256": "52aecefc0ccdd2f6301ce3f412aabfe8272d5cbf925cb64b40fef2137bc46b52",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 7,
+          "redundant_verified_targets": 6
+        }
+      ]
+    },
+    "B": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 6,
+      "integrity_failed_runs": 0,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 6,
+      "worker_attempts": 6,
+      "verifier_calls": 6,
+      "verifier_accepts": 6,
+      "verifier_rejects": 0,
+      "verified_fact_count": 6,
+      "supporting_closure_size": 6,
+      "facts_outside_closure": 0,
+      "verified_search_waste": 0.0,
+      "worker_tokens": 449133,
+      "verifier_tokens": 204202,
+      "total_tokens": 653335,
+      "mean_time_to_first_verified_target_seconds": 285.96655,
+      "total_terminal_time_seconds": 1868.147839,
+      "mean_terminal_time_seconds": 311.357973,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "bipartite-odd-cycle_20260831T054627Z",
+          "arm": "B",
+          "project": "n19bb_bipartite_odd_cycle_20260831t054627z",
+          "problem_id": "bipartite-odd-cycle",
+          "problem_sha256": "83ad8ea770804cf68de3f47822e66eca2567a75a458c8e2c9a8251c655b6193e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-31T05:46:28.041329Z",
+          "schedule_started_at_utc": "2026-08-31T05:46:36.326763Z",
+          "completed_at_utc": "2026-08-31T05:52:28.750787Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "58030de941505b7a"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 119097,
+          "verifier_tokens": 13572,
+          "total_tokens": 132669,
+          "time_to_first_verified_target_seconds": 312.933156,
+          "time_to_terminal_run_seconds": 345.452893,
+          "wall_clock_seconds": 345.452893,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "58030de941505b7a"
+          ],
+          "selected_target_fact_id": "58030de941505b7a",
+          "accepted_fact_ids": [
+            "58030de941505b7a"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-31T05:46:36.331740Z",
+              "wall_clock_seconds": 345.413564,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "58030de941505b7a"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260831T055020Z_f8c7a964a392"
+          ],
+          "initial_state_sha256": "b78d4e8a4bcab4dc5f71c99d1ecb465928b136fe4859d3b1961940567dd86f64",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "chinese-remainder_20260830T101744Z",
+          "arm": "B",
+          "project": "n19bb_chinese_remainder_20260830t101744z",
+          "problem_id": "chinese-remainder",
+          "problem_sha256": "0fe8ac3f288c7c81bf3dc563b9a263d0960351c3c206d4eafb67ede3bde86c52",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:17:44.801590Z",
+          "schedule_started_at_utc": "2026-08-30T10:17:52.839106Z",
+          "completed_at_utc": "2026-08-30T10:23:44.613543Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "d085896d3ef68b55"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 72120,
+          "verifier_tokens": 17137,
+          "total_tokens": 89257,
+          "time_to_first_verified_target_seconds": 306.843172,
+          "time_to_terminal_run_seconds": 338.150935,
+          "wall_clock_seconds": 338.150935,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "d085896d3ef68b55"
+          ],
+          "selected_target_fact_id": "d085896d3ef68b55",
+          "accepted_fact_ids": [
+            "d085896d3ef68b55"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:17:52.856620Z",
+              "wall_clock_seconds": 337.955317,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "d085896d3ef68b55"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T102134Z_9c3c808650b5"
+          ],
+          "initial_state_sha256": "4d30d519db8cd8ec1a2517d45e0b1fc0e012ef0f683570bb589a850343cef83c",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "p-group-center_20260830T111712Z",
+          "arm": "B",
+          "project": "n19bb_p_group_center_20260830t111712z",
+          "problem_id": "p-group-center",
+          "problem_sha256": "86da3d2eda7c35fd448e7d60d4306479123f53adca3630d720d5d7ecdc82d624",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T11:17:13.952702Z",
+          "schedule_started_at_utc": "2026-08-30T11:17:24.783633Z",
+          "completed_at_utc": "2026-08-30T11:22:32.566653Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "34c66889fa8bb12e"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 43072,
+          "verifier_tokens": 83965,
+          "total_tokens": 127037,
+          "time_to_first_verified_target_seconds": 274.771745,
+          "time_to_terminal_run_seconds": 286.079931,
+          "wall_clock_seconds": 286.079931,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "34c66889fa8bb12e"
+          ],
+          "selected_target_fact_id": "34c66889fa8bb12e",
+          "accepted_fact_ids": [
+            "34c66889fa8bb12e"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T11:17:24.794225Z",
+              "wall_clock_seconds": 286.033107,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "34c66889fa8bb12e"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T111959Z_5818d22286bd"
+          ],
+          "initial_state_sha256": "a6274151180025a5e9505045d05f7d64a841c6a6db6e002dd5234819a9ffca72",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "ramsey-r33_20260830T100755Z",
+          "arm": "B",
+          "project": "n19bb_ramsey_r33_20260830t100755z",
+          "problem_id": "ramsey-r33",
+          "problem_sha256": "bc047d7eda75187e04cbed6e2632cc58226d88ee15ab224613ac5f03e693365e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:07:56.779610Z",
+          "schedule_started_at_utc": "2026-08-30T10:08:07.993445Z",
+          "completed_at_utc": "2026-08-30T10:12:35.045830Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "360506a1b51cca3c"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 81690,
+          "verifier_tokens": 24770,
+          "total_tokens": 106460,
+          "time_to_first_verified_target_seconds": 218.720038,
+          "time_to_terminal_run_seconds": 247.807338,
+          "wall_clock_seconds": 247.807338,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "360506a1b51cca3c"
+          ],
+          "selected_target_fact_id": "360506a1b51cca3c",
+          "accepted_fact_ids": [
+            "360506a1b51cca3c"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:08:08.001061Z",
+              "wall_clock_seconds": 247.761006,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "360506a1b51cca3c"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T101040Z_c5a72aa2ee86"
+          ],
+          "initial_state_sha256": "f1670b64c93df3cc79ef666670f76ad187ed56a674b469604f477339dc499064",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "sperner-antichain_20260830T105143Z",
+          "arm": "B",
+          "project": "n19bb_sperner_antichain_20260830t105143z",
+          "problem_id": "sperner-antichain",
+          "problem_sha256": "22f16b658815286dc4b76b7c4b6b74bb6c70f65123d5fc7e17fb593b5c5384cc",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:51:45.444093Z",
+          "schedule_started_at_utc": "2026-08-30T10:51:54.790534Z",
+          "completed_at_utc": "2026-08-30T10:58:00.339992Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "e1c56802b0dde6bf"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 81625,
+          "verifier_tokens": 49408,
+          "total_tokens": 131033,
+          "time_to_first_verified_target_seconds": 320.725075,
+          "time_to_terminal_run_seconds": 347.030223,
+          "wall_clock_seconds": 347.030223,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "e1c56802b0dde6bf"
+          ],
+          "selected_target_fact_id": "e1c56802b0dde6bf",
+          "accepted_fact_ids": [
+            "e1c56802b0dde6bf"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:51:54.792088Z",
+              "wall_clock_seconds": 346.961237,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "e1c56802b0dde6bf"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T105545Z_869b0ac4eb81"
+          ],
+          "initial_state_sha256": "226e3515507ea2b4660e1333bb981a275afcc9dc124049ad5cec850a317f03c9",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vandermonde-determinant_20260830T111101Z",
+          "arm": "B",
+          "project": "n19bb_vandermonde_determinant_20260830t111101z",
+          "problem_id": "vandermonde-determinant",
+          "problem_sha256": "3aaaef36d74edfae70e8cc6dcb586dd5b1ff596dd5748c21584542aa77e9a508",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T11:11:02.424832Z",
+          "schedule_started_at_utc": "2026-08-30T11:11:11.055635Z",
+          "completed_at_utc": "2026-08-30T11:16:38.004523Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "01d94b0856bbdce0"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 51529,
+          "verifier_tokens": 15350,
+          "total_tokens": 66879,
+          "time_to_first_verified_target_seconds": 281.806117,
+          "time_to_terminal_run_seconds": 303.626519,
+          "wall_clock_seconds": 303.626519,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": false,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "01d94b0856bbdce0"
+          ],
+          "selected_target_fact_id": "01d94b0856bbdce0",
+          "accepted_fact_ids": [
+            "01d94b0856bbdce0"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T11:11:11.063215Z",
+              "wall_clock_seconds": 303.584029,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "01d94b0856bbdce0"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T111446Z_8b514239f6d1"
+          ],
+          "initial_state_sha256": "52aecefc0ccdd2f6301ce3f412aabfe8272d5cbf925cb64b40fef2137bc46b52",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        }
+      ]
+    },
+    "C": {
+      "result_bearing_runs": 6,
+      "integrity_valid_runs": 6,
+      "integrity_failed_runs": 0,
+      "solved": 6,
+      "solve_rate": 1.0,
+      "workers_launched": 6,
+      "worker_attempts": 6,
+      "verifier_calls": 8,
+      "verifier_accepts": 8,
+      "verifier_rejects": 0,
+      "verified_fact_count": 8,
+      "supporting_closure_size": 7,
+      "facts_outside_closure": 1,
+      "verified_search_waste": 0.125,
+      "worker_tokens": 521010,
+      "verifier_tokens": 269916,
+      "total_tokens": 790926,
+      "mean_time_to_first_verified_target_seconds": 311.453572,
+      "total_terminal_time_seconds": 2255.345072,
+      "mean_terminal_time_seconds": 375.890845,
+      "runs": [
+        {
+          "schema_version": 1,
+          "run_id": "bipartite-odd-cycle_20260831T053657Z",
+          "arm": "C",
+          "project": "n19bc_bipartite_odd_cycle_20260831t053657z",
+          "problem_id": "bipartite-odd-cycle",
+          "problem_sha256": "83ad8ea770804cf68de3f47822e66eca2567a75a458c8e2c9a8251c655b6193e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-31T05:36:58.589760Z",
+          "schedule_started_at_utc": "2026-08-31T05:37:07.622925Z",
+          "completed_at_utc": "2026-08-31T05:46:02.003017Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 2,
+          "verifier_accepts": 2,
+          "verifier_rejects": 0,
+          "verified_fact_count": 2,
+          "supporting_closure": [
+            "ec5be0d896864f8c",
+            "d98cf04de7f5c73c"
+          ],
+          "supporting_closure_size": 2,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 75570,
+          "verifier_tokens": 70535,
+          "total_tokens": 146105,
+          "time_to_first_verified_target_seconds": 488.793852,
+          "time_to_terminal_run_seconds": 532.380105,
+          "wall_clock_seconds": 532.380105,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "d98cf04de7f5c73c"
+          ],
+          "selected_target_fact_id": "d98cf04de7f5c73c",
+          "accepted_fact_ids": [
+            "d98cf04de7f5c73c",
+            "ec5be0d896864f8c"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-31T05:37:07.633253Z",
+              "wall_clock_seconds": 532.356817,
+              "verified_facts_before": 0,
+              "verified_facts_after": 2,
+              "verifier_events_before": 0,
+              "verifier_events_after": 2,
+              "new_verifier_events": 2,
+              "target_fact_ids_after_batch": [
+                "d98cf04de7f5c73c"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260831T054003Z_bcf92c611638",
+            "20260831T054256Z_f8c7a964a392"
+          ],
+          "initial_state_sha256": "b78d4e8a4bcab4dc5f71c99d1ecb465928b136fe4859d3b1961940567dd86f64",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "chinese-remainder_20260830T102415Z",
+          "arm": "C",
+          "project": "n19bc_chinese_remainder_20260830t102415z",
+          "problem_id": "chinese-remainder",
+          "problem_sha256": "0fe8ac3f288c7c81bf3dc563b9a263d0960351c3c206d4eafb67ede3bde86c52",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:24:15.768999Z",
+          "schedule_started_at_utc": "2026-08-30T10:24:23.572853Z",
+          "completed_at_utc": "2026-08-30T10:30:51.599735Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "ae6b563869cc7b96"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 96620,
+          "verifier_tokens": 20774,
+          "total_tokens": 117394,
+          "time_to_first_verified_target_seconds": 337.749669,
+          "time_to_terminal_run_seconds": 379.062362,
+          "wall_clock_seconds": 379.062362,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "ae6b563869cc7b96"
+          ],
+          "selected_target_fact_id": "ae6b563869cc7b96",
+          "accepted_fact_ids": [
+            "ae6b563869cc7b96"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:24:23.577910Z",
+              "wall_clock_seconds": 379.017617,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "ae6b563869cc7b96"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T102839Z_9c3c808650b5"
+          ],
+          "initial_state_sha256": "4d30d519db8cd8ec1a2517d45e0b1fc0e012ef0f683570bb589a850343cef83c",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "p-group-center_20260831T051212Z",
+          "arm": "C",
+          "project": "n19bc_p_group_center_20260831t051212z",
+          "problem_id": "p-group-center",
+          "problem_sha256": "86da3d2eda7c35fd448e7d60d4306479123f53adca3630d720d5d7ecdc82d624",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-31T05:12:13.693624Z",
+          "schedule_started_at_utc": "2026-08-31T05:12:24.321986Z",
+          "completed_at_utc": "2026-08-31T05:21:00.776238Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 2,
+          "verifier_accepts": 2,
+          "verifier_rejects": 0,
+          "verified_fact_count": 2,
+          "supporting_closure": [
+            "25ce3bdb78bf40cf"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 1,
+          "verified_search_waste": 0.5,
+          "worker_tokens": 116571,
+          "verifier_tokens": 79069,
+          "total_tokens": 195640,
+          "time_to_first_verified_target_seconds": 258.608985,
+          "time_to_terminal_run_seconds": 492.745792,
+          "wall_clock_seconds": 492.745792,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "25ce3bdb78bf40cf",
+            "47151e5c66fc8fbd"
+          ],
+          "selected_target_fact_id": "25ce3bdb78bf40cf",
+          "accepted_fact_ids": [
+            "25ce3bdb78bf40cf",
+            "47151e5c66fc8fbd"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-31T05:12:24.328182Z",
+              "wall_clock_seconds": 492.679467,
+              "verified_facts_before": 0,
+              "verified_facts_after": 2,
+              "verifier_events_before": 0,
+              "verifier_events_after": 2,
+              "new_verifier_events": 2,
+              "target_fact_ids_after_batch": [
+                "25ce3bdb78bf40cf",
+                "47151e5c66fc8fbd"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260831T051513Z_5818d22286bd",
+            "20260831T051728Z_5818d22286bd"
+          ],
+          "initial_state_sha256": "a6274151180025a5e9505045d05f7d64a841c6a6db6e002dd5234819a9ffca72",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 1
+        },
+        {
+          "schema_version": 1,
+          "run_id": "ramsey-r33_20260830T101255Z",
+          "arm": "C",
+          "project": "n19bc_ramsey_r33_20260830t101255z",
+          "problem_id": "ramsey-r33",
+          "problem_sha256": "bc047d7eda75187e04cbed6e2632cc58226d88ee15ab224613ac5f03e693365e",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:12:56.570249Z",
+          "schedule_started_at_utc": "2026-08-30T10:13:07.892012Z",
+          "completed_at_utc": "2026-08-30T10:17:18.288937Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "34f23db483f896aa"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 88685,
+          "verifier_tokens": 24462,
+          "total_tokens": 113147,
+          "time_to_first_verified_target_seconds": 221.317277,
+          "time_to_terminal_run_seconds": 233.751039,
+          "wall_clock_seconds": 233.751039,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "34f23db483f896aa"
+          ],
+          "selected_target_fact_id": "34f23db483f896aa",
+          "accepted_fact_ids": [
+            "34f23db483f896aa"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:13:07.903083Z",
+              "wall_clock_seconds": 233.701565,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "34f23db483f896aa"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T101539Z_c5a72aa2ee86"
+          ],
+          "initial_state_sha256": "f1670b64c93df3cc79ef666670f76ad187ed56a674b469604f477339dc499064",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "sperner-antichain_20260830T103819Z",
+          "arm": "C",
+          "project": "n19bc_sperner_antichain_20260830t103819z",
+          "problem_id": "sperner-antichain",
+          "problem_sha256": "22f16b658815286dc4b76b7c4b6b74bb6c70f65123d5fc7e17fb593b5c5384cc",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T10:38:20.538713Z",
+          "schedule_started_at_utc": "2026-08-30T10:38:29.599973Z",
+          "completed_at_utc": "2026-08-30T10:44:26.274606Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "63e94554553228df"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 53866,
+          "verifier_tokens": 35164,
+          "total_tokens": 89030,
+          "time_to_first_verified_target_seconds": 311.524231,
+          "time_to_terminal_run_seconds": 330.124644,
+          "wall_clock_seconds": 330.124644,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "63e94554553228df"
+          ],
+          "selected_target_fact_id": "63e94554553228df",
+          "accepted_fact_ids": [
+            "63e94554553228df"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T10:38:29.607583Z",
+              "wall_clock_seconds": 330.095559,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "63e94554553228df"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T104145Z_869b0ac4eb81"
+          ],
+          "initial_state_sha256": "226e3515507ea2b4660e1333bb981a275afcc9dc124049ad5cec850a317f03c9",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        },
+        {
+          "schema_version": 1,
+          "run_id": "vandermonde-determinant_20260830T110511Z",
+          "arm": "C",
+          "project": "n19bc_vandermonde_determinant_20260830t110511z",
+          "problem_id": "vandermonde-determinant",
+          "problem_sha256": "3aaaef36d74edfae70e8cc6dcb586dd5b1ff596dd5748c21584542aa77e9a508",
+          "upstream_commit": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+          "started_at_utc": "2026-08-30T11:05:15.291074Z",
+          "schedule_started_at_utc": "2026-08-30T11:05:25.563380Z",
+          "completed_at_utc": "2026-08-30T11:10:34.682990Z",
+          "classification": "SOLVED",
+          "solved": true,
+          "blind_integrity": "BLIND_INTEGRITY_PASS",
+          "workers_configured": 7,
+          "workers_launched": 1,
+          "worker_attempts": 1,
+          "worker_sessions": 1,
+          "worker_terminal_states": {
+            "high": "max_rounds"
+          },
+          "verifier_calls": 1,
+          "verifier_accepts": 1,
+          "verifier_rejects": 0,
+          "verified_fact_count": 1,
+          "supporting_closure": [
+            "b737b8768de2c31a"
+          ],
+          "supporting_closure_size": 1,
+          "facts_outside_closure": 0,
+          "verified_search_waste": 0.0,
+          "worker_tokens": 89698,
+          "verifier_tokens": 39912,
+          "total_tokens": 129610,
+          "time_to_first_verified_target_seconds": 250.727417,
+          "time_to_terminal_run_seconds": 287.28113,
+          "wall_clock_seconds": 287.28113,
+          "first_worker_result": "PASS",
+          "first_success_index": 1,
+          "workers_saved": 6,
+          "stopped_after_success": true,
+          "number_of_successful_workers": 1,
+          "successful_workers": [
+            "high"
+          ],
+          "target_fact_ids": [
+            "b737b8768de2c31a"
+          ],
+          "selected_target_fact_id": "b737b8768de2c31a",
+          "accepted_fact_ids": [
+            "b737b8768de2c31a"
+          ],
+          "batch_records": [
+            {
+              "worker_indices": [
+                1
+              ],
+              "workers": [
+                "high"
+              ],
+              "started_at_utc": "2026-08-30T11:05:25.566214Z",
+              "wall_clock_seconds": 287.263721,
+              "verified_facts_before": 0,
+              "verified_facts_after": 1,
+              "verifier_events_before": 0,
+              "verifier_events_after": 1,
+              "new_verifier_events": 1,
+              "target_fact_ids_after_batch": [
+                "b737b8768de2c31a"
+              ],
+              "solved_after_batch": true
+            }
+          ],
+          "verifier_run_ids": [
+            "20260830T110806Z_8b514239f6d1"
+          ],
+          "initial_state_sha256": "52aecefc0ccdd2f6301ce3f412aabfe8272d5cbf925cb64b40fef2137bc46b52",
+          "worker_assignment_sha256": "7f66ed3b235377a467c5724b882c7a3b7d01008864fe8ddcece2ef126c2a5284",
+          "worker_model": "gpt-5.6-sol",
+          "worker_role": "high",
+          "worker_reasoning_effort": "high",
+          "blind_wrapper_sha256": "852d8c7bdb2157c77fd993ec32fc01416724978fa2fb2d488fc5015b478910cd",
+          "target_selection_rule": "lexicographically smallest verifier-accepted Fact whose normalized statement equals the frozen problem",
+          "notes": [
+            "Every arm configured seven identical high workers from a fresh empty project.",
+            "Only launch scheduling differs across A, B, and C.",
+            "No failure text, feedback, hints, decomposition, or route change was supplied."
+          ],
+          "successful_worker_count": 1,
+          "redundant_verified_targets": 0
+        }
+      ]
+    },
+    "first_worker_failures": [],
+    "sequential_recoveries": [],
+    "relative_to_A": {
+      "B": {
+        "worker_reduction_fraction": 0.8571428571428571,
+        "token_reduction_fraction": 0.8573349864963542
+      },
+      "C": {
+        "worker_reduction_fraction": 0.8571428571428571,
+        "token_reduction_fraction": 0.827290029662601
+      }
+    }
+  },
+  "verdict": "SINGLE_WORKER_FIRST_SUPPORTED"
+}

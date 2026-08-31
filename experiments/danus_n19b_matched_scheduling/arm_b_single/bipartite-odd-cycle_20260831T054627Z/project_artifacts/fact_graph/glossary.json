@@ -1,0 +1,15 @@
+{
+  "G": "the finite undirected graph in the theorem",
+  "V(G)": "the vertex set of G",
+  "A": "one class of the constructed or assumed bipartition of V(G)",
+  "B": "the other class of the constructed or assumed bipartition of V(G)",
+  "H": "an arbitrary connected component of G",
+  "T": "a spanning tree of H",
+  "r": "a chosen root vertex of T",
+  "x": "an arbitrary vertex of H",
+  "d_T(r,x)": "the number of edges in the unique path in T from r to x",
+  "u": "one endpoint of an arbitrary edge of H",
+  "v": "the other endpoint of that edge",
+  "w": "the last common vertex of the root-to-u and root-to-v paths in T",
+  "P": "the unique path in T from u to v"
+}
