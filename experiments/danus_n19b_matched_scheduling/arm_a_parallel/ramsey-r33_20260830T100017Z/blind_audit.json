@@ -1,0 +1,647 @@
+{
+  "problem_id": "ramsey-r33",
+  "run_id": "ramsey-r33_20260830T100017Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 36,
+  "wrapper_worker_roles": 7,
+  "wrapper_verifier_roles": 7,
+  "expected_worker_roles": 7,
+  "expected_verifier_roles": 7,
+  "verifier_http_200": 7,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Every red-blue coloring of the edges of the complete graph on six vertices contains a monochromatic triangle; a red-blue coloring on five vertices avoids monochromatic triangles.",
+        "attempted_queries": [],
+        "primary_tool": null,
+        "reason": "The search_arxiv_theorems tool is not exposed in this worker session. No external theorem is needed because the target admits a self-contained elementary proof; no external result will be cited or relied upon.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "every red-blue coloring of K6 has a monochromatic triangle and a K5 coloring avoids one"
+        ],
+        "primary_tool": null,
+        "reason": "The configured worker tool surface did not expose search_arxiv_theorems or web search. No external theorem was used.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high4/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Every red-blue edge-coloring of the complete graph on six vertices contains a monochromatic triangle",
+          "There is a red-blue coloring of the complete graph on five vertices with no monochromatic triangle"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external result is needed or cited in the proof.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Every red-blue edge-coloring of the complete graph on six vertices contains a monochromatic triangle; a cyclic coloring of the complete graph on five vertices avoids monochromatic triangles."
+        ],
+        "primary_tool": null,
+        "reason": "The configured worker tool surface exposes no search_arxiv_theorems or web-search tool. No external result is required because every mathematical step is proved explicitly in the submitted proof.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": "none",
+        "usefulness_tier": "discard"
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Every red-blue coloring of the edges of the complete graph on six vertices contains a monochromatic triangle; a red-blue coloring on five vertices avoids monochromatic triangles.",
+      "attempted_queries": [],
+      "primary_tool": null,
+      "reason": "The search_arxiv_theorems tool is not exposed in this worker session. No external theorem is needed because the target admits a self-contained elementary proof; no external result will be cited or relied upon.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "every red-blue coloring of K6 has a monochromatic triangle and a K5 coloring avoids one"
+      ],
+      "primary_tool": null,
+      "reason": "The configured worker tool surface did not expose search_arxiv_theorems or web search. No external theorem was used.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high4/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Every red-blue edge-coloring of the complete graph on six vertices contains a monochromatic triangle",
+        "There is a red-blue coloring of the complete graph on five vertices with no monochromatic triangle"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems tool and a built-in web-search tool are not exposed in this worker session. No external result is needed or cited in the proof.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Every red-blue edge-coloring of the complete graph on six vertices contains a monochromatic triangle; a cyclic coloring of the complete graph on five vertices avoids monochromatic triangles."
+      ],
+      "primary_tool": null,
+      "reason": "The configured worker tool surface exposes no search_arxiv_theorems or web-search tool. No external result is required because every mathematical step is proved explicitly in the submitted proof.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": "none",
+      "usefulness_tier": "discard"
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:34959"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 173,
+        "generated_word_count": 548,
+        "longest_common_token_span": 9,
+        "longest_common_text": "are blue so abc is a blue triangle thus",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "bba071057758bb68"
+      },
+      "all": [
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 452,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "499c2ad121614d79"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 488,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "59fba783ac994f23"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 513,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "7d4af4197a8dd1f1"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 348,
+          "longest_common_token_span": 8,
+          "longest_common_text": "five edges incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "b21489ec3fbf47e5"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 673,
+          "longest_common_token_span": 6,
+          "longest_common_text": "incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "b4b1503841f17fde"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 548,
+          "longest_common_token_span": 9,
+          "longest_common_text": "are blue so abc is a blue triangle thus",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "bba071057758bb68"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 544,
+          "longest_common_token_span": 8,
+          "longest_common_text": "five edges incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "fc9449efd3455db4"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 36,
+      "strongest": {
+        "reference_word_count": 173,
+        "generated_word_count": 2203,
+        "longest_common_token_span": 11,
+        "longest_common_text": "a red triangle if none is red all three are blue",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/global_memory/proof_attempt.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 693,
+          "longest_common_token_span": 0,
+          "longest_common_text": "",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 739,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 247,
+          "longest_common_token_span": 5,
+          "longest_common_text": "red blue coloring of the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/global_memory/example.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 2203,
+          "longest_common_token_span": 11,
+          "longest_common_text": "a red triangle if none is red all three are blue",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 1232,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 303,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 163,
+          "longest_common_token_span": 3,
+          "longest_common_text": "at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 13929,
+          "longest_common_token_span": 8,
+          "longest_common_text": "five edges incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 86,
+          "longest_common_token_span": 2,
+          "longest_common_text": "lower bound",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 106,
+          "longest_common_token_span": 3,
+          "longest_common_text": "a monochromatic triangle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 4526,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high2/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 186,
+          "longest_common_token_span": 4,
+          "longest_common_text": "red blue coloring of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 90,
+          "longest_common_token_span": 3,
+          "longest_common_text": "a monochromatic triangle",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 6357,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high3/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 188,
+          "longest_common_token_span": 5,
+          "longest_common_text": "red blue coloring of the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high4/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 126,
+          "longest_common_token_span": 5,
+          "longest_common_text": "blue the red graph is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high4/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 9061,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high4/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 310,
+          "longest_common_token_span": 3,
+          "longest_common_text": "coloring of the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high5/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 156,
+          "longest_common_token_span": 5,
+          "longest_common_text": "is a five cycle and",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high5/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 11486,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high5/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 119,
+          "longest_common_token_span": 2,
+          "longest_common_text": "the five",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high6/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 71,
+          "longest_common_token_span": 2,
+          "longest_common_text": "edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high6/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 5739,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high6/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 100,
+          "longest_common_token_span": 2,
+          "longest_common_text": "lower bound",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high7/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 143,
+          "longest_common_token_span": 3,
+          "longest_common_text": "the red graph",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high7/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 5916,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/project_artifacts/workers/high7/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 667,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 4351,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100303Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 4473,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100309Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 6357,
+          "longest_common_token_span": 9,
+          "longest_common_text": "are blue so abc is a blue triangle thus",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100318Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 3675,
+          "longest_common_token_span": 8,
+          "longest_common_text": "five edges incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100324Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 4574,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100357Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 6805,
+          "longest_common_token_span": 8,
+          "longest_common_text": "five edges incident with v at least three",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100359Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 4087,
+          "longest_common_token_span": 7,
+          "longest_common_text": "red blue coloring of the edges of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_outputs/20260830T100411Z_c5a72aa2ee86/log.md"
+        },
+        {
+          "reference_word_count": 173,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "for",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/ramsey-r33_20260830T100017Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

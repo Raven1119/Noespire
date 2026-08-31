@@ -1,0 +1,4 @@
+{
+  "M_i": "For 1≤i≤k, the product of all moduli m_j with j≠i, with empty product equal to 1.",
+  "P_h": "For 1≤h≤k, the partial product m_1m_2⋯m_h."
+}

@@ -1,0 +1,188 @@
+{
+  "problem_id": "chinese-remainder",
+  "run_id": "chinese-remainder_20260830T102415Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 11,
+  "wrapper_worker_roles": 1,
+  "wrapper_verifier_roles": 1,
+  "expected_worker_roles": 1,
+  "expected_verifier_roles": 1,
+  "verifier_http_200": 1,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [],
+  "boundary_classifications": [],
+  "blocked_theorem_search_intents": [],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:35579"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 179,
+        "generated_word_count": 756,
+        "longest_common_token_span": 8,
+        "longest_common_text": "x y therefore x equiv y pmod m",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "ae6b563869cc7b96"
+      },
+      "all": [
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 756,
+          "longest_common_token_span": 8,
+          "longest_common_text": "x y therefore x equiv y pmod m",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "ae6b563869cc7b96"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 11,
+      "strongest": {
+        "reference_word_count": 179,
+        "generated_word_count": 1867,
+        "longest_common_token_span": 8,
+        "longest_common_text": "x y therefore x equiv y pmod m",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/global_memory/proof_attempt.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 99,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 616,
+          "longest_common_token_span": 4,
+          "longest_common_text": "i m i 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 1867,
+          "longest_common_token_span": 8,
+          "longest_common_text": "x y therefore x equiv y pmod m",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 176,
+          "longest_common_token_span": 3,
+          "longest_common_text": "cdots m k",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 146,
+          "longest_common_token_span": 1,
+          "longest_common_text": "and",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 154,
+          "longest_common_token_span": 2,
+          "longest_common_text": "m i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 8821,
+          "longest_common_token_span": 8,
+          "longest_common_text": "x y therefore x equiv y pmod m",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 656,
+          "longest_common_token_span": 1,
+          "longest_common_text": "with",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 4570,
+          "longest_common_token_span": 8,
+          "longest_common_text": "x y therefore x equiv y pmod m",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/verifier_outputs/20260830T102839Z_9c3c808650b5/log.md"
+        },
+        {
+          "reference_word_count": 179,
+          "generated_word_count": 72,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/chinese-remainder_20260830T102415Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

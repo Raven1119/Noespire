@@ -1,0 +1,18 @@
+{
+  "n": "the given positive integer",
+  "[n]": "the set \\{1,\\ldots,n\\}",
+  "\\mathcal A": "the given family of subsets of [n] in which no distinct member contains another",
+  "\\mathfrak S_n": "the set of all permutations of [n]",
+  "\\pi": "a permutation (\\pi_1,\\ldots,\\pi_n) in \\mathfrak S_n",
+  "\\pi_i": "the entry in position i of the permutation \\pi",
+  "I_j(\\pi)": "the set of the first j entries of \\pi, with I_0(\\pi)=\\varnothing",
+  "j": "an integer index satisfying 0\\le j\\le n",
+  "\\mathcal P": "the set of pairs (A,\\pi) with A\\in\\mathcal A and A=I_{|A|}(\\pi)",
+  "A": "a generic member of \\mathcal A",
+  "k": "the cardinality |A| of a fixed set A",
+  "m": "the integer \\lfloor n/2\\rfloor",
+  "M": "the middle-level binomial coefficient \\binom{n}{m}",
+  "\\mathcal B": "the family of all m-element subsets of [n]",
+  "B": "a generic member of \\mathcal B",
+  "C": "a generic member of \\mathcal B"
+}

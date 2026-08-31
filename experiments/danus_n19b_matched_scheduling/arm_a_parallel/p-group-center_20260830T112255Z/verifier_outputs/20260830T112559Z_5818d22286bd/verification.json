@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It establishes the conjugacy-class size formula by an explicit orbit-stabilizer bijection, shows that every noncentral conjugacy class has size divisible by p using Lagrange's theorem, identifies the singleton conjugacy classes with Z(G), and applies the class equation to conclude that p divides |Z(G)|. The final argument correctly uses |Z(G)| > 0 and p >= 2 to obtain a nonidentity central element. The statement is self-contained, all stated hypotheses are appropriately used, and no hard-prohibition violation, unsupported external reference, critical error, or reasoning gap is present.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

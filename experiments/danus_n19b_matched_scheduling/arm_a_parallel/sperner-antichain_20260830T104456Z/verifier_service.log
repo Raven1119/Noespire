@@ -1,0 +1,16 @@
+INFO:     Started server process [33705]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.19.0.1:37193 (Press CTRL+C to quit)
+INFO:     127.0.0.1:48004 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41876 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39360 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41882 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46710 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46698 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54848 - "POST /verify HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42608 - "POST /verify HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33705]

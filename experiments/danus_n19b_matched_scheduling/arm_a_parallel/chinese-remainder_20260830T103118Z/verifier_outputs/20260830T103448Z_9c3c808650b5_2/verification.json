@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It proves Bézout's lemma from well-ordering and division, derives coprimality with finite products, constructs a simultaneous solution using Bézout coefficients, and proves uniqueness modulo the full product by induction using pairwise coprimality. All hypotheses are used appropriately, no external or fact-graph references require checking, and none of Hard Prohibitions P1, P3, P5, or P6 is triggered.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

@@ -1,0 +1,571 @@
+{
+  "problem_id": "vandermonde-determinant",
+  "run_id": "vandermonde-determinant_20260830T105830Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 36,
+  "wrapper_worker_roles": 7,
+  "wrapper_verifier_roles": 7,
+  "expected_worker_roles": 7,
+  "expected_verifier_roles": 7,
+  "verifier_http_200": 7,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Vandermonde determinant identity and standard proof mechanisms",
+        "attempted_queries": [],
+        "primary_tool": "search_arxiv_theorems",
+        "reason": "The search_arxiv_theorems tool is not present in this worker's enabled tool surface; no external theorem is needed for the elementary self-contained proof.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Vandermonde determinant identity via determinant-preserving column operations"
+        ],
+        "primary_tool": null,
+        "reason": "The worker runtime does not expose search_arxiv_theorems. No external theorem is needed because the proof uses only determinant multilinearity, elementary column replacement, cofactor expansion, row factor extraction, and induction.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Vandermonde determinant identity and standard proof mechanisms",
+      "attempted_queries": [],
+      "primary_tool": "search_arxiv_theorems",
+      "reason": "The search_arxiv_theorems tool is not present in this worker's enabled tool surface; no external theorem is needed for the elementary self-contained proof.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Vandermonde determinant identity via determinant-preserving column operations"
+      ],
+      "primary_tool": null,
+      "reason": "The worker runtime does not expose search_arxiv_theorems. No external theorem is needed because the proof uses only determinant multilinearity, elementary column replacement, cofactor expansion, row factor extraction, and induction.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:57031"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 209,
+        "generated_word_count": 574,
+        "longest_common_token_span": 12,
+        "longest_common_text": "exactly prod 1 le i j le n x j x i",
+        "shared_12gram_count": 1,
+        "generated_12gram_coverage": 0.001776,
+        "manual_overlap_review": false,
+        "fact_id": "0b7d1a06656098fe"
+      },
+      "all": [
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 489,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "050883499820bf3e"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 574,
+          "longest_common_token_span": 12,
+          "longest_common_text": "exactly prod 1 le i j le n x j x i",
+          "shared_12gram_count": 1,
+          "generated_12gram_coverage": 0.001776,
+          "manual_overlap_review": false,
+          "fact_id": "0b7d1a06656098fe"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 613,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "6ab8638474a44a45"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 588,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "7c2961a5909277c1"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 564,
+          "longest_common_token_span": 9,
+          "longest_common_text": "prod i 1 n 1 x n x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "8e752b5ef32eefe8"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 492,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "c17836aa77edd312"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 554,
+          "longest_common_token_span": 4,
+          "longest_common_text": "when some of the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "eadaec484176a582"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 36,
+      "strongest": {
+        "reference_word_count": 209,
+        "generated_word_count": 2737,
+        "longest_common_token_span": 12,
+        "longest_common_text": "prod 1 le i j le n 1 x j x i",
+        "shared_12gram_count": 1,
+        "generated_12gram_coverage": 0.000377,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/global_memory/proof_attempt.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 693,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 445,
+          "longest_common_token_span": 4,
+          "longest_common_text": "d n x 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 122,
+          "longest_common_token_span": 4,
+          "longest_common_text": "d n 1 x",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/global_memory/plan.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 2737,
+          "longest_common_token_span": 12,
+          "longest_common_text": "prod 1 le i j le n 1 x j x i",
+          "shared_12gram_count": 1,
+          "generated_12gram_coverage": 0.000377,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 1410,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 266,
+          "longest_common_token_span": 3,
+          "longest_common_text": "x n 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 131,
+          "longest_common_token_span": 5,
+          "longest_common_text": "hence c d n 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 10035,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 103,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 72,
+          "longest_common_token_span": 2,
+          "longest_common_text": "x 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 6018,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high2/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 142,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 139,
+          "longest_common_token_span": 4,
+          "longest_common_text": "d n 1 x",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 9140,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high3/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 97,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high4/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 126,
+          "longest_common_token_span": 3,
+          "longest_common_text": "x i for",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high4/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 7412,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high4/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 124,
+          "longest_common_token_span": 2,
+          "longest_common_text": "n 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high5/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 85,
+          "longest_common_token_span": 4,
+          "longest_common_text": "on n for n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high5/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 7093,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high5/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 157,
+          "longest_common_token_span": 2,
+          "longest_common_text": "x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high6/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 101,
+          "longest_common_token_span": 3,
+          "longest_common_text": "the induction hypothesis",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high6/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 7040,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high6/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high7/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 83,
+          "longest_common_token_span": 3,
+          "longest_common_text": "n n 1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high7/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 6393,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/project_artifacts/workers/high7/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 667,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 3993,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110129Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 6427,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110148Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 4507,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110159Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 4367,
+          "longest_common_token_span": 12,
+          "longest_common_text": "exactly prod 1 le i j le n x j x i",
+          "shared_12gram_count": 1,
+          "generated_12gram_coverage": 0.000355,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110159Z_8b514239f6d1_2/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 4468,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110207Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 4202,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110217Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 4212,
+          "longest_common_token_span": 11,
+          "longest_common_text": "prod 1 le i j le n x j x i",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_outputs/20260830T110224Z_8b514239f6d1/log.md"
+        },
+        {
+          "reference_word_count": 209,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/vandermonde-determinant_20260830T105830Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

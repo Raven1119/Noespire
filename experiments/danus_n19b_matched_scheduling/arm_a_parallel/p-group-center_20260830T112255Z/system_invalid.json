@@ -1,0 +1,20 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "arm": "A",
+  "problem_id": "p-group-center",
+  "error_type": "ExternalInterruption",
+  "error": "matrix host process/session ended before cell completion; six workers reached max_rounds and one worker was left in a stale running state; no result.json was produced",
+  "recorded_at_utc": "2026-08-31T04:40:14.8877051Z",
+  "cleanup_error": null,
+  "artifact_preservation_error": null,
+  "verifier_run_ids_preserved": [
+    "20260830T112523Z_5818d22286bd",
+    "20260830T112532Z_5818d22286bd",
+    "20260830T112545Z_5818d22286bd",
+    "20260830T112559Z_5818d22286bd",
+    "20260830T112614Z_5818d22286bd",
+    "20260830T112628Z_5818d22286bd",
+    "20260830T112719Z_5818d22286bd",
+    "20260830T112921Z_5818d22286bd"
+  ]
+}

@@ -1,0 +1,1 @@
+Prove that every red-blue coloring of the edges of the complete graph on six vertices contains a monochromatic triangle, while there is a red-blue coloring of the complete graph on five vertices containing no monochromatic triangle. Equivalently, prove that the Ramsey number \(R(3,3)\) equals \(6\).

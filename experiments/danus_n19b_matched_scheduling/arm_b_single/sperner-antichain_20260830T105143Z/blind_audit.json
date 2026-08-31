@@ -1,0 +1,258 @@
+{
+  "problem_id": "sperner-antichain",
+  "run_id": "sperner-antichain_20260830T105143Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 11,
+  "wrapper_worker_roles": 1,
+  "wrapper_verifier_roles": 1,
+  "expected_worker_roles": 1,
+  "expected_verifier_roles": 1,
+  "verifier_http_200": 1,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [
+      {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log",
+        "line": 412,
+        "text": "/bin/bash -lc \"curl -L --max-time 25 -A 'Danus-math-worker/1.0' 'https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5' | sed -n '1,260p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high"
+      }
+    ],
+    "shell_network_call": [
+      {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log",
+        "line": 412,
+        "text": "/bin/bash -lc \"curl -L --max-time 25 -A 'Danus-math-worker/1.0' 'https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5' | sed -n '1,260p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high"
+      }
+    ]
+  },
+  "boundary_events": [
+    {
+      "capability": "shell_url_call",
+      "name": "shell_url_call",
+      "url": "https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log",
+      "line": 412,
+      "outcome_context": "/bin/bash -lc \"curl -L --max-time 25 -A 'Danus-math-worker/1.0' 'https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5' | sed -n '1,260p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high\n2026-08-30T10:53:50.816755Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc \"curl -L --max-time 25 -A 'Danus-math-worker/1.0' 'https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5' | sed -n '1,260p'\"`: ProcessFailed { message: \"Network access to \\\"export.arxiv.org\\\" was blocked: domain is not on the allowlist for the current sandbox mode.\" }\n exited -1 in 0ms:\nNetwork access to \"export.arxiv.org\" was blocked: domain is not on the allowlist for the current sandbox mode.\ndiff --git a/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high/local_memory/events.jsonl b/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high/local_memory/events.jsonl"
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Sperner theorem antichain maximal chain LYM inequality",
+        "attempted_queries": [],
+        "primary_tool": "search_arxiv_theorems",
+        "reason": "search_arxiv_theorems is not exposed in this worker session, and direct arXiv network access was blocked by the sandbox allowlist",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": "none",
+        "usefulness_tier": "discard"
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "OUTBOUND_ATTEMPT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Sperner theorem antichain maximal chain LYM inequality",
+      "attempted_queries": [],
+      "primary_tool": "search_arxiv_theorems",
+      "reason": "search_arxiv_theorems is not exposed in this worker session, and direct arXiv network access was blocked by the sandbox allowlist",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": "none",
+      "usefulness_tier": "discard"
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log",
+      "line": 412,
+      "url": "https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5"
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log",
+      "line": 413,
+      "url": "https://export.arxiv.org/api/query?search_query=all%3ASperner%20AND%20all%3Aantichain&start=0&max_results=5"
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:41191"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 212,
+        "generated_word_count": 556,
+        "longest_common_token_span": 10,
+        "longest_common_text": "sum a in mathcal a a n a le n",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "e1c56802b0dde6bf"
+      },
+      "all": [
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 556,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "e1c56802b0dde6bf"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 11,
+      "strongest": {
+        "reference_word_count": 212,
+        "generated_word_count": 12689,
+        "longest_common_token_span": 10,
+        "longest_common_text": "sum a in mathcal a a n a le n",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log"
+      },
+      "all": [
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 99,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 505,
+          "longest_common_token_span": 8,
+          "longest_common_text": "maximal chain contains at most one member of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 628,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the ratio binom n k 1 binom",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 175,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 199,
+          "longest_common_token_span": 2,
+          "longest_common_text": "maximal chain",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 164,
+          "longest_common_token_span": 5,
+          "longest_common_text": "k n k maximal chains",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 12689,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 656,
+          "longest_common_token_span": 1,
+          "longest_common_text": "a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 4359,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/verifier_outputs/20260830T105545Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 72,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_b_single/sperner-antichain_20260830T105143Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

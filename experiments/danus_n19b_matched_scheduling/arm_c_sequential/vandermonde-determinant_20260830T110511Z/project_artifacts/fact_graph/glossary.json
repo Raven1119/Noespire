@@ -1,0 +1,9 @@
+{
+  "n": "a positive integer equal to the number of rows and columns of the Vandermonde matrix",
+  "x_i": "the i-th real number in the list x_1,...,x_n",
+  "i": "an integer row index or product index",
+  "j": "an integer product index",
+  "k": "an integer column index used in the descending sequence of column operations",
+  "A": "the n-by-n Vandermonde matrix displayed in the theorem statement",
+  "C_k": "the current k-th column of the matrix during the column-operation sequence"
+}

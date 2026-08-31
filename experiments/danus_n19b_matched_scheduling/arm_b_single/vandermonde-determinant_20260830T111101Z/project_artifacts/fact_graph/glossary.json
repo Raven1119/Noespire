@@ -1,0 +1,4 @@
+{
+  "V_n(x_1,...,x_n)": "the determinant of the n by n matrix with entry x_i^(k-1) in row i and column k",
+  "C_k": "the kth column of the n by n matrix defining V_n(x_1,...,x_n)"
+}

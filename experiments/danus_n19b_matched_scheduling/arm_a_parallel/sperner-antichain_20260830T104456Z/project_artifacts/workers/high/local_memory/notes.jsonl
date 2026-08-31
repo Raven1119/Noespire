@@ -1,0 +1,2 @@
+{"timestamp":"2026-08-30T10:45:35Z","branch":"permutation_chain","note":"Complete direct route: count permutations for which A is an initial segment to obtain the LYM inequality; prove the central binomial coefficient is maximal via adjacent ratios and symmetry; conclude the bound and use the middle layer for equality. No predecessor facts or external theorems are needed."}
+{"timestamp":"2026-08-30T10:47:30Z","branch":"permutation_chain","note":"Target theorem is now verified as fact 4e6a0ae444666b6b. No further subgoal remains under TASK.md."}

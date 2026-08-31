@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. The six-vertex upper bound follows from the pigeonhole argument at an arbitrary vertex and an exhaustive two-case analysis on the three selected neighbors. The five-vertex lower-bound construction colors a 5-cycle red and its complementary 5-cycle blue; the displayed audit covers every vertex triple and shows that each contains both colors. The concluding argument correctly converts these results into R(3,3) = 6. The statement is self-contained, no hard prohibition is triggered, and there are no external or internal references requiring validation.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

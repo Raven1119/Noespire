@@ -1,0 +1,9 @@
+{
+  "R(3,3)": "The least positive integer n such that every red-blue coloring of the edges of the complete graph on n vertices contains a monochromatic triangle.",
+  "v": "The vertex fixed in the six-vertex argument.",
+  "a": "One of three selected neighbors of v joined to v in the common color X.",
+  "b": "One of three selected neighbors of v joined to v in the common color X.",
+  "c": "One of three selected neighbors of v joined to v in the common color X.",
+  "X": "The common color of the edges va, vb, and vc.",
+  "n": "A positive integer denoting the number of vertices in the definition of R(3,3)."
+}

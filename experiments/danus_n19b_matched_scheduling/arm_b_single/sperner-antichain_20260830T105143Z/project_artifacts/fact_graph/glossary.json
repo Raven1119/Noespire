@@ -1,0 +1,13 @@
+{
+  "X_i": "the set at rank i in a full chain",
+  "x_i": "the element added when passing from X_{i-1} to X_i",
+  "k": "the cardinality of a fixed member A of the family",
+  "\\mathcal I": "the set of incidences between members of the family and full chains containing them",
+  "C": "a full chain used in an incidence pair",
+  "m": "the integer floor(n/2)",
+  "M": "the middle binomial coefficient binom(n,m)",
+  "\\mathcal B": "the family of all m-element subsets of [n]",
+  "B": "a member of the family \\mathcal B",
+  "B_1": "a member of \\mathcal B used in the containment check",
+  "B_2": "a member of \\mathcal B used in the containment check"
+}

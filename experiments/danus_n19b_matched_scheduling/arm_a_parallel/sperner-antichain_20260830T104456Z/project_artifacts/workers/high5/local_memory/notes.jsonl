@@ -1,0 +1,2 @@
+{"note":"Planned self-contained proof: count pairs (A,pi) with A in the antichain and A equal to the first |A| entries of pi. Upper bound n! because the initial segments of one pi form a chain and the antichain meets it at most once. Exact count sum_A |A|!(n-|A|)! gives LYM after division. Prove C(n,k)<=C(n,floor(n/2)) using consecutive ratio (n-k)/(k+1). Then |A|/C(n,m)<=LYM sum<=1. Equality family is all m-subsets."}
+{"note":"Completed: verifier accepted the exact target as fact a46f9fed7f38b52f with no predecessors and no external references."}

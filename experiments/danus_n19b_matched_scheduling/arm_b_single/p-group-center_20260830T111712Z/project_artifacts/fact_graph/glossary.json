@@ -1,0 +1,12 @@
+{
+  "p": "the prime appearing in the theorem statement",
+  "G": "the finite group appearing in the theorem statement",
+  "n": "the integer at least 1 such that the order of G is p^n",
+  "Z(G)": "the center of G, consisting of the elements commuting with every element of G",
+  "C_G(x)": "the centralizer of x in G, namely the subgroup of elements of G that commute with x",
+  "Orb_G(x)": "the orbit of x under the conjugation action of G on itself",
+  "Stab_G(x)": "the stabilizer of x under the conjugation action of G on itself",
+  "e": "the identity element of G",
+  "r": "the number of non-singleton conjugacy orbits of G",
+  "x_i": "a chosen representative of the i-th non-singleton conjugacy orbit"
+}

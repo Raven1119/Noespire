@@ -1,0 +1,14 @@
+{
+  "name": "n19bc_sperner_antichain_20260830t103819z",
+  "model": "gpt-5.6-sol",
+  "roles": "high:7",
+  "workers": [
+    "high",
+    "high2",
+    "high3",
+    "high4",
+    "high5",
+    "high6",
+    "high7"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "n": "the positive integer giving the size of the matrix",
+  "x_i": "the real number in the ordered list with index i",
+  "A": "the n-by-n Vandermonde matrix whose (i,j)-entry is x_i^(j-1)",
+  "C_k": "the k-th column of that matrix, where 1<=k<=n",
+  "i": "a row index and the first index in a product pair",
+  "j": "the second index in a product pair",
+  "C": "the residual (n-1) by (n-1) matrix defined explicitly in the proof",
+  "k": "a column index used in the induction proof",
+  "D_n": "the determinant of the n-by-n matrix displayed on the left-hand side of the identity",
+  "t": "an auxiliary real variable used in the inductive step",
+  "p(t)": "the determinant obtained by replacing the last row of the size-n Vandermonde matrix by (1,t,t^2,...,t^{n-1})",
+  "c": "the constant quotient in the factorization of p(t) by the factors t-x_i for 1<=i<=n-1",
+  "B": "the matrix obtained from A by the specified descending column replacements",
+  "B'": "the submatrix of B obtained by deleting its first row and first column",
+  "C_j": "the j-th column of A before it is replaced",
+  "y_r": "the r-th real variable used in the induction hypothesis"
+}

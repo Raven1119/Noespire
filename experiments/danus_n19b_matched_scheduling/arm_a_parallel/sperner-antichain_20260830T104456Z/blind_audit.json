@@ -1,0 +1,774 @@
+{
+  "problem_id": "sperner-antichain",
+  "run_id": "sperner-antichain_20260830T104456Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 35,
+  "wrapper_worker_roles": 7,
+  "wrapper_verifier_roles": 7,
+  "expected_worker_roles": 7,
+  "expected_verifier_roles": 7,
+  "verifier_http_200": 7,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [
+      {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log",
+        "line": 393,
+        "text": "/bin/bash -lc \"printf '\\\\nproject glossary\\\\n' && { sed -n '1,260p' ../../fact_graph/glossary.json 2>/dev/null || true; } && printf '\\\\narXiv API search\\\\n' && curl -L --max-time 20 -sS 'https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5' | sed -n '1,240p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19ba_sperner_antichain_20260830t104456z/workers/high7"
+      }
+    ],
+    "shell_network_call": [
+      {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log",
+        "line": 393,
+        "text": "/bin/bash -lc \"printf '\\\\nproject glossary\\\\n' && { sed -n '1,260p' ../../fact_graph/glossary.json 2>/dev/null || true; } && printf '\\\\narXiv API search\\\\n' && curl -L --max-time 20 -sS 'https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5' | sed -n '1,240p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19ba_sperner_antichain_20260830t104456z/workers/high7"
+      }
+    ]
+  },
+  "boundary_events": [
+    {
+      "capability": "shell_url_call",
+      "name": "shell_url_call",
+      "url": "https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5",
+      "attempted": true,
+      "blocked": true,
+      "bytes_received": 0,
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log",
+      "line": 393,
+      "outcome_context": "/bin/bash -lc \"printf '\\\\nproject glossary\\\\n' && { sed -n '1,260p' ../../fact_graph/glossary.json 2>/dev/null || true; } && printf '\\\\narXiv API search\\\\n' && curl -L --max-time 20 -sS 'https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5' | sed -n '1,240p'\" in /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19ba_sperner_antichain_20260830t104456z/workers/high7\n2026-08-30T10:46:56.473756Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc \"printf '\\\\nproject glossary\\\\n' && { sed -n '1,260p' ../../fact_graph/glossary.json 2>/dev/null || true; } && printf '\\\\narXiv API search\\\\n' && curl -L --max-time 20 -sS 'https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5' | sed -n '1,240p'\"`: ProcessFailed { message: \"Network access to \\\"export.arxiv.org\\\" was blocked: domain is not on the allowlist for the current sandbox mode.\" }\n exited -1 in 154ms:\n\nproject glossary"
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Sperner antichain LYM inequality permutation maximal chain"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. No external result is needed because the permutation double count is proved self-containedly.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Sperner antichain maximal-chain double counting LYM inequality",
+        "attempted_queries": [],
+        "primary_tool": null,
+        "reason": "Neither search_arxiv_theorems nor a built-in web-search endpoint is exposed in this worker session. No external theorem is needed because the intended argument derives every ingredient directly.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Every antichain of subsets of [n] has size at most binomial(n,floor(n/2)); permutation-chain or LYM proof",
+        "attempted_queries": [],
+        "primary_tool": null,
+        "reason": "Neither search_arxiv_theorems nor a web-search fallback is exposed in this worker session. No external result is needed or used in the proof.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high4/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Sperner antichain theorem subset Boolean lattice",
+          "binomial coefficient middle layer permutation chains LYM"
+        ],
+        "primary_tool": null,
+        "reason": "The mandated search_arxiv_theorems tool is not exposed in this worker session. No external theorem is needed because the complete LYM double count and binomial-unimodality argument will be proved directly.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Sperner theorem antichain LYM permutation maximal chains"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems endpoint is not exposed to this worker session. No external result is needed because the proof will derive the LYM inequality and binomial unimodality from first principles.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high6/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Sperner theorem antichain LYM permutation chains complete proof"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems endpoint is not exposed in this worker session. No external result is needed or used because the proof is elementary and fully derived.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": "Sperner antichain maximal-chain/LYM proof",
+        "attempted_queries": [],
+        "primary_tool": "search_arxiv_theorems unavailable in this worker tool surface",
+        "reason": "The named theorem-search tool is not exposed and export.arxiv.org is blocked by the sandbox allowlist. No external theorem will be used.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "OUTBOUND_ATTEMPT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Sperner antichain LYM inequality permutation maximal chain"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems tool is not exposed in this worker session. No external result is needed because the permutation double count is proved self-containedly.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high2/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Sperner antichain maximal-chain double counting LYM inequality",
+      "attempted_queries": [],
+      "primary_tool": null,
+      "reason": "Neither search_arxiv_theorems nor a built-in web-search endpoint is exposed in this worker session. No external theorem is needed because the intended argument derives every ingredient directly.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Every antichain of subsets of [n] has size at most binomial(n,floor(n/2)); permutation-chain or LYM proof",
+      "attempted_queries": [],
+      "primary_tool": null,
+      "reason": "Neither search_arxiv_theorems nor a web-search fallback is exposed in this worker session. No external result is needed or used in the proof.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high4/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Sperner antichain theorem subset Boolean lattice",
+        "binomial coefficient middle layer permutation chains LYM"
+      ],
+      "primary_tool": null,
+      "reason": "The mandated search_arxiv_theorems tool is not exposed in this worker session. No external theorem is needed because the complete LYM double count and binomial-unimodality argument will be proved directly.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high5/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Sperner theorem antichain LYM permutation maximal chains"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems endpoint is not exposed to this worker session. No external result is needed because the proof will derive the LYM inequality and binomial unimodality from first principles.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high6/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Sperner theorem antichain LYM permutation chains complete proof"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems endpoint is not exposed in this worker session. No external result is needed or used because the proof is elementary and fully derived.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": "Sperner antichain maximal-chain/LYM proof",
+      "attempted_queries": [],
+      "primary_tool": "search_arxiv_theorems unavailable in this worker tool surface",
+      "reason": "The named theorem-search tool is not exposed and export.arxiv.org is blocked by the sandbox allowlist. No external theorem will be used.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log",
+      "line": 393,
+      "url": "https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5"
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log",
+      "line": 394,
+      "url": "https://export.arxiv.org/api/query?search_query=all:%22Sperner%27s%20theorem%22&start=0&max_results=5"
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:37193"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 212,
+        "generated_word_count": 455,
+        "longest_common_token_span": 11,
+        "longest_common_text": "gives sum a in mathcal a a n a le n",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "39085573c7228cc9"
+      },
+      "all": [
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 439,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "01d5f7cce8e69015"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 406,
+          "longest_common_token_span": 9,
+          "longest_common_text": "sum a in mathcal a frac1 binom n a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "34a2de81f0cd6305"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 455,
+          "longest_common_token_span": 11,
+          "longest_common_text": "gives sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "39085573c7228cc9"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 487,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "3fb4a8364356b550"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 386,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "4e6a0ae444666b6b"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 541,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "5f849f00006c32a7"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 563,
+          "longest_common_token_span": 9,
+          "longest_common_text": "sum a in mathcal a frac1 binom n a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "a46f9fed7f38b52f"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 35,
+      "strongest": {
+        "reference_word_count": 212,
+        "generated_word_count": 1753,
+        "longest_common_token_span": 12,
+        "longest_common_text": "the ratio binom n k 1 binom nk n k k 1",
+        "shared_12gram_count": 1,
+        "generated_12gram_coverage": 0.000604,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/global_memory/conclusion.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 693,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 1753,
+          "longest_common_token_span": 12,
+          "longest_common_text": "the ratio binom n k 1 binom nk n k k 1",
+          "shared_12gram_count": 1,
+          "generated_12gram_coverage": 0.000604,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 2442,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 1249,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 163,
+          "longest_common_token_span": 2,
+          "longest_common_text": "maximal chain",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 82,
+          "longest_common_token_span": 3,
+          "longest_common_text": "a is an",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 8572,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 192,
+          "longest_common_token_span": 2,
+          "longest_common_text": "maximal chain",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 100,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the ratio binom n k 1 binom",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 8342,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the ratio binom n k 1 binom",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high2/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 289,
+          "longest_common_token_span": 3,
+          "longest_common_text": "n has size",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 97,
+          "longest_common_token_span": 4,
+          "longest_common_text": "gives sum a in",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 12979,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high3/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 173,
+          "longest_common_token_span": 2,
+          "longest_common_text": "boolean lattice",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high4/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 99,
+          "longest_common_token_span": 3,
+          "longest_common_text": "k n k",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high4/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 8793,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high4/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 199,
+          "longest_common_token_span": 4,
+          "longest_common_text": "exactly k n k",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high5/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 103,
+          "longest_common_token_span": 4,
+          "longest_common_text": "a a n a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high5/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 9914,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high5/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 287,
+          "longest_common_token_span": 3,
+          "longest_common_text": "k n k",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high6/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 188,
+          "longest_common_token_span": 6,
+          "longest_common_text": "ratio binom n k 1 binom",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high6/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 10853,
+          "longest_common_token_span": 6,
+          "longest_common_text": "ratio binom n k 1 binom",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high6/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 223,
+          "longest_common_token_span": 3,
+          "longest_common_text": "in the first",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 118,
+          "longest_common_token_span": 9,
+          "longest_common_text": "a maximal chain contains at most one member of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 10599,
+          "longest_common_token_span": 9,
+          "longest_common_text": "a maximal chain contains at most one member of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/project_artifacts/workers/high7/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 667,
+          "longest_common_token_span": 1,
+          "longest_common_text": "a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 5834,
+          "longest_common_token_span": 6,
+          "longest_common_text": "binom n lfloor n 2 rfloor",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104754Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 3985,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104804Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 4351,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104805Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 3514,
+          "longest_common_token_span": 9,
+          "longest_common_text": "sum a in mathcal a frac1 binom n a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104814Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 4499,
+          "longest_common_token_span": 9,
+          "longest_common_text": "sum a in mathcal a frac1 binom n a",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104816Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 6241,
+          "longest_common_token_span": 11,
+          "longest_common_text": "gives sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104834Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 4498,
+          "longest_common_token_span": 10,
+          "longest_common_text": "sum a in mathcal a a n a le n",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_outputs/20260830T104845Z_869b0ac4eb81/log.md"
+        },
+        {
+          "reference_word_count": 212,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "1",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/sperner-antichain_20260830T104456Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

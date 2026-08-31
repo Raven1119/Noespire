@@ -1,0 +1,13 @@
+{
+  "k": "a positive integer equal to the number of moduli and congruences",
+  "m_i": "the i-th pairwise coprime integer modulus, greater than 1",
+  "a_i": "the arbitrary integer prescribed modulo m_i",
+  "M": "the product m_1m_2...m_k",
+  "M_i": "the product of all m_j with j different from i",
+  "S": "the set of positive integer linear combinations used to prove Bézout's identity",
+  "c": "the least positive element of S",
+  "e_i": "the integer u_i M_i, congruent to 1 modulo m_i and 0 modulo all other moduli",
+  "x_0": "the explicitly constructed simultaneous solution",
+  "d": "the difference of two simultaneous solutions",
+  "P_r": "the partial product m_1m_2...m_r"
+}

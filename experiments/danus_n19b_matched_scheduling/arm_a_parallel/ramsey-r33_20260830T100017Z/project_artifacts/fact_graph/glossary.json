@@ -1,0 +1,16 @@
+{
+  "R(3,3)": "the least positive integer n such that every red-blue coloring of the edges of the complete graph on n vertices contains a triangle whose three edges have one color",
+  "v": "an arbitrary vertex in the complete graph on six vertices",
+  "x, y, z": "three distinct vertices joined to v by edges of one common color",
+  "c": "one of three distinct neighbors of v joined to v by edges of one common color",
+  "a": "one of three distinct neighbors of v joined to v by edges of one common color",
+  "b": "one of three distinct neighbors of v joined to v by edges of one common color",
+  "C": "the common color of the three selected edges incident to v",
+  "i": "An arbitrary vertex label in the five-vertex lower-bound construction; labels are interpreted modulo 5.",
+  "j": "a second vertex label distinct from i in the explicit five-vertex construction",
+  "n": "the number of vertices appearing in the definition of R(3,3)",
+  "\\gamma": "one of the two colors, chosen to occur on at least three edges incident with v",
+  "x": "one of three distinct vertices joined to v by an edge of color gamma",
+  "y": "a second of three distinct vertices joined to v by an edge of color gamma",
+  "z": "a third of three distinct vertices joined to v by an edge of color gamma"
+}

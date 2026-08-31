@@ -1,0 +1,97 @@
+$ bash bin/danus new n19bb_sperner_antichain_20260830t105143z --roles high:7 --model gpt-5.6-sol
+exit_code=0
+--- stdout ---
+created n19bb_sperner_antichain_20260830t105143z with 7 workers: high, high2, high3, high4, high5, high6, high7
+  /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high2 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high2 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high2/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high3 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high3 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high3/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high4 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high4 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high4/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high5 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high5 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high5/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high6 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high6 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high6/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus assign n19bb_sperner_antichain_20260830t105143z/high7 --task Develop a rigorous complete proof directly. Submit the complete theorem statement verbatim from PROBLEM.md as the Fact statement. Use only verifier-accepted predecessor Facts when genuinely needed. Do not weaken or paraphrase the target.
+
+exit_code=0
+--- stdout ---
+assigned n19bb_sperner_antichain_20260830t105143z/high7 -> /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/workers/high7/TASK.md
+
+--- stderr ---
+
+
+$ bash bin/danus start n19bb_sperner_antichain_20260830t105143z/high
+exit_code=0
+--- stdout ---
+high: started
+
+--- stderr ---
+
+
+$ bash bin/danus finalize n19bb_sperner_antichain_20260830t105143z e1c56802b0dde6bf
+exit_code=0
+--- stdout ---
+finalized target for n19bb_sperner_antichain_20260830t105143z: e1c56802b0dde6bf
+  wrote /mnt/c/Users/wmywb/PycharmProjects/Noespire/baselines/danus/runtime/projects/n19bb_sperner_antichain_20260830t105143z/TARGET.md
+
+--- stderr ---
+
+
+$ runtime/venv/bin/python -c from pathlib import Path; from danus.write_paper.assemble import closure_order; print(closure_order(Path('runtime/projects/n19bb_sperner_antichain_20260830t105143z')))
+exit_code=0
+--- stdout ---
+['e1c56802b0dde6bf']
+
+--- stderr ---
+
+
