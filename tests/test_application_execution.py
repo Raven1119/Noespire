@@ -9,6 +9,7 @@ from pathlib import Path
 import threading
 from tempfile import TemporaryDirectory
 import unittest
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -27,6 +28,14 @@ from application_fixtures import (
     run_attempt,
     wait_for,
 )
+
+
+class FakeCodexExec:
+    """Stands in for CodexExec so workdir wiring is testable without the
+    Codex CLI on PATH (records the resolved workdir, never spawns anything)."""
+
+    def __init__(self, *, workdir, **kwargs) -> None:
+        self.workdir = Path(workdir).resolve()
 
 
 def read_log(problem_dir: Path) -> list:
@@ -400,6 +409,76 @@ class ExecutionOutcomeTests(unittest.TestCase):
         self.assertEqual(event["attempt_id"], "attempt-000001")
         self.assertIn("execution_id", event)
         self.assertIn("ts", event)
+
+
+    def test_worker_invoked_is_appended_before_the_real_call(self) -> None:
+        problem_dir = self.builder.add_problem("p-worder", "Worker ordering theorem.")
+        observed = {}
+
+        class OrderingWorker:
+            def propose(self, *, problem, existing_facts, subgoal):
+                invoked = [
+                    event
+                    for event in read_log(problem_dir)
+                    if event["kind"] == "WORKER_INVOKED"
+                ]
+                observed["event"] = invoked[-1] if invoked else None
+                return CandidateFact(problem, "A candidate proof.", ())
+
+        self._run_once("p-worder", OrderingWorker, lambda: ScriptedVerifier(True))
+
+        # The inner worker itself observed the WORKER_INVOKED line already on
+        # disk when it ran (same before-call ordering contract as the verifier).
+        event = observed["event"]
+        self.assertIsNotNone(event)
+        self.assertEqual(event["problem_id"], "p-worder")
+        self.assertEqual(event["attempt_id"], "attempt-000001")
+        self.assertIn("execution_id", event)
+        self.assertIn("ts", event)
+
+
+class ExecutionWorkdirIsolationTests(unittest.TestCase):
+    """Production Codex isolation: the read-only sandbox workdir must not be
+    the workspaces root and must contain no problem data."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.builder = WorkspaceBuilder(Path(self.temporary.name))
+
+    def test_default_execution_workdir_is_a_dedicated_empty_dir(self) -> None:
+        self.builder.add_problem("p-data", "Secret theorem.")
+        service = ExecutionService(self.builder.root)
+
+        self.assertNotEqual(service.execution_workdir, service.workspaces_root)
+        # A dedicated child dir: problem workspaces are its siblings, never
+        # inside it, so the read-only sandbox sees no problem data.
+        self.assertEqual(service.execution_workdir.parent, service.workspaces_root)
+        # Lazy: constructing the service does not create it.
+        self.assertFalse(service.execution_workdir.exists())
+
+        import application.execution as execution_module
+
+        with mock.patch.object(execution_module, "CodexExec", FakeCodexExec):
+            worker = service.worker_factory()
+            verifier = service.verifier_factory()
+        self.assertEqual(worker.codex.workdir, service.execution_workdir.resolve())
+        self.assertEqual(verifier.codex.workdir, service.execution_workdir.resolve())
+        # Separate fresh CodexExec instances for worker and verifier.
+        self.assertIsNot(worker.codex, verifier.codex)
+        # Created on demand, and empty: no problem workspace inside.
+        self.assertEqual(list(service.execution_workdir.iterdir()), [])
+
+    def test_custom_execution_workdir_is_respected(self) -> None:
+        import application.execution as execution_module
+
+        custom = Path(self.temporary.name) / "custom-exec"
+        service = ExecutionService(self.builder.root, execution_workdir=custom)
+
+        self.assertEqual(service.execution_workdir, custom)
+        with mock.patch.object(execution_module, "CodexExec", FakeCodexExec):
+            worker = service.worker_factory()
+        self.assertEqual(worker.codex.workdir, custom.resolve())
 
 
 if __name__ == "__main__":

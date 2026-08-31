@@ -71,6 +71,48 @@ class _ActiveExecution:
     before_attempt_ids: FrozenSet[str]
 
 
+class _LoggingWorker:
+    """Worker adapter: WORKER_INVOKED appended BEFORE the inner call.
+
+    Per-attempt provenance for startup log completion: the attempt file
+    exists by the time ``propose`` runs (core ``_start_attempt`` writes it
+    before ``execute_obligation`` calls the worker), so the attempt_id
+    snapshot correlation resolves. A crash before this line leaves the
+    attempt at verdict RUNNING — the interrupted path, not log completion.
+    """
+
+    def __init__(
+        self,
+        inner,
+        service: "ExecutionService",
+        problem_dir: Path,
+        execution_id: str,
+        problem_id: str,
+        before_attempt_ids: FrozenSet[str],
+    ) -> None:
+        self._inner = inner
+        self._service = service
+        self._problem_dir = problem_dir
+        self._execution_id = execution_id
+        self._problem_id = problem_id
+        self._before_attempt_ids = before_attempt_ids
+
+    def propose(self, *, problem, existing_facts, subgoal):
+        self._service._append_event(
+            self._problem_dir,
+            {
+                "kind": "WORKER_INVOKED",
+                "execution_id": self._execution_id,
+                "problem_id": self._problem_id,
+                "attempt_id": _new_attempt_id(self._problem_dir, self._before_attempt_ids),
+                "ts": _utc_now(),
+            },
+        )
+        return self._inner.propose(
+            problem=problem, existing_facts=existing_facts, subgoal=subgoal
+        )
+
+
 class _LoggingVerifier:
     """Verifier adapter: VERIFIER_INVOKED appended BEFORE the inner call."""
 
@@ -110,24 +152,42 @@ class ExecutionService:
     """One instance per app. Owns the claim table, the execution log, and
     startup recovery. ``worker_factory`` / ``verifier_factory`` are the DI
     seam: no-arg callables returning objects with ``.propose(...)`` /
-    ``.verify(...)``; the production defaults build Codex-backed agents."""
+    ``.verify(...)``; the production defaults build Codex-backed agents.
+
+    ``execution_workdir`` is the production Codex sandbox workdir: a
+    dedicated EMPTY directory (default ``<workspaces_root>/_execution``,
+    created on demand at first execution) so the read-only sandbox never
+    sees any problem's facts/attempts. Worker and verifier get separate
+    fresh CodexExec instances.
+    """
 
     def __init__(
         self,
         workspaces_root: Path,
         worker_factory: Optional[Callable[[], object]] = None,
         verifier_factory: Optional[Callable[[], object]] = None,
+        execution_workdir: Optional[Path] = None,
     ) -> None:
         self.workspaces_root = Path(workspaces_root)
+        self.execution_workdir = (
+            Path(execution_workdir)
+            if execution_workdir is not None
+            else self.workspaces_root / "_execution"
+        )
         self.worker_factory = worker_factory or (
-            lambda: ResearchWorker(CodexExec(workdir=self.workspaces_root))
+            lambda: ResearchWorker(self._codex_exec())
         )
         self.verifier_factory = verifier_factory or (
-            lambda: ResearchVerifier(CodexExec(workdir=self.workspaces_root))
+            lambda: ResearchVerifier(self._codex_exec())
         )
         self._lock = Lock()
         self._active: Dict[str, _ActiveExecution] = {}
         self._log_locks: Dict[Path, Lock] = {}
+
+    def _codex_exec(self) -> CodexExec:
+        """Fresh CodexExec in the dedicated empty workdir (created on demand)."""
+        self.execution_workdir.mkdir(parents=True, exist_ok=True)
+        return CodexExec(workdir=self.execution_workdir)
 
     # -- claim lifecycle ---------------------------------------------------
 
@@ -193,12 +253,20 @@ class ExecutionService:
                 problem_id,
                 before,
             )
+            worker = _LoggingWorker(
+                self.worker_factory(),
+                self,
+                problem_dir,
+                execution_id,
+                problem_id,
+                before,
+            )
             result = solve_problem_once(
                 problem=ProblemSpec(problem_id, statement),
                 registry=ObligationRegistry(problem_dir / "obligations.json"),
                 graph=FactGraph(problem_dir),
                 author="noespire-app",
-                worker=self.worker_factory(),
+                worker=worker,
                 verifier=adapter,
             )
         except Exception:
@@ -285,6 +353,7 @@ class ExecutionService:
                 continue
             problem_dir = index.root / entry.problem_id
             self._recover_running_obligation(entry.problem_id, problem_dir)
+            self._recover_residual_running_attempts(entry.problem_id, problem_dir)
             self._complete_missing_finish_records(entry.problem_id, problem_dir)
 
     def _recover_running_obligation(self, problem_id: str, problem_dir: Path) -> None:
@@ -319,6 +388,42 @@ class ExecutionService:
             },
         )
 
+    def _recover_residual_running_attempts(self, problem_id: str, problem_dir: Path) -> None:
+        """A verdict-RUNNING attempt no recovery event names yet, under ANY
+        obligation status. Covers the crash between core ``_start_attempt``
+        (writes the attempt file, verdict RUNNING) and ``execute_obligation``'s
+        OPEN→RUNNING transition, where the obligation stays OPEN and step one
+        never fires. Runs AFTER step one, whose freshly appended event already
+        names its attempt — no double-append. No registry transition here;
+        step one owns obligation state."""
+        attempts = sorted((problem_dir / "attempts").glob("attempt-*.json"))
+        if not attempts:
+            return
+        events = read_execution_events(problem_dir)
+        recovered_ids = {
+            event.get("attempt_id")
+            for event in events
+            if event.get("kind") in ("RECOVERED_INTERRUPTED", "RECOVERED_DISCHARGED")
+        }
+        for path in attempts:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if raw["verdict"] != "RUNNING" or raw["attempt_id"] in recovered_ids:
+                continue
+            execution_id, verifier_called = self._orphan_binding(
+                problem_dir, raw["attempt_id"]
+            )
+            self._append_event(
+                problem_dir,
+                {
+                    "kind": "RECOVERED_INTERRUPTED",
+                    "execution_id": execution_id,
+                    "problem_id": problem_id,
+                    "attempt_id": raw["attempt_id"],
+                    "verifier_called": verifier_called,
+                    "ts": _utc_now(),
+                },
+            )
+
     def _complete_missing_finish_records(self, problem_id: str, problem_dir: Path) -> None:
         """Spec §7.3 step two (log completion): an attempt at verdict
         FAIL/ERROR/PASS with no ATTEMPT_FINISHED naming it died after the
@@ -326,21 +431,19 @@ class ExecutionService:
         Append the recovered finish record — ``started_at``/``finished_at``
         stay null (never fabricate timestamps); ``outcome_stage`` by
         observation. Attempts still at verdict RUNNING are excluded: they
-        belong to the interrupted path (step one)."""
+        belong to the interrupted path (step one).
+
+        Gate is PER-ATTEMPT provenance: only attempts named by a
+        WORKER_INVOKED or VERIFIER_INVOKED event are completed — both are
+        wrapper-only evidence, so such an attempt provably passed through
+        the V1 wrapper and "FAIL + no VERIFIER_INVOKED naming it" genuinely
+        means the contract guard fired. An attempt no event names (pre-V1 /
+        hand-seeded evidence, or a core failure before the worker call) is
+        never classified: no evidence, no guess (spec §5 honesty)."""
         attempts = sorted((problem_dir / "attempts").glob("attempt-*.json"))
         if not attempts:
             return
         events = read_execution_events(problem_dir)
-        if not events:
-            # No execution-log events at all: this workspace's attempts never
-            # passed through the V1 wrapper (pre-V1 or hand-seeded evidence),
-            # so "FAIL + no VERIFIER_INVOKED" would be a guess, not an
-            # observation — no evidence, no classification (spec §5 honesty).
-            # Within a V1-logged problem the classification IS honest: the
-            # wrapper logs VERIFIER_INVOKED before every real verifier call,
-            # and a crash before the first log line leaves the attempt at
-            # verdict RUNNING — the interrupted path, not log completion.
-            return
         finished_attempt_ids = {
             event.get("attempt_id")
             for event in events
@@ -351,10 +454,17 @@ class ExecutionService:
             for event in events
             if event.get("kind") == "VERIFIER_INVOKED"
         }
+        provenanced_ids = {
+            event.get("attempt_id")
+            for event in events
+            if event.get("kind") in ("WORKER_INVOKED", "VERIFIER_INVOKED")
+        }
         for path in attempts:
             raw = json.loads(path.read_text(encoding="utf-8"))
             if raw["verdict"] == "RUNNING" or raw["attempt_id"] in finished_attempt_ids:
                 continue
+            if raw["attempt_id"] not in provenanced_ids:
+                continue  # no wrapper evidence for THIS attempt — never guess
             invocation = invocations.get(raw["attempt_id"])
             verifier_called = invocation is not None
             if raw["verdict"] == "PASS":

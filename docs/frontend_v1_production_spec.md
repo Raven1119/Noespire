@@ -264,12 +264,28 @@ No job scheduler, no queue, no cancellation. A thread that outlives the
 Codex subprocess timeout (600 s default in `CodexExec`) finishes on its own;
 that is the only timeout story in V1.
 
+Codex isolation (Slice 3 freeze amendment): the production worker and
+verifier factories build separate fresh `CodexExec` instances whose sandbox
+workdir is a dedicated **empty** directory (default
+`<workspaces_root>/_execution`, overridable via `ExecutionService`'s
+`execution_workdir`) — never the workspaces root. The fresh verifier must
+depend only on the candidate/predecessors in its prompt; giving its
+read-only sandbox sight of other problems' facts/attempts would be
+unnecessary evidence leakage.
+
 ### 7.2 Execution log (application-owned evidence)
 
-The wrapper injects its own verifier adapter around the real verifier and
-appends JSON lines to `_execution_log.jsonl`. Three event kinds:
+The wrapper injects its own worker/verifier adapters around the real agents
+and appends JSON lines to `_execution_log.jsonl`. Four event kinds:
 
-- `VERIFIER_INVOKED` — `{"execution_id", "problem_id", "attempt_id", "ts"}`,
+- `WORKER_INVOKED` — `{"execution_id", "problem_id", "attempt_id", "ts"}`,
+  appended by the wrapper's worker adapter **before** it calls the real
+  worker. The attempt file already exists at this point (core
+  `_start_attempt` precedes `execute_obligation`), so `attempt_id` resolves
+  by the same snapshot correlation. Together with `VERIFIER_INVOKED` this
+  is the **per-attempt provenance** the log-completion gate requires: both
+  events are wrapper-only evidence that the named attempt provably passed
+  through the V1 wrapper.- `VERIFIER_INVOKED` — `{"execution_id", "problem_id", "attempt_id", "ts"}`,
   appended by the wrapper's verifier adapter **before** it calls the real
   verifier. If the process dies after the verifier returned but before the
   finish record, recovery still knows the fresh verifier was actually called.
@@ -337,6 +353,20 @@ On server start, for each indexed problem whose registry obligation is
    including `verifier_called: true` when a `VERIFIER_INVOKED` event exists
    for that execution.
 
+**Residual RUNNING attempts (Slice 3 freeze amendment).** Core `_start_attempt`
+writes the attempt file at verdict `RUNNING` *before* `execute_obligation`
+performs the OPEN→RUNNING transition (`problem.py:107` precedes
+`obligation_execution.py:44`). A crash in that window leaves obligation
+OPEN + attempt RUNNING + no live execution, which the RUNNING-obligation
+pass above never sees. Startup recovery therefore runs a **residual pass**
+(after the RUNNING-obligation pass, before log completion) over every
+attempt of every indexed problem with no live execution: any attempt at
+verdict `RUNNING` that no `RECOVERED_INTERRUPTED`/`RECOVERED_DISCHARGED`
+event already names gets a `RECOVERED_INTERRUPTED` bound to its attempt_id
+(orphan binding as in §7.2) with **no registry transition** — obligation
+state belongs to the first pass alone. The pass is idempotent via the
+event marker, and never touches an attempt belonging to a live execution.
+
 Read-model mapping: an attempt file left at `verdict: "RUNNING"` is
 reported with `failure_class: "interrupted"` **only when a
 `RECOVERED_INTERRUPTED` event names that attempt_id** — a later attempt of
@@ -354,7 +384,7 @@ the attempt verdict (FAIL/ERROR/PASS), but the process died before the
 wrapper appended `ATTEMPT_FINISHED` — startup recovery skips the problem
 because no obligation is RUNNING, and the read model would find a FAIL
 attempt with no finish record and no way to classify it. Startup recovery
-therefore runs a **second pass after the RUNNING-obligation pass**, over
+therefore runs a **completion pass after the residual-RUNNING pass**, over
 every attempt of every indexed problem:
 
 - For each attempt whose verdict is `FAIL`, `ERROR`, or `PASS` and for which
@@ -367,20 +397,26 @@ every attempt of every indexed problem:
   `FRESH_VERIFIER_REJECT`; `FAIL` with no such invocation →
   `CONTRACT_GUARD`.
 - Attempts at verdict `RUNNING` are excluded — they belong to the
-  interrupted path above.
-- **Honesty gate:** if the problem has *no execution-log events at all*,
-  the completion pass skips it entirely. A workspace whose very first
-  execution crashed in the guard/ERROR late window leaves an empty log and
-  is indistinguishable from pre-V1 data — classifying it would be a guess.
-  Such attempts honestly report `failure_class: null` until a new attempt
-  runs. This is an accepted limitation, not a bug.
+  interrupted paths above.
+- **Honesty gate — per-attempt provenance (amended at Slice 3 freeze):** an
+  attempt is completed **only when a `WORKER_INVOKED` or `VERIFIER_INVOKED`
+  event names its attempt_id**. Both are wrapper-only evidence, so a named
+  attempt provably passed through the V1 wrapper and "FAIL + no
+  `VERIFIER_INVOKED` naming it" genuinely means the contract guard fired.
+  An attempt no event names — pre-V1 or hand-seeded evidence, or a core
+  failure before the worker call — is never classified: its `failure_class`
+  stays `null`. A problem-level gate ("the problem has any log events") is
+  explicitly rejected: it would retroactively classify pre-V1 attempts once
+  the problem later runs one V1 execution, which is classification without
+  evidence.
 - Idempotence follows from the finish-record existence check: a second
   startup finds every completed attempt already named by an
   `ATTEMPT_FINISHED` and appends nothing.
-- Ordering matters: the RUNNING-obligation pass runs first so that a
-  window-E recovery (`RECOVERED_DISCHARGED`, which leaves the attempt at
-  `PASS`) is resolved before the completion pass would otherwise write its
-  finish record.
+- Ordering matters: the RUNNING-obligation pass runs first (so a window-E
+  recovery resolves before any finish record is written), the
+  residual-RUNNING pass second (so verdict-RUNNING attempts are marked
+  interrupted before the completion pass would skip them anyway), and the
+  completion pass last.
 
 ### 7.4 Exception mapping
 

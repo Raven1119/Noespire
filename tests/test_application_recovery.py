@@ -254,13 +254,12 @@ class LogCompletionTests(RecoveryTestBase):
         from application_fixtures import run_attempt
 
         problem_dir = self.builder.add_problem("p-guard", "Guard theorem.")
-        # A prior V1-wrapped execution proves this workspace is V1-logged
-        # (a contract-guard execution emits no log line of its own before the
-        # finish record, so without V1 history the gate cannot distinguish
-        # this crash from pre-V1 evidence).
+        # A prior V1-wrapped execution, fully logged.
         first = run_attempt(problem_dir, "p-guard", "Guard theorem.", accepted=False)
         append_log(
             problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-1", "problem_id": "p-guard",
+             "attempt_id": first.attempt_id, "ts": "t0"},
             {"kind": "VERIFIER_INVOKED", "execution_id": "exec-1", "problem_id": "p-guard",
              "attempt_id": first.attempt_id, "ts": "t0"},
             {"kind": "ATTEMPT_FINISHED", "execution_id": "exec-1", "problem_id": "p-guard",
@@ -271,8 +270,14 @@ class LogCompletionTests(RecoveryTestBase):
             problem_dir, "p-guard", "Guard theorem.",
             accepted=True, candidate_statement="A different statement.",
         )
-        # Contract guard: the fresh verifier was never called -> no
-        # VERIFIER_INVOKED names THIS attempt.
+        # Contract-guard late window: the V1 wrapper DID run (WORKER_INVOKED
+        # names this attempt) but the fresh verifier was never called (no
+        # VERIFIER_INVOKED names it) and the crash took the finish record.
+        append_log(
+            problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-2", "problem_id": "p-guard",
+             "attempt_id": result.attempt_id, "ts": "t2"},
+        )
 
         self._service().recover_stale_running()
 
@@ -292,12 +297,11 @@ class LogCompletionTests(RecoveryTestBase):
         from application_fixtures import run_attempt, run_error_attempt
 
         problem_dir = self.builder.add_problem("p-err", "Error theorem.")
-        # Prior V1-wrapped execution, as in the contract-guard variant: an
-        # ERROR execution whose crash predates its finish record leaves no
-        # log line of its own.
         first = run_attempt(problem_dir, "p-err", "Error theorem.", accepted=False)
         append_log(
             problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-1", "problem_id": "p-err",
+             "attempt_id": first.attempt_id, "ts": "t0"},
             {"kind": "VERIFIER_INVOKED", "execution_id": "exec-1", "problem_id": "p-err",
              "attempt_id": first.attempt_id, "ts": "t0"},
             {"kind": "ATTEMPT_FINISHED", "execution_id": "exec-1", "problem_id": "p-err",
@@ -305,6 +309,13 @@ class LogCompletionTests(RecoveryTestBase):
              "outcome_stage": "FRESH_VERIFIER_REJECT", "verifier_called": True},
         )
         run_error_attempt(problem_dir, "p-err", "Error theorem.")
+        # The V1 wrapper invoked the worker (which then raised); the crash
+        # took the finish record.
+        append_log(
+            problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-2", "problem_id": "p-err",
+             "attempt_id": "attempt-000002", "ts": "t2"},
+        )
 
         self._service().recover_stale_running()
 
@@ -319,6 +330,73 @@ class LogCompletionTests(RecoveryTestBase):
         self.assertTrue(event["recovered"])
         attempt = build_read_model(self.builder.root, "p-err")["attempts"][1]
         self.assertEqual(attempt["failure_class"], "runtime")
+
+    def test_error_attempt_without_wrapper_provenance_stays_unclassified(self) -> None:
+        """An ERROR attempt no attempt-named event covers (the core raised
+        before the wrapper's worker call, or pre-wrapper evidence) is never
+        classified — no evidence, no guess."""
+        from application_fixtures import run_attempt, run_error_attempt
+
+        problem_dir = self.builder.add_problem("p-errx", "Error theorem X.")
+        first = run_attempt(problem_dir, "p-errx", "Error theorem X.", accepted=False)
+        append_log(
+            problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-1", "problem_id": "p-errx",
+             "attempt_id": first.attempt_id, "ts": "t0"},
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-1", "problem_id": "p-errx",
+             "attempt_id": first.attempt_id, "ts": "t0"},
+            {"kind": "ATTEMPT_FINISHED", "execution_id": "exec-1", "problem_id": "p-errx",
+             "attempt_id": first.attempt_id, "started_at": "t0", "finished_at": "t1",
+             "outcome_stage": "FRESH_VERIFIER_REJECT", "verifier_called": True},
+        )
+        run_error_attempt(problem_dir, "p-errx", "Error theorem X.")
+        # attempt-000002 has NO attempt-named event.
+
+        self._service().recover_stale_running()
+
+        finishes = [
+            e for e in read_log(problem_dir)
+            if e["kind"] == "ATTEMPT_FINISHED" and e["attempt_id"] == "attempt-000002"
+        ]
+        self.assertEqual(finishes, [])
+        attempt = build_read_model(self.builder.root, "p-errx")["attempts"][1]
+        self.assertEqual(attempt["verdict"], "ERROR")
+        # Verdict ERROR maps to failure_class runtime from the verdict alone;
+        # what must not happen is a fabricated finish record.
+        self.assertIsNone(attempt["started_at"])
+        self.assertIsNone(attempt["finished_at"])
+
+    def test_pre_v1_attempt_survives_later_v1_execution_unclassified(self) -> None:
+        """Per-attempt provenance: a pre-V1 FAIL attempt stays unclassified
+        even after the problem later had a fully-logged V1 execution."""
+        from application_fixtures import run_attempt
+
+        problem_dir = self.builder.add_problem("p-mixed", "Mixed theorem.")
+        pre_v1 = run_attempt(problem_dir, "p-mixed", "Mixed theorem.", accepted=False)
+        # No events name the pre-V1 attempt. Later: a real V1-wrapped PASS.
+        v1 = run_attempt(problem_dir, "p-mixed", "Mixed theorem.", accepted=True)
+        append_log(
+            problem_dir,
+            {"kind": "WORKER_INVOKED", "execution_id": "exec-v1", "problem_id": "p-mixed",
+             "attempt_id": v1.attempt_id, "ts": "t0"},
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-v1", "problem_id": "p-mixed",
+             "attempt_id": v1.attempt_id, "ts": "t1"},
+            {"kind": "ATTEMPT_FINISHED", "execution_id": "exec-v1", "problem_id": "p-mixed",
+             "attempt_id": v1.attempt_id, "started_at": "t0", "finished_at": "t2",
+             "outcome_stage": "PASS", "verifier_called": True},
+        )
+
+        self._service().recover_stale_running()
+
+        finishes = [
+            e for e in read_log(problem_dir)
+            if e["kind"] == "ATTEMPT_FINISHED" and e["attempt_id"] == pre_v1.attempt_id
+        ]
+        self.assertEqual(finishes, [])
+        model = build_read_model(self.builder.root, "p-mixed")
+        self.assertEqual(model["status"], "SOLVED")
+        self.assertIsNone(model["attempts"][0]["failure_class"])
+        self.assertIsNone(model["attempts"][1]["failure_class"])
 
     def test_late_window_pass_after_recovered_resolve(self) -> None:
         """Window E ordering: step one resolves the obligation first, then log
@@ -495,6 +573,64 @@ class TornLogLineRecoveryTests(RecoveryTestBase):
             [e for e in read_log(problem_dir) if e["kind"] == "RECOVERED_INTERRUPTED"],
             recovered,
         )
+
+
+class ResidualRunningAttemptTests(RecoveryTestBase):
+    """Crash between core _start_attempt (attempt file, verdict RUNNING) and
+    execute_obligation's OPEN->RUNNING transition: obligation stays OPEN but
+    the residual attempt must still be recovered as interrupted."""
+
+    def test_residual_running_attempt_under_open_obligation_is_recovered(self) -> None:
+        problem_dir = self.builder.add_problem("p-res", "Residual theorem.")
+        add_open_obligation(problem_dir, "p-res", "Residual theorem.")
+        attempt_id = write_residual_running_attempt(problem_dir, "p-res")
+
+        self._service().recover_stale_running()
+
+        # No registry transition was needed or performed.
+        self.assertEqual(
+            registry_for(problem_dir).get("root:p-res").status, ObligationStatus.OPEN
+        )
+        (event,) = read_log(problem_dir)
+        self.assertEqual(event["kind"], "RECOVERED_INTERRUPTED")
+        self.assertEqual(event["attempt_id"], attempt_id)
+        self.assertTrue(event["execution_id"].startswith("recovery-"))
+        self.assertFalse(event["verifier_called"])
+        model = build_read_model(self.builder.root, "p-res")
+        self.assertEqual(model["status"], "OPEN")
+        self.assertEqual(model["attempts"][0]["failure_class"], "interrupted")
+        self.assertNotIn("live", model)
+
+    def test_residual_recovery_is_idempotent_across_startups(self) -> None:
+        problem_dir = self.builder.add_problem("p-res2", "Residual theorem two.")
+        add_open_obligation(problem_dir, "p-res2", "Residual theorem two.")
+        write_residual_running_attempt(problem_dir, "p-res2")
+
+        self._service().recover_stale_running()
+        first = read_log(problem_dir)
+        self._service().recover_stale_running()
+
+        self.assertEqual(read_log(problem_dir), first)
+
+    def test_residual_running_attempt_with_orphan_invocation_binds_it(self) -> None:
+        problem_dir = self.builder.add_problem("p-res3", "Residual theorem three.")
+        add_open_obligation(problem_dir, "p-res3", "Residual theorem three.")
+        attempt_id = write_residual_running_attempt(
+            problem_dir, "p-res3", candidate=candidate_artifact("Residual theorem three.")
+        )
+        append_log(
+            problem_dir,
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-res", "problem_id": "p-res3",
+             "attempt_id": attempt_id, "ts": "t1"},
+        )
+
+        self._service().recover_stale_running()
+
+        (event,) = [e for e in read_log(problem_dir) if e["kind"] == "RECOVERED_INTERRUPTED"]
+        self.assertEqual(event["execution_id"], "exec-res")
+        self.assertTrue(event["verifier_called"])
+        model = build_read_model(self.builder.root, "p-res3")
+        self.assertTrue(model["attempts"][0]["verifier_called"])
 
 
 class RecoveryIdempotenceTests(RecoveryTestBase):
