@@ -6,6 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "noespire"
 version = "0.0.1"
 requires-python = ">=3.9"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "httpx",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
