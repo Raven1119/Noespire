@@ -36,16 +36,16 @@ def build_read_model(workspaces_root: Path, problem_id: str) -> dict:
     problem_dir = index.root / problem_id
     obligation = _root_obligation(problem_dir, problem_id)
     events = _read_events(problem_dir)
-    recovered = any(
-        event.get("kind") in ("RECOVERED_INTERRUPTED", "RECOVERED_DISCHARGED")
-        for event in events
-    )
     attempts = [
         _project_attempt(raw, events)
         for raw in _read_attempts(problem_dir)
     ]
 
-    status = _status(obligation, recovered)
+    # Recovery binds per attempt (spec §7.2): only a RECOVERED_INTERRUPTED
+    # naming the LATEST attempt suppresses live-RUNNING; earlier recovery
+    # history must not affect a new attempt of the same problem.
+    latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
+    status = _status(obligation, latest_recovered)
     target_fact = None
     supporting_closure: List[dict] = []
     if status == "SOLVED":
@@ -81,12 +81,9 @@ def build_problem_list(workspaces_root: Path) -> List[dict]:
 def _summarize(problem_dir: Path, entry: ProblemEntry) -> dict:
     obligation = _root_obligation(problem_dir, entry.problem_id)
     events = _read_events(problem_dir)
-    recovered = any(
-        event.get("kind") in ("RECOVERED_INTERRUPTED", "RECOVERED_DISCHARGED")
-        for event in events
-    )
     attempts = [_project_attempt(raw, events) for raw in _read_attempts(problem_dir)]
-    status = _status(obligation, recovered)
+    latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
+    status = _status(obligation, latest_recovered)
     activity = workspace_last_activity(problem_dir)
     return {
         "problem_id": entry.problem_id,
@@ -195,7 +192,7 @@ def _project_attempt(raw: dict, events: List[dict]) -> dict:
         "finished_at": finished.get("finished_at") if finished else None,
     }
     if payload["failure_class"] == "interrupted":
-        payload["verifier_called"] = _orphan_verifier_invoked(events)
+        payload["verifier_called"] = _interrupted_verifier_called(raw["attempt_id"], events)
     return payload
 
 
@@ -208,20 +205,41 @@ def _failure_class(raw: dict, finished: Optional[dict], events: List[dict]) -> O
             "CONTRACT_GUARD": "contract",
             "FRESH_VERIFIER_REJECT": "rejection",
         }.get(finished.get("outcome_stage"))
-    if raw["verdict"] == "RUNNING" and any(
-        event.get("kind") == "RECOVERED_INTERRUPTED" for event in events
-    ):
+    if raw["verdict"] == "RUNNING" and _recovery_for(raw["attempt_id"], events) is not None:
         return "interrupted"
     return None
 
 
-def _orphan_verifier_invoked(events: List[dict]) -> bool:
-    """True when a crashed execution invoked the verifier but never finished.
+def _recovery_for(attempt_id: str, events: List[dict]) -> Optional[dict]:
+    """The RECOVERED_INTERRUPTED naming this attempt (per-attempt binding, §7.2)."""
+    return next(
+        (
+            event
+            for event in events
+            if event.get("kind") == "RECOVERED_INTERRUPTED"
+            and event.get("attempt_id") == attempt_id
+        ),
+        None,
+    )
 
-    VERIFIER_INVOKED is appended before the real verifier call (spec §7.2), so
-    an invocation record without a matching ATTEMPT_FINISHED means the fresh
-    verifier ran and its verdict was lost to the crash.
+
+def _interrupted_verifier_called(attempt_id: str, events: List[dict]) -> bool:
+    """Whether the crashed execution behind an interrupted attempt ran the verifier.
+
+    Correlation rule: the RECOVERED_INTERRUPTED naming the attempt carries the
+    crashed execution's ``execution_id``; ``verifier_called`` is True iff an
+    orphan VERIFIER_INVOKED — one whose execution has no ATTEMPT_FINISHED —
+    shares that execution_id. (VERIFIER_INVOKED is appended before the real
+    verifier call, spec §7.2, so the orphan proves the fresh verifier ran and
+    its verdict was lost to the crash.) A recovery event without an
+    ``execution_id``, or one whose orphan invocation cannot be attributed to
+    the same execution, yields False — never a guess. Only called for attempts
+    already classified ``interrupted``.
     """
+    recovery = _recovery_for(attempt_id, events) or {}
+    execution_id = recovery.get("execution_id")
+    if execution_id is None:
+        return False
     finished_ids = {
         event.get("execution_id")
         for event in events
@@ -229,16 +247,19 @@ def _orphan_verifier_invoked(events: List[dict]) -> bool:
     }
     return any(
         event.get("kind") == "VERIFIER_INVOKED"
-        and event.get("execution_id") not in finished_ids
+        and event.get("execution_id") == execution_id
+        and execution_id not in finished_ids
         for event in events
     )
 
 
-def _status(obligation: Optional[ProofObligation], recovered: bool) -> str:
+def _status(obligation: Optional[ProofObligation], latest_recovered: bool) -> str:
+    """RUNNING iff the obligation is RUNNING and the latest attempt is not
+    covered by a RECOVERED_INTERRUPTED naming it (spec §7.2 per-attempt binding)."""
     if obligation is None:
         return "OPEN"
     if obligation.status is ObligationStatus.DISCHARGED:
         return "SOLVED"
-    if obligation.status is ObligationStatus.RUNNING and not recovered:
+    if obligation.status is ObligationStatus.RUNNING and not latest_recovered:
         return "RUNNING"
     return "OPEN"

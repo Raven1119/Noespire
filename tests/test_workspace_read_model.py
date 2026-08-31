@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
@@ -250,7 +251,7 @@ class RecoveryProjectionTests(unittest.TestCase):
             problem_dir,
             {"kind": "VERIFIER_INVOKED", "execution_id": "exec-9", "problem_id": "p-crash", "ts": "t1"},
             {"kind": "RECOVERED_INTERRUPTED", "execution_id": "exec-9", "problem_id": "p-crash",
-             "ts": "t2", "verifier_called": True},
+             "attempt_id": attempt_id, "ts": "t2", "verifier_called": True},
         )
 
         model = build_read_model(self.builder.root, "p-crash")
@@ -267,11 +268,11 @@ class RecoveryProjectionTests(unittest.TestCase):
         problem_dir = self.builder.add_problem("p-crash", "Crash theorem.")
         add_open_obligation(problem_dir, "p-crash", "Crash theorem.")
         registry_for(problem_dir).transition("root:p-crash", ObligationStatus.RUNNING)
-        write_residual_running_attempt(problem_dir, "p-crash")
+        attempt_id = write_residual_running_attempt(problem_dir, "p-crash")
         append_log(
             problem_dir,
             {"kind": "RECOVERED_INTERRUPTED", "execution_id": "exec-9", "problem_id": "p-crash",
-             "ts": "t2", "verifier_called": False},
+             "attempt_id": attempt_id, "ts": "t2", "verifier_called": False},
         )
 
         model = build_read_model(self.builder.root, "p-crash")
@@ -284,10 +285,11 @@ class RecoveryProjectionTests(unittest.TestCase):
 
     def test_recovered_discharged_reads_as_ordinary_solved(self) -> None:
         problem_dir = self.builder.add_problem("p-crash", "Crash theorem.")
-        run_attempt(problem_dir, "p-crash", "Crash theorem.", accepted=True)
+        result = run_attempt(problem_dir, "p-crash", "Crash theorem.", accepted=True)
         append_log(
             problem_dir,
-            {"kind": "RECOVERED_DISCHARGED", "execution_id": "exec-9", "problem_id": "p-crash", "ts": "t2"},
+            {"kind": "RECOVERED_DISCHARGED", "execution_id": "exec-9", "problem_id": "p-crash",
+             "attempt_id": result.attempt_id, "ts": "t2"},
         )
 
         model = build_read_model(self.builder.root, "p-crash")
@@ -296,6 +298,35 @@ class RecoveryProjectionTests(unittest.TestCase):
         self.assertEqual(model["attempts"][0]["verdict"], "PASS")
         self.assertIsNone(model["attempts"][0]["failure_class"])
         self.assertIsNotNone(model["target_fact"])
+
+    def test_new_attempt_after_recovery_is_live_running(self) -> None:
+        problem_dir = self.builder.add_problem("p-retry", "Retry theorem.")
+        add_open_obligation(problem_dir, "p-retry", "Retry theorem.")
+        interrupted_id = write_residual_running_attempt(problem_dir, "p-retry", sequence=1)
+        append_log(
+            problem_dir,
+            {"kind": "VERIFIER_INVOKED", "execution_id": "exec-1", "problem_id": "p-retry", "ts": "t1"},
+            {"kind": "RECOVERED_INTERRUPTED", "execution_id": "exec-1", "problem_id": "p-retry",
+             "attempt_id": interrupted_id, "ts": "t2", "verifier_called": True},
+        )
+        # After recovery (obligation back to OPEN) a new attempt starts:
+        # obligation RUNNING again, attempt-000002 in flight with a candidate.
+        registry_for(problem_dir).transition("root:p-retry", ObligationStatus.RUNNING)
+        live_id = write_residual_running_attempt(
+            problem_dir, "p-retry", sequence=2, candidate=candidate_artifact("Retry theorem.")
+        )
+
+        model = build_read_model(self.builder.root, "p-retry")
+
+        self.assertEqual(model["status"], "RUNNING")
+        self.assertEqual(model["running_phase_hint"], "checking")
+        first, second = model["attempts"]
+        self.assertEqual(first["attempt_id"], interrupted_id)
+        self.assertEqual(first["failure_class"], "interrupted")
+        self.assertTrue(first["verifier_called"])
+        self.assertEqual(second["attempt_id"], live_id)
+        self.assertIsNone(second["failure_class"])
+        self.assertNotIn("verifier_called", second)
 
 
 class ProblemListTests(unittest.TestCase):
@@ -335,9 +366,13 @@ class ProblemListTests(unittest.TestCase):
 
     def test_list_is_ordered_by_last_activity_descending(self) -> None:
         first_dir = self.builder.add_problem("p-earlier", "Earlier theorem.")
-        run_attempt(first_dir, "p-earlier", "Earlier theorem.", accepted=False)
+        first = run_attempt(first_dir, "p-earlier", "Earlier theorem.", accepted=False)
         second_dir = self.builder.add_problem("p-later", "Later theorem.")
-        run_attempt(second_dir, "p-later", "Later theorem.", accepted=False)
+        second = run_attempt(second_dir, "p-later", "Later theorem.", accepted=False)
+        # Pin mtimes explicitly: same-tick writes would tie and fall back to
+        # the problem_id tie-break, making this test timing-flaky.
+        os.utime(first_dir / "attempts" / f"{first.attempt_id}.json", (1_000_000.0, 1_000_000.0))
+        os.utime(second_dir / "attempts" / f"{second.attempt_id}.json", (2_000_000.0, 2_000_000.0))
 
         listed = build_problem_list(self.builder.root)
 
