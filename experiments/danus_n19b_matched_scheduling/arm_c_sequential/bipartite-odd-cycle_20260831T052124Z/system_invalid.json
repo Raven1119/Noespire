@@ -1,0 +1,11 @@
+{
+  "classification": "SYSTEM_INVALID_RUN",
+  "arm": "C",
+  "problem_id": "bipartite-odd-cycle",
+  "error_type": "ExternalInterruption",
+  "error": "matrix host process/session ended after the first sequential worker started and before any verifier call or result.json was produced",
+  "recorded_at_utc": "2026-08-31T05:35:33.956967Z",
+  "cleanup_error": null,
+  "artifact_preservation_error": null,
+  "verifier_run_ids_preserved": []
+}

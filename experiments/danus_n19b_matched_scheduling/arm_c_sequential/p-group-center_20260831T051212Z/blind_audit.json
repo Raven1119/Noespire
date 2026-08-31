@@ -1,0 +1,240 @@
+{
+  "problem_id": "p-group-center",
+  "run_id": "p-group-center_20260831T051212Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 11,
+  "wrapper_worker_roles": 1,
+  "wrapper_verifier_roles": 2,
+  "expected_worker_roles": 1,
+  "expected_verifier_roles": 2,
+  "verifier_http_200": 2,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "finite p-group center order divisible by p class equation",
+          "conjugacy classes centralizers orbit sizes divisible p"
+        ],
+        "primary_tool": null,
+        "reason": "The search_arxiv_theorems endpoint is not exposed in this worker session. No external result is needed because the proof is elementary and self-contained.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "finite p-group center order divisible by p class equation",
+        "conjugacy classes centralizers orbit sizes divisible p"
+      ],
+      "primary_tool": null,
+      "reason": "The search_arxiv_theorems endpoint is not exposed in this worker session. No external result is needed because the proof is elementary and self-contained.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:59529"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 180,
+        "generated_word_count": 564,
+        "longest_common_token_span": 5,
+        "longest_common_text": "is a positive multiple of",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "25ce3bdb78bf40cf"
+      },
+      "all": [
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 564,
+          "longest_common_token_span": 5,
+          "longest_common_text": "is a positive multiple of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "25ce3bdb78bf40cf"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 465,
+          "longest_common_token_span": 5,
+          "longest_common_text": "is a positive multiple of",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "47151e5c66fc8fbd"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 11,
+      "strongest": {
+        "reference_word_count": 180,
+        "generated_word_count": 565,
+        "longest_common_token_span": 6,
+        "longest_common_text": "z g is divisible by p",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/global_memory/proof_attempt.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 147,
+          "longest_common_token_span": 1,
+          "longest_common_text": "c",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 565,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 331,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 321,
+          "longest_common_token_span": 6,
+          "longest_common_text": "a power of p greater than",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 54,
+          "longest_common_token_span": 2,
+          "longest_common_text": "conjugacy class",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 13783,
+          "longest_common_token_span": 6,
+          "longest_common_text": "a power of p greater than",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 685,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4119,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/verifier_outputs/20260831T051513Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4679,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/verifier_outputs/20260831T051728Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 85,
+          "longest_common_token_span": 1,
+          "longest_common_text": "on",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_c_sequential/p-group-center_20260831T051212Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}

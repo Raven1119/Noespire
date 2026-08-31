@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and self-contained. It establishes the conjugacy-class size formula via the centralizer, shows every noncentral conjugacy class has size divisible by p, and applies the class equation to conclude that p divides |Z(G)|. Since the identity lies in Z(G), this divisibility implies |Z(G)| is at least p and hence the center contains a nonidentity element.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

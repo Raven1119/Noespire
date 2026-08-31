@@ -1,0 +1,12 @@
+{
+  "worker": "high3",
+  "state": "max_rounds",
+  "round": 1,
+  "started_at": 1788152624.659056,
+  "pid": 472,
+  "updated_at": 1788153018.5840716,
+  "round_started_at": 1788152624.6771593,
+  "last_round_at": 1788153013.5600185,
+  "last_rc": 0,
+  "last_fact_id": "6da5d6d10a31b361"
+}

@@ -1,0 +1,1 @@
+Let \(p\) be a prime and let \(G\) be a finite group of order \(p^n\) for some integer \(n\ge 1\). Prove that the order of the center \(Z(G)\) is divisible by \(p\), and hence that \(Z(G)\) contains a nonidentity element.

@@ -1,0 +1,9 @@
+{
+  "verification_report": {
+    "summary": "The proof is correct and complete. It derives the class equation from the conjugation action, shows that every noncentral conjugacy class has size divisible by p, concludes that |Z(G)| is divisible by p, and then uses the identity element and p >= 2 to obtain a nonidentity central element. The statement is self-contained, all hypotheses are used, and there are no external references or prohibited justification patterns.",
+    "critical_errors": [],
+    "gaps": []
+  },
+  "verdict": "correct",
+  "repair_hints": ""
+}

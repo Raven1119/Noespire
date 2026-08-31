@@ -1,0 +1,2 @@
+{"timestamp":"2026-08-31T05:04:08Z","branch":"class_equation","note":"Resumed full-target assignment. Shared memory and fact graph had no prior relevant items. Complete route: conjugation action gives noncentral class size [G:C_G(x)]=p^(n-k), hence divisible by p; class equation yields |Z(G)| congruent to |G| congruent to 0 mod p; then |Z(G)|>=p>=2."}
+{"timestamp":"2026-08-31T05:09:40Z","branch":"class_equation","note":"Target closed by verifier-accepted fact 02e0c2c064b780a2. Fact search confirms the exact PROBLEM.md statement is present in the graph."}

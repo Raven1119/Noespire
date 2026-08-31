@@ -1,0 +1,17 @@
+{
+  "G": "the finite group in the theorem",
+  "p": "the prime in the theorem",
+  "n": "the integer with n>=1 and |G|=p^n",
+  "Z(G)": "the center of G",
+  "C_G(x)": "the centralizer of an element x in G",
+  "[G:C_G(x)]": "the number of left cosets of C_G(x) in G",
+  "g,h,a,b,c,x": "arbitrary elements of G used in the proof",
+  "m": "the integer satisfying |C_G(x)|=p^m",
+  "x_i": "a representative of a non-singleton conjugacy class",
+  "i": "an index ranging over the non-singleton conjugacy classes",
+  "C_G(x_i)": "the centralizer of a chosen noncentral conjugacy-class representative x_i",
+  "[G:C_G(x_i)]": "the number of left cosets of C_G(x_i) in G",
+  "gC_G(x)": "the left coset of C_G(x) represented by g",
+  "hC_G(x)": "the left coset of C_G(x) represented by h",
+  "a,b,c,g,h,x": "elements of G used in the proof"
+}

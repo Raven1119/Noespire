@@ -1,0 +1,608 @@
+{
+  "problem_id": "p-group-center",
+  "run_id": "p-group-center_20260831T050325Z",
+  "integrity": "BLIND_INTEGRITY_PASS",
+  "capability_gate": "PASS",
+  "trace_file_count": 35,
+  "wrapper_worker_roles": 7,
+  "wrapper_verifier_roles": 7,
+  "expected_worker_roles": 7,
+  "expected_verifier_roles": 7,
+  "verifier_http_200": 7,
+  "verifier_http_500": 0,
+  "policy_counts_match": true,
+  "external_call_hits": {
+    "arxiv_mcp_call": [],
+    "builtin_web_call": [],
+    "shell_url_call": [],
+    "shell_network_call": []
+  },
+  "boundary_events": [
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Every finite group of order p^n with n at least 1 has center of order divisible by p",
+          "conjugation class equation centralizer index in a finite p-group"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems tool is not available in this worker tool surface. The proof will not cite or rely on any external result; orbit-size and class-equation steps will be proved directly.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "Every finite group of prime-power order has center whose order is divisible by the prime",
+          "conjugation action class equation finite p-group center"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems endpoint is not exposed in this worker session; no external theorem is needed because the class-equation argument will be proved self-containedly.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    },
+    {
+      "intent": true,
+      "attempted": false,
+      "source": {
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high6/local_memory/events.jsonl",
+        "line": 2,
+        "event_type": "search_math_results_stalled",
+        "query": null,
+        "attempted_queries": [
+          "finite p-group center nontrivial via class equation",
+          "conjugation orbit sizes in finite p-groups"
+        ],
+        "primary_tool": null,
+        "reason": "The required search_arxiv_theorems tool and built-in web-search fallback were not exposed in this worker's available tool surface. No external theorem was used; the final proof derives the needed class-size formula directly from an explicit coset bijection.",
+        "results_summary": [],
+        "useful_references": [],
+        "results": [],
+        "literature_depth_reached": null,
+        "usefulness_tier": null
+      }
+    }
+  ],
+  "boundary_classifications": [
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED",
+    "SEARCH_INTENT_BLOCKED"
+  ],
+  "blocked_theorem_search_intents": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Every finite group of order p^n with n at least 1 has center of order divisible by p",
+        "conjugation class equation centralizer index in a finite p-group"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems tool is not available in this worker tool surface. The proof will not cite or rely on any external result; orbit-size and class-equation steps will be proved directly.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high3/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "Every finite group of prime-power order has center whose order is divisible by the prime",
+        "conjugation action class equation finite p-group center"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems endpoint is not exposed in this worker session; no external theorem is needed because the class-equation argument will be proved self-containedly.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    },
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high6/local_memory/events.jsonl",
+      "line": 2,
+      "event_type": "search_math_results_stalled",
+      "query": null,
+      "attempted_queries": [
+        "finite p-group center nontrivial via class equation",
+        "conjugation orbit sizes in finite p-groups"
+      ],
+      "primary_tool": null,
+      "reason": "The required search_arxiv_theorems tool and built-in web-search fallback were not exposed in this worker's available tool surface. No external theorem was used; the final proof derives the needed class-size formula directly from an explicit coset bijection.",
+      "results_summary": [],
+      "useful_references": [],
+      "results": [],
+      "literature_depth_reached": null,
+      "usefulness_tier": null
+    }
+  ],
+  "completed_theorem_search_events": [],
+  "source_lookup_hits": [],
+  "protected_path_hits": [],
+  "unexpected_url_occurrences": [
+    {
+      "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_service.log",
+      "line": 4,
+      "url": "http://127.19.0.1:35799"
+    }
+  ],
+  "reference_overlap": {
+    "method": "token-level longest contiguous match plus 12-token n-gram coverage",
+    "threshold": "FAIL when a trace has a >=25-token span or >=10% generated 12-gram coverage",
+    "accepted_facts": {
+      "strongest": {
+        "reference_word_count": 180,
+        "generated_word_count": 352,
+        "longest_common_token_span": 8,
+        "longest_common_text": "yields the class equation g z g sum",
+        "shared_12gram_count": 0,
+        "generated_12gram_coverage": 0.0,
+        "manual_overlap_review": false,
+        "fact_id": "6755847422926d62"
+      },
+      "all": [
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 415,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "02e0c2c064b780a2"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 358,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "0362c38893af8f96"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 480,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "1dbb0e55cead0ef6"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 352,
+          "longest_common_token_span": 8,
+          "longest_common_text": "yields the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "6755847422926d62"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 457,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "6da5d6d10a31b361"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 380,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "83d9a62b15ff6dc0"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 546,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "fact_id": "a2e6ca370d02e17a"
+        }
+      ]
+    },
+    "all_llm_and_tool_traces": {
+      "files_checked": 35,
+      "strongest": {
+        "reference_word_count": 180,
+        "generated_word_count": 2705,
+        "longest_common_token_span": 12,
+        "longest_common_text": "it has at least p elements and therefore contains a nonidentity element",
+        "shared_12gram_count": 1,
+        "generated_12gram_coverage": 0.000416,
+        "manual_overlap_review": false,
+        "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/global_memory/proof_attempt.jsonl"
+      },
+      "all": [
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 700,
+          "longest_common_token_span": 1,
+          "longest_common_text": "c",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/blind_wrapper.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 1881,
+          "longest_common_token_span": 11,
+          "longest_common_text": "conjugacy class exactly when it commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/global_memory/conclusion.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 2705,
+          "longest_common_token_span": 12,
+          "longest_common_text": "it has at least p elements and therefore contains a nonidentity element",
+          "shared_12gram_count": 1,
+          "generated_12gram_coverage": 0.000416,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/global_memory/proof_attempt.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 1132,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/global_memory/verification.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 239,
+          "longest_common_token_span": 5,
+          "longest_common_text": "p partitioning g into its",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 146,
+          "longest_common_token_span": 7,
+          "longest_common_text": "let g act on itself by conjugation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 11634,
+          "longest_common_token_span": 7,
+          "longest_common_text": "let g act on itself by conjugation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 110,
+          "longest_common_token_span": 2,
+          "longest_common_text": "class equation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high2/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 91,
+          "longest_common_token_span": 4,
+          "longest_common_text": "g c g x",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high2/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 8031,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high2/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 233,
+          "longest_common_token_span": 5,
+          "longest_common_text": "has size divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high3/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 117,
+          "longest_common_token_span": 4,
+          "longest_common_text": "g c g x",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high3/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 12172,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high3/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 145,
+          "longest_common_token_span": 3,
+          "longest_common_text": "to z g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high4/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 108,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high4/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 7969,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high4/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 107,
+          "longest_common_token_span": 2,
+          "longest_common_text": "class equation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high5/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 84,
+          "longest_common_token_span": 4,
+          "longest_common_text": "g c g x",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high5/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 5358,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high5/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 211,
+          "longest_common_token_span": 3,
+          "longest_common_text": "the class equation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high6/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 60,
+          "longest_common_token_span": 3,
+          "longest_common_text": "divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high6/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 6776,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high6/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 59,
+          "longest_common_token_span": 2,
+          "longest_common_text": "class equation",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high7/local_memory/events.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 73,
+          "longest_common_token_span": 5,
+          "longest_common_text": "has size divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high7/local_memory/notes.jsonl"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 6546,
+          "longest_common_token_span": 6,
+          "longest_common_text": "z g is divisible by p",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/project_artifacts/workers/high7/logs/round_1.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 696,
+          "longest_common_token_span": 1,
+          "longest_common_text": "the",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/stdout_stderr.log"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 9,
+          "longest_common_token_span": 1,
+          "longest_common_text": "is",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/strategy_master_trace.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 6688,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050604Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 3736,
+          "longest_common_token_span": 8,
+          "longest_common_text": "yields the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050604Z_5818d22286bd_2/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 6867,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050636Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4053,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050636Z_5818d22286bd_2/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4339,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050637Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4351,
+          "longest_common_token_span": 6,
+          "longest_common_text": "commutes with every element of g",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050656Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 4472,
+          "longest_common_token_span": 7,
+          "longest_common_text": "the class equation g z g sum",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_outputs/20260831T050701Z_5818d22286bd/log.md"
+        },
+        {
+          "reference_word_count": 180,
+          "generated_word_count": 150,
+          "longest_common_token_span": 1,
+          "longest_common_text": "on",
+          "shared_12gram_count": 0,
+          "generated_12gram_coverage": 0.0,
+          "manual_overlap_review": false,
+          "file": "experiments/danus_n19b_matched_scheduling/arm_a_parallel/p-group-center_20260831T050325Z/verifier_service.log"
+        }
+      ]
+    },
+    "assessment": "NO_SUSPICIOUS_TEXTUAL_OVERLAP"
+  },
+  "decision_basis": "PASS requires the pre-math capability gate, one blind wrapper invocation per proof-relevant session, successful verifier calls, and no successful external access, source/private-path marker, or suspicious reference overlap in formal-run traces. Search intent and mechanically blocked outbound attempts are recorded but do not constitute retrieval; a call without explicit blocking evidence is conservatively a success."
+}
