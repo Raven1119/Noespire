@@ -29,7 +29,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Callable, Dict, FrozenSet, List, Optional, Set
+from typing import Callable, Dict, FrozenSet, Optional, Set
 from uuid import uuid4
 
 from research.agents import CodexExec, ResearchVerifier, ResearchWorker
@@ -38,7 +38,7 @@ from research.graph import FactGraph
 from research.obligation import ObligationRegistry, ObligationStatus
 from research.problem import ProblemSpec, solve_problem_once
 
-from .problem_index import EXECUTION_LOG_NAME, ProblemIndex
+from .problem_index import EXECUTION_LOG_NAME, ProblemIndex, read_execution_events
 
 
 class AlreadyRunningError(RuntimeError):
@@ -180,15 +180,19 @@ class ExecutionService:
         started_at = _utc_now()
         with self._lock:
             before = self._active[problem_id].before_attempt_ids
-        adapter = _LoggingVerifier(
-            self.verifier_factory(),
-            self,
-            problem_dir,
-            execution_id,
-            problem_id,
-            before,
-        )
+        adapter: Optional[_LoggingVerifier] = None
         try:
+            # ALL factory/adapter construction happens inside the try: a
+            # raising factory (e.g. Codex CLI unavailable) must still land in
+            # the finally below — the claim release is unconditional.
+            adapter = _LoggingVerifier(
+                self.verifier_factory(),
+                self,
+                problem_dir,
+                execution_id,
+                problem_id,
+                before,
+            )
             result = solve_problem_once(
                 problem=ProblemSpec(problem_id, statement),
                 registry=ObligationRegistry(problem_dir / "obligations.json"),
@@ -204,11 +208,12 @@ class ExecutionService:
                     "kind": "ATTEMPT_FINISHED",
                     "execution_id": execution_id,
                     "problem_id": problem_id,
+                    # None when the failure predates _start_attempt.
                     "attempt_id": _new_attempt_id(problem_dir, before),
                     "started_at": started_at,
                     "finished_at": _utc_now(),
                     "outcome_stage": "RUNTIME_ERROR",
-                    "verifier_called": adapter.called,
+                    "verifier_called": adapter.called if adapter is not None else False,
                 },
             )
         else:
@@ -245,61 +250,137 @@ class ExecutionService:
 
     def _append_event(self, problem_dir: Path, event: dict) -> None:
         """Append one JSON line; per-workspace lock so a background thread
-        and recovery never interleave or half-write a line."""
+        and recovery never interleave or half-write a line.
+
+        If a previous crash left a torn final line (no trailing newline),
+        truncate it before appending: a half-written line is not parseable
+        evidence, and keeping the log's invariant — at most the FINAL line
+        may be torn — is what licenses the shared tolerant reader.
+        """
+        log = problem_dir / EXECUTION_LOG_NAME
         line = json.dumps(event, ensure_ascii=False) + "\n"
         with self._log_lock(problem_dir):
-            with (problem_dir / EXECUTION_LOG_NAME).open("a", encoding="utf-8") as handle:
+            if log.is_file():
+                data = log.read_bytes()
+                if data and not data.endswith(b"\n"):
+                    log.write_bytes(data[: data.rfind(b"\n") + 1])
+            with log.open("a", encoding="utf-8") as handle:
                 handle.write(line)
                 handle.flush()
-
-    def _read_events(self, problem_dir: Path) -> List[dict]:
-        log = problem_dir / EXECUTION_LOG_NAME
-        if not log.is_file():
-            return []
-        return [
-            json.loads(line)
-            for line in log.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
 
     # -- startup recovery (spec §7.3) --------------------------------------
 
     def recover_stale_running(self) -> None:
         """Run once at startup, over indexed problems only.
 
-        Idempotent: afterwards the obligation is no longer RUNNING, so a
-        second run finds nothing to do and appends nothing.
+        Per problem: step one recovers stale RUNNING obligations (§7.3),
+        step two completes missing finish records for attempts whose verdict
+        was persisted but whose ATTEMPT_FINISHED was lost to a late crash.
+        Idempotent: afterwards no obligation is RUNNING and every finished
+        attempt has an ATTEMPT_FINISHED, so a second run appends nothing.
         """
         index = ProblemIndex(self.workspaces_root)
         for entry in index.list():
             if self.is_running(entry.problem_id):
                 continue
             problem_dir = index.root / entry.problem_id
-            obligation = self._root_obligation(problem_dir, entry.problem_id)
-            if obligation is None or obligation.status is not ObligationStatus.RUNNING:
+            self._recover_running_obligation(entry.problem_id, problem_dir)
+            self._complete_missing_finish_records(entry.problem_id, problem_dir)
+
+    def _recover_running_obligation(self, problem_id: str, problem_dir: Path) -> None:
+        """Spec §7.3 step one: inspect before resetting a stale RUNNING
+        obligation — never a mechanical RUNNING→OPEN."""
+        obligation = self._root_obligation(problem_dir, problem_id)
+        if obligation is None or obligation.status is not ObligationStatus.RUNNING:
+            return
+        attempts = sorted((problem_dir / "attempts").glob("attempt-*.json"))
+        latest = (
+            json.loads(attempts[-1].read_text(encoding="utf-8"))
+            if attempts
+            else None
+        )
+        attempt_id = latest["attempt_id"] if latest else None
+        if latest is not None and self._try_recover_discharged(
+            problem_id, problem_dir, obligation, latest
+        ):
+            return
+        registry = ObligationRegistry(problem_dir / "obligations.json")
+        registry.transition(obligation.obligation_id, ObligationStatus.OPEN)
+        execution_id, verifier_called = self._orphan_binding(problem_dir, attempt_id)
+        self._append_event(
+            problem_dir,
+            {
+                "kind": "RECOVERED_INTERRUPTED",
+                "execution_id": execution_id,
+                "problem_id": problem_id,
+                "attempt_id": attempt_id,
+                "verifier_called": verifier_called,
+                "ts": _utc_now(),
+            },
+        )
+
+    def _complete_missing_finish_records(self, problem_id: str, problem_dir: Path) -> None:
+        """Spec §7.3 step two (log completion): an attempt at verdict
+        FAIL/ERROR/PASS with no ATTEMPT_FINISHED naming it died after the
+        core persisted the verdict but before the wrapper logged the finish.
+        Append the recovered finish record — ``started_at``/``finished_at``
+        stay null (never fabricate timestamps); ``outcome_stage`` by
+        observation. Attempts still at verdict RUNNING are excluded: they
+        belong to the interrupted path (step one)."""
+        attempts = sorted((problem_dir / "attempts").glob("attempt-*.json"))
+        if not attempts:
+            return
+        events = read_execution_events(problem_dir)
+        if not events:
+            # No execution-log events at all: this workspace's attempts never
+            # passed through the V1 wrapper (pre-V1 or hand-seeded evidence),
+            # so "FAIL + no VERIFIER_INVOKED" would be a guess, not an
+            # observation — no evidence, no classification (spec §5 honesty).
+            # Within a V1-logged problem the classification IS honest: the
+            # wrapper logs VERIFIER_INVOKED before every real verifier call,
+            # and a crash before the first log line leaves the attempt at
+            # verdict RUNNING — the interrupted path, not log completion.
+            return
+        finished_attempt_ids = {
+            event.get("attempt_id")
+            for event in events
+            if event.get("kind") == "ATTEMPT_FINISHED"
+        }
+        invocations = {
+            event.get("attempt_id"): event
+            for event in events
+            if event.get("kind") == "VERIFIER_INVOKED"
+        }
+        for path in attempts:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if raw["verdict"] == "RUNNING" or raw["attempt_id"] in finished_attempt_ids:
                 continue
-            attempts = sorted((problem_dir / "attempts").glob("attempt-*.json"))
-            latest = (
-                json.loads(attempts[-1].read_text(encoding="utf-8"))
-                if attempts
-                else None
-            )
-            if latest is not None and self._try_recover_discharged(
-                entry.problem_id, problem_dir, obligation, latest
-            ):
-                continue
-            registry = ObligationRegistry(problem_dir / "obligations.json")
-            registry.transition(obligation.obligation_id, ObligationStatus.OPEN)
-            execution_id, verifier_called = self._orphan_binding(problem_dir)
+            invocation = invocations.get(raw["attempt_id"])
+            verifier_called = invocation is not None
+            if raw["verdict"] == "PASS":
+                outcome = "PASS"
+            elif raw["verdict"] == "ERROR":
+                outcome = "RUNTIME_ERROR"
+            elif verifier_called:
+                outcome = "FRESH_VERIFIER_REJECT"
+            else:
+                outcome = "CONTRACT_GUARD"
             self._append_event(
                 problem_dir,
                 {
-                    "kind": "RECOVERED_INTERRUPTED",
-                    "execution_id": execution_id,
-                    "problem_id": entry.problem_id,
-                    "attempt_id": latest["attempt_id"] if latest else None,
+                    "kind": "ATTEMPT_FINISHED",
+                    "execution_id": (
+                        invocation["execution_id"]
+                        if invocation is not None
+                        else f"recovery-{uuid4().hex}"
+                    ),
+                    "problem_id": problem_id,
+                    "attempt_id": raw["attempt_id"],
+                    "started_at": None,
+                    "finished_at": None,
+                    "outcome_stage": outcome,
                     "verifier_called": verifier_called,
-                    "ts": _utc_now(),
+                    "recovered": True,
                 },
             )
 
@@ -335,7 +416,7 @@ class ExecutionService:
             return False
         registry = ObligationRegistry(problem_dir / "obligations.json")
         registry.resolve(obligation.obligation_id, fact_id, graph)
-        execution_id, _ = self._orphan_binding(problem_dir)
+        execution_id, _ = self._orphan_binding(problem_dir, latest_attempt["attempt_id"])
         self._append_event(
             problem_dir,
             {
@@ -348,16 +429,18 @@ class ExecutionService:
         )
         return True
 
-    def _orphan_binding(self, problem_dir: Path) -> tuple:
+    def _orphan_binding(self, problem_dir: Path, attempt_id: Optional[str]) -> tuple:
         """(execution_id, verifier_called) for a recovery event.
 
-        If exactly one orphan VERIFIER_INVOKED (its execution has no
-        ATTEMPT_FINISHED) exists in this workspace's log, reuse its
-        execution_id — that binding is what makes the read model's
-        ``verifier_called`` projection honest. Otherwise a fresh
+        Binding is per-attempt: only a VERIFIER_INVOKED naming THE attempt
+        being recovered, whose execution has no ATTEMPT_FINISHED, counts as
+        orphan evidence — invocations consumed by earlier recoveries name
+        other attempts and are irrelevant. Exactly one match → reuse its
+        execution_id (that binding is what makes the read model's
+        ``verifier_called`` projection honest); otherwise a fresh
         ``recovery-<uuid>`` id.
         """
-        events = self._read_events(problem_dir)
+        events = read_execution_events(problem_dir)
         finished_ids = {
             event.get("execution_id")
             for event in events
@@ -367,9 +450,10 @@ class ExecutionService:
             event
             for event in events
             if event.get("kind") == "VERIFIER_INVOKED"
+            and event.get("attempt_id") == attempt_id
             and event.get("execution_id") not in finished_ids
         ]
-        if len(orphans) == 1:
+        if attempt_id is not None and len(orphans) == 1:
             return orphans[0]["execution_id"], True
         return f"recovery-{uuid4().hex}", False
 

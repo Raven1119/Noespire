@@ -22,9 +22,9 @@ from research.graph import FactGraph
 from research.obligation import ObligationRegistry, ObligationStatus, ProofObligation
 
 from .problem_index import (
-    EXECUTION_LOG_NAME,
     ProblemEntry,
     ProblemIndex,
+    read_execution_events,
     workspace_last_activity,
 )
 
@@ -200,24 +200,9 @@ def _read_attempts(problem_dir: Path) -> List[dict]:
 
 
 def _read_events(problem_dir: Path) -> List[dict]:
-    """Execution-log events. Only an unparseable FINAL line is tolerated
-    (crash mid-append artifact — skipped); a corrupt non-final line means
-    genuine corruption and raises — the read model never guesses (§5)."""
-    log = problem_dir / EXECUTION_LOG_NAME
-    if not log.is_file():
-        return []
-    lines = [
-        line for line in log.read_text(encoding="utf-8").splitlines() if line.strip()
-    ]
-    events = []
-    for position, line in enumerate(lines):
-        try:
-            events.append(json.loads(line))
-        except json.JSONDecodeError:
-            if position == len(lines) - 1:
-                continue
-            raise
-    return events
+    """Execution-log events via the single shared tolerant reader (only an
+    unparseable FINAL line is skipped; corrupt non-final lines raise)."""
+    return read_execution_events(problem_dir)
 
 
 def _project_attempt(raw: dict, events: List[dict]) -> dict:

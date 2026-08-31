@@ -207,6 +207,74 @@ class ExecutionHttpTests(unittest.TestCase):
             self.assertEqual(model["status"], "SOLVED")
 
 
+class FactoryFailureTests(unittest.TestCase):
+    """Regression: a raising factory must not leak the active claim — the
+    claim release is unconditional, and the failure is logged honestly."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.builder = WorkspaceBuilder(Path(self.temporary.name))
+
+    def test_raising_verifier_factory_releases_claim_and_logs_runtime_error(self) -> None:
+        problem_dir = self.builder.add_problem("p-fac", "Factory theorem.")
+        calls = []
+
+        def flaky_verifier_factory():
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("Codex CLI is not installed or not on PATH")
+            return ScriptedVerifier(True)
+
+        service = ExecutionService(
+            self.builder.root,
+            worker_factory=EchoWorker,
+            verifier_factory=flaky_verifier_factory,
+        )
+
+        service.start_attempt("p-fac")
+        self.assertTrue(wait_for(lambda: not service.is_running("p-fac")))
+
+        (event,) = finished_events(problem_dir)
+        self.assertEqual(event["outcome_stage"], "RUNTIME_ERROR")
+        self.assertIsNone(event["attempt_id"])  # no attempt was ever allocated
+        self.assertFalse(event["verifier_called"])
+
+        # Claim released: the retry is accepted and succeeds.
+        service.start_attempt("p-fac")
+        self.assertTrue(wait_for(lambda: not service.is_running("p-fac")))
+        outcomes = [e["outcome_stage"] for e in finished_events(problem_dir)]
+        self.assertEqual(outcomes, ["RUNTIME_ERROR", "PASS"])
+
+    def test_raising_worker_factory_releases_claim_and_logs_runtime_error(self) -> None:
+        problem_dir = self.builder.add_problem("p-fac2", "Factory theorem two.")
+        calls = []
+
+        def flaky_worker_factory():
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("Codex CLI is not installed or not on PATH")
+            return EchoWorker()
+
+        service = ExecutionService(
+            self.builder.root,
+            worker_factory=flaky_worker_factory,
+            verifier_factory=lambda: ScriptedVerifier(True),
+        )
+
+        service.start_attempt("p-fac2")
+        self.assertTrue(wait_for(lambda: not service.is_running("p-fac2")))
+
+        (event,) = finished_events(problem_dir)
+        self.assertEqual(event["outcome_stage"], "RUNTIME_ERROR")
+        self.assertIsNone(event["attempt_id"])
+
+        service.start_attempt("p-fac2")
+        self.assertTrue(wait_for(lambda: not service.is_running("p-fac2")))
+        outcomes = [e["outcome_stage"] for e in finished_events(problem_dir)]
+        self.assertEqual(outcomes, ["RUNTIME_ERROR", "PASS"])
+
+
 class ExecutionOutcomeTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = TemporaryDirectory()

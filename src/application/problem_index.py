@@ -75,6 +75,30 @@ def workspace_last_activity(problem_dir: Path) -> Optional[float]:
     return max(mtimes) if mtimes else None
 
 
+def read_execution_events(problem_dir: Path) -> List[dict]:
+    """Parse ``_execution_log.jsonl`` — the single reader, shared by the
+    execution service and the read model.
+
+    Tolerates ONLY an unparseable FINAL line (a crash mid-append artifact —
+    skipped); a corrupt non-final line is genuine corruption and raises.
+    """
+    log = problem_dir / EXECUTION_LOG_NAME
+    if not log.is_file():
+        return []
+    lines = [
+        line for line in log.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
+    events = []
+    for position, line in enumerate(lines):
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            if position == len(lines) - 1:
+                continue
+            raise
+    return events
+
+
 @dataclass(frozen=True)
 class ProblemEntry:
     problem_id: str

@@ -269,10 +269,12 @@ that is the only timeout story in V1.
 The wrapper injects its own verifier adapter around the real verifier and
 appends JSON lines to `_execution_log.jsonl`. Three event kinds:
 
-- `VERIFIER_INVOKED` — `{"execution_id", "problem_id", "ts"}`, appended by
-  the wrapper's verifier adapter **before** it calls the real verifier. If
-  the process dies after the verifier returned but before the finish record,
-  recovery still knows the fresh verifier was actually called.
+- `VERIFIER_INVOKED` — `{"execution_id", "problem_id", "attempt_id", "ts"}`,
+  appended by the wrapper's verifier adapter **before** it calls the real
+  verifier. If the process dies after the verifier returned but before the
+  finish record, recovery still knows the fresh verifier was actually called.
+  (`attempt_id` is derived at invocation time as the new attempt relative to
+  the attempt set snapshotted when the execution started.)
 - `ATTEMPT_FINISHED` — `{"execution_id", "problem_id", "attempt_id",
   "started_at", "finished_at", "outcome_stage": "PASS | CONTRACT_GUARD |
   FRESH_VERIFIER_REJECT | RUNTIME_ERROR", "verifier_called": bool}`, written
@@ -293,12 +295,18 @@ by `problem_id` is unambiguous.
 Log integrity rules (Slice 3 clarification): appends hold a per-workspace
 lock so the background thread and recovery never interleave a line; readers
 tolerate ONLY an unparseable **final** line (crash mid-append) and raise on
-any corrupt non-final line. Recovery events bind `execution_id` as follows:
-if exactly one orphan `VERIFIER_INVOKED` (no matching `ATTEMPT_FINISHED`)
-exists for the problem, the recovery event reuses its `execution_id` (which
-is what makes the read model's `verifier_called: true` projection possible);
-otherwise the event carries a fresh `recovery-<uuid>` id and
-`verifier_called` is false. Never a guess.
+any corrupt non-final line; appenders first truncate a torn unterminated
+final line so the invariant "at most the final line may be torn" survives
+across a crash.
+
+Recovery events bind `execution_id` **per attempt** (amended at Slice 3
+freeze): when recovering attempt X, an orphan `VERIFIER_INVOKED` is one that
+names X's `attempt_id` and whose execution has no `ATTEMPT_FINISHED`;
+exactly one such event → reuse its `execution_id` and
+`verifier_called: true`; otherwise a fresh `recovery-<uuid>` id and
+`verifier_called: false`. Invocations belonging to earlier, already
+recovered attempts name other attempt_ids and never pollute the binding.
+Never a guess.
 
 This log is the application layer's own instrumentation — it does not
 modify, and is not read by, the research core. It also gives the UI honest
@@ -338,6 +346,41 @@ The file itself is never rewritten. A problem recovered via
 shows `verdict: "PASS"`, because the evidence wrapper persists the verifier
 verdict before the fact write (`problem.py:85-90`), so no reinterpretation
 is needed.
+
+**Log completion (Slice 3 freeze amendment).** The RUNNING-obligation
+recovery above does not close the *late* crash window: if the verifier
+already returned, the core already reset the obligation to OPEN and wrote
+the attempt verdict (FAIL/ERROR/PASS), but the process died before the
+wrapper appended `ATTEMPT_FINISHED` — startup recovery skips the problem
+because no obligation is RUNNING, and the read model would find a FAIL
+attempt with no finish record and no way to classify it. Startup recovery
+therefore runs a **second pass after the RUNNING-obligation pass**, over
+every attempt of every indexed problem:
+
+- For each attempt whose verdict is `FAIL`, `ERROR`, or `PASS` and for which
+  **no `ATTEMPT_FINISHED` event names its attempt_id**, append a completion
+  record: `ATTEMPT_FINISHED` with `recovered: true`,
+  `started_at: null` / `finished_at: null` (timestamps are never
+  fabricated), and `outcome_stage` derived from observation only:
+  `PASS` verdict → `PASS`; `ERROR` verdict → `RUNTIME_ERROR`;
+  `FAIL` + a `VERIFIER_INVOKED` naming the attempt →
+  `FRESH_VERIFIER_REJECT`; `FAIL` with no such invocation →
+  `CONTRACT_GUARD`.
+- Attempts at verdict `RUNNING` are excluded — they belong to the
+  interrupted path above.
+- **Honesty gate:** if the problem has *no execution-log events at all*,
+  the completion pass skips it entirely. A workspace whose very first
+  execution crashed in the guard/ERROR late window leaves an empty log and
+  is indistinguishable from pre-V1 data — classifying it would be a guess.
+  Such attempts honestly report `failure_class: null` until a new attempt
+  runs. This is an accepted limitation, not a bug.
+- Idempotence follows from the finish-record existence check: a second
+  startup finds every completed attempt already named by an
+  `ATTEMPT_FINISHED` and appends nothing.
+- Ordering matters: the RUNNING-obligation pass runs first so that a
+  window-E recovery (`RECOVERED_DISCHARGED`, which leaves the attempt at
+  `PASS`) is resolved before the completion pass would otherwise write its
+  finish record.
 
 ### 7.4 Exception mapping
 
