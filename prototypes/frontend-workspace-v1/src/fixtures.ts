@@ -101,10 +101,15 @@ const P1_STATEMENT =
   'For every positive integer $n$, the sum of the first $n$ odd numbers equals $n^2$.'
 
 const p1: WorkspaceModel = {
-  spec: { problem_id: 'sum-first-n-odd', statement: P1_STATEMENT, premise_fact_ids: [] },
+  // premise_fact_ids / root premises must equal the target Fact's
+  // predecessors: execute_obligation contract-fails any candidate whose
+  // predecessor set differs from the obligation premises
+  // (obligation_execution.py:60-63). F_LEMMA pre-exists as an accepted Fact
+  // of this same problem, as the backend's same-problem premise rule requires.
+  spec: { problem_id: 'sum-first-n-odd', statement: P1_STATEMENT, premise_fact_ids: [F_LEMMA] },
   obligation: {
     obligation_id: 'root:sum-first-n-odd',
-    premises: [],
+    premises: [F_LEMMA],
     goal: P1_STATEMENT,
     route_id: 'root',
     status: 'DISCHARGED',
