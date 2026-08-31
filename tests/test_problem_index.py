@@ -1,9 +1,13 @@
 import json
 import os
 from pathlib import Path
+import threading
 from tempfile import TemporaryDirectory
+import time
 import unittest
+from unittest import mock
 
+import application.problem_index as problem_index_module
 from application.problem_index import ProblemIndex
 
 
@@ -208,6 +212,89 @@ class ProblemIndexAddTests(unittest.TestCase):
         listed = {item.problem_id: item for item in self.index.list()}
         self.assertEqual(set(listed), {"p-existing", created.problem_id})
         self.assertEqual(listed["p-existing"].statement, "Existing theorem.")
+
+
+class ProblemIndexAddConcurrencyTests(unittest.TestCase):
+    """Regression: concurrent add() calls must not lose entries (stale-read
+    read-modify-write race behind FastAPI's threadpool)."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+
+    def test_concurrent_adds_both_persist(self) -> None:
+        # A sleep inside _write_json widens the race window deterministically:
+        # without a lock, both threads read the same old index before either
+        # write lands, and the later write clobbers the first entry.
+        real_write = problem_index_module._write_json
+
+        def slow_write(path, payload):
+            time.sleep(0.05)
+            real_write(path, payload)
+
+        for iteration in range(10):
+            with self.subTest(iteration=iteration):
+                root = self.root / f"case-{iteration}"
+                root.mkdir()
+                index = ProblemIndex(root)
+                barrier = threading.Barrier(2)
+                results: dict = {}
+                errors: list = []
+
+                def do_add(name: str) -> None:
+                    try:
+                        barrier.wait()
+                        results[name] = index.add(f"Theorem {name} of case {iteration}.")
+                    except Exception as error:  # noqa: BLE001 - surfaced below
+                        errors.append(error)
+
+                threads = [
+                    threading.Thread(target=do_add, args=("alpha",)),
+                    threading.Thread(target=do_add, args=("beta",)),
+                ]
+                with mock.patch.object(problem_index_module, "_write_json", slow_write):
+                    for thread in threads:
+                        thread.start()
+                    for thread in threads:
+                        thread.join()
+
+                self.assertEqual(errors, [])
+                self.assertEqual(set(results), {"alpha", "beta"})
+                listed = {item.problem_id for item in ProblemIndex(root).list()}
+                self.assertEqual(
+                    listed, {results["alpha"].problem_id, results["beta"].problem_id}
+                )
+                for created in results.values():
+                    self.assertTrue((root / created.problem_id).is_dir())
+
+
+class ProblemIndexAddRollbackTests(unittest.TestCase):
+    """A failed index write must not leave an unindexed workspace dir behind."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+
+    def test_failed_index_write_removes_freshly_created_workspace_dir(self) -> None:
+        write_index(self.root, [entry("p-existing", "Existing theorem.")])
+        (self.root / "p-existing").mkdir()
+        before = json.loads((self.root / "index.json").read_text(encoding="utf-8"))
+
+        with mock.patch.object(
+            problem_index_module, "_write_json", side_effect=OSError("disk full")
+        ):
+            with self.assertRaises(OSError):
+                ProblemIndex(self.root).add("New theorem.")
+
+        self.assertEqual(
+            sorted(path.name for path in self.root.iterdir()),
+            ["index.json", "p-existing"],
+        )
+        self.assertEqual(
+            json.loads((self.root / "index.json").read_text(encoding="utf-8")), before
+        )
 
 
 if __name__ == "__main__":

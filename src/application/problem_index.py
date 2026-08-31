@@ -15,12 +15,27 @@ from hashlib import sha256
 import json
 from pathlib import Path
 import re
-from typing import List, Optional
+from threading import Lock
+from typing import Dict, List, Optional
 
 
 EXECUTION_LOG_NAME = "_execution_log.jsonl"
 
 _SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
+
+# FastAPI sync handlers run in a threadpool, and http.py constructs a fresh
+# ProblemIndex per request — a per-instance lock would not serialize anything.
+# The add() read-modify-write cycle is therefore guarded by module-level locks
+# keyed by resolved data root. V1 is a single-process loopback server, so an
+# in-process mutex per root is the honest minimal mechanism (no file locks, no
+# database); distinct roots never block each other.
+_ROOT_LOCKS: Dict[Path, Lock] = {}
+_ROOT_LOCKS_GUARD = Lock()
+
+
+def _lock_for(root: Path) -> Lock:
+    with _ROOT_LOCKS_GUARD:
+        return _ROOT_LOCKS.setdefault(root.resolve(), Lock())
 
 
 def _normalize(statement: str) -> str:
@@ -98,25 +113,39 @@ class ProblemIndex:
         if not normalized:
             raise ValueError("statement must be non-empty")
         slug = _slug(normalized)
-        taken = {entry.problem_id for entry in self._entries()}
-        while True:
-            created_at = datetime.now().astimezone().isoformat()
-            suffix = sha256(f"{normalized}\n{created_at}".encode("utf-8")).hexdigest()[:6]
-            problem_id = f"{slug}-{suffix}"
-            if problem_id not in taken and not (self.root / problem_id).exists():
-                break  # re-roll with a fresh timestamp; never overwrite
-        entry = ProblemEntry(
-            problem_id=problem_id,
-            statement=normalized,
-            derived_from=None,
-            archived=False,
-            created_at=created_at,
-        )
-        (self.root / problem_id).mkdir(parents=True)
-        payload = {"problems": [vars(item) for item in self._entries()]}
-        payload["problems"].append(vars(entry))
-        _write_json(self.root / "index.json", payload)
-        return entry
+        # The whole read-modify-write cycle is the critical section: reading
+        # outside the lock would reintroduce the stale-index clobber.
+        with _lock_for(self.root):
+            taken = {entry.problem_id for entry in self._entries()}
+            while True:
+                created_at = datetime.now().astimezone().isoformat()
+                suffix = sha256(f"{normalized}\n{created_at}".encode("utf-8")).hexdigest()[:6]
+                problem_id = f"{slug}-{suffix}"
+                if problem_id not in taken and not (self.root / problem_id).exists():
+                    break  # re-roll with a fresh timestamp; never overwrite
+            entry = ProblemEntry(
+                problem_id=problem_id,
+                statement=normalized,
+                derived_from=None,
+                archived=False,
+                created_at=created_at,
+            )
+            problem_dir = self.root / problem_id
+            problem_dir.mkdir(parents=True)
+            payload = {"problems": [vars(item) for item in self._entries()]}
+            payload["problems"].append(vars(entry))
+            try:
+                _write_json(self.root / "index.json", payload)
+            except Exception:
+                # Roll back only the directory THIS call just created, and only
+                # if still empty — rmdir refuses non-empty dirs. Pre-existing
+                # dirs and entries are never touched.
+                try:
+                    problem_dir.rmdir()
+                except OSError:
+                    pass
+                raise
+            return entry
 
     def _entries(self) -> List[ProblemEntry]:
         path = self.root / "index.json"

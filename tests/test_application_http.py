@@ -1,4 +1,5 @@
 from pathlib import Path
+import threading
 from tempfile import TemporaryDirectory
 import unittest
 
@@ -108,6 +109,39 @@ class CreateProblemHttpTests(unittest.TestCase):
         self.assertEqual(self.client.get("/api/problems").json()["problems"], [])
         self.assertFalse((self.root / "index.json").exists())
         self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_concurrent_posts_both_persist(self) -> None:
+        """Regression: two concurrent POSTs must not lose an index entry."""
+        for iteration in range(5):
+            with self.subTest(iteration=iteration):
+                barrier = threading.Barrier(2)
+                responses: list = []
+
+                def do_post(statement: str) -> None:
+                    barrier.wait()
+                    responses.append(
+                        self.client.post("/api/problems", json={"statement": statement})
+                    )
+
+                threads = [
+                    threading.Thread(target=do_post, args=(f"Concurrent theorem {iteration} A.",)),
+                    threading.Thread(target=do_post, args=(f"Concurrent theorem {iteration} B.",)),
+                ]
+                for thread in threads:
+                    thread.start()
+                for thread in threads:
+                    thread.join()
+
+                self.assertEqual([r.status_code for r in responses], [201, 201])
+                created_ids = {r.json()["problem_id"] for r in responses}
+                self.assertEqual(len(created_ids), 2)
+                listed_ids = {
+                    item["problem_id"]
+                    for item in self.client.get("/api/problems").json()["problems"]
+                }
+                self.assertTrue(created_ids <= listed_ids)
+                for problem_id in created_ids:
+                    self.assertTrue((self.root / problem_id).is_dir())
 
 
 if __name__ == "__main__":
