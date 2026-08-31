@@ -58,5 +58,57 @@ class HttpApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+class CreateProblemHttpTests(unittest.TestCase):
+    """Slice 2: POST /api/problems (spec §6)."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.client = TestClient(create_app(self.root))
+
+    def test_post_creates_problem_and_returns_201_contract(self) -> None:
+        response = self.client.post(
+            "/api/problems",
+            json={"statement": "Every even perfect number is triangular."},
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(
+            set(payload), {"problem_id", "statement", "status", "derived_from", "archived"}
+        )
+        self.assertEqual(payload["statement"], "Every even perfect number is triangular.")
+        self.assertEqual(payload["status"], "OPEN")
+        self.assertIsNone(payload["derived_from"])
+        self.assertFalse(payload["archived"])
+        self.assertTrue((self.root / payload["problem_id"]).is_dir())
+
+    def test_created_problem_appears_in_list_and_read_model(self) -> None:
+        problem_id = self.client.post(
+            "/api/problems", json={"statement": "A new theorem."}
+        ).json()["problem_id"]
+
+        listed = self.client.get("/api/problems").json()["problems"]
+        by_id = {item["problem_id"]: item for item in listed}
+        self.assertEqual(by_id[problem_id]["status"], "OPEN")
+        self.assertEqual(by_id[problem_id]["attempt_count"], 0)
+        self.assertIsNone(by_id[problem_id]["last_activity"])
+
+        model = self.client.get(f"/api/problems/{problem_id}").json()
+        self.assertEqual(model["status"], "OPEN")
+        self.assertIsNone(model["obligation"])
+        self.assertEqual(model["attempts"], [])
+
+    def test_post_blank_statement_returns_400_without_side_effects(self) -> None:
+        response = self.client.post("/api/problems", json={"statement": "  \n\t "})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.client.get("/api/problems").json()["problems"], [])
+        self.assertFalse((self.root / "index.json").exists())
+        self.assertEqual(list(self.root.iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()

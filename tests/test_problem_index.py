@@ -129,5 +129,86 @@ class ProblemIndexTests(unittest.TestCase):
         self.assertEqual([item.problem_id for item in listed], ["p-b", "p-a"])
 
 
+class ProblemIndexAddTests(unittest.TestCase):
+    """Slice 2: ProblemIndex.add — the minimal write capability (spec §4/§6)."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.index = ProblemIndex(self.root)
+
+    def test_add_creates_index_entry(self) -> None:
+        created = self.index.add("Every even perfect number is triangular.")
+
+        self.assertRegex(
+            created.problem_id,
+            r"^every-even-perfect-number-is-triangular-[0-9a-f]{6}$",
+        )
+        self.assertEqual(created.statement, "Every even perfect number is triangular.")
+        self.assertIsNone(created.derived_from)
+        self.assertFalse(created.archived)
+        self.assertEqual(self.index.get(created.problem_id), created)
+
+    def test_add_sets_a_real_local_timestamp_with_offset(self) -> None:
+        from datetime import datetime
+
+        created = self.index.add("Some theorem.")
+
+        parsed = datetime.fromisoformat(created.created_at)
+        self.assertIsNotNone(parsed.tzinfo)
+
+    def test_add_creates_an_empty_workspace_directory(self) -> None:
+        created = self.index.add("Some theorem.")
+
+        problem_dir = self.root / created.problem_id
+        self.assertTrue(problem_dir.is_dir())
+        self.assertEqual(list(problem_dir.iterdir()), [])
+
+    def test_add_rejects_empty_statement(self) -> None:
+        with self.assertRaises(ValueError):
+            self.index.add("")
+
+    def test_add_rejects_whitespace_only_statement(self) -> None:
+        with self.assertRaises(ValueError):
+            self.index.add("  \n\t  ")
+
+    def test_rejected_add_leaves_no_side_effects(self) -> None:
+        write_index(self.root, [entry("p-existing", "Existing theorem.")])
+
+        with self.assertRaises(ValueError):
+            self.index.add("   ")
+
+        self.assertEqual(
+            [item.problem_id for item in self.index.list()], ["p-existing"]
+        )
+        self.assertEqual(
+            json.loads((self.root / "index.json").read_text(encoding="utf-8"))["problems"],
+            [entry("p-existing", "Existing theorem.")],
+        )
+
+    def test_add_normalizes_whitespace(self) -> None:
+        created = self.index.add("  Every even\nperfect   number  is triangular. \n")
+
+        self.assertEqual(created.statement, "Every even perfect number is triangular.")
+
+    def test_add_generates_unique_ids_for_rapid_identical_statements(self) -> None:
+        first = self.index.add("Same statement.")
+        second = self.index.add("Same statement.")
+
+        self.assertNotEqual(first.problem_id, second.problem_id)
+        self.assertTrue((self.root / first.problem_id).is_dir())
+        self.assertTrue((self.root / second.problem_id).is_dir())
+
+    def test_add_preserves_existing_entries(self) -> None:
+        write_index(self.root, [entry("p-existing", "Existing theorem.")])
+
+        created = self.index.add("New theorem.")
+
+        listed = {item.problem_id: item for item in self.index.list()}
+        self.assertEqual(set(listed), {"p-existing", created.problem_id})
+        self.assertEqual(listed["p-existing"].statement, "Existing theorem.")
+
+
 if __name__ == "__main__":
     unittest.main()

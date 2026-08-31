@@ -44,6 +44,19 @@ class NeverAttemptedProblemTests(unittest.TestCase):
         self.assertEqual(model["supporting_closure"], [])
         self.assertIsNone(model["running_phase_hint"])
 
+    def test_problem_created_via_index_add_reads_as_open(self) -> None:
+        """Slice 2: a problem created by ProblemIndex.add flows through the read model."""
+        from application.problem_index import ProblemIndex
+
+        created = ProblemIndex(self.builder.root).add("A created theorem.")
+
+        model = build_read_model(self.builder.root, created.problem_id)
+
+        self.assertEqual(model["statement"], "A created theorem.")
+        self.assertEqual(model["status"], "OPEN")
+        self.assertIsNone(model["obligation"])
+        self.assertEqual(model["attempts"], [])
+
     def test_lineage_is_carried_from_the_index(self) -> None:
         self.builder.add_problem("p-parent", "Original theorem.")
         self.builder.add_problem("p-child", "Revised theorem.", derived_from="p-parent")
