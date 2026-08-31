@@ -8,11 +8,11 @@ const PHASE_TEXT: Record<Exclude<PhaseHint, null>, string> = {
 };
 
 /**
- * Minimal RUNNING display (Slice 3; Slice 4 owns the full visuals). The phase
- * line is a UI heuristic from `running_phase_hint` — never a claimed backend
- * phase — so it carries a `phase inferred` marker (spec §2, §9). The elapsed
- * clock is session-scoped: it starts when the page first observes RUNNING and
- * is never persisted; it disappears with the component on terminal states.
+ * RUNNING display: the phase line is a UI heuristic from
+ * `running_phase_hint` — never a claimed backend phase — so it carries a
+ * `live · phase inferred` marker (spec §2, §9). The elapsed clock is
+ * session-scoped: it starts when the page first observes RUNNING and is
+ * never persisted; it disappears with the component on terminal states.
  */
 export function RunningIndicator({ phaseHint }: { phaseHint: PhaseHint }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -32,13 +32,11 @@ export function RunningIndicator({ phaseHint }: { phaseHint: PhaseHint }) {
     <div className="running-indicator">
       {phaseHint !== null && (
         <p className="running-indicator__phase">
-          {PHASE_TEXT[phaseHint]}
-          <span className="running-indicator__marker">phase inferred</span>
+          {PHASE_TEXT[phaseHint]}{" "}
+          <span className="running-indicator__marker">live · phase inferred</span>
         </p>
       )}
-      <p className="running-indicator__elapsed">
-        {mm}:{ss} on this page
-      </p>
+      <p className="running-indicator__elapsed">{mm}:{ss} on this page</p>
     </div>
   );
 }

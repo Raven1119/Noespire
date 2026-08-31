@@ -73,11 +73,7 @@ describe("WorkspaceShell", () => {
     expect(
       screen.getByRole("tab", { name: "Proof" }).getAttribute("aria-selected")
     ).toBe("true");
-    expect(
-      screen.getByText(
-        "The proof document appears here once the problem is solved."
-      )
-    ).toBeTruthy();
+    expect(screen.getByText("No verified proof yet")).toBeTruthy();
   });
 
   it("never shows the LLM-verified badge when not SOLVED", async () => {

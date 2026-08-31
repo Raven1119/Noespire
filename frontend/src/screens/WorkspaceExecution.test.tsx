@@ -78,7 +78,7 @@ async function advance(ms: number) {
   });
 }
 
-async function clickStart(name: string | RegExp = "Start attempt") {
+async function clickStart(name: string | RegExp = "Start proving") {
   fireEvent.click(screen.getByRole("button", { name }));
   await flush();
 }
@@ -213,7 +213,7 @@ describe("WorkspaceShell — Slice 3 execution", () => {
     await renderAndFlush();
 
     expect(screen.getByText("Checking candidate…")).toBeTruthy();
-    expect(screen.getByText("phase inferred")).toBeTruthy();
+    expect(screen.getByText("live · phase inferred")).toBeTruthy();
   });
 
   it("runs a session-scoped elapsed clock that vanishes on terminal states", async () => {
@@ -243,8 +243,9 @@ describe("WorkspaceShell — Slice 3 execution", () => {
 
     await advance(POLL_INTERVAL_MS);
     expect(
-      screen.getByText("Latest attempt attempt-000007: FAIL — Verification rejection")
+      screen.getByRole("button", { name: /Attempt 1\b/ })
     ).toBeTruthy();
+    expect(screen.getByText(/Verification rejection/)).toBeTruthy();
   });
 
   it("shows an honest inline error on 404 from startAttempt", async () => {

@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError, getProblem, startAttempt } from "../api";
+import { ApiError, getProblem, listProblems, startAttempt } from "../api";
 import type { WorkspaceReadModel } from "../types";
-import { KatexStatement } from "../components/KatexStatement";
-import { LlmVerifiedBadge } from "../components/LlmVerifiedBadge";
-import { RunningIndicator } from "../components/RunningIndicator";
-import { StatusBadge } from "../components/StatusBadge";
-import { FAILURE_CLASS_LABELS } from "../workspace/failureMeta";
+import { InspectorDrawer } from "../inspector/InspectorDrawer";
+import type { Inspection } from "../inspector/inspectionContent";
+import { drawerContent } from "../inspector/inspectionContent";
+import { AttemptsTab } from "../workspace/AttemptsTab";
+import { ProofTab } from "../workspace/ProofTab";
+import { WorkspaceHeader } from "../workspace/WorkspaceHeader";
+import type { DerivedFromInfo } from "../workspace/WorkspaceHeader";
 import { useWorkspacePolling } from "./useWorkspacePolling";
 
 type Tab = "proof" | "attempts";
 
 /**
- * Workspace shell (Slice 3): header with state-gated start/Retry action,
- * `Proof | Attempts` tabs, polling while RUNNING, and a minimal RUNNING /
- * latest-attempt display. Slice 4 builds the real tab panes; until then they
- * hold honest minimal content only.
+ * Workspace shell: header with state-gated actions, `Proof | Attempts` tabs,
+ * polling while RUNNING, and the Inspector drawer. State decides only the
+ * default tab (applied on initial load / problemId change); the user's manual
+ * tab choice is never overridden by polling or status transitions (spec §9).
  */
 export function WorkspaceShell() {
   const { problemId } = useParams<{ problemId: string }>();
@@ -24,12 +26,15 @@ export function WorkspaceShell() {
   const [tab, setTab] = useState<Tab>("attempts");
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [derivedFrom, setDerivedFrom] = useState<DerivedFromInfo | null>(null);
+  const [inspection, setInspection] = useState<Inspection | null>(null);
 
   useEffect(() => {
     if (!problemId) return;
     setModel(null);
     setError(null);
     setStartError(null);
+    setInspection(null);
     getProblem(problemId)
       .then((data) => {
         setModel(data);
@@ -44,6 +49,34 @@ export function WorkspaceShell() {
         )
       );
   }, [problemId]);
+
+  // Resolve the lineage link target against the problem list; failure or a
+  // missing parent falls back to the plain-text id (never blocks the header).
+  const derivedFromId = model?.derived_from ?? null;
+  useEffect(() => {
+    if (derivedFromId === null) {
+      setDerivedFrom(null);
+      return;
+    }
+    let cancelled = false;
+    listProblems()
+      .then((response) => {
+        if (cancelled) return;
+        const parent = response.problems.find(
+          (item) => item.problem_id === derivedFromId
+        );
+        setDerivedFrom({
+          problem_id: derivedFromId,
+          statement: parent?.statement ?? null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setDerivedFrom({ problem_id: derivedFromId, statement: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [derivedFromId]);
 
   // Interval polling swallows transient failures: the last known state stays
   // on screen and the next tick retries.
@@ -139,38 +172,20 @@ export function WorkspaceShell() {
       </div>
     );
   } else {
-    const latestAttempt =
-      model.attempts.length > 0 ? model.attempts[model.attempts.length - 1] : null;
     body = (
       <>
-        <div className="workspace-header">
-          <StatusBadge status={model.display_status} />
-          {model.status === "SOLVED" && <LlmVerifiedBadge />}
-          {model.status !== "SOLVED" && (
-            <div className="workspace-actions">
-              <button
-                className="button button--primary"
-                disabled={model.status === "RUNNING" || starting}
-                onClick={() => void handleStartAttempt()}
-              >
-                {latestAttempt === null ? "Start attempt" : "Retry"}
-              </button>
-              {model.status === "RUNNING" && (
-                <span className="workspace-actions__hint">
-                  An attempt is already running.
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        <WorkspaceHeader
+          model={model}
+          starting={starting}
+          onStartAttempt={() => void handleStartAttempt()}
+          onOpenInspector={() => setInspection({ kind: "problem" })}
+          derivedFrom={derivedFrom}
+        />
         {startError !== null && (
           <p className="workspace-actions__error" role="alert">
             {startError}
           </p>
         )}
-        <p className="workspace-statement">
-          <KatexStatement statement={model.statement} />
-        </p>
         <div className="workspace-tabs" role="tablist">
           <button
             className="workspace-tab"
@@ -191,19 +206,25 @@ export function WorkspaceShell() {
         </div>
         <div className="workspace-pane" role="tabpanel">
           {tab === "proof" ? (
-            "The proof document appears here once the problem is solved."
-          ) : model.status === "RUNNING" ? (
-            <RunningIndicator phaseHint={model.running_phase_hint} />
-          ) : latestAttempt !== null ? (
-            <p className="attempt-line">
-              Latest attempt {latestAttempt.attempt_id}: {latestAttempt.verdict}
-              {latestAttempt.failure_class !== null &&
-                ` — ${FAILURE_CLASS_LABELS[latestAttempt.failure_class]}`}
-            </p>
+            <ProofTab
+              model={model}
+              onInspectFact={(fact) => setInspection({ kind: "fact", fact })}
+            />
           ) : (
-            "Attempts appear here once the first attempt has run."
+            <AttemptsTab
+              model={model}
+              onInspectAttempt={(attempt, ordinal) =>
+                setInspection({ kind: "attempt", attempt, ordinal })
+              }
+            />
           )}
         </div>
+        {inspection !== null && (
+          <InspectorDrawer
+            {...drawerContent(model, inspection)}
+            onClose={() => setInspection(null)}
+          />
+        )}
       </>
     );
   }
