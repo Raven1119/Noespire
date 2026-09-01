@@ -1,8 +1,9 @@
 """Application-owned problem discovery over ``<workspaces_root>/index.json``.
 
-Slice 1 added listing and lookup; Slice 2 adds ``add`` — the minimal create
-capability behind ``POST /api/problems`` (spec §4/§6). Fork and archive
-arrive with later slices. The index is the only listing source (spec §4);
+Slice 1 added listing and lookup; Slice 2 added ``add`` — the minimal create
+capability behind ``POST /api/problems`` (spec §4/§6); Slice 5 adds ``fork``
+(revision by lineage, ADR-0001) and ``set_archived`` (metadata-only). The
+index is the only listing source (spec §4);
 workspace directories without an index entry do not exist as far as the
 application layer is concerned.
 """
@@ -133,43 +134,96 @@ class ProblemIndex:
         Raises ``ValueError`` on a blank statement; only ``ValueError`` may be
         mapped to HTTP 400.
         """
+        return self._create(statement, derived_from=None)
+
+    def fork(self, parent_id: str, statement: str) -> ProblemEntry:
+        """Create a revised child of an existing problem (ADR-0001: revision
+        is fork, never edit).
+
+        The child workspace is EMPTY — nothing (facts, attempts, obligations,
+        log) is copied from the parent; only ``derived_from`` records lineage.
+        Archived parents fork fine (archived ≠ frozen, spec §6). Raises
+        ``KeyError`` on an unknown parent, ``ValueError`` on a blank statement.
+        """
         normalized = _normalize(statement)
         if not normalized:
             raise ValueError("statement must be non-empty")
+        with _lock_for(self.root):
+            self.get(parent_id)  # KeyError on unknown parent
+            return self._create_locked(normalized, derived_from=parent_id)
+
+    def set_archived(self, problem_id: str, archived: bool) -> ProblemEntry:
+        """Toggle the archived flag — metadata-only (spec §4): no core files
+        are touched and there is no execution interaction. Idempotent; the
+        atomic write means a failure leaves the old index authoritative.
+        Raises ``KeyError`` on an unknown problem.
+        """
+        with _lock_for(self.root):
+            entries = self._entries()
+            updated: Optional[ProblemEntry] = None
+            payload_entries = []
+            for item in entries:
+                if item.problem_id == problem_id:
+                    updated = ProblemEntry(
+                        problem_id=item.problem_id,
+                        statement=item.statement,
+                        derived_from=item.derived_from,
+                        archived=archived,
+                        created_at=item.created_at,
+                    )
+                    payload_entries.append(vars(updated))
+                else:
+                    payload_entries.append(vars(item))
+            if updated is None:
+                raise KeyError(f"unknown problem: {problem_id}")
+            _write_json(self.root / "index.json", {"problems": payload_entries})
+            return updated
+
+    def _create(self, statement: str, derived_from: Optional[str]) -> ProblemEntry:
+        normalized = _normalize(statement)
+        if not normalized:
+            raise ValueError("statement must be non-empty")
+        with _lock_for(self.root):
+            return self._create_locked(normalized, derived_from)
+
+    def _create_locked(
+        self, normalized: str, derived_from: Optional[str]
+    ) -> ProblemEntry:
+        """Shared create body; caller holds the root lock (``Lock`` is not
+        reentrant, so fork must not re-enter ``_create``)."""
         slug = _slug(normalized)
         # The whole read-modify-write cycle is the critical section: reading
         # outside the lock would reintroduce the stale-index clobber.
-        with _lock_for(self.root):
-            taken = {entry.problem_id for entry in self._entries()}
-            while True:
-                created_at = datetime.now().astimezone().isoformat()
-                suffix = sha256(f"{normalized}\n{created_at}".encode("utf-8")).hexdigest()[:6]
-                problem_id = f"{slug}-{suffix}"
-                if problem_id not in taken and not (self.root / problem_id).exists():
-                    break  # re-roll with a fresh timestamp; never overwrite
-            entry = ProblemEntry(
-                problem_id=problem_id,
-                statement=normalized,
-                derived_from=None,
-                archived=False,
-                created_at=created_at,
-            )
-            problem_dir = self.root / problem_id
-            problem_dir.mkdir(parents=True)
-            payload = {"problems": [vars(item) for item in self._entries()]}
-            payload["problems"].append(vars(entry))
+        taken = {entry.problem_id for entry in self._entries()}
+        while True:
+            created_at = datetime.now().astimezone().isoformat()
+            suffix = sha256(f"{normalized}\n{created_at}".encode("utf-8")).hexdigest()[:6]
+            problem_id = f"{slug}-{suffix}"
+            if problem_id not in taken and not (self.root / problem_id).exists():
+                break  # re-roll with a fresh timestamp; never overwrite
+        entry = ProblemEntry(
+            problem_id=problem_id,
+            statement=normalized,
+            derived_from=derived_from,
+            archived=False,
+            created_at=created_at,
+        )
+        problem_dir = self.root / problem_id
+        problem_dir.mkdir(parents=True)
+        payload = {"problems": [vars(item) for item in self._entries()]}
+        payload["problems"].append(vars(entry))
+        try:
+            _write_json(self.root / "index.json", payload)
+        except Exception:
+            # Roll back only the directory THIS call just created, and only
+            # if still empty — rmdir refuses non-empty dirs. Pre-existing
+            # dirs and entries are never touched.
             try:
-                _write_json(self.root / "index.json", payload)
-            except Exception:
-                # Roll back only the directory THIS call just created, and only
-                # if still empty — rmdir refuses non-empty dirs. Pre-existing
-                # dirs and entries are never touched.
-                try:
-                    problem_dir.rmdir()
-                except OSError:
-                    pass
-                raise
-            return entry
+                problem_dir.rmdir()
+            except OSError:
+                pass
+            raise
+        return entry
 
     def _entries(self) -> List[ProblemEntry]:
         path = self.root / "index.json"

@@ -82,7 +82,7 @@ describe("WorkspaceShell — header actions", () => {
     expect(screen.getByText("An attempt is already running.")).toBeTruthy();
   });
 
-  it("SOLVED shows no Retry and keeps 'Revise & Fork' as a disabled stub", async () => {
+  it("SOLVED shows no Retry and offers 'Revise & Fork'", async () => {
     mockedApi.getProblem.mockResolvedValue(solvedMultiFactModel());
     await renderWorkspace();
 
@@ -90,7 +90,7 @@ describe("WorkspaceShell — header actions", () => {
     const fork = screen.getByRole("button", {
       name: "Revise & Fork",
     }) as HTMLButtonElement;
-    expect(fork.disabled).toBe(true);
+    expect(fork.disabled).toBe(false);
   });
 
   it("always shows the Inspector button", async () => {

@@ -146,5 +146,150 @@ class CreateProblemHttpTests(unittest.TestCase):
                     self.assertTrue((self.root / problem_id).is_dir())
 
 
+class ForkProblemHttpTests(unittest.TestCase):
+    """Slice 5: POST /api/problems/{id}/fork (spec §6)."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.client = TestClient(create_app(self.root))
+
+    def _create(self, statement: str) -> str:
+        return self.client.post(
+            "/api/problems", json={"statement": statement}
+        ).json()["problem_id"]
+
+    def test_fork_returns_201_contract(self) -> None:
+        parent_id = self._create("Parent theorem.")
+
+        response = self.client.post(
+            f"/api/problems/{parent_id}/fork", json={"statement": "Revised statement."}
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+        self.assertEqual(
+            set(payload), {"problem_id", "statement", "status", "derived_from", "archived"}
+        )
+        self.assertEqual(payload["statement"], "Revised statement.")
+        self.assertEqual(payload["status"], "OPEN")
+        self.assertEqual(payload["derived_from"], parent_id)
+        self.assertFalse(payload["archived"])
+        self.assertNotEqual(payload["problem_id"], parent_id)
+        child_dir = self.root / payload["problem_id"]
+        self.assertTrue(child_dir.is_dir())
+        self.assertEqual(list(child_dir.iterdir()), [])
+
+    def test_forked_child_is_open_with_empty_read_model(self) -> None:
+        parent_id = self._create("Parent theorem.")
+        child_id = self.client.post(
+            f"/api/problems/{parent_id}/fork", json={"statement": "Revised statement."}
+        ).json()["problem_id"]
+
+        model = self.client.get(f"/api/problems/{child_id}").json()
+        self.assertEqual(model["status"], "OPEN")
+        self.assertEqual(model["derived_from"], parent_id)
+        self.assertIsNone(model["obligation"])
+        self.assertEqual(model["attempts"], [])
+
+        listed = {
+            item["problem_id"]: item
+            for item in self.client.get("/api/problems").json()["problems"]
+        }
+        self.assertEqual(listed[child_id]["derived_from"], parent_id)
+        # The parent is untouched (ADR-0001).
+        self.assertEqual(listed[parent_id]["statement"], "Parent theorem.")
+        self.assertIsNone(listed[parent_id]["derived_from"])
+
+    def test_fork_blank_statement_returns_400_without_side_effects(self) -> None:
+        parent_id = self._create("Parent theorem.")
+
+        response = self.client.post(
+            f"/api/problems/{parent_id}/fork", json={"statement": "  \n "}
+        )
+
+        self.assertEqual(response.status_code, 400)
+        listed = self.client.get("/api/problems").json()["problems"]
+        self.assertEqual([item["problem_id"] for item in listed], [parent_id])
+
+    def test_fork_unknown_parent_returns_404(self) -> None:
+        response = self.client.post(
+            "/api/problems/p-missing/fork", json={"statement": "Revised."}
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_fork_of_archived_parent_returns_201(self) -> None:
+        parent_id = self._create("Parent theorem.")
+        self.client.post(f"/api/problems/{parent_id}/archive", json={"archived": True})
+
+        response = self.client.post(
+            f"/api/problems/{parent_id}/fork", json={"statement": "Revised statement."}
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["derived_from"], parent_id)
+        self.assertFalse(response.json()["archived"])
+
+
+class ArchiveProblemHttpTests(unittest.TestCase):
+    """Slice 5: POST /api/problems/{id}/archive (spec §6)."""
+
+    def setUp(self) -> None:
+        self.temporary = TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.client = TestClient(create_app(self.root))
+
+    def _create(self, statement: str) -> str:
+        return self.client.post(
+            "/api/problems", json={"statement": statement}
+        ).json()["problem_id"]
+
+    def test_archive_toggles_and_reflects_in_list_and_read_model(self) -> None:
+        problem_id = self._create("Some theorem.")
+
+        response = self.client.post(
+            f"/api/problems/{problem_id}/archive", json={"archived": True}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"archived": True})
+        listed = self.client.get("/api/problems").json()["problems"]
+        self.assertTrue(listed[0]["archived"])
+        self.assertTrue(
+            self.client.get(f"/api/problems/{problem_id}").json()["archived"]
+        )
+
+        restored = self.client.post(
+            f"/api/problems/{problem_id}/archive", json={"archived": False}
+        )
+        self.assertEqual(restored.status_code, 200)
+        self.assertEqual(restored.json(), {"archived": False})
+        self.assertFalse(
+            self.client.get(f"/api/problems/{problem_id}").json()["archived"]
+        )
+
+    def test_archive_is_idempotent(self) -> None:
+        problem_id = self._create("Some theorem.")
+
+        for archived in (True, True, False, False):
+            response = self.client.post(
+                f"/api/problems/{problem_id}/archive", json={"archived": archived}
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), {"archived": archived})
+
+    def test_archive_unknown_problem_returns_404(self) -> None:
+        response = self.client.post(
+            "/api/problems/p-missing/archive", json={"archived": True}
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+
 if __name__ == "__main__":
     unittest.main()

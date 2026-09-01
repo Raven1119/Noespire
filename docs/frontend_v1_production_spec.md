@@ -239,8 +239,8 @@ archived problem is allowed (archived ≠ frozen).
 ### `POST /api/problems/{problem_id}/fork`
 
 Body: `{ "statement": string }`. → 201 `{ "problem_id" }` of the new
-problem with `derived_from` set. 404/422 as above. The old problem is
-untouched (ADR-0001).
+problem with `derived_from` set. 404 unknown parent / 400 invalid
+statement. The old problem is untouched (ADR-0001).
 
 ### `POST /api/problems/{problem_id}/archive`
 

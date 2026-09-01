@@ -33,6 +33,14 @@ export interface CreateProblemResponse {
   archived: boolean;
 }
 
+/** POST /api/problems/{id}/fork → 201. Same shape as create (spec §6). */
+export type ForkProblemResponse = CreateProblemResponse;
+
+/** POST /api/problems/{id}/archive → 200 (spec §6). Idempotent. */
+export interface ArchiveProblemResponse {
+  archived: boolean;
+}
+
 /** POST /api/problems/{id}/attempts → 202. The body carries no attempt id
  *  (freeze ruling 3); the frontend learns it by polling the read model. */
 export interface StartAttemptResponse {

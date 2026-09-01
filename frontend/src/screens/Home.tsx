@@ -10,9 +10,16 @@ function formatActivity(iso: string | null): string {
   return `Last activity ${new Date(iso).toLocaleString()}`;
 }
 
-function ProblemRow({ problem }: { problem: ProblemSummary }) {
+function ProblemRow({
+  problem,
+  parentStatement,
+}: {
+  problem: ProblemSummary;
+  /** Parent statement resolved from the same list payload; null → raw id. */
+  parentStatement: string | null;
+}) {
   return (
-    <li>
+    <li className="problem-row-item">
       <Link className="problem-row" to={`/problems/${problem.problem_id}`}>
         <div className="problem-row__statement">
           <KatexStatement statement={problem.statement} />
@@ -24,16 +31,25 @@ function ProblemRow({ problem }: { problem: ProblemSummary }) {
               ? "1 attempt"
               : `${problem.attempt_count} attempts`}
           </span>
-          {problem.derived_from !== null && (
-            <span className="problem-row__lineage">
-              Derived from {problem.derived_from}
-            </span>
-          )}
           <span>{formatActivity(problem.last_activity)}</span>
         </div>
       </Link>
+      {problem.derived_from !== null && (
+        <span className="problem-row__lineage">
+          Derived from{" "}
+          <Link to={`/problems/${problem.derived_from}`}>
+            {parentStatement !== null
+              ? snippet(parentStatement)
+              : problem.derived_from}
+          </Link>
+        </span>
+      )}
     </li>
   );
+}
+
+function snippet(statement: string): string {
+  return statement.length > 80 ? `${statement.slice(0, 77)}…` : statement;
 }
 
 function NewProblemForm({ onCancel }: { onCancel: () => void }) {
@@ -167,7 +183,17 @@ export function Home() {
               ) : (
                 <ul className="problem-list">
                   {visible.map((problem) => (
-                    <ProblemRow key={problem.problem_id} problem={problem} />
+                    <ProblemRow
+                      key={problem.problem_id}
+                      problem={problem}
+                      parentStatement={
+                        problem.derived_from !== null
+                          ? (problems.find(
+                              (item) => item.problem_id === problem.derived_from
+                            )?.statement ?? null)
+                          : null
+                      }
+                    />
                   ))}
                 </ul>
               )}

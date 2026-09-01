@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { KatexStatement } from "../components/KatexStatement";
 import { LlmVerifiedBadge } from "../components/LlmVerifiedBadge";
 import { StatusBadge } from "../components/StatusBadge";
 import type { WorkspaceReadModel } from "../types";
+import { ForkDialog } from "./ForkDialog";
 
 export interface DerivedFromInfo {
   problem_id: string;
@@ -16,6 +18,8 @@ interface WorkspaceHeaderProps {
   onStartAttempt: () => void;
   onOpenInspector: () => void;
   derivedFrom: DerivedFromInfo | null;
+  archiving: boolean;
+  onToggleArchive: () => void;
 }
 
 /**
@@ -23,7 +27,10 @@ interface WorkspaceHeaderProps {
  * LLM-verified badge ONLY when SOLVED, and state-gated actions — fresh OPEN
  * (no attempts) → "Start proving"; OPEN/ERROR/interrupted → "Retry"; RUNNING
  * → Retry disabled with an honest hint; SOLVED → no retry action. "Revise &
- * Fork" is a disabled stub until Slice 5. Machine metadata stays out of the
+ * Fork" opens the fork dialog (allowed in every state — forking a RUNNING
+ * parent never blocks or stops its execution). Archive/Unarchive is a
+ * metadata-only toggle shown as a SECONDARY "Archived" badge; the main
+ * status badge stays OPEN/RUNNING/SOLVED. Machine metadata stays out of the
  * header (ADR-0003) — the ⓘ button opens the Inspector drawer.
  */
 export function WorkspaceHeader({
@@ -32,7 +39,10 @@ export function WorkspaceHeader({
   onStartAttempt,
   onOpenInspector,
   derivedFrom,
+  archiving,
+  onToggleArchive,
 }: WorkspaceHeaderProps) {
+  const [forkOpen, setForkOpen] = useState(false);
   const solved = model.status === "SOLVED";
   const running = model.status === "RUNNING";
   const noAttempts = model.attempts.length === 0;
@@ -41,6 +51,7 @@ export function WorkspaceHeader({
     <header className="workspace-header-block">
       <div className="workspace-header">
         <StatusBadge status={model.display_status} />
+        {model.archived && <span className="badge badge--archived">Archived</span>}
         {solved && <LlmVerifiedBadge />}
         <div className="workspace-actions">
           {!solved && (
@@ -59,12 +70,15 @@ export function WorkspaceHeader({
               )}
             </>
           )}
+          <button className="button" onClick={() => setForkOpen(true)}>
+            Revise &amp; Fork
+          </button>
           <button
             className="button"
-            disabled
-            title="Coming in the next slice"
+            disabled={archiving}
+            onClick={onToggleArchive}
           >
-            Revise &amp; Fork
+            {model.archived ? "Unarchive" : "Archive"}
           </button>
           <button
             className="button button--icon"
@@ -90,6 +104,13 @@ export function WorkspaceHeader({
             derivedFrom.problem_id
           )}
         </p>
+      )}
+      {forkOpen && (
+        <ForkDialog
+          problemId={model.problem_id}
+          statement={model.statement}
+          onClose={() => setForkOpen(false)}
+        />
       )}
     </header>
   );

@@ -25,6 +25,14 @@ class CreateProblemRequest(BaseModel):
     statement: str
 
 
+class ForkProblemRequest(BaseModel):
+    statement: str
+
+
+class ArchiveProblemRequest(BaseModel):
+    archived: bool
+
+
 def create_app(
     workspaces_root: Path,
     execution_service: Optional[ExecutionService] = None,
@@ -73,6 +81,40 @@ def create_app(
                 status_code=404,
                 content={"error": f"unknown problem: {problem_id}"},
             )
+
+    @app.post("/api/problems/{problem_id}/fork")
+    def fork_problem(problem_id: str, request: ForkProblemRequest):
+        try:
+            entry = ProblemIndex(root).fork(problem_id, request.statement)
+        except KeyError:
+            return JSONResponse(
+                status_code=404,
+                content={"error": f"unknown problem: {problem_id}"},
+            )
+        except ValueError as error:
+            return JSONResponse(status_code=400, content={"error": str(error)})
+        # A forked child has no obligation yet: OPEN by construction.
+        return JSONResponse(
+            status_code=201,
+            content={
+                "problem_id": entry.problem_id,
+                "statement": entry.statement,
+                "status": "OPEN",
+                "derived_from": entry.derived_from,
+                "archived": entry.archived,
+            },
+        )
+
+    @app.post("/api/problems/{problem_id}/archive")
+    def archive_problem(problem_id: str, request: ArchiveProblemRequest):
+        try:
+            entry = ProblemIndex(root).set_archived(problem_id, request.archived)
+        except KeyError:
+            return JSONResponse(
+                status_code=404,
+                content={"error": f"unknown problem: {problem_id}"},
+            )
+        return {"archived": entry.archived}
 
     @app.post("/api/problems/{problem_id}/attempts")
     def start_attempt(problem_id: str):

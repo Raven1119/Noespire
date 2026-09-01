@@ -760,3 +760,83 @@ body {
   padding: 10px;
   overflow-x: auto;
 }
+
+/* ---------- Slice 5: fork dialog / archive / lineage ---------- */
+
+.badge--archived {
+  color: hsl(var(--text-secondary));
+  background: hsl(var(--surface-sunken));
+  border: 1px solid hsl(var(--border-subtle));
+}
+
+.fork-dialog {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, 92vw);
+  background: hsl(var(--surface-raised));
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-paper);
+  padding: 20px 24px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fork-dialog__title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.fork-dialog__note {
+  font-size: 13px;
+  color: hsl(var(--text-secondary));
+  margin: 0;
+}
+
+.fork-dialog__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--text-secondary));
+}
+
+.fork-dialog textarea {
+  font-family: var(--font-math);
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid hsl(var(--border-strong));
+  border-radius: var(--radius-sm);
+  background: hsl(var(--surface-raised));
+  color: hsl(var(--text-primary));
+  resize: vertical;
+}
+
+.fork-dialog__error {
+  font-size: 13px;
+  color: hsl(var(--status-error));
+  margin: 0;
+}
+
+.fork-dialog__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.problem-row-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.problem-row-item .problem-row__lineage {
+  padding-left: 4px;
+}
+
+.problem-row__lineage a {
+  color: hsl(var(--accent));
+  text-decoration: none;
+}

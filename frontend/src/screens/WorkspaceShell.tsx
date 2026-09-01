@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ApiError, getProblem, listProblems, startAttempt } from "../api";
+import { ApiError, getProblem, listProblems, setProblemArchived, startAttempt } from "../api";
 import type { WorkspaceReadModel } from "../types";
 import { InspectorDrawer } from "../inspector/InspectorDrawer";
 import type { Inspection } from "../inspector/inspectionContent";
@@ -25,6 +25,7 @@ export function WorkspaceShell() {
   const [error, setError] = useState<ApiError | null>(null);
   const [tab, setTab] = useState<Tab>("attempts");
   const [starting, setStarting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [derivedFrom, setDerivedFrom] = useState<DerivedFromInfo | null>(null);
   const [inspection, setInspection] = useState<Inspection | null>(null);
@@ -132,6 +133,26 @@ export function WorkspaceShell() {
     }
   }, [problemId, starting, refresh]);
 
+  // Archive is metadata-only (spec §6): toggle, then refetch the read model
+  // in place — no redirect, no execution interaction.
+  const handleToggleArchive = useCallback(async (): Promise<void> => {
+    if (!problemId || !model || archiving) return;
+    setStartError(null);
+    setArchiving(true);
+    try {
+      await setProblemArchived(problemId, !model.archived);
+      await refresh();
+    } catch (err: unknown) {
+      setStartError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not update the archive flag. Try again."
+      );
+    } finally {
+      setArchiving(false);
+    }
+  }, [problemId, model, archiving, refresh]);
+
   let body: React.ReactNode;
   if (error !== null) {
     body =
@@ -180,6 +201,8 @@ export function WorkspaceShell() {
           onStartAttempt={() => void handleStartAttempt()}
           onOpenInspector={() => setInspection({ kind: "problem" })}
           derivedFrom={derivedFrom}
+          archiving={archiving}
+          onToggleArchive={() => void handleToggleArchive()}
         />
         {startError !== null && (
           <p className="workspace-actions__error" role="alert">

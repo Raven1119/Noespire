@@ -70,14 +70,61 @@ describe("Home", () => {
     renderHome();
 
     expect(
-      await screen.findByText("Every even perfect number is triangular.")
-    ).toBeTruthy();
+      (await screen.findAllByText("Every even perfect number is triangular."))
+        .length
+    ).toBeGreaterThan(0);
     expect(screen.getByText("has no solutions.")).toBeTruthy();
     expect(screen.getByText("Open")).toBeTruthy();
     expect(screen.getByText("Solved")).toBeTruthy();
     expect(screen.getByText("2 attempts")).toBeTruthy();
     expect(screen.getByText("1 attempt")).toBeTruthy();
-    expect(screen.getByText("Derived from p-open")).toBeTruthy();
+    // Derived-from resolves to the parent's statement snippet from the same
+    // list payload, as a navigable link. (CSS-scoped text query: jsdom's
+    // accessible-name computation crashes on the KaTeX markup inside the row
+    // links, so role+name queries are not usable here.)
+    const parentLink = screen.getByText("Every even perfect number is triangular.", {
+      selector: ".problem-row__lineage a",
+    });
+    expect(parentLink.getAttribute("href")).toBe("/problems/p-open");
+  });
+
+  it("falls back to the raw parent id when it is not in the list payload", async () => {
+    mockedApi.listProblems.mockResolvedValue({
+      problems: [
+        summary({
+          problem_id: "p-child",
+          statement: "A revised theorem.",
+          derived_from: "p-missing-parent",
+        }),
+      ],
+    });
+    renderHome();
+
+    const fallback = await screen.findByText("p-missing-parent", {
+      selector: ".problem-row__lineage a",
+    });
+    expect(fallback.getAttribute("href")).toBe("/problems/p-missing-parent");
+  });
+
+  it("navigates to the parent workspace via the derived-from link", async () => {
+    mockedApi.listProblems.mockResolvedValue({
+      problems: [
+        summary({ problem_id: "p-parent", statement: "Parent theorem." }),
+        summary({
+          problem_id: "p-child",
+          statement: "Child theorem.",
+          derived_from: "p-parent",
+        }),
+      ],
+    });
+    renderHome();
+
+    fireEvent.click(
+      await screen.findByText("Parent theorem.", {
+        selector: ".problem-row__lineage a",
+      })
+    );
+    expect(await screen.findByText("Workspace for problem")).toBeTruthy();
   });
 
   it("shows the empty state when there are no problems", async () => {

@@ -4,7 +4,9 @@
  */
 
 import type {
+  ArchiveProblemResponse,
   CreateProblemResponse,
+  ForkProblemResponse,
   ProblemListResponse,
   StartAttemptResponse,
   WorkspaceReadModel,
@@ -80,5 +82,33 @@ export function startAttempt(problemId: string): Promise<StartAttemptResponse> {
   return request<StartAttemptResponse>(
     `/api/problems/${encodeURIComponent(problemId)}/attempts`,
     { method: "POST" }
+  );
+}
+
+/**
+ * POST /api/problems/{id}/fork (spec §6). 201 with the created child;
+ * 400 blank statement, 404 unknown parent. The parent is never modified.
+ */
+export function forkProblem(
+  problemId: string,
+  statement: string
+): Promise<ForkProblemResponse> {
+  return request<ForkProblemResponse>(
+    `/api/problems/${encodeURIComponent(problemId)}/fork`,
+    { method: "POST", body: JSON.stringify({ statement }) }
+  );
+}
+
+/**
+ * POST /api/problems/{id}/archive (spec §6). 200 `{ archived }`; metadata-only,
+ * idempotent; 404 unknown id.
+ */
+export function setProblemArchived(
+  problemId: string,
+  archived: boolean
+): Promise<ArchiveProblemResponse> {
+  return request<ArchiveProblemResponse>(
+    `/api/problems/${encodeURIComponent(problemId)}/archive`,
+    { method: "POST", body: JSON.stringify({ archived }) }
   );
 }
