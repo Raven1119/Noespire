@@ -513,6 +513,105 @@ body {
   color: hsl(var(--text-tertiary));
 }
 
+/* ---------- proof plan (static scaffold projection) ---------- */
+
+.proof-plan {
+  max-width: 44rem;
+  margin: 0 0 16px;
+  background: hsl(var(--surface-raised));
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.proof-plan__heading {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(var(--text-tertiary));
+  margin: 0 0 8px;
+}
+
+.proof-plan__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.proof-plan__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-math);
+  font-size: 14px;
+  color: hsl(var(--text-secondary));
+}
+
+.proof-plan__glyph {
+  flex: none;
+  width: 1em;
+  text-align: center;
+  color: hsl(var(--text-tertiary));
+}
+
+.proof-plan__statement {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.proof-plan__state {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: hsl(var(--text-tertiary));
+}
+
+.proof-plan__target {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(var(--text-secondary));
+  border: 1px solid hsl(var(--border-strong));
+  border-radius: var(--radius-xs);
+  padding: 1px 6px;
+}
+
+/* Only VERIFIED wears verified-truth styling (ADR-0003). */
+.proof-plan__item--verified {
+  color: hsl(var(--text-primary));
+}
+
+.proof-plan__item--verified .proof-plan__glyph {
+  color: hsl(var(--status-verified));
+}
+
+/* BLOCKED uses the amber failure accent; other search states stay muted. */
+.proof-plan__item--blocked .proof-plan__glyph,
+.proof-plan__item--blocked .proof-plan__state {
+  color: hsl(var(--status-open));
+}
+
+/* ---------- execution-level failure panel ---------- */
+
+.failure-panel--execution {
+  max-width: 44rem;
+  margin: 0 0 16px;
+  border-left-color: hsl(var(--status-open));
+}
+
+/* ---------- attempt node attribution ---------- */
+
+.attempt-node {
+  font-size: 13px;
+  color: hsl(var(--text-secondary));
+  margin: 0 0 8px;
+}
+
 .attempt-list {
   list-style: none;
   margin: 16px 0 0;

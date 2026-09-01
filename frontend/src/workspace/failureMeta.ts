@@ -1,4 +1,9 @@
-import type { Attempt, FailureClass } from "../types";
+import type {
+  Attempt,
+  FailureClass,
+  LastExecutionFailure,
+  WorkspaceReadModel,
+} from "../types";
 
 /**
  * The single place failure-class branching lives (spec §10). Slice 3 uses the
@@ -69,4 +74,77 @@ export function failurePanel(attempt: Attempt): FailurePanelData | null {
     case null:
       return null;
   }
+}
+
+const RETRY_LINE = "Suggested next: Retry.";
+
+/**
+ * Panel content for an execution-level failure (`last_execution_failure`) —
+ * an application/UI outcome classification (architect-stage failure,
+ * pre-attempt runtime failure, crash recovery), NOT a mathematical failure
+ * taxonomy. Such failures produced no node attempts, so they live above the
+ * attempt list, not on a card.
+ */
+export function executionFailurePanel(
+  failure: LastExecutionFailure
+): FailurePanelData | null {
+  switch (failure.outcome_stage) {
+    case "ARCHITECT_ERROR":
+      return {
+        glyph: "⚠",
+        title: "Architect error",
+        reason: failure.error,
+        lines: [
+          "The proof plan could not be produced. No proof nodes ran.",
+          RETRY_LINE,
+        ],
+      };
+    case "ARCHITECT_INVALID":
+      return {
+        glyph: "⚠",
+        title: "Invalid proof plan",
+        reason: failure.error,
+        lines: [
+          "The Architect's proposal failed mechanical validation. No proof nodes ran.",
+          RETRY_LINE,
+        ],
+      };
+    case "SYSTEM_ERROR":
+    case "RUNTIME_ERROR":
+      return {
+        glyph: "⚠",
+        title: "Runtime error",
+        reason: failure.error,
+        lines: [RETRY_LINE],
+      };
+    case "INTERRUPTED":
+      return {
+        glyph: "⚠",
+        title: "Interrupted",
+        reason: null,
+        lines: [
+          "The execution ended before a final outcome was recorded.",
+          RETRY_LINE,
+        ],
+      };
+  }
+}
+
+/**
+ * Whether the execution-level failure panel is visible: the failure is
+ * current only while the workspace is unfinished (OPEN/ERROR — never
+ * SOLVED/RUNNING), and only when no attempt supersedes it. When timestamps
+ * are missing or incomparable, show it — the honest default.
+ */
+export function showExecutionFailure(model: WorkspaceReadModel): boolean {
+  const failure = model.last_execution_failure;
+  if (failure === null) return false;
+  if (model.display_status !== "OPEN" && model.display_status !== "ERROR") {
+    return false;
+  }
+  if (model.attempts.length === 0) return true;
+  if (failure.finished_at === null) return true;
+  const latestFinished = model.attempts[model.attempts.length - 1]?.finished_at ?? null;
+  if (latestFinished === null) return true;
+  return failure.finished_at >= latestFinished;
 }

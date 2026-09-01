@@ -1,0 +1,19 @@
+{
+  "attempt_id": "attempt-000003",
+  "candidate_artifact": {
+    "predecessors": [
+      "5799bfde28efda3f",
+      "db836fa61119657a"
+    ],
+    "proof": "We prove the statement by induction on the positive integer n. The fact 5799bfde28efda3f gives the base case n=1. For the induction step, suppose the statement holds for a positive integer k. Then fact db836fa61119657a implies that it holds for k+1. Therefore, by mathematical induction, the statement holds for every positive integer n.",
+    "statement": "For every positive integer n, the sum of the first n odd positive integers equals n^2."
+  },
+  "error": null,
+  "obligation_id": "scaffold:for-every-positive-integer-n-the-sum-of-ecc481:target",
+  "problem_id": "for-every-positive-integer-n-the-sum-of-ecc481",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The proof correctly applies induction on positive integers: predecessor 5799bfde28efda3f establishes the base case n=1, and predecessor db836fa61119657a establishes the induction step from k to k+1 for every positive integer k. Both declared predecessors are provided and genuinely used, and the conclusion exactly matches the candidate statement."
+  }
+}

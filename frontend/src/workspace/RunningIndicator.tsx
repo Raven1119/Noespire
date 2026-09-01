@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MathText } from "../components/MathText";
 
 type PhaseHint = "generating" | "checking" | null;
 
@@ -7,14 +8,28 @@ const PHASE_TEXT: Record<Exclude<PhaseHint, null>, string> = {
   checking: "Checking candidate…",
 };
 
+const NODE_PHASE_VERB: Record<Exclude<PhaseHint, null>, string> = {
+  generating: "Proving",
+  checking: "Checking",
+};
+
 /**
  * RUNNING display: the phase line is a UI heuristic from
  * `running_phase_hint` — never a claimed backend phase — so it carries a
- * `live · phase inferred` marker (spec §2, §9). The elapsed clock is
+ * `live · phase inferred` marker (spec §2, §9). When the read model projects
+ * exactly one RUNNING scaffold node, the line names it ("Proving/Checking
+ * <statement>…"); otherwise it stays generic. The elapsed clock is
  * session-scoped: it starts when the page first observes RUNNING and is
  * never persisted; it disappears with the component on terminal states.
  */
-export function RunningIndicator({ phaseHint }: { phaseHint: PhaseHint }) {
+export function RunningIndicator({
+  phaseHint,
+  nodeStatement = null,
+}: {
+  phaseHint: PhaseHint;
+  /** Statement of the single RUNNING scaffold node, when reliably known. */
+  nodeStatement?: string | null;
+}) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
@@ -32,7 +47,14 @@ export function RunningIndicator({ phaseHint }: { phaseHint: PhaseHint }) {
     <div className="running-indicator">
       {phaseHint !== null && (
         <p className="running-indicator__phase">
-          {PHASE_TEXT[phaseHint]}{" "}
+          {nodeStatement !== null ? (
+            <>
+              {NODE_PHASE_VERB[phaseHint]} <MathText text={nodeStatement} />
+              …{" "}
+            </>
+          ) : (
+            <>{PHASE_TEXT[phaseHint]} </>
+          )}
           <span className="running-indicator__marker">live · phase inferred</span>
         </p>
       )}

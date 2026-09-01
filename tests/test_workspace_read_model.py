@@ -362,7 +362,11 @@ class LiveExecutionReadModelTests(unittest.TestCase):
         from application_fixtures import BlockingWorker, wait_for
         from research.fact import CandidateFact
 
-        self.builder.add_problem("p-live", "Live theorem.")
+        # Legacy-mode workspace shape (root obligation): this test exercises
+        # the direct path's live window. Fresh problems are scaffold-mode
+        # since N1.14P and would invoke the Architect instead.
+        problem_dir = self.builder.add_problem("p-live", "Live theorem.")
+        add_open_obligation(problem_dir, "p-live", "Live theorem.")
         started, release = threading.Event(), threading.Event()
         service = ExecutionService(
             self.builder.root,
@@ -396,7 +400,11 @@ class LiveExecutionReadModelTests(unittest.TestCase):
 
         from application.execution import ExecutionService
 
-        self.builder.add_problem("p-early", "Early theorem.")
+        # Legacy-mode workspace shape (root obligation): the direct path has
+        # no architect stage. A fresh problem would be scaffold-mode since
+        # N1.14P and invoke a real Architect after the release.
+        problem_dir = self.builder.add_problem("p-early", "Early theorem.")
+        add_open_obligation(problem_dir, "p-early", "Early theorem.")
         factory_entered, release = threading.Event(), threading.Event()
 
         def blocking_verifier_factory():

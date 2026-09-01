@@ -1,0 +1,31 @@
+{
+  "obligations": [
+    {
+      "goal": "The sum of the first one odd positive integer equals 1^2.",
+      "obligation_id": "scaffold:for-every-positive-integer-n-the-sum-of-ecc481:base_case",
+      "premises": [],
+      "resolved_by_fact_id": "5799bfde28efda3f",
+      "route_id": "scaffold:base_case",
+      "status": "DISCHARGED"
+    },
+    {
+      "goal": "For every positive integer k, if the sum of the first k odd positive integers equals k^2, then the sum of the first k+1 odd positive integers equals (k+1)^2.",
+      "obligation_id": "scaffold:for-every-positive-integer-n-the-sum-of-ecc481:inductive_step",
+      "premises": [],
+      "resolved_by_fact_id": "db836fa61119657a",
+      "route_id": "scaffold:inductive_step",
+      "status": "DISCHARGED"
+    },
+    {
+      "goal": "For every positive integer n, the sum of the first n odd positive integers equals n^2.",
+      "obligation_id": "scaffold:for-every-positive-integer-n-the-sum-of-ecc481:target",
+      "premises": [
+        "5799bfde28efda3f",
+        "db836fa61119657a"
+      ],
+      "resolved_by_fact_id": "350dbb13e5b389f4",
+      "route_id": "scaffold:target",
+      "status": "DISCHARGED"
+    }
+  ]
+}

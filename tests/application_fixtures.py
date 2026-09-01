@@ -107,6 +107,76 @@ class BlockingWorker:
         return self.candidate
 
 
+class GoalEchoWorker:
+    """Derives the candidate from the subgoal's ``Goal:\\n<text>`` tail and the
+    provided premise Facts — contract-passing for root AND scaffold-node
+    obligations, so one double serves legacy and multi-node executions."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.goals = []
+
+    def propose(self, *, problem, existing_facts, subgoal):
+        self.calls += 1
+        goal = subgoal.split("Goal:\n", 1)[1]
+        self.goals.append(goal)
+        return CandidateFact(
+            goal,
+            f"A candidate proof of {goal}",
+            tuple(fact.fact_id for fact in existing_facts),
+        )
+
+
+class BlockingGoalWorker(GoalEchoWorker):
+    """GoalEchoWorker that blocks inside propose until released (concurrency seam)."""
+
+    def __init__(self, started, release) -> None:
+        super().__init__()
+        self.started = started
+        self.release = release
+
+    def propose(self, *, problem, existing_facts, subgoal):
+        self.started.set()
+        if not self.release.wait(timeout=10):
+            raise RuntimeError("test release timeout")
+        return super().propose(
+            problem=problem, existing_facts=existing_facts, subgoal=subgoal
+        )
+
+
+class RejectingVerifier:
+    """Accepts every candidate whose statement is not in ``rejected``.
+
+    ``rejected`` is a mutable set so a test can flip verdicts between
+    executions (e.g. a manual retry after a verifier rejection).
+    """
+
+    def __init__(self, rejected=()) -> None:
+        self.rejected = set(rejected)
+        self.calls = 0
+
+    def verify(self, problem, candidate, predecessors):
+        self.calls += 1
+        accepted = candidate.statement not in self.rejected
+        return VerificationResult(accepted, "scripted verdict")
+
+
+class StubArchitect:
+    """Returns queued ScaffoldProposals in order (the last one repeats);
+    counts calls so tests can prove the Architect ran exactly once — or
+    never on resume."""
+
+    def __init__(self, proposals) -> None:
+        self.proposals = list(proposals)
+        self.calls = 0
+
+    def propose(self, *, problem, allowed_facts, config):
+        self.calls += 1
+        if len(self.proposals) > 1:
+            return self.proposals.pop(0)
+        return self.proposals[0]
+
+
 def wait_for(predicate, timeout: float = 10.0, interval: float = 0.01) -> bool:
     """Poll ``predicate`` until it holds; False on timeout (never a hard sleep)."""
     deadline = time.monotonic() + timeout
@@ -174,10 +244,13 @@ def write_residual_running_attempt(
     sequence: int = 1,
     *,
     candidate: Optional[dict] = None,
+    obligation_id: Optional[str] = None,
 ) -> str:
     """Attempt file a crash mid-attempt would leave behind.
 
     Payload shape mirrors src/research/problem.py:_start_attempt/_update_attempt.
+    ``obligation_id`` defaults to the root obligation; scaffold tests pass
+    ``scaffold:<problem_id>:<node_id>``.
     """
     attempts_dir = problem_dir / "attempts"
     attempts_dir.mkdir(parents=True, exist_ok=True)
@@ -185,7 +258,7 @@ def write_residual_running_attempt(
     payload = {
         "attempt_id": attempt_id,
         "problem_id": problem_id,
-        "obligation_id": f"root:{problem_id}",
+        "obligation_id": obligation_id or f"root:{problem_id}",
         "candidate_artifact": candidate,
         "verifier_artifact": None,
         "verdict": "RUNNING",

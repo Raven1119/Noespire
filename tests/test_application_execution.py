@@ -2,6 +2,11 @@
 outcome classification (spec §6/§7.2/§8.2). All execution is real
 ``solve_problem_once`` over scripted worker/verifier doubles; the doubles are
 injected through ExecutionService factories, never by patching the core.
+
+Since N1.14P a FRESH problem (no root obligation, no scaffold.json) is
+scaffold-mode and goes through the Architect; these Slice-3 tests pin the
+LEGACY_DIRECT path, so each one pre-creates the root obligation (the legacy
+workspace shape) with ``add_open_obligation``.
 """
 
 import json
@@ -25,6 +30,7 @@ from application_fixtures import (
     ExplodingWorker,
     ScriptedVerifier,
     WorkspaceBuilder,
+    add_open_obligation,
     run_attempt,
     wait_for,
 )
@@ -62,7 +68,8 @@ class ExecutionHttpTests(unittest.TestCase):
         return TestClient(create_app(self.builder.root, execution_service=service))
 
     def test_post_attempts_on_open_problem_returns_202_without_attempt_id(self) -> None:
-        self.builder.add_problem("p-open", "Open theorem.")
+        problem_dir = self.builder.add_problem("p-open", "Open theorem.")
+        add_open_obligation(problem_dir, "p-open", "Open theorem.")
         service = ExecutionService(
             self.builder.root,
             worker_factory=EchoWorker,
@@ -108,7 +115,8 @@ class ExecutionHttpTests(unittest.TestCase):
         self.assertEqual(calls, [])
 
     def test_second_post_during_live_run_returns_409_already_running(self) -> None:
-        self.builder.add_problem("p-live", "Live theorem.")
+        problem_dir = self.builder.add_problem("p-live", "Live theorem.")
+        add_open_obligation(problem_dir, "p-live", "Live theorem.")
         started, release = threading.Event(), threading.Event()
         service = ExecutionService(
             self.builder.root,
@@ -134,6 +142,11 @@ class ExecutionHttpTests(unittest.TestCase):
         for iteration in range(5):
             with self.subTest(iteration=iteration):
                 self.builder.add_problem(f"p-conc-{iteration}", f"Concurrent theorem {iteration}.")
+                add_open_obligation(
+                    self.builder.root / f"p-conc-{iteration}",
+                    f"p-conc-{iteration}",
+                    f"Concurrent theorem {iteration}.",
+                )
                 started, release = threading.Event(), threading.Event()
                 service = ExecutionService(
                     self.builder.root,
@@ -170,8 +183,10 @@ class ExecutionHttpTests(unittest.TestCase):
                 )
 
     def test_concurrent_starts_on_different_problems_both_run(self) -> None:
-        self.builder.add_problem("p-a", "Shared statement theorem.")
-        self.builder.add_problem("p-b", "Shared statement theorem.")
+        dir_a = self.builder.add_problem("p-a", "Shared statement theorem.")
+        dir_b = self.builder.add_problem("p-b", "Shared statement theorem.")
+        add_open_obligation(dir_a, "p-a", "Shared statement theorem.")
+        add_open_obligation(dir_b, "p-b", "Shared statement theorem.")
         started, release = threading.Event(), threading.Event()
         worker_calls = []
 
@@ -219,6 +234,7 @@ class FactoryFailureTests(unittest.TestCase):
 
     def test_raising_verifier_factory_releases_claim_and_logs_runtime_error(self) -> None:
         problem_dir = self.builder.add_problem("p-fac", "Factory theorem.")
+        add_open_obligation(problem_dir, "p-fac", "Factory theorem.")
         calls = []
 
         def flaky_verifier_factory():
@@ -249,6 +265,7 @@ class FactoryFailureTests(unittest.TestCase):
 
     def test_raising_worker_factory_releases_claim_and_logs_runtime_error(self) -> None:
         problem_dir = self.builder.add_problem("p-fac2", "Factory theorem two.")
+        add_open_obligation(problem_dir, "p-fac2", "Factory theorem two.")
         calls = []
 
         def flaky_worker_factory():
@@ -283,6 +300,13 @@ class ExecutionOutcomeTests(unittest.TestCase):
         self.builder = WorkspaceBuilder(Path(self.temporary.name))
 
     def _run_once(self, problem_id, worker_factory, verifier_factory):
+        # Legacy-mode shape: pre-create the root obligation so the execution
+        # takes the LEGACY_DIRECT path these tests pin (fresh problems are
+        # scaffold-mode since N1.14P).
+        from application.problem_index import ProblemIndex
+
+        statement = ProblemIndex(self.builder.root).get(problem_id).statement
+        add_open_obligation(self.builder.root / problem_id, problem_id, statement)
         service = ExecutionService(
             self.builder.root,
             worker_factory=worker_factory,
@@ -344,6 +368,7 @@ class ExecutionOutcomeTests(unittest.TestCase):
 
     def test_worker_exception_is_runtime_error_and_releases_claim(self) -> None:
         problem_dir = self.builder.add_problem("p-boom", "Fragile theorem.")
+        add_open_obligation(problem_dir, "p-boom", "Fragile theorem.")
         workers = iter(
             [ExplodingWorker(), EchoWorker()]
         )

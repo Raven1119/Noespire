@@ -1,10 +1,17 @@
 """The single deep read module behind the workspace REST contract (spec §5).
 
 Combines the application-owned index entry with research-core state
-(``ObligationRegistry``, ``FactGraph``, ``attempts/*.json``) and the
-application-owned execution log (``_execution_log.jsonl``) into the one
-aggregate the workspace UI needs. Read-only: this module never writes core
-files or the execution log.
+(``ObligationRegistry``, ``FactGraph``, ``attempts/*.json``, and — in
+scaffold mode — ``scaffold.json``) and the application-owned execution log
+(``_execution_log.jsonl``) into the one aggregate the workspace UI needs.
+Read-only: this module never writes core files or the execution log.
+
+Execution modes (proof_execution.py) are projected additively: legacy
+workspaces keep every previously existing key and semantic; scaffold-mode
+workspaces gain ``execution_mode``, ``proof_structure`` (a PROJECTION of
+search state, never an authority), per-attempt ``obligation_id`` /
+``scaffold_node_id`` (parsed server-side — the frontend never parses
+obligation ids), and ``last_execution_failure``.
 
 ``running_phase_hint`` is a UI heuristic inferred from attempt-artifact field
 presence; it is NOT a backend execution phase and must never be presented as
@@ -20,6 +27,7 @@ from typing import List, Optional
 
 from research.graph import FactGraph
 from research.obligation import ObligationRegistry, ObligationStatus, ProofObligation
+from research.scaffold import ProofScaffold
 
 from .problem_index import (
     ProblemEntry,
@@ -27,6 +35,20 @@ from .problem_index import (
     read_execution_events,
     workspace_last_activity,
 )
+from .proof_execution import (
+    LEGACY_DIRECT,
+    STATIC_SCAFFOLD,
+    detect_execution_mode,
+    is_problem_solved,
+)
+
+_EXECUTION_FAILURE_STAGES = {
+    "ARCHITECT_ERROR",
+    "ARCHITECT_INVALID",
+    "SYSTEM_ERROR",
+    "RUNTIME_ERROR",
+    "INTERRUPTED",
+}
 
 
 def build_read_model(
@@ -38,15 +60,16 @@ def build_read_model(
 
     ``execution_service`` (optional) is the live-execution table: status is
     RUNNING iff a live execution exists for the problem (authoritative,
-    spec §5) or the obligation is RUNNING in the pre-recovery window.
+    spec §5) or an obligation is RUNNING in the pre-recovery window.
     """
     index = ProblemIndex(workspaces_root)
     entry = index.get(problem_id)
     problem_dir = index.root / problem_id
+    mode = detect_execution_mode(problem_dir, problem_id)
     obligation = _root_obligation(problem_dir, problem_id)
     events = _read_events(problem_dir)
     attempts = [
-        _project_attempt(raw, events)
+        _project_attempt(raw, events, problem_id)
         for raw in _read_attempts(problem_dir)
     ]
 
@@ -55,12 +78,21 @@ def build_read_model(
     # history must not affect a new attempt of the same problem.
     latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
     live_execution = execution_service is not None and execution_service.is_running(problem_id)
-    status = _status(obligation, latest_recovered, live_execution)
+    if mode == LEGACY_DIRECT:
+        status = _status(obligation, latest_recovered, live_execution)
+    else:
+        status = _scaffold_status(problem_dir, problem_id, attempts, live_execution)
     target_fact = None
     supporting_closure: List[dict] = []
     if status == "SOLVED":
         graph = FactGraph(problem_dir)
-        fact = graph.get_fact(obligation.resolved_by_fact_id or "")
+        if mode == LEGACY_DIRECT:
+            fact = graph.get_fact(obligation.resolved_by_fact_id or "")
+        else:
+            scaffold = ProofScaffold(problem_dir / "scaffold.json")
+            fact = graph.get_fact(
+                scaffold.get(scaffold.target_node_id).resolved_by_fact_id or ""
+            )
         target_fact = _fact_payload(fact)
         supporting_closure = [
             _fact_payload(item) for item in graph.supporting_closure(fact.fact_id)
@@ -72,11 +104,20 @@ def build_read_model(
         "display_status": _display_status(status, attempts),
         "derived_from": entry.derived_from,
         "archived": entry.archived,
-        "obligation": _obligation_payload(obligation),
+        "execution_mode": mode,
+        "obligation": (
+            _obligation_payload(obligation) if mode == LEGACY_DIRECT else None
+        ),
+        "proof_structure": (
+            _proof_structure(problem_dir, problem_id, attempts, live_execution)
+            if mode == STATIC_SCAFFOLD
+            else None
+        ),
         "attempts": attempts,
         "target_fact": target_fact,
         "supporting_closure": supporting_closure,
         "running_phase_hint": _running_phase_hint(status, attempts),
+        "last_execution_failure": _last_execution_failure(events),
     }
     if status == "RUNNING":
         model["live"] = {
@@ -115,14 +156,18 @@ def build_problem_list(workspaces_root: Path, execution_service=None) -> List[di
 
 
 def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -> dict:
+    mode = detect_execution_mode(problem_dir, entry.problem_id)
     obligation = _root_obligation(problem_dir, entry.problem_id)
     events = _read_events(problem_dir)
-    attempts = [_project_attempt(raw, events) for raw in _read_attempts(problem_dir)]
+    attempts = [_project_attempt(raw, events, entry.problem_id) for raw in _read_attempts(problem_dir)]
     latest_recovered = bool(attempts) and attempts[-1]["failure_class"] == "interrupted"
     live_execution = (
         execution_service is not None and execution_service.is_running(entry.problem_id)
     )
-    status = _status(obligation, latest_recovered, live_execution)
+    if mode == LEGACY_DIRECT:
+        status = _status(obligation, latest_recovered, live_execution)
+    else:
+        status = _scaffold_status(problem_dir, entry.problem_id, attempts, live_execution)
     activity = workspace_last_activity(problem_dir)
     return {
         "problem_id": entry.problem_id,
@@ -205,7 +250,7 @@ def _read_events(problem_dir: Path) -> List[dict]:
     return read_execution_events(problem_dir)
 
 
-def _project_attempt(raw: dict, events: List[dict]) -> dict:
+def _project_attempt(raw: dict, events: List[dict], problem_id: str) -> dict:
     finished = next(
         (
             event
@@ -215,6 +260,7 @@ def _project_attempt(raw: dict, events: List[dict]) -> dict:
         ),
         None,
     )
+    obligation_id = raw.get("obligation_id")
     payload = {
         "attempt_id": raw["attempt_id"],
         "verdict": raw["verdict"],
@@ -222,12 +268,135 @@ def _project_attempt(raw: dict, events: List[dict]) -> dict:
         "candidate": raw["candidate_artifact"],
         "verifier": raw["verifier_artifact"],
         "error": raw["error"],
+        "obligation_id": obligation_id,
+        "scaffold_node_id": _scaffold_node_id(obligation_id, problem_id),
         "started_at": finished.get("started_at") if finished else None,
         "finished_at": finished.get("finished_at") if finished else None,
     }
     if payload["failure_class"] == "interrupted":
         payload["verifier_called"] = _interrupted_verifier_called(raw["attempt_id"], events)
     return payload
+
+
+def _scaffold_node_id(obligation_id: Optional[str], problem_id: str) -> Optional[str]:
+    """``scaffold:<problem_id>:<node>`` → ``<node>``; anything else → None.
+    Server-side parsing only — the frontend never parses obligation ids."""
+    prefix = f"scaffold:{problem_id}:"
+    if obligation_id and obligation_id.startswith(prefix):
+        return obligation_id[len(prefix):]
+    return None
+
+
+def _all_obligations(problem_dir: Path) -> List[ProofObligation]:
+    path = problem_dir / "obligations.json"
+    if not path.is_file():
+        return []
+    return ObligationRegistry(path).list()
+
+
+def _latest_attempt_for(obligation_id: str, attempts: List[dict]) -> Optional[dict]:
+    """Attempts are filename-ordered, so the last match is the latest."""
+    matching = [a for a in attempts if a["obligation_id"] == obligation_id]
+    return matching[-1] if matching else None
+
+
+def _scaffold_status(
+    problem_dir: Path,
+    problem_id: str,
+    attempts: List[dict],
+    live_execution: bool,
+) -> str:
+    """Scaffold-mode status: SOLVED iff the target node's resolved Fact
+    exists (fail closed on corruption); RUNNING iff a live execution exists
+    or a RUNNING obligation's latest attempt is not covered by a
+    RECOVERED_INTERRUPTED naming it (same pre-recovery rule as legacy);
+    else OPEN."""
+    if is_problem_solved(problem_dir, problem_id, STATIC_SCAFFOLD):
+        return "SOLVED"
+    if live_execution:
+        return "RUNNING"
+    for obligation in _all_obligations(problem_dir):
+        if obligation.status is not ObligationStatus.RUNNING:
+            continue
+        latest = _latest_attempt_for(obligation.obligation_id, attempts)
+        if latest is None or latest["failure_class"] != "interrupted":
+            return "RUNNING"
+    return "OPEN"
+
+
+def _proof_structure(
+    problem_dir: Path,
+    problem_id: str,
+    attempts: List[dict],
+    live_execution: bool,
+) -> Optional[dict]:
+    """Search-state projection over scaffold.json (never an authority):
+    per-node state VERIFIED (resolved Fact) > RUNNING (its obligation's
+    latest attempt is RUNNING and live-or-unrecovered, same rule as status)
+    > BLOCKED (latest attempt FAIL/ERROR) > READY (dependencies resolved)
+    > PLANNED. None when no scaffold has been materialized yet."""
+    scaffold_path = problem_dir / "scaffold.json"
+    if not scaffold_path.is_file():
+        return None
+    scaffold = ProofScaffold(scaffold_path)
+    obligations = {
+        obligation.obligation_id: obligation
+        for obligation in _all_obligations(problem_dir)
+    }
+    nodes = []
+    for node in scaffold.list_nodes():
+        obligation_id = f"scaffold:{problem_id}:{node.node_id}"
+        obligation = obligations.get(obligation_id)
+        latest = _latest_attempt_for(obligation_id, attempts)
+        nodes.append(
+            {
+                "node_id": node.node_id,
+                "statement": node.goal,
+                "dependency_node_ids": sorted(node.depends_on),
+                "resolved_fact_id": node.resolved_by_fact_id,
+                "latest_attempt_id": latest["attempt_id"] if latest else None,
+                "state": _node_state(scaffold, node, obligation, latest, live_execution),
+            }
+        )
+    return {"target_node_id": scaffold.target_node_id, "nodes": nodes}
+
+
+def _node_state(scaffold, node, obligation, latest_attempt, live_execution: bool) -> str:
+    if node.resolved_by_fact_id:
+        return "VERIFIED"
+    if (
+        obligation is not None
+        and obligation.status is ObligationStatus.RUNNING
+        and latest_attempt is not None
+        and latest_attempt["verdict"] == "RUNNING"
+        and (live_execution or latest_attempt["failure_class"] != "interrupted")
+    ):
+        return "RUNNING"
+    if latest_attempt is not None and latest_attempt["verdict"] in ("FAIL", "ERROR"):
+        return "BLOCKED"
+    if all(scaffold.get(dependency).resolved_by_fact_id for dependency in node.depends_on):
+        return "READY"
+    return "PLANNED"
+
+
+def _last_execution_failure(events: List[dict]) -> Optional[dict]:
+    """The last ATTEMPT_FINISHED, if it is an execution-level failure
+    (attempt_id null): architect-stage failures and pre-attempt
+    runtime/interrupted failures — the latter were previously invisible in
+    legacy mode. A later per-attempt finish supersedes it (→ None)."""
+    finishes = [event for event in events if event.get("kind") == "ATTEMPT_FINISHED"]
+    if not finishes:
+        return None
+    last = finishes[-1]
+    if last.get("attempt_id") is not None:
+        return None
+    if last.get("outcome_stage") not in _EXECUTION_FAILURE_STAGES:
+        return None
+    return {
+        "outcome_stage": last["outcome_stage"],
+        "error": last.get("error"),
+        "finished_at": last.get("finished_at"),
+    }
 
 
 def _failure_class(raw: dict, finished: Optional[dict], events: List[dict]) -> Optional[str]:

@@ -81,7 +81,7 @@ closure shape (Fact predecessor topology, never scaffold edges). Production
 currently produces single-Fact closures; the multi-Fact path is renderer-ready
 and becomes reachable when scaffold execution is wired.
 
-## 8. Read-model extension conditions (frozen gate)
+## 8. Read-model extension conditions (gate satisfied by N1.14P)
 
 A scaffold projection (e.g. `proof_structure`) may be added to the read model
 only when all of these hold:
@@ -92,4 +92,9 @@ only when all of these hold:
 3. the projection is read-only and changes no proof semantics;
 4. the frontend continues to reach core state only through REST.
 
-Condition 2 is not met today; this is the recorded integration gap.
+**Status after N1.14P** (`noespire-static-scaffold-product`): condition 2 is
+now met — new problems execute through the static scaffold path, and the read
+model exposes `execution_mode`, `proof_structure`, per-attempt
+`scaffold_node_id`, and `last_execution_failure` exactly as specified in
+§§2–5. This document's §§1–7 remain the governing semantics; see
+`docs/NOESPIRE_PRODUCT_STATE_STATIC_SCAFFOLD.md` for the wired state.

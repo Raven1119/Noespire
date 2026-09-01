@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000001",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "The first odd positive integer is 1. Therefore, the sum of the first one odd positive integer is 1, and since 1^2 = 1, the stated equality holds.",
+    "statement": "The sum of the first one odd positive integer equals 1^2."
+  },
+  "error": null,
+  "obligation_id": "scaffold:for-every-positive-integer-n-the-sum-of-ecc481:base_case",
+  "problem_id": "for-every-positive-integer-n-the-sum-of-ecc481",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The proof correctly identifies the first odd positive integer as 1 and verifies that its sum, 1, equals 1^2. No predecessor facts are needed."
+  }
+}

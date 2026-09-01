@@ -1,0 +1,11 @@
+{
+  "problems": [
+    {
+      "problem_id": "for-every-positive-integer-n-the-sum-of-ecc481",
+      "statement": "For every positive integer n, the sum of the first n odd positive integers equals n^2.",
+      "derived_from": null,
+      "archived": false,
+      "created_at": "2026-09-01T23:03:18.656005+08:00"
+    }
+  ]
+}

@@ -67,6 +67,47 @@ export interface VerifierArtifact {
   reason: string;
 }
 
+export type ExecutionMode = "LEGACY_DIRECT" | "STATIC_SCAFFOLD";
+
+export type ProofNodeState =
+  | "VERIFIED"
+  | "RUNNING"
+  | "BLOCKED"
+  | "READY"
+  | "PLANNED";
+
+export interface ProofNode {
+  node_id: string;
+  statement: string;
+  dependency_node_ids: string[];
+  resolved_fact_id: string | null;
+  latest_attempt_id: string | null;
+  state: ProofNodeState;
+}
+
+/** Read-only projection of scaffold search state (never an authority). Null
+ *  in legacy mode and before a scaffold is materialized. Nodes arrive sorted
+ *  by node_id — NOT in topological order. */
+export interface ProofStructure {
+  target_node_id: string;
+  nodes: ProofNode[];
+}
+
+export type ExecutionFailureStage =
+  | "ARCHITECT_ERROR"
+  | "ARCHITECT_INVALID"
+  | "SYSTEM_ERROR"
+  | "RUNTIME_ERROR"
+  | "INTERRUPTED";
+
+/** An execution-level failure that produced no node attempts (architect
+ *  failure, pre-attempt runtime failure, architect-stage crash recovery). */
+export interface LastExecutionFailure {
+  outcome_stage: ExecutionFailureStage;
+  error: string | null;
+  finished_at: string | null;
+}
+
 export interface Attempt {
   attempt_id: string;
   verdict: "RUNNING" | "PASS" | "FAIL" | "ERROR";
@@ -77,6 +118,9 @@ export interface Attempt {
   started_at: string | null;
   finished_at: string | null;
   verifier_called?: boolean;
+  /** Server-parsed; the frontend NEVER parses obligation ids itself. */
+  obligation_id: string | null;
+  scaffold_node_id: string | null;
 }
 
 export interface Fact {
@@ -92,12 +136,17 @@ export interface WorkspaceReadModel {
   statement: string;
   status: ProblemStatus;
   display_status: DisplayStatus;
+  execution_mode: ExecutionMode;
   derived_from: string | null;
   archived: boolean;
+  /** Legacy root payload; null in scaffold mode (node state lives in
+   *  `proof_structure`). */
   obligation: Obligation | null;
   attempts: Attempt[];
   target_fact: Fact | null;
   supporting_closure: Fact[];
+  proof_structure: ProofStructure | null;
+  last_execution_failure: LastExecutionFailure | null;
   running_phase_hint: "generating" | "checking" | null;
   /** Live execution state (spec §5); present only when status == RUNNING. */
   live?: { running: boolean; current_attempt_id: string | null };

@@ -25,7 +25,8 @@ interface WorkspaceHeaderProps {
 /**
  * Workspace header (spec §9): serif KaTeX statement, status badge, the
  * LLM-verified badge ONLY when SOLVED, and state-gated actions — fresh OPEN
- * (no attempts) → "Start proving"; OPEN/ERROR/interrupted → "Retry"; RUNNING
+ * (no attempts, no execution-level failure) → "Start proving"; OPEN/ERROR/
+ * interrupted/failed runs → "Retry"; RUNNING
  * → Retry disabled with an honest hint; SOLVED → no retry action. "Revise &
  * Fork" opens the fork dialog (allowed in every state — forking a RUNNING
  * parent never blocks or stops its execution). Archive/Unarchive is a
@@ -45,7 +46,10 @@ export function WorkspaceHeader({
   const [forkOpen, setForkOpen] = useState(false);
   const solved = model.status === "SOLVED";
   const running = model.status === "RUNNING";
-  const noAttempts = model.attempts.length === 0;
+  // An execution-level failure (e.g. architect-stage) leaves no attempts but
+  // is still a failed run — the action is "Retry", not "Start proving".
+  const noAttempts =
+    model.attempts.length === 0 && model.last_execution_failure === null;
 
   return (
     <header className="workspace-header-block">
