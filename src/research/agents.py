@@ -51,6 +51,9 @@ class CodexExec:
         audit_dir: Optional[Path] = None,
         executable: Optional[str] = None,
         timeout_seconds: int = 600,
+        model: Optional[str] = None,
+        reasoning_effort: Optional[str] = None,
+        blind: bool = False,
     ) -> None:
         resolved = executable or shutil.which("codex")
         if not resolved:
@@ -59,6 +62,9 @@ class CodexExec:
         self.workdir = workdir.resolve()
         self.audit_dir = audit_dir
         self.timeout_seconds = timeout_seconds
+        self.model = model
+        self.reasoning_effort = reasoning_effort
+        self.blind = blind
         if audit_dir:
             audit_dir.mkdir(parents=True, exist_ok=True)
             self._sequence = len(list(audit_dir.glob("*.json")))
@@ -66,38 +72,48 @@ class CodexExec:
             self._sequence = 0
 
     def invoke(self, *, prompt: str, schema: Dict[str, Any], label: str) -> Dict[str, Any]:
-        with TemporaryDirectory(prefix="noespire-codex-") as directory:
-            schema_path = Path(directory) / "schema.json"
-            schema_path.write_text(json.dumps(schema), encoding="utf-8")
-            command = [
-                self.executable,
-                "exec",
-                "--ephemeral",
-                "--sandbox",
-                "read-only",
-                "--json",
-                "--color",
-                "never",
-                "--output-schema",
-                str(schema_path),
-                "-C",
-                str(self.workdir),
-            ]
-            completed = subprocess.run(
-                command,
-                input=prompt,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                capture_output=True,
-                timeout=self.timeout_seconds,
-                check=False,
-            )
-
+        completed: Optional[subprocess.CompletedProcess] = None
         events: List[Dict[str, Any]] = []
         result: Optional[Dict[str, Any]] = None
         error: Optional[str] = None
+        command: List[str] = []
         try:
+            with TemporaryDirectory(prefix="noespire-codex-") as directory:
+                schema_path = Path(directory) / "schema.json"
+                schema_path.write_text(json.dumps(schema), encoding="utf-8")
+                command = [
+                    self.executable,
+                    "exec",
+                    "--ephemeral",
+                    "--sandbox",
+                    "read-only",
+                    "--json",
+                    "--color",
+                    "never",
+                ]
+                if self.model:
+                    command += ["--model", self.model]
+                if self.reasoning_effort:
+                    command += [
+                        "--config",
+                        f'model_reasoning_effort="{self.reasoning_effort}"',
+                    ]
+                if self.blind:
+                    command += _blind_exec_options()
+                command += [
+                    "--output-schema", str(schema_path), "-C", str(self.workdir)
+                ]
+                completed = subprocess.run(
+                    command,
+                    input=prompt,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    capture_output=True,
+                    timeout=self.timeout_seconds,
+                    check=False,
+                )
+
             events = [json.loads(line) for line in completed.stdout.splitlines() if line.strip()]
             if completed.returncode:
                 raise RuntimeError(completed.stderr.strip() or "Codex invocation failed")
@@ -112,7 +128,7 @@ class CodexExec:
             result = json.loads(messages[-1])
             return result
         except Exception as exc:
-            error = str(exc)
+            error = f"{type(exc).__name__}: {exc}"
             raise
         finally:
             self._record(label, command, prompt, schema, completed, events, result, error)
@@ -123,7 +139,7 @@ class CodexExec:
         command: List[str],
         prompt: str,
         schema: Dict[str, Any],
-        completed: subprocess.CompletedProcess,
+        completed: Optional[subprocess.CompletedProcess],
         events: List[Dict[str, Any]],
         result: Optional[Dict[str, Any]],
         error: Optional[str],
@@ -138,8 +154,8 @@ class CodexExec:
             "command": command,
             "prompt": prompt,
             "schema": schema,
-            "returncode": completed.returncode,
-            "stderr": completed.stderr,
+            "returncode": completed.returncode if completed else None,
+            "stderr": completed.stderr if completed else None,
             "events": events,
             "thread_id": thread_ids[-1] if thread_ids else None,
             "result": result,
@@ -147,6 +163,45 @@ class CodexExec:
         }
         path = self.audit_dir / f"{self._sequence:03d}_{safe_label}.json"
         path.write_text(json.dumps(artifact, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _blind_exec_options() -> List[str]:
+    """Freeze the N1.9a-style no-retrieval surface for blind experiments."""
+    options = [
+        "--skip-git-repo-check",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--config", 'approval_policy="never"',
+        "--config", 'default_permissions="n113_blind"',
+        "--config", 'permissions.n113_blind.extends=":workspace"',
+        "--config", "permissions.n113_blind.network.enabled=true",
+        "--config", 'permissions.n113_blind.network.domains={"127.19.0.1"="allow"}',
+        "--config", "permissions.n113_blind.network.allow_local_binding=false",
+        "--config", "permissions.n113_blind.network.allow_upstream_proxy=false",
+        "--config", "permissions.n113_blind.network.enable_socks5=false",
+        "--config", "permissions.n113_blind.network.enable_socks5_udp=false",
+        "--config", "features.network_proxy=true",
+        "--config", 'web_search="disabled"',
+        "--config", "tools.web_search=false",
+        "--config", "agents.enabled=false",
+    ]
+    for feature in (
+        "browser_use",
+        "browser_use_external",
+        "in_app_browser",
+        "apps",
+        "enable_mcp_apps",
+        "computer_use",
+        "remote_plugin",
+        "plugins",
+        "recommended_plugins",
+        "standalone_web_search",
+        "search_tool",
+        "multi_agent",
+        "multi_agent_mode",
+    ):
+        options += ["--disable", feature]
+    return options
 
 
 class ResearchWorker:
@@ -194,9 +249,13 @@ class ResearchVerifier:
         predecessors: List[Fact],
     ) -> VerificationResult:
         prompt = f"""You are an independent fresh Codex verifier for an informal Research Fact Graph.
-Check whether the candidate statement is mathematically correct, the proof establishes it, and every
-declared predecessor is both provided and genuinely used. Reject missing assumptions, circular reasoning,
-unknown predecessor IDs, or arithmetic errors. This is an LLM baseline verdict, not a Lean check.
+The complete Problem is background context only. The candidate may be an intermediate lemma.
+Judge whether the supplied proof establishes exactly the candidate statement from the supplied accepted
+predecessors. Do not require the candidate to prove the complete Problem unless the candidate statement
+itself is the complete Problem. Check that the candidate statement is mathematically correct, the supplied
+predecessors are collectively sufficient, and every declared predecessor is provided and genuinely used.
+Reject an insufficient proof, missing assumptions, circular reasoning, unsupported inference, unknown
+predecessor IDs, or arithmetic errors. This is an LLM baseline verdict, not a Lean check.
 
 Problem:
 {problem}

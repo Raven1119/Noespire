@@ -1,0 +1,12 @@
+{
+  "obligations": [
+    {
+      "goal": "For every integer n, the integer n³ - n is divisible by 2.",
+      "obligation_id": "scaffold:n113-integer-divisibility:divisible_by_2",
+      "premises": [],
+      "resolved_by_fact_id": null,
+      "route_id": "scaffold:divisible_by_2",
+      "status": "OPEN"
+    }
+  ]
+}

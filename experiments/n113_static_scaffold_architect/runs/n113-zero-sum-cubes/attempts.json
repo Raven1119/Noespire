@@ -1,0 +1,36 @@
+[
+  {
+    "attempt_id": "attempt-000001",
+    "candidate_artifact": {
+      "predecessors": [],
+      "proof": "Let a, b, and c be arbitrary real numbers. Expanding the right-hand side gives\n(a + b + c)(a² + b² + c² − ab − ac − bc)\n= a³ + ab² + ac² − a²b − a²c − abc\n  + a²b + b³ + bc² − ab² − abc − b²c\n  + a²c + b²c + c³ − abc − ac² − bc².\nAll opposite terms cancel, leaving a³ + b³ + c³ − 3abc. Hence the stated identity holds for all real a, b, and c.",
+      "statement": "For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc)."
+    },
+    "error": null,
+    "obligation_id": "scaffold:n113-zero-sum-cubes:factorization",
+    "problem_id": "n113-zero-sum-cubes",
+    "verdict": "PASS",
+    "verifier_artifact": {
+      "accepted": true,
+      "reason": "The factorization identity is correct, and the displayed expansion proves it by cancellation. With a+b+c=0, its right-hand side is zero, immediately yielding a³+b³+c³=3abc. No predecessors are declared or needed."
+    }
+  },
+  {
+    "attempt_id": "attempt-000002",
+    "candidate_artifact": {
+      "predecessors": [
+        "acce0091d0e0cdeb"
+      ],
+      "proof": "Let a, b, and c be real numbers satisfying a + b + c = 0. By Fact acce0091d0e0cdeb, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc). Since a + b + c = 0, the right-hand side is 0. Thus a³ + b³ + c³ − 3abc = 0, and therefore a³ + b³ + c³ = 3abc.",
+      "statement": "For all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc."
+    },
+    "error": null,
+    "obligation_id": "scaffold:n113-zero-sum-cubes:target",
+    "problem_id": "n113-zero-sum-cubes",
+    "verdict": "PASS",
+    "verifier_artifact": {
+      "accepted": true,
+      "reason": "The statement is correct. The proof validly applies the provided predecessor identity, uses the hypothesis a + b + c = 0 to make the product zero, and rearranges the resulting equality to obtain a³ + b³ + c³ = 3abc. The sole declared predecessor is known, provided, and genuinely used; no assumptions, circularity, or arithmetic issues are present."
+    }
+  }
+]

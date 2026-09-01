@@ -1,0 +1,5 @@
+{
+  "problem_id": "n113-integer-divisibility",
+  "category": "divisibility",
+  "statement": "For every integer n, the integer n³ - n is divisible by 6."
+}

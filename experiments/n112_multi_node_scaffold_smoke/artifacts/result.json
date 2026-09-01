@@ -1,0 +1,166 @@
+{
+  "advance_statuses": [
+    "ADVANCED",
+    "ADVANCED",
+    "SOLVED"
+  ],
+  "attempt_ids": [
+    "attempt-000001",
+    "attempt-000002",
+    "attempt-000003"
+  ],
+  "attempt_verdicts": [
+    "PASS",
+    "PASS",
+    "PASS"
+  ],
+  "codex_version": "codex-cli 0.151.0-alpha.7.2",
+  "completed_at_utc": "2026-09-01T10:49:28.920762+00:00",
+  "error": null,
+  "invocations": [
+    {
+      "artifact": "001_research_worker.json",
+      "error": null,
+      "label": "research_worker",
+      "result": {
+        "predecessors": [],
+        "proof": "When n = 1, the sum consists only of the first positive odd integer, 1. Since 1 = 1^2, the stated equality holds.",
+        "statement": "For n = 1, the sum of the first n positive odd integers is n^2."
+      },
+      "thread_id": "01a05c85-1702-70b1-8b79-4422cba7b6bc",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21063,
+        "output_tokens": 193,
+        "reasoning_output_tokens": 117
+      }
+    },
+    {
+      "artifact": "002_research_verifier.json",
+      "error": null,
+      "label": "research_verifier",
+      "result": {
+        "accepted": true,
+        "reason": "The candidate correctly proves the n = 1 base case: the sum is 1, and 1 = 1^2. No assumptions are missing for this statement, and there are no declared predecessors to validate. It proves only the base case, not the full theorem, but is valid as an intermediate Research Fact."
+      },
+      "thread_id": "01a05c88-008a-7c31-8db6-6d5676383e4c",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21073,
+        "output_tokens": 202,
+        "reasoning_output_tokens": 117
+      }
+    },
+    {
+      "artifact": "003_research_worker.json",
+      "error": null,
+      "label": "research_worker",
+      "result": {
+        "predecessors": [],
+        "proof": "Let k be a positive integer and suppose the sum of the first k positive odd integers is k^2. The next positive odd integer is 2k + 1. Therefore, the sum of the first k + 1 positive odd integers is k^2 + (2k + 1) = k^2 + 2k + 1 = (k + 1)^2.",
+        "statement": "For every positive integer k, if the sum of the first k positive odd integers is k^2, then the sum of the first k + 1 positive odd integers is (k + 1)^2."
+      },
+      "thread_id": "01a05c8a-eaac-7680-a1a4-73f7942b40bb",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21086,
+        "output_tokens": 302,
+        "reasoning_output_tokens": 156
+      }
+    },
+    {
+      "artifact": "004_research_verifier.json",
+      "error": null,
+      "label": "research_verifier",
+      "result": {
+        "accepted": true,
+        "reason": "The statement is mathematically correct, and the proof establishes the induction step: after the first k odd integers, the next odd integer is 2k + 1, so k^2 + (2k + 1) = (k + 1)^2. No predecessor facts are declared or needed. This candidate proves only the inductive step, not the base case or the full theorem, but it fully proves its stated claim."
+      },
+      "thread_id": "01a05c8d-dded-7122-8eda-ee8dfe298a49",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21143,
+        "output_tokens": 224,
+        "reasoning_output_tokens": 115
+      }
+    },
+    {
+      "artifact": "005_research_worker.json",
+      "error": null,
+      "label": "research_worker",
+      "result": {
+        "predecessors": [
+          "c01d8d0ce1716e1e",
+          "f77b1e0364de7558"
+        ],
+        "proof": "We use mathematical induction on n. The statement holds for n = 1 by Fact c01d8d0ce1716e1e. Now let k be a positive integer and assume that the sum of the first k positive odd integers is k^2. By Fact f77b1e0364de7558, the sum of the first k + 1 positive odd integers is then (k + 1)^2. Therefore, by induction, for every positive integer n, the sum of the first n positive odd integers is n^2.",
+        "statement": "Prove that for every positive integer n, the sum of the first n positive odd integers is n^2."
+      },
+      "thread_id": "01a05c90-c456-7a53-8253-11f1d3bb51b3",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21383,
+        "output_tokens": 302,
+        "reasoning_output_tokens": 119
+      }
+    },
+    {
+      "artifact": "006_research_verifier.json",
+      "error": null,
+      "label": "research_verifier",
+      "result": {
+        "accepted": true,
+        "reason": "The statement is correct. The proof validly applies induction over positive integers: Fact c01d8d0ce1716e1e establishes the base case n = 1, and Fact f77b1e0364de7558 establishes the induction step using k² + (2k + 1) = (k + 1)². Both declared predecessors are provided, correctly identified, and genuinely used; there are no missing assumptions, circular reasoning, or arithmetic errors."
+      },
+      "thread_id": "01a05c93-a9aa-7303-a5bb-6e72a1bc1395",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 21503,
+        "output_tokens": 203,
+        "reasoning_output_tokens": 84
+      }
+    }
+  ],
+  "problem_id": "n112-sum-of-odd-integers",
+  "resolved_fact_ids": [
+    "c01d8d0ce1716e1e",
+    "f77b1e0364de7558",
+    "839d7d86a7fa67a8"
+  ],
+  "result": "PASS",
+  "scaffold_node_ids": [
+    "n1_base_case",
+    "n2_induction_step",
+    "target"
+  ],
+  "started_at_utc": "2026-09-01T10:30:21.101406+00:00",
+  "supporting_closure_fact_ids": [
+    "c01d8d0ce1716e1e",
+    "f77b1e0364de7558",
+    "839d7d86a7fa67a8"
+  ],
+  "supporting_closure_size": 3,
+  "target_fact_id": "839d7d86a7fa67a8",
+  "thread_ids": [
+    "01a05c85-1702-70b1-8b79-4422cba7b6bc",
+    "01a05c88-008a-7c31-8db6-6d5676383e4c",
+    "01a05c8a-eaac-7680-a1a4-73f7942b40bb",
+    "01a05c8d-dded-7122-8eda-ee8dfe298a49",
+    "01a05c90-c456-7a53-8253-11f1d3bb51b3",
+    "01a05c93-a9aa-7303-a5bb-6e72a1bc1395"
+  ],
+  "token_usage": {
+    "cache_write_input_tokens": 0,
+    "cached_input_tokens": 0,
+    "input_tokens": 127251,
+    "output_tokens": 1426,
+    "reasoning_output_tokens": 708
+  },
+  "wall_clock_seconds": 1147.8193351999944
+}

@@ -1,0 +1,9 @@
+{
+  "attempt_id": "attempt-000001",
+  "candidate_artifact": null,
+  "error": "Command '['c:\\\\Users\\\\wmywb\\\\.vscode\\\\extensions\\\\openai.chatgpt-26.5825.51511-win32-x64\\\\bin\\\\windows-x86_64\\\\codex.EXE', 'exec', '--ephemeral', '--sandbox', 'read-only', '--json', '--color', 'never', '--output-schema', 'C:\\\\Users\\\\wmywb\\\\AppData\\\\Local\\\\Temp\\\\noespire-codex-8nkhlkus\\\\schema.json', '-C', 'C:\\\\Users\\\\wmywb\\\\PycharmProjects\\\\Noespire']' timed out after 600 seconds",
+  "obligation_id": "scaffold:n112-three-odd-numbers:n1_first_sum",
+  "problem_id": "n112-three-odd-numbers",
+  "verdict": "ERROR",
+  "verifier_artifact": null
+}

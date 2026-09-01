@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000002",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "Let n be an integer. Modulo 3, n is congruent to 0, 1, or 2. If n ≡ 0 then 3 divides n; if n ≡ 1 then 3 divides n - 1; and if n ≡ 2 then 3 divides n + 1. Thus one of the factors n - 1, n, n + 1 is divisible by 3. Since n³ - n = n(n - 1)(n + 1), it is divisible by 3.",
+    "statement": "For every integer n, the integer n³ - n is divisible by 3."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n113-integer-divisibility:divisible_by_3",
+  "problem_id": "n113-integer-divisibility",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The proof is self-contained and correct. It exhausts all residue classes modulo 3, shows that one of n−1, n, n+1 is divisible by 3, and uses the valid factorization n³−n = n(n−1)(n+1). No predecessors are declared or needed."
+  }
+}

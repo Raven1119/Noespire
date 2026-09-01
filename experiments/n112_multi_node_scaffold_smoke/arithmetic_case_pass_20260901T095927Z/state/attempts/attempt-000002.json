@@ -1,0 +1,18 @@
+{
+  "attempt_id": "attempt-000002",
+  "candidate_artifact": {
+    "predecessors": [
+      "3d5381207a176796"
+    ],
+    "proof": "From the accepted fact 1 + 3 = 4, add 5 to both sides. This gives (1 + 3) + 5 = 4 + 5, hence 1 + 3 + 5 = 4 + 5.",
+    "statement": "1 + 3 + 5 = 4 + 5."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n112-three-odd-numbers:n2_rewrite_total",
+  "problem_id": "n112-three-odd-numbers",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The statement is mathematically correct. The proof validly uses the provided predecessor 3d5381207a176796 (1 + 3 = 4) and adds 5 to both sides, yielding (1 + 3) + 5 = 4 + 5. The predecessor exists and is genuinely used; there are no missing assumptions, circular steps, or arithmetic errors."
+  }
+}

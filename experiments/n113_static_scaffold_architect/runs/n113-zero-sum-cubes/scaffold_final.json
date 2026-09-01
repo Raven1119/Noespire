@@ -1,0 +1,22 @@
+{
+  "nodes": [
+    {
+      "depends_on": [],
+      "goal": "For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc).",
+      "node_id": "factorization",
+      "premise_fact_ids": [],
+      "resolved_by_fact_id": "acce0091d0e0cdeb"
+    },
+    {
+      "depends_on": [
+        "factorization"
+      ],
+      "goal": "For all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc.",
+      "node_id": "target",
+      "premise_fact_ids": [],
+      "resolved_by_fact_id": "fbcd79f66f8aa346"
+    }
+  ],
+  "problem_id": "n113-zero-sum-cubes",
+  "target_node_id": "target"
+}

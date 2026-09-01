@@ -1,0 +1,68 @@
+{
+  "advance_node_ids": [
+    "divisible_by_2",
+    "divisible_by_3",
+    "target"
+  ],
+  "architect_calls": 0,
+  "attempt_verdicts": [
+    "PASS",
+    "PASS",
+    "PASS"
+  ],
+  "automatic_retry": false,
+  "error": null,
+  "fact_ids": [
+    "4f6ccd5f5fae457f",
+    "739b692999ec8c7a",
+    "d2ca2c4125b62829"
+  ],
+  "facts_admitted": 3,
+  "frozen_scripted_worker": true,
+  "invocations": [
+    {
+      "artifact": "codex_audits\\e2e_resumed\\001_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9310,
+      "output_tokens": 75,
+      "reasoning_tokens": 0,
+      "thread_id": "01a05ce2-fc3e-7b13-817c-1e2875bbca75"
+    },
+    {
+      "artifact": "codex_audits\\e2e_resumed\\002_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9354,
+      "output_tokens": 82,
+      "reasoning_tokens": 0,
+      "thread_id": "01a05ce3-1d22-77e2-85b7-fcabaa3214a2"
+    },
+    {
+      "artifact": "codex_audits\\e2e_resumed\\003_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9690,
+      "output_tokens": 86,
+      "reasoning_tokens": 0,
+      "thread_id": "01a05ce3-3be0-76f1-9ff7-f25551db68a3"
+    }
+  ],
+  "status": "SOLVED",
+  "supporting_closure_fact_ids": [
+    "739b692999ec8c7a",
+    "d2ca2c4125b62829",
+    "4f6ccd5f5fae457f"
+  ],
+  "supporting_closure_size": 3,
+  "target_fact_id": "4f6ccd5f5fae457f",
+  "target_unlocked_after": [
+    "divisible_by_2",
+    "divisible_by_3"
+  ],
+  "verifier_calls": 3,
+  "wall_clock_seconds": 24.052737500009243,
+  "worker_calls": 3,
+  "workspace_empty_after": true,
+  "workspace_empty_before": true
+}

@@ -1,0 +1,17 @@
+{
+  "packet_id": "N1",
+  "classification": "mathematical_error",
+  "source_attempt": null,
+  "source_verifier_audit": null,
+  "problem": "For every integer n, the integer n³ - n is divisible by 6.",
+  "candidate": {
+    "statement": "For every integer n, the integer n³ - n is divisible by 4.",
+    "proof": "The three integers n - 1, n, and n + 1 are consecutive, so their product always contains two factors of 2 and is divisible by 4.",
+    "predecessors": []
+  },
+  "predecessor_facts": [],
+  "old_recorded_verdict": "NOT_RECORDED",
+  "old_recorded_reason": null,
+  "expected_verdict": "REJECT",
+  "mathematical_audit": "False: n = 2 gives n³ - n = 6, which is not divisible by 4."
+}

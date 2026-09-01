@@ -1,0 +1,19 @@
+{
+  "attempt_id": "attempt-000003",
+  "candidate_artifact": {
+    "predecessors": [
+      "739b692999ec8c7a",
+      "d2ca2c4125b62829"
+    ],
+    "proof": "Let n be any integer and put m = n³ - n. The accepted divisible-by-2 predecessor proves that 2 divides m, and the accepted divisible-by-3 predecessor proves that 3 divides m. Since 2 and 3 are coprime, their product 6 divides m. Therefore n³ - n is divisible by 6.",
+    "statement": "For every integer n, the integer n³ - n is divisible by 6."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n113-integer-divisibility:target",
+  "problem_id": "n113-integer-divisibility",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The proof correctly applies both supplied predecessors to the same arbitrary integer n, obtaining 2 | (n³−n) and 3 | (n³−n). Since gcd(2,3)=1, it validly concludes 6 | (n³−n). Both predecessor IDs are known, sufficient, and genuinely used."
+  }
+}

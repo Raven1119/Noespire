@@ -1,0 +1,32 @@
+{
+  "advance_statuses": [],
+  "attempt_ids": [
+    "attempt-000001"
+  ],
+  "attempt_verdicts": [
+    "ERROR"
+  ],
+  "codex_version": "codex-cli 0.151.0-alpha.7.2",
+  "completed_at_utc": "2026-09-01T09:58:36.144167+00:00",
+  "error": "TimeoutExpired: Command '['c:\\\\Users\\\\wmywb\\\\.vscode\\\\extensions\\\\openai.chatgpt-26.5825.51511-win32-x64\\\\bin\\\\windows-x86_64\\\\codex.EXE', 'exec', '--ephemeral', '--sandbox', 'read-only', '--json', '--color', 'never', '--output-schema', 'C:\\\\Users\\\\wmywb\\\\AppData\\\\Local\\\\Temp\\\\noespire-codex-8nkhlkus\\\\schema.json', '-C', 'C:\\\\Users\\\\wmywb\\\\PycharmProjects\\\\Noespire']' timed out after 600 seconds",
+  "invocations": [],
+  "problem_id": "n112-three-odd-numbers",
+  "resolved_fact_ids": [
+    null,
+    null,
+    null
+  ],
+  "result": "FAIL",
+  "scaffold_node_ids": [
+    "n1_first_sum",
+    "n2_rewrite_total",
+    "target"
+  ],
+  "started_at_utc": "2026-09-01T09:48:36.093725+00:00",
+  "supporting_closure_fact_ids": [],
+  "supporting_closure_size": 0,
+  "target_fact_id": null,
+  "thread_ids": [],
+  "token_usage": "unavailable",
+  "wall_clock_seconds": 600.0504198999988
+}

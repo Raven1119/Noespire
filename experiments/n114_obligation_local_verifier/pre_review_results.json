@@ -1,0 +1,153 @@
+{
+  "e2e_result": {
+    "advance_node_ids": [
+      "divisible_by_2",
+      "divisible_by_3",
+      "target"
+    ],
+    "architect_calls": 0,
+    "attempt_verdicts": [
+      "PASS",
+      "PASS",
+      "PASS"
+    ],
+    "automatic_retry": false,
+    "error": null,
+    "fact_ids": [
+      "4f6ccd5f5fae457f",
+      "739b692999ec8c7a",
+      "d2ca2c4125b62829"
+    ],
+    "facts_admitted": 3,
+    "frozen_scripted_worker": true,
+    "invocations": [
+      {
+        "artifact": "codex_audits\\e2e_resumed\\001_research_verifier.json",
+        "boundary_pass": true,
+        "error": null,
+        "input_tokens": 9310,
+        "output_tokens": 75,
+        "reasoning_tokens": 0,
+        "thread_id": "01a05ce2-fc3e-7b13-817c-1e2875bbca75"
+      },
+      {
+        "artifact": "codex_audits\\e2e_resumed\\002_research_verifier.json",
+        "boundary_pass": true,
+        "error": null,
+        "input_tokens": 9354,
+        "output_tokens": 82,
+        "reasoning_tokens": 0,
+        "thread_id": "01a05ce3-1d22-77e2-85b7-fcabaa3214a2"
+      },
+      {
+        "artifact": "codex_audits\\e2e_resumed\\003_research_verifier.json",
+        "boundary_pass": true,
+        "error": null,
+        "input_tokens": 9690,
+        "output_tokens": 86,
+        "reasoning_tokens": 0,
+        "thread_id": "01a05ce3-3be0-76f1-9ff7-f25551db68a3"
+      }
+    ],
+    "status": "SOLVED",
+    "supporting_closure_fact_ids": [
+      "739b692999ec8c7a",
+      "d2ca2c4125b62829",
+      "4f6ccd5f5fae457f"
+    ],
+    "supporting_closure_size": 3,
+    "target_fact_id": "4f6ccd5f5fae457f",
+    "target_unlocked_after": [
+      "divisible_by_2",
+      "divisible_by_3"
+    ],
+    "verifier_calls": 3,
+    "wall_clock_seconds": 24.052737500009243,
+    "worker_calls": 3,
+    "workspace_empty_after": true,
+    "workspace_empty_before": true
+  },
+  "packet_gate_pass": true,
+  "packet_results": [
+    {
+      "audit_artifact": "codex_audits\\packets\\001_research_verifier.json",
+      "blind_boundary_pass": true,
+      "classification": "known_false_negative",
+      "error": null,
+      "expected_verdict": "ACCEPT",
+      "input_tokens": 9306,
+      "matches_expected": true,
+      "new_verdict": "ACCEPT",
+      "old_recorded_verdict": "REJECT",
+      "output_tokens": 76,
+      "packet_id": "P1",
+      "reason": "The proof is correct and self-contained. It factors n³−n as n(n−1)(n+1), observes that among the consecutive integers n and n−1 one is even, and therefore concludes that the product is divisible by 2. No predecessors are declared or needed.",
+      "reasoning_tokens": 0,
+      "thread_id": "01a05ce0-d9d6-7273-9f97-21a6dce537a6",
+      "wall_clock_seconds": 7.425354799997876,
+      "workspace_empty_after": true,
+      "workspace_empty_before": true
+    },
+    {
+      "audit_artifact": "codex_audits\\packets\\002_research_verifier.json",
+      "blind_boundary_pass": true,
+      "classification": "known_accepted_intermediate",
+      "error": null,
+      "expected_verdict": "ACCEPT",
+      "input_tokens": 9420,
+      "matches_expected": true,
+      "new_verdict": "ACCEPT",
+      "old_recorded_verdict": "ACCEPT",
+      "output_tokens": 102,
+      "packet_id": "P2",
+      "reason": "The proof correctly expands the right-hand side and cancels all cross terms, leaving exactly a³ + b³ + c³ − 3abc. The identity holds for arbitrary real a, b, and c, and no predecessor facts are required.",
+      "reasoning_tokens": 32,
+      "thread_id": "01a05ce0-f6c3-7850-9855-a66eb75c72a3",
+      "wall_clock_seconds": 8.023332500000834,
+      "workspace_empty_after": true,
+      "workspace_empty_before": true
+    },
+    {
+      "audit_artifact": "codex_audits\\packets\\003_research_verifier.json",
+      "blind_boundary_pass": true,
+      "classification": "mathematical_error",
+      "error": null,
+      "expected_verdict": "REJECT",
+      "input_tokens": 9268,
+      "matches_expected": true,
+      "new_verdict": "REJECT",
+      "old_recorded_verdict": "NOT_RECORDED",
+      "output_tokens": 133,
+      "packet_id": "N1",
+      "reason": "The candidate statement is false: for n = 2, n³ - n = 8 - 2 = 6, which is not divisible by 4. The proof also incorrectly claims that three consecutive integers always contain two factors of 2; for 1, 2, 3, their product has only one factor of 2.",
+      "reasoning_tokens": 42,
+      "thread_id": "01a05ce1-161e-75a0-91c5-2e8f79a262a9",
+      "wall_clock_seconds": 9.016987299997709,
+      "workspace_empty_after": true,
+      "workspace_empty_before": true
+    },
+    {
+      "audit_artifact": "codex_audits\\packets\\004_research_verifier.json",
+      "blind_boundary_pass": true,
+      "classification": "missing_assumption",
+      "error": null,
+      "expected_verdict": "REJECT",
+      "input_tokens": 9279,
+      "matches_expected": true,
+      "new_verdict": "REJECT",
+      "old_recorded_verdict": "NOT_RECORDED",
+      "output_tokens": 75,
+      "packet_id": "N2",
+      "reason": "The proof only handles the case where n is divisible by 3. It does not address integers with remainder 1 or 2 modulo 3, for which n-1 or n+1, respectively, is divisible by 3. Thus it does not establish the universal statement.",
+      "reasoning_tokens": 0,
+      "thread_id": "01a05ce1-3947-7033-aa7d-f7a4df41f0d3",
+      "wall_clock_seconds": 7.564486700008274,
+      "workspace_empty_after": true,
+      "workspace_empty_before": true
+    }
+  ],
+  "preserved_preflight_failure": "e2e_run/result.json",
+  "protocol_id": "n114-obligation-local-verifier-v1",
+  "resumed_after_pre_verifier_harness_error": true,
+  "started_and_completed_at_utc": "2026-09-01T12:13:18.691883+00:00"
+}

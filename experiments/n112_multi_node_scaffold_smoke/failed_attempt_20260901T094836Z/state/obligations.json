@@ -1,0 +1,12 @@
+{
+  "obligations": [
+    {
+      "goal": "1 + 3 = 4.",
+      "obligation_id": "scaffold:n112-three-odd-numbers:n1_first_sum",
+      "premises": [],
+      "resolved_by_fact_id": null,
+      "route_id": "scaffold:n1_first_sum",
+      "status": "OPEN"
+    }
+  ]
+}

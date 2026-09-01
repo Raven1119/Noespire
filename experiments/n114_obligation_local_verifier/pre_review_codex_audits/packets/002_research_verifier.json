@@ -1,0 +1,128 @@
+{
+  "label": "research_verifier",
+  "command": [
+    "c:\\Users\\wmywb\\.vscode\\extensions\\openai.chatgpt-26.5825.51511-win32-x64\\bin\\windows-x86_64\\codex.EXE",
+    "exec",
+    "--ephemeral",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--model",
+    "gpt-5.6-sol",
+    "--config",
+    "model_reasoning_effort=\"medium\"",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--config",
+    "approval_policy=\"never\"",
+    "--config",
+    "default_permissions=\"n113_blind\"",
+    "--config",
+    "permissions.n113_blind.extends=\":workspace\"",
+    "--config",
+    "permissions.n113_blind.network.enabled=true",
+    "--config",
+    "permissions.n113_blind.network.domains={\"127.19.0.1\"=\"allow\"}",
+    "--config",
+    "permissions.n113_blind.network.allow_local_binding=false",
+    "--config",
+    "permissions.n113_blind.network.allow_upstream_proxy=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5_udp=false",
+    "--config",
+    "features.network_proxy=true",
+    "--config",
+    "web_search=\"disabled\"",
+    "--config",
+    "tools.web_search=false",
+    "--config",
+    "agents.enabled=false",
+    "--disable",
+    "browser_use",
+    "--disable",
+    "browser_use_external",
+    "--disable",
+    "in_app_browser",
+    "--disable",
+    "apps",
+    "--disable",
+    "enable_mcp_apps",
+    "--disable",
+    "computer_use",
+    "--disable",
+    "remote_plugin",
+    "--disable",
+    "plugins",
+    "--disable",
+    "recommended_plugins",
+    "--disable",
+    "standalone_web_search",
+    "--disable",
+    "search_tool",
+    "--disable",
+    "multi_agent",
+    "--disable",
+    "multi_agent_mode",
+    "--output-schema",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\noespire-codex-1cx35k_t\\schema.json",
+    "-C",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\n114-p2-oagar68i"
+  ],
+  "prompt": "You are an independent fresh Codex verifier for an informal Research Fact Graph.\nThe complete Problem is background context only. The candidate may be an intermediate lemma.\nJudge whether the supplied proof establishes exactly the candidate statement from the supplied accepted\npredecessors. Do not require the candidate to prove the complete Problem unless the candidate statement\nitself is the complete Problem. Check that the candidate statement is mathematically correct and every\ndeclared predecessor is both provided, sufficient, and genuinely used. Reject an insufficient proof,\nmissing assumptions, circular reasoning, unsupported inference, unknown predecessor IDs, or arithmetic\nerrors. This is an LLM baseline verdict, not a Lean check.\n\nProblem:\nFor all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc.\n\nCandidate:\n{\n  \"statement\": \"For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc).\",\n  \"proof\": \"Let a, b, and c be arbitrary real numbers. Expanding the right-hand side gives\\n(a + b + c)(a² + b² + c² − ab − ac − bc)\\n= a³ + ab² + ac² − a²b − a²c − abc\\n  + a²b + b³ + bc² − ab² − abc − b²c\\n  + a²c + b²c + c³ − abc − ac² − bc².\\nAll opposite terms cancel, leaving a³ + b³ + c³ − 3abc. Hence the stated identity holds for all real a, b, and c.\",\n  \"predecessors\": []\n}\n\nAccepted predecessor facts:\n[]\n",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "accepted": {
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "accepted",
+      "reason"
+    ],
+    "additionalProperties": false
+  },
+  "returncode": 0,
+  "stderr": "Reading prompt from stdin...\n2026-09-01T12:10:42.249165Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell\n",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a05ce0-f6c3-7850-9855-a66eb75c72a3"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "{\"accepted\":true,\"reason\":\"The proof correctly expands the right-hand side and cancels all cross terms, leaving exactly a³ + b³ + c³ − 3abc. The identity holds for arbitrary real a, b, and c, and no predecessor facts are required.\"}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 9420,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 102,
+        "reasoning_output_tokens": 32
+      }
+    }
+  ],
+  "thread_id": "01a05ce0-f6c3-7850-9855-a66eb75c72a3",
+  "result": {
+    "accepted": true,
+    "reason": "The proof correctly expands the right-hand side and cancels all cross terms, leaving exactly a³ + b³ + c³ − 3abc. The identity holds for arbitrary real a, b, and c, and no predecessor facts are required."
+  },
+  "error": null
+}

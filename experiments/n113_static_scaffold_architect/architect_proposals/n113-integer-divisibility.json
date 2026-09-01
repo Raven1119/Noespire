@@ -1,0 +1,26 @@
+{
+  "nodes": [
+    {
+      "depends_on": [],
+      "goal": "For every integer n, the integer n³ - n is divisible by 2.",
+      "node_id": "divisible_by_2",
+      "premise_fact_ids": []
+    },
+    {
+      "depends_on": [],
+      "goal": "For every integer n, the integer n³ - n is divisible by 3.",
+      "node_id": "divisible_by_3",
+      "premise_fact_ids": []
+    },
+    {
+      "depends_on": [
+        "divisible_by_2",
+        "divisible_by_3"
+      ],
+      "goal": "For every integer n, the integer n³ - n is divisible by 6.",
+      "node_id": "target",
+      "premise_fact_ids": []
+    }
+  ],
+  "target_node_id": "target"
+}

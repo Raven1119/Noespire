@@ -1,0 +1,11 @@
+[
+  {
+    "attempt_id": "attempt-000001",
+    "candidate_artifact": null,
+    "error": "'Use every provided accepted Fact jointly as a premise. Return the goal text verbatim as the candidate statement and return exactly the provided fact IDs as predecessors.\\n\\nGoal:\\nFor every integer n, the integer n³ - n is divisible by 2.'",
+    "obligation_id": "scaffold:n113-integer-divisibility:divisible_by_2",
+    "problem_id": "n113-integer-divisibility",
+    "verdict": "ERROR",
+    "verifier_artifact": null
+  }
+]

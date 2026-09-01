@@ -14,6 +14,11 @@
 - Experimental default: **single-worker-first**, supported by the N1.9b strictly matched scheduling ablation (`SINGLE_WORKER_FIRST_SUPPORTED`).
 - Implemented N1.11 product seam: `ProblemSpec -> root ProofObligation -> execute_obligation -> verified target Fact -> SupportingClosure -> ProblemResult`.
 - This is a **minimal direct-proof MVP**: the complete theorem statement is the root goal, with no parsing, planning, decomposition, or graph-search policy.
+- Implemented and validated N1.12 predefined-scaffold seam: persisted `ScaffoldNode` dependencies are materialized into ordinary obligations only after their upstream nodes resolve to accepted Fact IDs; one deterministic ready node executes at a time.
+- N1.12 real-Codex smoke: three distinct proof nodes, three worker invocations, three independent verifier invocations, three accepted Facts, and a target supporting closure of size three (`MULTI_NODE_EXECUTION_VALIDATED`).
+- N1.12's scaffold was caller-supplied experiment input; N1.13 now adds one fresh, one-shot Static Scaffold Architect whose strict proposal is mechanically validated and frozen before the unchanged N1.12 executor starts.
+- N1.13 real-Codex experiment: 3/3 mechanically valid multi-node proposals, 2/3 target PASS, verified multi-Fact target closures, fresh role threads, and zero retry/repair (`STATIC_SCAFFOLD_ARCHITECT_VALIDATED`).
+- No structural LLM audit, retry policy, fan-out, OR-route search, failure-driven refinement, GraphPatch, or adaptive refinement has been added.
 - Current N1 execution: one open Proof Obligation launches exactly one direct worker; a well-formed candidate receives one fresh verifier decision.
 - PASS: admit exactly one content-addressed Fact and mark the obligation `DISCHARGED`.
 - FAIL: persist attempt evidence, admit no Fact, return the root obligation to `OPEN`, and launch no automatic retry or fan-out.

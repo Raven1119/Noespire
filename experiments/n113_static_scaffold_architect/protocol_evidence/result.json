@@ -1,0 +1,9 @@
+{
+  "result": {
+    "external_network_was_blocked": false,
+    "observation": "Both shell attempts were rejected by execution policy before running, so workspace contents could not be inspected and no HTTPS request was made.",
+    "workspace_was_empty": false
+  },
+  "workspace_after": [],
+  "workspace_before": []
+}

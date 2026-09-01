@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000001",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "When n = 1, the sum consists only of the first positive odd integer, 1. Since 1 = 1^2, the stated equality holds.",
+    "statement": "For n = 1, the sum of the first n positive odd integers is n^2."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n112-sum-of-odd-integers:n1_base_case",
+  "problem_id": "n112-sum-of-odd-integers",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The candidate correctly proves the n = 1 base case: the sum is 1, and 1 = 1^2. No assumptions are missing for this statement, and there are no declared predecessors to validate. It proves only the base case, not the full theorem, but is valid as an intermediate Research Fact."
+  }
+}

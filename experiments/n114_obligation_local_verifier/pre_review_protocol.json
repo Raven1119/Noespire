@@ -1,0 +1,37 @@
+{
+  "protocol_id": "n114-obligation-local-verifier-v1",
+  "frozen_at_utc": "2026-09-01T00:00:00Z",
+  "product_branch": "noespire-nl-proof-v2",
+  "product_head": "aea39dad234c7fb7b3ad45ae9a69037054336067",
+  "frozen_danus_head": "6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c",
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "timeout_seconds": 900,
+  "packet_ablation": {
+    "packet_count": 4,
+    "fresh_ephemeral_verifier_per_packet": true,
+    "research_worker_calls": 0,
+    "architect_calls": 0,
+    "automatic_retry": false
+  },
+  "blind_boundary": {
+    "ignore_user_config": true,
+    "ignore_rules": true,
+    "external_search_disabled": true,
+    "browser_apps_plugins_subagents_disabled": true,
+    "shell_network_allowlist": [
+      "127.19.0.1"
+    ]
+  },
+  "e2e_regression": {
+    "runs_only_after_all_packets_match_expected": true,
+    "scaffold_source": "experiments/n113_static_scaffold_architect/runs/n113-integer-divisibility/validated_scaffold.json",
+    "architect_regeneration": false,
+    "scaffold_modification": false,
+    "worker": "frozen scripted candidates",
+    "verifier": "fresh real ResearchVerifier per node",
+    "automatic_retry": false,
+    "repair": false,
+    "adaptive_cut": false
+  }
+}

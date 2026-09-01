@@ -1,5 +1,9 @@
 # Noespire Frontend V1 — Production Spec
 
+> Historical V1 baseline. For the N1.12–N1.14 state synchronization
+> amendments and current product truth, see `docs/frontend_n114_sync_spec.md`
+> and `docs/NOESPIRE_FRONTEND_STATE_N114.md`.
+
 Status: FROZEN (including the crash-consistency rulings in §7.2–7.3 and the
 freeze rulings in §13), ready for implementation. This spec is the contract
 between product decisions (CONTEXT.md, ADR-0001…0005, prototype verdict) and

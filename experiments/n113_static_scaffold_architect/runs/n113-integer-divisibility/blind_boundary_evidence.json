@@ -1,0 +1,20 @@
+{
+  "architect_excluded": [
+    "reference proof",
+    "previous proof",
+    "worker artifact",
+    "verifier artifact",
+    "Fact Graph history",
+    "DANUS memory",
+    "Lean information"
+  ],
+  "architect_input": [
+    "problem_id",
+    "complete theorem statement",
+    "allowed Fact IDs and statements"
+  ],
+  "blind_command_recorded_in": "runs\\n113-integer-divisibility\\architect_audit.json",
+  "workspace_entries_after": [],
+  "workspace_entries_before": [],
+  "workspace_removed_after_case": true
+}

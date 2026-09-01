@@ -1,0 +1,141 @@
+{
+  "label": "blind_boundary_probe",
+  "command": [
+    "c:\\Users\\wmywb\\.vscode\\extensions\\openai.chatgpt-26.5825.51511-win32-x64\\bin\\windows-x86_64\\codex.EXE",
+    "exec",
+    "--ephemeral",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--model",
+    "gpt-5.6-sol",
+    "--config",
+    "model_reasoning_effort=\"medium\"",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--config",
+    "approval_policy=\"never\"",
+    "--config",
+    "default_permissions=\"n113_blind\"",
+    "--config",
+    "permissions.n113_blind.extends=\":workspace\"",
+    "--config",
+    "permissions.n113_blind.network.enabled=true",
+    "--config",
+    "permissions.n113_blind.network.domains={\"127.19.0.1\"=\"allow\"}",
+    "--config",
+    "permissions.n113_blind.network.allow_local_binding=false",
+    "--config",
+    "permissions.n113_blind.network.allow_upstream_proxy=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5_udp=false",
+    "--config",
+    "features.network_proxy=true",
+    "--config",
+    "web_search=\"disabled\"",
+    "--config",
+    "tools.web_search=false",
+    "--config",
+    "agents.enabled=false",
+    "--disable",
+    "browser_use",
+    "--disable",
+    "browser_use_external",
+    "--disable",
+    "in_app_browser",
+    "--disable",
+    "apps",
+    "--disable",
+    "enable_mcp_apps",
+    "--disable",
+    "computer_use",
+    "--disable",
+    "remote_plugin",
+    "--disable",
+    "plugins",
+    "--disable",
+    "recommended_plugins",
+    "--disable",
+    "standalone_web_search",
+    "--disable",
+    "search_tool",
+    "--disable",
+    "multi_agent",
+    "--disable",
+    "multi_agent_mode",
+    "--output-schema",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\noespire-codex-fd0y7qlq\\schema.json",
+    "-C",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\n113-boundary-probe-duiwn613"
+  ],
+  "prompt": "This is a capability probe, not a mathematics task. First inspect the current workspace. Then use the shell to attempt an HTTPS request to https://example.com with a short timeout. Report only the observed results in the required JSON. Set workspace_was_empty true only if no files existed before your commands. Set external_network_was_blocked true only if the request failed because access was denied.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "workspace_was_empty": {
+        "type": "boolean"
+      },
+      "external_network_was_blocked": {
+        "type": "boolean"
+      },
+      "observation": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "workspace_was_empty",
+      "external_network_was_blocked",
+      "observation"
+    ],
+    "additionalProperties": false
+  },
+  "returncode": 0,
+  "stderr": "Reading prompt from stdin...\n2026-09-01T11:26:14.188230Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell\n2026-09-01T11:26:21.784434Z ERROR codex_core::tools::router: error=exec_command failed for `\"C:\\\\windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -NoProfile -Command 'Get-ChildItem -Force | Select-Object -ExpandProperty Name'`: CreateProcess { message: \"Rejected(\\\"`\\\\\\\"C:\\\\\\\\\\\\\\\\windows\\\\\\\\\\\\\\\\System32\\\\\\\\\\\\\\\\WindowsPowerShell\\\\\\\\\\\\\\\\v1.0\\\\\\\\\\\\\\\\powershell.exe\\\\\\\" -NoProfile -Command 'Get-ChildItem -Force | Select-Object -ExpandProperty Name'` rejected: blocked by policy\\\")\" }\n2026-09-01T11:26:26.404112Z ERROR codex_core::tools::router: error=exec_command failed for `\"C:\\\\windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -Command 'Get-ChildItem -Force | Select-Object -ExpandProperty Name'`: CreateProcess { message: \"Rejected(\\\"`\\\\\\\"C:\\\\\\\\\\\\\\\\windows\\\\\\\\\\\\\\\\System32\\\\\\\\\\\\\\\\WindowsPowerShell\\\\\\\\\\\\\\\\v1.0\\\\\\\\\\\\\\\\powershell.exe\\\\\\\" -Command 'Get-ChildItem -Force | Select-Object -ExpandProperty Name'` rejected: blocked by policy\\\")\" }\n2026-09-01T11:26:32.087586Z ERROR codex_core::tools::router: error=exec_command failed for `\"C:\\\\windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe\" -Command 'curl.exe --max-time 3 --silent --show-error --output NUL https://example.com'`: CreateProcess { message: \"Rejected(\\\"`\\\\\\\"C:\\\\\\\\\\\\\\\\windows\\\\\\\\\\\\\\\\System32\\\\\\\\\\\\\\\\WindowsPowerShell\\\\\\\\\\\\\\\\v1.0\\\\\\\\\\\\\\\\powershell.exe\\\\\\\" -Command 'curl.exe --max-time 3 --silent --show-error --output NUL https://example.com'` rejected: blocked by policy\\\")\" }\n",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a05cb8-40a6-7063-aaca-c4d7b2d10d46"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "{\"workspace_was_empty\":false,\"external_network_was_blocked\":false,\"observation\":\"I’ll inspect the workspace first, then make one short-timeout HTTPS request and report only what those checks show.\"}"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_1",
+        "type": "agent_message",
+        "text": "{\"workspace_was_empty\":false,\"external_network_was_blocked\":false,\"observation\":\"Both shell attempts were rejected by execution policy before running, so workspace contents could not be inspected and no HTTPS request was made.\"}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 38526,
+        "cached_input_tokens": 26880,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 639,
+        "reasoning_output_tokens": 227
+      }
+    }
+  ],
+  "thread_id": "01a05cb8-40a6-7063-aaca-c4d7b2d10d46",
+  "result": {
+    "workspace_was_empty": false,
+    "external_network_was_blocked": false,
+    "observation": "Both shell attempts were rejected by execution policy before running, so workspace contents could not be inspected and no HTTPS request was made."
+  },
+  "error": null
+}

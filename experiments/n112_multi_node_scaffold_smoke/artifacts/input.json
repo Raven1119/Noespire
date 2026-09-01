@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {
+      "depends_on": [],
+      "goal": "For n = 1, the sum of the first n positive odd integers is n^2.",
+      "node_id": "n1_base_case",
+      "premise_fact_ids": []
+    },
+    {
+      "depends_on": [],
+      "goal": "For every positive integer k, if the sum of the first k positive odd integers is k^2, then the sum of the first k + 1 positive odd integers is (k + 1)^2.",
+      "node_id": "n2_induction_step",
+      "premise_fact_ids": []
+    },
+    {
+      "depends_on": [
+        "n1_base_case",
+        "n2_induction_step"
+      ],
+      "goal": "Prove that for every positive integer n, the sum of the first n positive odd integers is n^2.",
+      "node_id": "target",
+      "premise_fact_ids": []
+    }
+  ],
+  "problem_id": "n112-sum-of-odd-integers",
+  "statement": "Prove that for every positive integer n, the sum of the first n positive odd integers is n^2.",
+  "target_node_id": "target"
+}

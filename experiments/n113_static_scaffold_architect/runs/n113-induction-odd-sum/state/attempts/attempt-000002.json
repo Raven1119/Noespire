@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000002",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "Let k be a nonnegative integer and assume that 1 + 3 + ⋯ + (2k - 1) = k². Adding 2k + 1 to both sides gives 1 + 3 + ⋯ + (2k - 1) + (2k + 1) = k² + 2k + 1. Since k² + 2k + 1 = (k + 1)², the desired equality follows.",
+    "statement": "For every nonnegative integer k, if 1 + 3 + ⋯ + (2k - 1) = k² (with the sum empty when k = 0), then 1 + 3 + ⋯ + (2k - 1) + (2k + 1) = (k + 1)²."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n113-induction-odd-sum:inductive_step",
+  "problem_id": "n113-induction-odd-sum",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The candidate correctly proves the induction step for every nonnegative integer k: assuming the sum of the first k positive odd integers is k², adding the next odd integer 2k+1 yields k²+2k+1=(k+1)². The k=0 case is compatible with the empty-sum convention. No predecessor facts are declared or needed."
+  }
+}

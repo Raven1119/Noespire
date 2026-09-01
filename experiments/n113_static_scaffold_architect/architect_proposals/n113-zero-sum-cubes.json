@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {
+      "depends_on": [],
+      "goal": "For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc).",
+      "node_id": "factorization",
+      "premise_fact_ids": []
+    },
+    {
+      "depends_on": [
+        "factorization"
+      ],
+      "goal": "For all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc.",
+      "node_id": "target",
+      "premise_fact_ids": []
+    }
+  ],
+  "target_node_id": "target"
+}

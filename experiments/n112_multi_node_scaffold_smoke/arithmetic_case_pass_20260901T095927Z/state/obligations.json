@@ -1,0 +1,32 @@
+{
+  "obligations": [
+    {
+      "goal": "1 + 3 = 4.",
+      "obligation_id": "scaffold:n112-three-odd-numbers:n1_first_sum",
+      "premises": [],
+      "resolved_by_fact_id": "3d5381207a176796",
+      "route_id": "scaffold:n1_first_sum",
+      "status": "DISCHARGED"
+    },
+    {
+      "goal": "1 + 3 + 5 = 4 + 5.",
+      "obligation_id": "scaffold:n112-three-odd-numbers:n2_rewrite_total",
+      "premises": [
+        "3d5381207a176796"
+      ],
+      "resolved_by_fact_id": "7dadec650cdaae22",
+      "route_id": "scaffold:n2_rewrite_total",
+      "status": "DISCHARGED"
+    },
+    {
+      "goal": "Prove that 1 + 3 + 5 = 9.",
+      "obligation_id": "scaffold:n112-three-odd-numbers:target",
+      "premises": [
+        "7dadec650cdaae22"
+      ],
+      "resolved_by_fact_id": "fa8e338d80c9b36b",
+      "route_id": "scaffold:target",
+      "status": "DISCHARGED"
+    }
+  ]
+}

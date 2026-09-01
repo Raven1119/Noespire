@@ -1,0 +1,438 @@
+{
+  "acceptance_checks": {
+    "all_architect_blind_boundaries_pass": true,
+    "all_architect_outputs_mechanically_valid": true,
+    "all_executed_nodes_use_existing_truth_gate": true,
+    "all_threads_fresh": true,
+    "at_least_three_real_theorems": true,
+    "at_least_two_multi_node_scaffolds": true,
+    "at_least_two_targets_verifier_pass": true,
+    "solved_closures_include_intermediate_facts": true,
+    "zero_retry_or_repair": true
+  },
+  "architect_valid_count": 3,
+  "codex_version": "codex-cli 0.151.0-alpha.7.2",
+  "direct_baseline_executed": false,
+  "git_branch": "noespire-nl-proof-v2",
+  "git_head": "aea39dad234c7fb7b3ad45ae9a69037054336067",
+  "model": "gpt-5.6-sol",
+  "multi_node_count": 3,
+  "performance_claim": null,
+  "protocol_id": "n113-static-scaffold-architect-v1",
+  "reasoning_effort": "medium",
+  "results": [
+    {
+      "all_case_threads_fresh": true,
+      "architect_blind_boundary_pass": true,
+      "architect_valid": true,
+      "attempt_verdicts": [
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "category": "induction",
+      "completed_at_utc": "2026-09-01T11:28:18.553037+00:00",
+      "edge_count": 2,
+      "error": null,
+      "facts_outside_closure": 0,
+      "facts_written": 3,
+      "invocations": [
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\001_scaffold_architect.json",
+          "error": null,
+          "label": "scaffold_architect",
+          "role": "architect",
+          "thread_id": "01a05cb9-279a-7240-8ecc-fbdab76561d5",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9379,
+            "output_tokens": 360,
+            "reasoning_output_tokens": 118
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\002_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cb9-5ba1-7072-aaed-dd5b4150c889",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9257,
+            "output_tokens": 92,
+            "reasoning_output_tokens": 0
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\003_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cb9-780d-7f73-862f-623bdb92e2cd",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9276,
+            "output_tokens": 58,
+            "reasoning_output_tokens": 0
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\004_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cb9-93f6-7032-8caf-aeb48ea8edc2",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9300,
+            "output_tokens": 229,
+            "reasoning_output_tokens": 35
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\005_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cb9-be52-7663-9d71-d861222b11ca",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9376,
+            "output_tokens": 93,
+            "reasoning_output_tokens": 0
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\006_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cb9-da6b-73b3-97ff-9e5c1d30cde2",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9661,
+            "output_tokens": 258,
+            "reasoning_output_tokens": 22
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-induction-odd-sum\\007_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cba-0578-7182-a0c8-8c7a34c6c9e2",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9800,
+            "output_tokens": 129,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ],
+      "node_count": 3,
+      "one_shot_no_retry": true,
+      "post_review_mechanical_revalidation_pass": true,
+      "problem_id": "n113-induction-odd-sum",
+      "role_invocation_counts": {
+        "architect": 1,
+        "verifier": 3,
+        "worker": 3
+      },
+      "role_tokens": {
+        "architect": {
+          "cached_input_tokens": 0,
+          "input_tokens": 9379,
+          "output_tokens": 360,
+          "reasoning_output_tokens": 118
+        },
+        "verifier": {
+          "cached_input_tokens": 0,
+          "input_tokens": 28452,
+          "output_tokens": 280,
+          "reasoning_output_tokens": 0
+        },
+        "worker": {
+          "cached_input_tokens": 0,
+          "input_tokens": 28218,
+          "output_tokens": 579,
+          "reasoning_output_tokens": 57
+        }
+      },
+      "solved": true,
+      "started_at_utc": "2026-09-01T11:27:13.242554+00:00",
+      "status": "SOLVED",
+      "supporting_closure_fact_ids": [
+        "534b2c8350a6010d",
+        "a42b86e8849efcef",
+        "f46affad949f4a88"
+      ],
+      "supporting_closure_size": 3,
+      "target_depth_edges": 1,
+      "target_fact_id": "f46affad949f4a88",
+      "tokens_per_scaffold_node": 22422.666666666668,
+      "tokens_per_verified_fact": 22422.666666666668,
+      "total_cached_input_tokens": 0,
+      "total_input_tokens": 66049,
+      "total_output_tokens": 1219,
+      "total_reasoning_output_tokens": 175,
+      "verifier_accepts": 3,
+      "verifier_rejects": 0,
+      "wall_clock_seconds": 65.30650779999269,
+      "worker_attempts": 3
+    },
+    {
+      "all_case_threads_fresh": true,
+      "architect_blind_boundary_pass": true,
+      "architect_valid": true,
+      "attempt_verdicts": [
+        "FAIL"
+      ],
+      "category": "divisibility",
+      "completed_at_utc": "2026-09-01T11:28:49.288144+00:00",
+      "edge_count": 2,
+      "error": null,
+      "facts_outside_closure": 0,
+      "facts_written": 0,
+      "invocations": [
+        {
+          "artifact": "codex_audits\\n113-integer-divisibility\\001_scaffold_architect.json",
+          "error": null,
+          "label": "scaffold_architect",
+          "role": "architect",
+          "thread_id": "01a05cba-26b3-7ff2-a70e-918e7ab6d9c0",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9338,
+            "output_tokens": 200,
+            "reasoning_output_tokens": 55
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-integer-divisibility\\002_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cba-4c6a-7a43-8d0c-c646ed48c5ad",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9205,
+            "output_tokens": 142,
+            "reasoning_output_tokens": 32
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-integer-divisibility\\003_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cba-6e82-7f20-805f-d7f96e6c09c2",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9252,
+            "output_tokens": 144,
+            "reasoning_output_tokens": 69
+          }
+        }
+      ],
+      "node_count": 3,
+      "one_shot_no_retry": true,
+      "post_review_mechanical_revalidation_pass": true,
+      "problem_id": "n113-integer-divisibility",
+      "role_invocation_counts": {
+        "architect": 1,
+        "verifier": 1,
+        "worker": 1
+      },
+      "role_tokens": {
+        "architect": {
+          "cached_input_tokens": 0,
+          "input_tokens": 9338,
+          "output_tokens": 200,
+          "reasoning_output_tokens": 55
+        },
+        "verifier": {
+          "cached_input_tokens": 0,
+          "input_tokens": 9252,
+          "output_tokens": 144,
+          "reasoning_output_tokens": 69
+        },
+        "worker": {
+          "cached_input_tokens": 0,
+          "input_tokens": 9205,
+          "output_tokens": 142,
+          "reasoning_output_tokens": 32
+        }
+      },
+      "solved": false,
+      "started_at_utc": "2026-09-01T11:28:18.554011+00:00",
+      "status": "EXECUTION_BLOCKED",
+      "supporting_closure_fact_ids": [],
+      "supporting_closure_size": 0,
+      "target_depth_edges": 1,
+      "target_fact_id": null,
+      "tokens_per_scaffold_node": 9427.0,
+      "tokens_per_verified_fact": null,
+      "total_cached_input_tokens": 0,
+      "total_input_tokens": 27795,
+      "total_output_tokens": 486,
+      "total_reasoning_output_tokens": 156,
+      "verifier_accepts": 0,
+      "verifier_rejects": 1,
+      "wall_clock_seconds": 30.73129979999794,
+      "worker_attempts": 1
+    },
+    {
+      "all_case_threads_fresh": true,
+      "architect_blind_boundary_pass": true,
+      "architect_valid": true,
+      "attempt_verdicts": [
+        "PASS",
+        "PASS"
+      ],
+      "category": "elementary algebra",
+      "completed_at_utc": "2026-09-01T11:29:43.824644+00:00",
+      "edge_count": 1,
+      "error": null,
+      "facts_outside_closure": 0,
+      "facts_written": 2,
+      "invocations": [
+        {
+          "artifact": "codex_audits\\n113-zero-sum-cubes\\001_scaffold_architect.json",
+          "error": null,
+          "label": "scaffold_architect",
+          "role": "architect",
+          "thread_id": "01a05cba-9ebe-7e50-a8f3-7e50a3caad81",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9354,
+            "output_tokens": 194,
+            "reasoning_output_tokens": 51
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-zero-sum-cubes\\002_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cba-ce54-76f2-8f09-1960a0ace4cf",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9251,
+            "output_tokens": 238,
+            "reasoning_output_tokens": 30
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-zero-sum-cubes\\003_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cba-f90e-7390-9a62-f9960be23322",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9366,
+            "output_tokens": 265,
+            "reasoning_output_tokens": 196
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-zero-sum-cubes\\004_research_worker.json",
+          "error": null,
+          "label": "research_worker",
+          "role": "worker",
+          "thread_id": "01a05cbb-2c4c-79b1-84d0-835a50de2b48",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9484,
+            "output_tokens": 183,
+            "reasoning_output_tokens": 0
+          }
+        },
+        {
+          "artifact": "codex_audits\\n113-zero-sum-cubes\\005_research_verifier.json",
+          "error": null,
+          "label": "research_verifier",
+          "role": "verifier",
+          "thread_id": "01a05cbb-5197-7183-b493-948afd023540",
+          "usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 9592,
+            "output_tokens": 96,
+            "reasoning_output_tokens": 0
+          }
+        }
+      ],
+      "node_count": 2,
+      "one_shot_no_retry": true,
+      "post_review_mechanical_revalidation_pass": true,
+      "problem_id": "n113-zero-sum-cubes",
+      "role_invocation_counts": {
+        "architect": 1,
+        "verifier": 2,
+        "worker": 2
+      },
+      "role_tokens": {
+        "architect": {
+          "cached_input_tokens": 0,
+          "input_tokens": 9354,
+          "output_tokens": 194,
+          "reasoning_output_tokens": 51
+        },
+        "verifier": {
+          "cached_input_tokens": 0,
+          "input_tokens": 18958,
+          "output_tokens": 361,
+          "reasoning_output_tokens": 196
+        },
+        "worker": {
+          "cached_input_tokens": 0,
+          "input_tokens": 18735,
+          "output_tokens": 421,
+          "reasoning_output_tokens": 30
+        }
+      },
+      "solved": true,
+      "started_at_utc": "2026-09-01T11:28:49.289012+00:00",
+      "status": "SOLVED",
+      "supporting_closure_fact_ids": [
+        "acce0091d0e0cdeb",
+        "fbcd79f66f8aa346"
+      ],
+      "supporting_closure_size": 2,
+      "target_depth_edges": 1,
+      "target_fact_id": "fbcd79f66f8aa346",
+      "tokens_per_scaffold_node": 24011.5,
+      "tokens_per_verified_fact": 24011.5,
+      "total_cached_input_tokens": 0,
+      "total_input_tokens": 47047,
+      "total_output_tokens": 976,
+      "total_reasoning_output_tokens": 277,
+      "verifier_accepts": 2,
+      "verifier_rejects": 0,
+      "wall_clock_seconds": 54.532262900000205,
+      "worker_attempts": 2
+    }
+  ],
+  "solved_count": 2,
+  "theorem_count": 3,
+  "total_input_tokens": 140891,
+  "total_output_tokens": 2681,
+  "total_tokens": 143572,
+  "total_wall_clock_seconds": 150.57007049999083,
+  "verdict": "STATIC_SCAFFOLD_ARCHITECT_VALIDATED"
+}

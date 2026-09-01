@@ -1,0 +1,31 @@
+{
+  "nodes": [
+    {
+      "depends_on": [],
+      "goal": "1 + 3 = 4.",
+      "node_id": "n1_first_sum",
+      "premise_fact_ids": [],
+      "resolved_by_fact_id": "3d5381207a176796"
+    },
+    {
+      "depends_on": [
+        "n1_first_sum"
+      ],
+      "goal": "1 + 3 + 5 = 4 + 5.",
+      "node_id": "n2_rewrite_total",
+      "premise_fact_ids": [],
+      "resolved_by_fact_id": "7dadec650cdaae22"
+    },
+    {
+      "depends_on": [
+        "n2_rewrite_total"
+      ],
+      "goal": "Prove that 1 + 3 + 5 = 9.",
+      "node_id": "target",
+      "premise_fact_ids": [],
+      "resolved_by_fact_id": "fa8e338d80c9b36b"
+    }
+  ],
+  "problem_id": "n112-three-odd-numbers",
+  "target_node_id": "target"
+}

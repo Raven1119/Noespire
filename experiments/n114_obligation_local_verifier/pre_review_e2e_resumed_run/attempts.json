@@ -1,0 +1,53 @@
+[
+  {
+    "attempt_id": "attempt-000001",
+    "candidate_artifact": {
+      "predecessors": [],
+      "proof": "Let n be any integer. We have n³ - n = n(n - 1)(n + 1). The integers n and n - 1 are consecutive, so one of them is even. Hence their product, and therefore n(n - 1)(n + 1) = n³ - n, is divisible by 2.",
+      "statement": "For every integer n, the integer n³ - n is divisible by 2."
+    },
+    "error": null,
+    "obligation_id": "scaffold:n113-integer-divisibility:divisible_by_2",
+    "problem_id": "n113-integer-divisibility",
+    "verdict": "PASS",
+    "verifier_artifact": {
+      "accepted": true,
+      "reason": "The proof is correct and self-contained. It factors n³−n as n(n−1)(n+1), observes that one of the consecutive integers n and n−1 is even, and therefore concludes the product is divisible by 2. No predecessors are declared or needed."
+    }
+  },
+  {
+    "attempt_id": "attempt-000002",
+    "candidate_artifact": {
+      "predecessors": [],
+      "proof": "Let n be an integer. Modulo 3, n is congruent to 0, 1, or 2. If n ≡ 0 then 3 divides n; if n ≡ 1 then 3 divides n - 1; and if n ≡ 2 then 3 divides n + 1. Thus one of the factors n - 1, n, n + 1 is divisible by 3. Since n³ - n = n(n - 1)(n + 1), it is divisible by 3.",
+      "statement": "For every integer n, the integer n³ - n is divisible by 3."
+    },
+    "error": null,
+    "obligation_id": "scaffold:n113-integer-divisibility:divisible_by_3",
+    "problem_id": "n113-integer-divisibility",
+    "verdict": "PASS",
+    "verifier_artifact": {
+      "accepted": true,
+      "reason": "The proof is self-contained and correct. It exhausts all residue classes modulo 3, shows that one of n−1, n, n+1 is divisible by 3, and uses the valid factorization n³−n = n(n−1)(n+1). No predecessors are declared or needed."
+    }
+  },
+  {
+    "attempt_id": "attempt-000003",
+    "candidate_artifact": {
+      "predecessors": [
+        "739b692999ec8c7a",
+        "d2ca2c4125b62829"
+      ],
+      "proof": "Let n be any integer and put m = n³ - n. The accepted divisible-by-2 predecessor proves that 2 divides m, and the accepted divisible-by-3 predecessor proves that 3 divides m. Since 2 and 3 are coprime, their product 6 divides m. Therefore n³ - n is divisible by 6.",
+      "statement": "For every integer n, the integer n³ - n is divisible by 6."
+    },
+    "error": null,
+    "obligation_id": "scaffold:n113-integer-divisibility:target",
+    "problem_id": "n113-integer-divisibility",
+    "verdict": "PASS",
+    "verifier_artifact": {
+      "accepted": true,
+      "reason": "The proof correctly applies both supplied predecessors to the same arbitrary integer n, obtaining 2 | (n³−n) and 3 | (n³−n). Since gcd(2,3)=1, it validly concludes 6 | (n³−n). Both predecessor IDs are known, sufficient, and genuinely used."
+    }
+  }
+]

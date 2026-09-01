@@ -1,0 +1,19 @@
+{
+  "attempt_id": "attempt-000003",
+  "candidate_artifact": {
+    "predecessors": [
+      "c01d8d0ce1716e1e",
+      "f77b1e0364de7558"
+    ],
+    "proof": "We use mathematical induction on n. The statement holds for n = 1 by Fact c01d8d0ce1716e1e. Now let k be a positive integer and assume that the sum of the first k positive odd integers is k^2. By Fact f77b1e0364de7558, the sum of the first k + 1 positive odd integers is then (k + 1)^2. Therefore, by induction, for every positive integer n, the sum of the first n positive odd integers is n^2.",
+    "statement": "Prove that for every positive integer n, the sum of the first n positive odd integers is n^2."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n112-sum-of-odd-integers:target",
+  "problem_id": "n112-sum-of-odd-integers",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The statement is correct. The proof validly applies induction over positive integers: Fact c01d8d0ce1716e1e establishes the base case n = 1, and Fact f77b1e0364de7558 establishes the induction step using k² + (2k + 1) = (k + 1)². Both declared predecessors are provided, correctly identified, and genuinely used; there are no missing assumptions, circular reasoning, or arithmetic errors."
+  }
+}

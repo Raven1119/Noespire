@@ -1,0 +1,30 @@
+[
+  {
+    "author": "noespire-n112-real-worker",
+    "fact_id": "3d5381207a176796",
+    "predecessors": [],
+    "problem_id": "n112-three-odd-numbers",
+    "proof": "By direct addition, 1 + 3 = 4.",
+    "statement": "1 + 3 = 4."
+  },
+  {
+    "author": "noespire-n112-real-worker",
+    "fact_id": "7dadec650cdaae22",
+    "predecessors": [
+      "3d5381207a176796"
+    ],
+    "problem_id": "n112-three-odd-numbers",
+    "proof": "From the accepted fact 1 + 3 = 4, add 5 to both sides. This gives (1 + 3) + 5 = 4 + 5, hence 1 + 3 + 5 = 4 + 5.",
+    "statement": "1 + 3 + 5 = 4 + 5."
+  },
+  {
+    "author": "noespire-n112-real-worker",
+    "fact_id": "fa8e338d80c9b36b",
+    "predecessors": [
+      "7dadec650cdaae22"
+    ],
+    "problem_id": "n112-three-odd-numbers",
+    "proof": "By the accepted fact, 1 + 3 + 5 = 4 + 5. Since 4 + 5 = 9, transitivity of equality gives 1 + 3 + 5 = 9.",
+    "statement": "Prove that 1 + 3 + 5 = 9."
+  }
+]

@@ -1,0 +1,102 @@
+{
+  "all_case_threads_fresh": true,
+  "architect_valid": true,
+  "attempt_verdicts": [
+    "FAIL"
+  ],
+  "category": "divisibility",
+  "completed_at_utc": "2026-09-01T11:28:49.288144+00:00",
+  "edge_count": 2,
+  "error": null,
+  "facts_outside_closure": 0,
+  "facts_written": 0,
+  "invocations": [
+    {
+      "artifact": "codex_audits\\n113-integer-divisibility\\001_scaffold_architect.json",
+      "error": null,
+      "label": "scaffold_architect",
+      "role": "architect",
+      "thread_id": "01a05cba-26b3-7ff2-a70e-918e7ab6d9c0",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 9338,
+        "output_tokens": 200,
+        "reasoning_output_tokens": 55
+      }
+    },
+    {
+      "artifact": "codex_audits\\n113-integer-divisibility\\002_research_worker.json",
+      "error": null,
+      "label": "research_worker",
+      "role": "worker",
+      "thread_id": "01a05cba-4c6a-7a43-8d0c-c646ed48c5ad",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 9205,
+        "output_tokens": 142,
+        "reasoning_output_tokens": 32
+      }
+    },
+    {
+      "artifact": "codex_audits\\n113-integer-divisibility\\003_research_verifier.json",
+      "error": null,
+      "label": "research_verifier",
+      "role": "verifier",
+      "thread_id": "01a05cba-6e82-7f20-805f-d7f96e6c09c2",
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 0,
+        "input_tokens": 9252,
+        "output_tokens": 144,
+        "reasoning_output_tokens": 69
+      }
+    }
+  ],
+  "node_count": 3,
+  "one_shot_no_retry": true,
+  "problem_id": "n113-integer-divisibility",
+  "role_invocation_counts": {
+    "architect": 1,
+    "verifier": 1,
+    "worker": 1
+  },
+  "role_tokens": {
+    "architect": {
+      "cached_input_tokens": 0,
+      "input_tokens": 9338,
+      "output_tokens": 200,
+      "reasoning_output_tokens": 55
+    },
+    "verifier": {
+      "cached_input_tokens": 0,
+      "input_tokens": 9252,
+      "output_tokens": 144,
+      "reasoning_output_tokens": 69
+    },
+    "worker": {
+      "cached_input_tokens": 0,
+      "input_tokens": 9205,
+      "output_tokens": 142,
+      "reasoning_output_tokens": 32
+    }
+  },
+  "solved": false,
+  "started_at_utc": "2026-09-01T11:28:18.554011+00:00",
+  "status": "EXECUTION_BLOCKED",
+  "supporting_closure_fact_ids": [],
+  "supporting_closure_size": 0,
+  "target_depth_edges": 1,
+  "target_fact_id": null,
+  "tokens_per_scaffold_node": 9427.0,
+  "tokens_per_verified_fact": null,
+  "total_cached_input_tokens": 0,
+  "total_input_tokens": 27795,
+  "total_output_tokens": 486,
+  "total_reasoning_output_tokens": 156,
+  "verifier_accepts": 0,
+  "verifier_rejects": 1,
+  "wall_clock_seconds": 30.73129979999794,
+  "worker_attempts": 1
+}

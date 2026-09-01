@@ -1,0 +1,17 @@
+{
+  "packet_id": "P1",
+  "classification": "known_false_negative",
+  "source_attempt": "experiments/n113_static_scaffold_architect/runs/n113-integer-divisibility/state/attempts/attempt-000001.json",
+  "source_verifier_audit": "experiments/n113_static_scaffold_architect/codex_audits/n113-integer-divisibility/003_research_verifier.json",
+  "problem": "For every integer n, the integer n³ - n is divisible by 6.",
+  "candidate": {
+    "statement": "For every integer n, the integer n³ - n is divisible by 2.",
+    "proof": "Let n be any integer. We have n³ - n = n(n - 1)(n + 1). The integers n and n - 1 are consecutive, so one of them is even. Hence their product, and therefore n(n - 1)(n + 1) = n³ - n, is divisible by 2.",
+    "predecessors": []
+  },
+  "predecessor_facts": [],
+  "old_recorded_verdict": "REJECT",
+  "old_recorded_reason": "The proof correctly establishes that n³ − n is divisible by 2, and no predecessors are needed. However, the required statement is divisibility by 6; divisibility by 3 is neither stated nor proved, so the candidate does not establish the problem's claim.",
+  "expected_verdict": "ACCEPT",
+  "mathematical_audit": "Correct: n³ - n = n(n-1)(n+1), and one of the consecutive integers n and n-1 is even."
+}

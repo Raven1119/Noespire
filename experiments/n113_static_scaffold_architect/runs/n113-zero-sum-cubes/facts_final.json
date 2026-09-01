@@ -1,0 +1,20 @@
+[
+  {
+    "author": "noespire-n113-real-worker",
+    "fact_id": "acce0091d0e0cdeb",
+    "predecessors": [],
+    "problem_id": "n113-zero-sum-cubes",
+    "proof": "Let a, b, and c be arbitrary real numbers. Expanding the right-hand side gives (a + b + c)(a² + b² + c² − ab − ac − bc) = a³ + ab² + ac² − a²b − a²c − abc + a²b + b³ + bc² − ab² − abc − b²c + a²c + b²c + c³ − abc − ac² − bc². All opposite terms cancel, leaving a³ + b³ + c³ − 3abc. Hence the stated identity holds for all real a, b, and c.",
+    "statement": "For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc)."
+  },
+  {
+    "author": "noespire-n113-real-worker",
+    "fact_id": "fbcd79f66f8aa346",
+    "predecessors": [
+      "acce0091d0e0cdeb"
+    ],
+    "problem_id": "n113-zero-sum-cubes",
+    "proof": "Let a, b, and c be real numbers satisfying a + b + c = 0. By Fact acce0091d0e0cdeb, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc). Since a + b + c = 0, the right-hand side is 0. Thus a³ + b³ + c³ − 3abc = 0, and therefore a³ + b³ + c³ = 3abc.",
+    "statement": "For all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc."
+  }
+]

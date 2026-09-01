@@ -1,0 +1,72 @@
+{
+  "advance_node_ids": [
+    "divisible_by_2",
+    "divisible_by_3",
+    "target"
+  ],
+  "architect_calls": 0,
+  "attempt_verdicts": [
+    "PASS",
+    "PASS",
+    "PASS"
+  ],
+  "automatic_retry": false,
+  "error": null,
+  "fact_ids": [
+    "4f6ccd5f5fae457f",
+    "739b692999ec8c7a",
+    "d2ca2c4125b62829"
+  ],
+  "facts_admitted": 3,
+  "frozen_scripted_worker": true,
+  "invocations": [
+    {
+      "artifact": "codex_audits\\e2e\\001_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9315,
+      "output_tokens": 103,
+      "reasoning_tokens": 23,
+      "thread_id": "01a05ced-fc5d-74c1-8151-dcf1dcce6e0e"
+    },
+    {
+      "artifact": "codex_audits\\e2e\\002_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9359,
+      "output_tokens": 79,
+      "reasoning_tokens": 0,
+      "thread_id": "01a05cee-216b-7ef0-a821-32763c356f50"
+    },
+    {
+      "artifact": "codex_audits\\e2e\\003_research_verifier.json",
+      "boundary_pass": true,
+      "error": null,
+      "input_tokens": 9695,
+      "output_tokens": 77,
+      "reasoning_tokens": 0,
+      "thread_id": "01a05cee-400b-78d0-80a1-38f3f63da9c0"
+    }
+  ],
+  "status": "SOLVED",
+  "supporting_closure_fact_ids": [
+    "739b692999ec8c7a",
+    "d2ca2c4125b62829",
+    "4f6ccd5f5fae457f"
+  ],
+  "supporting_closure_size": 3,
+  "target_dependency_node_ids": [
+    "divisible_by_2",
+    "divisible_by_3"
+  ],
+  "target_fact_id": "4f6ccd5f5fae457f",
+  "target_unlocked_after": [
+    "divisible_by_2",
+    "divisible_by_3"
+  ],
+  "verifier_calls": 3,
+  "wall_clock_seconds": 25.71300789999077,
+  "worker_calls": 3,
+  "workspace_empty_after": true,
+  "workspace_empty_before": true
+}

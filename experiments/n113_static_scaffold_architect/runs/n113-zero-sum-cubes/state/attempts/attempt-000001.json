@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000001",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "Let a, b, and c be arbitrary real numbers. Expanding the right-hand side gives\n(a + b + c)(a² + b² + c² − ab − ac − bc)\n= a³ + ab² + ac² − a²b − a²c − abc\n  + a²b + b³ + bc² − ab² − abc − b²c\n  + a²c + b²c + c³ − abc − ac² − bc².\nAll opposite terms cancel, leaving a³ + b³ + c³ − 3abc. Hence the stated identity holds for all real a, b, and c.",
+    "statement": "For all real numbers a, b, and c, a³ + b³ + c³ − 3abc = (a + b + c)(a² + b² + c² − ab − ac − bc)."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n113-zero-sum-cubes:factorization",
+  "problem_id": "n113-zero-sum-cubes",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The factorization identity is correct, and the displayed expansion proves it by cancellation. With a+b+c=0, its right-hand side is zero, immediately yielding a³+b³+c³=3abc. No predecessors are declared or needed."
+  }
+}

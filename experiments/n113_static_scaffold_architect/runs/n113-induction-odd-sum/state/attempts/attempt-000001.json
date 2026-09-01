@@ -1,0 +1,16 @@
+{
+  "attempt_id": "attempt-000001",
+  "candidate_artifact": {
+    "predecessors": [],
+    "proof": "By the definition of an empty sum, the sum of the first 0 positive odd integers is 0. Also, 0² = 0. Therefore the empty sum equals 0 = 0².",
+    "statement": "When n = 0, the sum of the first n positive odd integers is the empty sum, which equals 0 = 0²."
+  },
+  "error": null,
+  "obligation_id": "scaffold:n113-induction-odd-sum:base_case",
+  "problem_id": "n113-induction-odd-sum",
+  "verdict": "PASS",
+  "verifier_artifact": {
+    "accepted": true,
+    "reason": "The statement is the correct base case n = 0. The proof correctly uses the definition of the empty sum and the arithmetic fact 0² = 0. No predecessors are declared or needed."
+  }
+}

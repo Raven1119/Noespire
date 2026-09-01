@@ -1,0 +1,128 @@
+{
+  "label": "research_verifier",
+  "command": [
+    "c:\\Users\\wmywb\\.vscode\\extensions\\openai.chatgpt-26.5825.51511-win32-x64\\bin\\windows-x86_64\\codex.EXE",
+    "exec",
+    "--ephemeral",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--model",
+    "gpt-5.6-sol",
+    "--config",
+    "model_reasoning_effort=\"medium\"",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--config",
+    "approval_policy=\"never\"",
+    "--config",
+    "default_permissions=\"n113_blind\"",
+    "--config",
+    "permissions.n113_blind.extends=\":workspace\"",
+    "--config",
+    "permissions.n113_blind.network.enabled=true",
+    "--config",
+    "permissions.n113_blind.network.domains={\"127.19.0.1\"=\"allow\"}",
+    "--config",
+    "permissions.n113_blind.network.allow_local_binding=false",
+    "--config",
+    "permissions.n113_blind.network.allow_upstream_proxy=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5_udp=false",
+    "--config",
+    "features.network_proxy=true",
+    "--config",
+    "web_search=\"disabled\"",
+    "--config",
+    "tools.web_search=false",
+    "--config",
+    "agents.enabled=false",
+    "--disable",
+    "browser_use",
+    "--disable",
+    "browser_use_external",
+    "--disable",
+    "in_app_browser",
+    "--disable",
+    "apps",
+    "--disable",
+    "enable_mcp_apps",
+    "--disable",
+    "computer_use",
+    "--disable",
+    "remote_plugin",
+    "--disable",
+    "plugins",
+    "--disable",
+    "recommended_plugins",
+    "--disable",
+    "standalone_web_search",
+    "--disable",
+    "search_tool",
+    "--disable",
+    "multi_agent",
+    "--disable",
+    "multi_agent_mode",
+    "--output-schema",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\noespire-codex-l7he0bel\\schema.json",
+    "-C",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\n113-induction-odd-sum-00raefil"
+  ],
+  "prompt": "You are an independent fresh Codex verifier for an informal Research Fact Graph.\nCheck whether the candidate statement is mathematically correct, the proof establishes it, and every\ndeclared predecessor is both provided and genuinely used. Reject missing assumptions, circular reasoning,\nunknown predecessor IDs, or arithmetic errors. This is an LLM baseline verdict, not a Lean check.\n\nProblem:\nFor every nonnegative integer n, the sum of the first n positive odd integers equals n²; equivalently, 1 + 3 + ⋯ + (2n - 1) = n², with the empty sum interpreted as 0 when n = 0.\n\nCandidate:\n{\n  \"statement\": \"For every nonnegative integer n, the sum of the first n positive odd integers equals n²; equivalently, 1 + 3 + ⋯ + (2n - 1) = n², with the empty sum interpreted as 0 when n = 0.\",\n  \"proof\": \"We prove the statement by induction on n. The base case n = 0 holds because the sum is empty and equals 0 = 0², by Fact 534b2c8350a6010d. For the induction step, let k be a nonnegative integer and assume that the sum of the first k positive odd integers is k². Fact a42b86e8849efcef then gives that adding the next positive odd integer, 2k + 1, produces (k + 1)². Thus the statement for k implies the statement for k + 1. By induction, the equality holds for every nonnegative integer n.\",\n  \"predecessors\": [\n    \"534b2c8350a6010d\",\n    \"a42b86e8849efcef\"\n  ]\n}\n\nAccepted predecessor facts:\n[\n  {\n    \"fact_id\": \"534b2c8350a6010d\",\n    \"problem_id\": \"n113-induction-odd-sum\",\n    \"author\": \"noespire-n113-real-worker\",\n    \"statement\": \"When n = 0, the sum of the first n positive odd integers is the empty sum, which equals 0 = 0².\",\n    \"proof\": \"By the definition of an empty sum, the sum of the first 0 positive odd integers is 0. Also, 0² = 0. Therefore the empty sum equals 0 = 0².\",\n    \"predecessors\": []\n  },\n  {\n    \"fact_id\": \"a42b86e8849efcef\",\n    \"problem_id\": \"n113-induction-odd-sum\",\n    \"author\": \"noespire-n113-real-worker\",\n    \"statement\": \"For every nonnegative integer k, if 1 + 3 + ⋯ + (2k - 1) = k² (with the sum empty when k = 0), then 1 + 3 + ⋯ + (2k - 1) + (2k + 1) = (k + 1)².\",\n    \"proof\": \"Let k be a nonnegative integer and assume that 1 + 3 + ⋯ + (2k - 1) = k². Adding 2k + 1 to both sides gives 1 + 3 + ⋯ + (2k - 1) + (2k + 1) = k² + 2k + 1. Since k² + 2k + 1 = (k + 1)², the desired equality follows.\",\n    \"predecessors\": []\n  }\n]\n",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "accepted": {
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "accepted",
+      "reason"
+    ],
+    "additionalProperties": false
+  },
+  "returncode": 0,
+  "stderr": "Reading prompt from stdin...\n2026-09-01T11:28:10.110545Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell\n",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a05cba-0578-7182-a0c8-8c7a34c6c9e2"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "{\"accepted\":true,\"reason\":\"The statement is correct and the proof is a valid induction on nonnegative integers. Fact 534b2c8350a6010d is provided and genuinely establishes the n = 0 base case. Fact a42b86e8849efcef is provided and genuinely establishes the induction step by adding the next odd integer 2k + 1 and using k² + 2k + 1 = (k + 1)². Both declared predecessors are known and used, with no missing assumptions, circular reasoning, or arithmetic errors.\"}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 9800,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 129,
+        "reasoning_output_tokens": 0
+      }
+    }
+  ],
+  "thread_id": "01a05cba-0578-7182-a0c8-8c7a34c6c9e2",
+  "result": {
+    "accepted": true,
+    "reason": "The statement is correct and the proof is a valid induction on nonnegative integers. Fact 534b2c8350a6010d is provided and genuinely establishes the n = 0 base case. Fact a42b86e8849efcef is provided and genuinely establishes the induction step by adding the next odd integer 2k + 1 and using k² + 2k + 1 = (k + 1)². Both declared predecessors are known and used, with no missing assumptions, circular reasoning, or arithmetic errors."
+  },
+  "error": null
+}

@@ -1,0 +1,128 @@
+{
+  "label": "research_verifier",
+  "command": [
+    "c:\\Users\\wmywb\\.vscode\\extensions\\openai.chatgpt-26.5825.51511-win32-x64\\bin\\windows-x86_64\\codex.EXE",
+    "exec",
+    "--ephemeral",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--model",
+    "gpt-5.6-sol",
+    "--config",
+    "model_reasoning_effort=\"medium\"",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--config",
+    "approval_policy=\"never\"",
+    "--config",
+    "default_permissions=\"n113_blind\"",
+    "--config",
+    "permissions.n113_blind.extends=\":workspace\"",
+    "--config",
+    "permissions.n113_blind.network.enabled=true",
+    "--config",
+    "permissions.n113_blind.network.domains={\"127.19.0.1\"=\"allow\"}",
+    "--config",
+    "permissions.n113_blind.network.allow_local_binding=false",
+    "--config",
+    "permissions.n113_blind.network.allow_upstream_proxy=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5_udp=false",
+    "--config",
+    "features.network_proxy=true",
+    "--config",
+    "web_search=\"disabled\"",
+    "--config",
+    "tools.web_search=false",
+    "--config",
+    "agents.enabled=false",
+    "--disable",
+    "browser_use",
+    "--disable",
+    "browser_use_external",
+    "--disable",
+    "in_app_browser",
+    "--disable",
+    "apps",
+    "--disable",
+    "enable_mcp_apps",
+    "--disable",
+    "computer_use",
+    "--disable",
+    "remote_plugin",
+    "--disable",
+    "plugins",
+    "--disable",
+    "recommended_plugins",
+    "--disable",
+    "standalone_web_search",
+    "--disable",
+    "search_tool",
+    "--disable",
+    "multi_agent",
+    "--disable",
+    "multi_agent_mode",
+    "--output-schema",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\noespire-codex-mtohgpt9\\schema.json",
+    "-C",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\n114-n1-kl8wa36r"
+  ],
+  "prompt": "You are an independent fresh Codex verifier for an informal Research Fact Graph.\nThe complete Problem is background context only. The candidate may be an intermediate lemma.\nJudge whether the supplied proof establishes exactly the candidate statement from the supplied accepted\npredecessors. Do not require the candidate to prove the complete Problem unless the candidate statement\nitself is the complete Problem. Check that the candidate statement is mathematically correct, the supplied\npredecessors are collectively sufficient, and every declared predecessor is provided and genuinely used.\nReject an insufficient proof, missing assumptions, circular reasoning, unsupported inference, unknown\npredecessor IDs, or arithmetic errors. This is an LLM baseline verdict, not a Lean check.\n\nProblem:\nFor every integer n, the integer n³ - n is divisible by 6.\n\nCandidate:\n{\n  \"statement\": \"For every integer n, the integer n³ - n is divisible by 4.\",\n  \"proof\": \"The three integers n - 1, n, and n + 1 are consecutive, so their product always contains two factors of 2 and is divisible by 4.\",\n  \"predecessors\": []\n}\n\nAccepted predecessor facts:\n[]\n",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "accepted": {
+        "type": "boolean"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "accepted",
+      "reason"
+    ],
+    "additionalProperties": false
+  },
+  "returncode": 0,
+  "stderr": "Reading prompt from stdin...\n2026-09-01T12:24:38.974709Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell\n",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a05ced-bb38-7d91-8239-43c33790338a"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "{\"accepted\":false,\"reason\":\"The candidate statement is false. For n = 2, n³ - n = 8 - 2 = 6, which is not divisible by 4. Three consecutive integers always contain at least one factor of 2, but they do not always contain two factors of 2; for example, 1·2·3 = 6.\"}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 9277,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 122,
+        "reasoning_output_tokens": 30
+      }
+    }
+  ],
+  "thread_id": "01a05ced-bb38-7d91-8239-43c33790338a",
+  "result": {
+    "accepted": false,
+    "reason": "The candidate statement is false. For n = 2, n³ - n = 8 - 2 = 6, which is not divisible by 4. Three consecutive integers always contain at least one factor of 2, but they do not always contain two factors of 2; for example, 1·2·3 = 6."
+  },
+  "error": null
+}

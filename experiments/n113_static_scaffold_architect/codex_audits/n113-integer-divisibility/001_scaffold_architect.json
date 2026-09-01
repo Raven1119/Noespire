@@ -1,0 +1,182 @@
+{
+  "label": "scaffold_architect",
+  "command": [
+    "c:\\Users\\wmywb\\.vscode\\extensions\\openai.chatgpt-26.5825.51511-win32-x64\\bin\\windows-x86_64\\codex.EXE",
+    "exec",
+    "--ephemeral",
+    "--sandbox",
+    "read-only",
+    "--json",
+    "--color",
+    "never",
+    "--model",
+    "gpt-5.6-sol",
+    "--config",
+    "model_reasoning_effort=\"medium\"",
+    "--skip-git-repo-check",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--config",
+    "approval_policy=\"never\"",
+    "--config",
+    "default_permissions=\"n113_blind\"",
+    "--config",
+    "permissions.n113_blind.extends=\":workspace\"",
+    "--config",
+    "permissions.n113_blind.network.enabled=true",
+    "--config",
+    "permissions.n113_blind.network.domains={\"127.19.0.1\"=\"allow\"}",
+    "--config",
+    "permissions.n113_blind.network.allow_local_binding=false",
+    "--config",
+    "permissions.n113_blind.network.allow_upstream_proxy=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5=false",
+    "--config",
+    "permissions.n113_blind.network.enable_socks5_udp=false",
+    "--config",
+    "features.network_proxy=true",
+    "--config",
+    "web_search=\"disabled\"",
+    "--config",
+    "tools.web_search=false",
+    "--config",
+    "agents.enabled=false",
+    "--disable",
+    "browser_use",
+    "--disable",
+    "browser_use_external",
+    "--disable",
+    "in_app_browser",
+    "--disable",
+    "apps",
+    "--disable",
+    "enable_mcp_apps",
+    "--disable",
+    "computer_use",
+    "--disable",
+    "remote_plugin",
+    "--disable",
+    "plugins",
+    "--disable",
+    "recommended_plugins",
+    "--disable",
+    "standalone_web_search",
+    "--disable",
+    "search_tool",
+    "--disable",
+    "multi_agent",
+    "--disable",
+    "multi_agent_mode",
+    "--output-schema",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\noespire-codex-xftik3pa\\schema.json",
+    "-C",
+    "C:\\Users\\wmywb\\AppData\\Local\\Temp\\n113-integer-divisibility-y1p5hrmr"
+  ],
+  "prompt": "You are the one-shot Codex Static Scaffold Architect.\nYour task is not to prove the theorem. Design a compact finite AND-DAG of precise,\nindependently provable natural-language mathematical obligations for other workers.\n\nContract:\n- Return between 1 and 6 proof nodes in the required schema.\n- Include exactly one designated target node.\n- The target goal must reproduce the complete theorem statement exactly.\n- Intermediate goals must be complete, meaningful mathematical propositions, not instructions\n  such as \"combine previous results\" and not proof text.\n- depends_on may name only node IDs in this proposal. Use no self-dependency or cycle.\n- premise_fact_ids may name only the allowed accepted Fact IDs below. Never invent a Fact ID.\n- Add no assumption that is absent from the theorem or allowed Facts.\n- Do not include proofs, reasoning traces, confidence, priorities, or estimates.\n- Include at least one non-target node that is an ancestor of the target.\n\nProblem ID:\nn113-integer-divisibility\n\nComplete theorem statement:\nFor every integer n, the integer n³ - n is divisible by 6.\n\nAllowed accepted Facts (IDs and statements only):\n[]\n",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "nodes": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 6,
+        "items": {
+          "type": "object",
+          "properties": {
+            "node_id": {
+              "type": "string"
+            },
+            "goal": {
+              "type": "string"
+            },
+            "depends_on": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "premise_fact_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "node_id",
+            "goal",
+            "depends_on",
+            "premise_fact_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "target_node_id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "nodes",
+      "target_node_id"
+    ],
+    "additionalProperties": false
+  },
+  "returncode": 0,
+  "stderr": "Reading prompt from stdin...\n2026-09-01T11:28:18.616999Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell\n",
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a05cba-26b3-7ff2-a70e-918e7ab6d9c0"
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "agent_message",
+        "text": "{\"nodes\":[{\"node_id\":\"divisible_by_2\",\"goal\":\"For every integer n, the integer n³ - n is divisible by 2.\",\"depends_on\":[],\"premise_fact_ids\":[]},{\"node_id\":\"divisible_by_3\",\"goal\":\"For every integer n, the integer n³ - n is divisible by 3.\",\"depends_on\":[],\"premise_fact_ids\":[]},{\"node_id\":\"target\",\"goal\":\"For every integer n, the integer n³ - n is divisible by 6.\",\"depends_on\":[\"divisible_by_2\",\"divisible_by_3\"],\"premise_fact_ids\":[]}],\"target_node_id\":\"target\"}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 9338,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 200,
+        "reasoning_output_tokens": 55
+      }
+    }
+  ],
+  "thread_id": "01a05cba-26b3-7ff2-a70e-918e7ab6d9c0",
+  "result": {
+    "nodes": [
+      {
+        "node_id": "divisible_by_2",
+        "goal": "For every integer n, the integer n³ - n is divisible by 2.",
+        "depends_on": [],
+        "premise_fact_ids": []
+      },
+      {
+        "node_id": "divisible_by_3",
+        "goal": "For every integer n, the integer n³ - n is divisible by 3.",
+        "depends_on": [],
+        "premise_fact_ids": []
+      },
+      {
+        "node_id": "target",
+        "goal": "For every integer n, the integer n³ - n is divisible by 6.",
+        "depends_on": [
+          "divisible_by_2",
+          "divisible_by_3"
+        ],
+        "premise_fact_ids": []
+      }
+    ],
+    "target_node_id": "target"
+  },
+  "error": null
+}

@@ -1,0 +1,17 @@
+{
+  "packet_id": "N2",
+  "classification": "missing_assumption",
+  "source_attempt": null,
+  "source_verifier_audit": null,
+  "problem": "For every integer n, the integer n³ - n is divisible by 6.",
+  "candidate": {
+    "statement": "For every integer n, at least one of n - 1, n, and n + 1 is divisible by 3.",
+    "proof": "Assume n itself is divisible by 3. Then one of n - 1, n, and n + 1 is divisible by 3, as required.",
+    "predecessors": []
+  },
+  "predecessor_facts": [],
+  "old_recorded_verdict": "NOT_RECORDED",
+  "old_recorded_reason": null,
+  "expected_verdict": "REJECT",
+  "mathematical_audit": "The statement is true, but the proof silently assumes the residue class n ≡ 0 (mod 3) and omits the other two cases."
+}

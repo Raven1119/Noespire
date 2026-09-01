@@ -1,0 +1,5 @@
+{
+  "problem_id": "n113-zero-sum-cubes",
+  "category": "elementary algebra",
+  "statement": "For all real numbers a, b, and c satisfying a + b + c = 0, prove that a³ + b³ + c³ = 3abc."
+}
