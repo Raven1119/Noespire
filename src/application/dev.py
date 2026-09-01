@@ -113,10 +113,23 @@ def serve(
     code: 0 for Ctrl+C, non-zero when either child dies on its own (a port
     conflict on 8173 surfaces as the backend child exiting non-zero)."""
     root = repo_root()
-    backend = popen(backend_command(), cwd=root, env=_child_env(root))
-    frontend = popen(frontend_command(), cwd=root / "frontend")
-    children = [("Backend", backend), ("Frontend", frontend)]
+    children = []
     try:
+        # Spawn incrementally INSIDE the cleanup scope: if the frontend
+        # Popen raises after the backend started, the finally below still
+        # kills the backend — no orphan.
+        try:
+            backend = popen(backend_command(), cwd=root, env=_child_env(root))
+        except (OSError, RuntimeError) as error:
+            stream(f"Could not start Backend: {error}")
+            return 1
+        children.append(("Backend", backend))
+        try:
+            frontend = popen(frontend_command(), cwd=root / "frontend")
+        except (OSError, RuntimeError) as error:
+            stream(f"Could not start Frontend: {error}")
+            return 1
+        children.append(("Frontend", frontend))
         while True:
             for name, process in children:
                 code = process.poll()

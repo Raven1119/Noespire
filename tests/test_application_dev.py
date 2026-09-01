@@ -144,6 +144,26 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(popen.calls[0]["cwd"], dev.repo_root())
         self.assertEqual(popen.calls[1]["cwd"], dev.repo_root() / "frontend")
 
+    def test_backend_spawn_failure_never_starts_frontend(self) -> None:
+        """Case A: backend Popen raises → frontend Popen never called,
+        launcher exits non-zero, nothing to clean up."""
+        popen = mock.Mock(side_effect=OSError("executable not found"))
+        with mock.patch.object(dev, "_terminate_tree") as terminate:
+            code = dev.serve(popen=popen, sleep=lambda _: None, stream=lambda _: None)
+        self.assertNotEqual(code, 0)
+        self.assertEqual(popen.call_count, 1)
+        terminate.assert_not_called()
+
+    def test_frontend_spawn_failure_cleans_up_backend(self) -> None:
+        """Case B: backend spawned, frontend Popen raises → the already-
+        running backend is terminated and the launcher exits non-zero."""
+        backend = FakeProcess([])
+        popen = mock.Mock(side_effect=[backend, OSError("npm broke")])
+        with mock.patch.object(dev, "_terminate_tree") as terminate:
+            code = dev.serve(popen=popen, sleep=lambda _: None, stream=lambda _: None)
+        self.assertNotEqual(code, 0)
+        terminate.assert_called_once_with(backend)
+
 
 class TerminateTreeTests(unittest.TestCase):
     def test_already_exited_process_is_left_alone(self) -> None:
