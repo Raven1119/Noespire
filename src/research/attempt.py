@@ -90,12 +90,17 @@ def execute_obligation_with_evidence(
     worker: ResearchWorker,
     verifier: Verifier,
     repair_context: Optional[RepairContext] = None,
+    resume_attempt_id: Optional[str] = None,
 ) -> AttemptExecutionResult:
     """Execute once while preserving candidate, verifier, and error evidence."""
     obligation = registry.get(obligation_id)
     attempt_id = None
     if obligation.status is not ObligationStatus.DISCHARGED:
-        attempt_id = _start_attempt(registry, problem_id, obligation_id)
+        attempt_id = _start_attempt(registry, problem_id, obligation_id, resume_attempt_id)
+        if resume_attempt_id:
+            record = json.loads((registry.path.parent / "attempts" / f"{attempt_id}.json").read_text(encoding="utf-8"))
+            worker = _RecordedWorker(worker, record)
+            verifier = _RecordedVerifier(verifier, record)
     attempt_worker = _EvidenceWorker(worker, registry, attempt_id) if attempt_id else worker
     attempt_verifier = _EvidenceVerifier(verifier, registry, attempt_id) if attempt_id else verifier
     try:
@@ -138,13 +143,23 @@ def _start_attempt(
     registry: ObligationRegistry,
     problem_id: str,
     obligation_id: str,
+    resume_attempt_id: Optional[str] = None,
 ) -> str:
     attempts_dir = registry.path.parent / "attempts"
     attempts_dir.mkdir(parents=True, exist_ok=True)
     sequence = 1
     while (attempts_dir / f"attempt-{sequence:06d}.json").exists():
         sequence += 1
-    attempt_id = f"attempt-{sequence:06d}"
+    attempt_id = resume_attempt_id or f"attempt-{sequence:06d}"
+    if resume_attempt_id:
+        if not resume_attempt_id.startswith("attempt-") or not resume_attempt_id[8:].isdigit():
+            raise ValueError("invalid resume attempt ID")
+        existing = attempts_dir / f"{attempt_id}.json"
+        if existing.exists():
+            record = json.loads(existing.read_text(encoding="utf-8"))
+            if (record["problem_id"], record["obligation_id"]) != (problem_id, obligation_id):
+                raise ValueError("resume attempt identity mismatch")
+            return attempt_id
     payload = {
         "attempt_id": attempt_id,
         "problem_id": problem_id,
@@ -187,3 +202,25 @@ def _write_json(path: Path, payload: dict) -> None:
         encoding="utf-8",
     )
     temporary.replace(path)
+
+
+class _RecordedWorker:
+    def __init__(self, worker, record):
+        self.worker, self.record = worker, record
+
+    def propose(self, **kwargs):
+        candidate = self.record.get("candidate_artifact")
+        if candidate is not None:
+            return CandidateFact(candidate["statement"], candidate["proof"], tuple(candidate["predecessors"]))
+        return self.worker.propose(**kwargs)
+
+
+class _RecordedVerifier:
+    def __init__(self, verifier, record):
+        self.verifier, self.record = verifier, record
+
+    def verify(self, *args):
+        verification = self.record.get("verifier_artifact")
+        if verification is not None:
+            return VerificationResult(**verification)
+        return self.verifier.verify(*args)

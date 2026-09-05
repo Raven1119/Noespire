@@ -4,41 +4,35 @@
 
 This file governs all agent and Codex work in the Noespire repository.
 
-The canonical architecture document is:
+Before changing the natural-language graph, verification, scheduling, or recovery,
+read `docs/CURRENT_RESEARCH_CORE.md`. It is the current architecture entry.
+`docs/Noespire_Natural_Language_Proof_Engine_Design_v2.md` records the earlier
+natural-language design; its implementation-status paragraphs are historical.
 
-- `docs/Dual_DAG_Math_Research_Architecture.md`
+## Current Project Goal
 
-Before changing graph semantics, verification boundaries, agent roles, or the MVP pipeline, read that document first.
+Noespire currently develops a resumable natural-language proof core:
 
-## Project Goal
-
-Noespire compiles an informal mathematical research graph into an independently reconstructed Lean proof graph:
-
-```text
-Research problem
-    ↓
-Codex research workers
-    ↓
-Research Fact DAG
-    ↓
-Supporting closure
-    ↓
-Codex Cross-DAG Compiler
-    ↓
-Initial Lean Blueprint
-    ↓
-Lean elaboration
-    ↓
-Actual Lean DAG
-    ↓
-Codex dynamic-leaf Lean workers
-    ↓
-Lean kernel
+```
+Existing problem workspace -> default NodeSolver / closed-book verifier
+    -> failure or local horizon -> Strategist -> Gate -> BoundaryAware Builder
+    -> fidelity / mechanical validation -> independent structural audit
+    -> at most one existing revision -> apply local patch -> continue proving
 ```
 
-Primary hypothesis:
+Use `research.dynamic_run` for new bounded research runs and same-run recovery.
+Keep accepted Facts, OPEN obligations, and run-control checkpoints distinct.
+Checkpoint data is execution metadata, never additional mathematical memory.
+All new experiments use GPT-5.6 Sol in fresh Codex sessions by default.
 
-> A converged Research Fact DAG can serve as a structural prior and knowledge substrate for research-level Lean formalization without forcing the Lean DAG to be isomorphic to the Research DAG.
+## Deferred Dual-DAG Direction
+
+`docs/Dual_DAG_Math_Research_Architecture.md` preserves the original Lean direction:
+Research supporting closure -> Cross-DAG Compiler -> Lean blueprint -> actual
+elaborator-derived Lean DAG -> Lean kernel. It is a later phase, not the current
+research entry or a requirement to add Lean to the natural-language core.
+The Lean-specific ownership, mapping, and acceptance rules below apply when that
+phase is explicitly undertaken. Their design is preserved, not implemented by N3A.
 
 ## Hard Rule 1 — Codex-First Execution
 
@@ -84,7 +78,7 @@ When available, the expected mapping is:
 
 If no relevant skill exists, proceed with the repository rules in this file. **Do not create a new process abstraction merely because a skill is absent.**
 
-## Frozen Architectural Rules
+## Preserved Dual-DAG Architectural Rules
 
 Do not change these without an explicit architecture decision and targeted experiment.
 
@@ -133,7 +127,7 @@ Noespire also owns:
 
 Reuse mature infrastructure for Lean tooling, Codex execution patterns, and generic graph operations when possible.
 
-## Minimal Module Direction
+## Deferred Dual-DAG Module Direction
 
 Prefer this boundary; do not create empty modules merely to match it.
 
@@ -245,9 +239,9 @@ Prefer content-addressed facts and rebuildable indexes. Do not add a graph datab
 
 Revoking a false fact must invalidate/revoke dependent research facts while preserving the historical record needed for audit.
 
-## MVP Acceptance Test
+## Deferred Lean Acceptance Test
 
-The first end-to-end milestone is complete only when one medium-scale theorem runs through:
+When the Lean phase starts, its end-to-end milestone requires one medium-scale theorem through:
 
 ```text
 Codex research
@@ -268,7 +262,7 @@ and records enough evidence to compare against at least:
 Final informal proof → direct Lean formalization
 ```
 
-Do not expand scope before this vertical slice works reliably.
+Within that later phase, keep scope limited until this vertical slice works reliably.
 
 ## Evaluation Priority
 

@@ -1067,6 +1067,8 @@ def run_local_redecomposition(
     timeout=None,
     problem_premise_fact_ids: Tuple[str, ...] = (),
     operation: str = "split",
+    checkpoint_dir: Optional[Path] = None,
+    checkpoint_event=None,
 ) -> RedecompositionResult:
     """One failure-conditioned local redecomposition round for a blocked node.
 
@@ -1086,6 +1088,13 @@ def run_local_redecomposition(
     if operation not in ("split", "insert_cut_set", "add_alternative_route"):
         raise ValueError(f"unknown local redecomposition operation: {operation}")
     root = Path(workspace_root)
+    if checkpoint_dir is not None:
+        from .run_storage import read_json, write_text
+        from .refinement.checkpoint import resume_patch
+        checkpoint_dir = Path(checkpoint_dir)
+        if (checkpoint_dir / "intent.json").exists():
+            return resume_patch(root, checkpoint_dir, operation, checkpoint_event)
+    before_scaffold = (root / "scaffold.json").read_text(encoding="utf-8")
     scaffold = ProofScaffold(root / "scaffold.json")
     registry = ObligationRegistry(root / "obligations.json")
     graph = FactGraph(root)
@@ -1125,10 +1134,10 @@ def run_local_redecomposition(
             }[operation]
             name = f"{prefix}-{stamp}.json"
         post_patch = (
-            ProofScaffold(root / "scaffold.json").list_nodes() if applied else None
+            ProofScaffold(scaffold.path).list_nodes() if applied else None
         )
         evidence = _write_evidence(
-            root,
+            checkpoint_dir if checkpoint_dir is not None else root,
             name=name,
             problem_id=problem_id,
             blocked_node_id=blocked_node_id,
@@ -1145,7 +1154,7 @@ def run_local_redecomposition(
             auditor_input=getattr(auditor, "last_prompt", None),
             missing_context=missing_context,
         )
-        return RedecompositionResult(
+        result = RedecompositionResult(
             outcome,
             blocked_node_id,
             proposal,
@@ -1155,6 +1164,17 @@ def run_local_redecomposition(
             str(evidence),
             error,
         )
+        if checkpoint_dir is not None:
+            from .refinement.checkpoint import prepare_patch
+            suffix = sha256(str(checkpoint_dir.resolve()).encode()).hexdigest()[:12]
+            final_evidence = root / "local_refinements" / f"{evidence.stem}-run-{suffix}.json"
+            result = replace(result, evidence_path=str(final_evidence))
+            return prepare_patch(
+                root, checkpoint_dir, operation, before_scaffold,
+                scaffold.path.read_text(encoding="utf-8") if applied else None,
+                result, read_json(evidence), checkpoint_event,
+            )
+        return result
 
     try:
         builder_result = builder.propose(context, effort=effort, timeout=timeout)
@@ -1253,6 +1273,11 @@ def run_local_redecomposition(
             auditor_result=auditor_result,
         )
 
+    if checkpoint_dir is not None:
+        # Prepare the exact post-patch file without mutating the live graph.
+        # The durable intent authorizes one atomic replacement during commit.
+        write_text(checkpoint_dir / "scaffold.json", before_scaffold)
+        scaffold = ProofScaffold(checkpoint_dir / "scaffold.json")
     if operation == "split":
         children = apply_split(scaffold, proposal)
         child_node_ids = tuple(child.node_id for child in children)

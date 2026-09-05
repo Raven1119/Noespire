@@ -19,6 +19,7 @@ docs/kimi_noespire_project_understanding.md
 /experiments/**/aggregate_summary.json
 /experiments/**/preflight.json
 /workspaces/
+dynamic_run/
 *.log
 
 # One-off frozen replay drivers and their local evidence.

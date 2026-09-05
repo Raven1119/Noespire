@@ -228,6 +228,7 @@ def advance_scaffold_once(
     verifier: Verifier,
     scheduler: Optional[ScaffoldScheduler] = None,
     solver_config: Optional[NodeSolverConfig] = None,
+    solver_progress_path: Optional[Path] = None,
 ) -> ScaffoldAdvanceResult:
     """Execute at most one deterministic ready scaffold node.
 
@@ -267,7 +268,8 @@ def advance_scaffold_once(
         fact = execution.fact
     else:
         outcome = NodeSolver(
-            worker=worker, verifier=verifier, config=solver_config
+            worker=worker, verifier=verifier, config=solver_config,
+            **({"progress_path": solver_progress_path} if solver_progress_path else {}),
         ).solve_obligation(
             problem=problem,
             registry=registry,

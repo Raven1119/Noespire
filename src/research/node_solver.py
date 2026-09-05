@@ -16,6 +16,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
+from pathlib import Path
+
+from .run_storage import read_json, write_json
 
 from .agents import ResearchWorker
 from .attempt import execute_obligation_with_evidence
@@ -58,10 +61,12 @@ class NodeSolver:
         worker: ResearchWorker,
         verifier: Verifier,
         config: NodeSolverConfig = NodeSolverConfig(),
+        progress_path: Optional[Path] = None,
     ) -> None:
         self.worker = worker
         self.verifier = verifier
         self.config = config
+        self.progress_path = progress_path
 
     def solve_obligation(
         self,
@@ -80,10 +85,25 @@ class NodeSolver:
         ):
             raise ValueError(f"obligation identity mismatch: {obligation_id}")
 
+        progress = {"obligation_id": obligation_id, "max_attempts": self.config.max_attempts_per_obligation, "attempt_ids": []}
+        if self.progress_path and self.progress_path.exists():
+            progress = read_json(self.progress_path)
+            if (progress["obligation_id"], progress["max_attempts"]) != (obligation_id, self.config.max_attempts_per_obligation):
+                raise ValueError("solver resume identity/configuration mismatch")
         attempt_ids: List[str] = []
         repair_context: Optional[RepairContext] = None
         execution: Optional[ObligationExecutionResult] = None
         for round_number in range(1, self.config.max_attempts_per_obligation + 1):
+            resume_kwargs = {}
+            if self.progress_path:
+                if len(progress["attempt_ids"]) < round_number:
+                    paths = (registry.path.parent / "attempts").glob("attempt-*.json")
+                    sequence = max((int(p.stem[8:]) for p in paths), default=0) + 1
+                    progress["attempt_ids"].append(f"attempt-{sequence:06d}")
+                    write_json(self.progress_path, progress)
+                resume_kwargs["resume_attempt_id"] = progress["attempt_ids"][round_number - 1]
+                progress["active_attempt_id"] = resume_kwargs["resume_attempt_id"]
+                write_json(self.progress_path, progress)
             try:
                 attempt = execute_obligation_with_evidence(
                     registry=registry,
@@ -95,6 +115,7 @@ class NodeSolver:
                     worker=self.worker,
                     verifier=self.verifier,
                     repair_context=repair_context,
+                    **resume_kwargs,
                 )
             except Exception as error:
                 return NodeSolveOutcome(

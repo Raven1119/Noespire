@@ -12,6 +12,9 @@ dependencies = [
     "httpx",
 ]
 
+[project.scripts]
+noespire-research = "research.dynamic_run:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

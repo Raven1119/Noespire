@@ -50,10 +50,8 @@ class FactGraph:
             sort_keys=True,
             separators=(",", ":"),
         )
-        path.write_text(
-            f"---\n{metadata}{_STATEMENT}{fact.statement}{_PROOF}{fact.proof}\n",
-            encoding="utf-8",
-        )
+        from .run_storage import write_text
+        write_text(path, f"---\n{metadata}{_STATEMENT}{fact.statement}{_PROOF}{fact.proof}\n")
         return fact
 
     def get_fact(self, fact_id: str) -> Fact:
