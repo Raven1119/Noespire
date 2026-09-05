@@ -23,6 +23,7 @@ from application.workspace_read_model import build_read_model
 
 from research.graph import FactGraph
 from research.obligation import ObligationRegistry, ObligationStatus, ProofObligation
+from research.pipeline import VerificationResult
 from research.problem import ProblemSpec
 from research.scaffold import ProofScaffold, ScaffoldNode
 from research.scaffold_architect import ScaffoldProposal, ScaffoldProposalNode
@@ -174,7 +175,14 @@ class SolvedScaffoldReadModelTests(ScaffoldExecutionTestBase):
 
 class BlockedScaffoldTests(ScaffoldExecutionTestBase):
     """C/D. A verifier rejection blocks the run; a manual retry resumes only
-    the failed node — no Architect call, no resolved-node re-execution."""
+    the failed node — no Architect call, no resolved-node re-execution.
+
+    The product default is ``max_attempts_per_obligation=3`` (N1.15 bounded
+    repair), so the blocked workspace shows lemma2 attempted three times
+    (rounds 2-3 with repair context) before the run blocks. Legacy
+    single-attempt-on-FAIL is pinned at the research layer instead
+    (``execute_obligation`` and ``solver_config=None`` scaffold tests).
+    """
 
     def _blocked_workspace(self):
         problem_dir = self.builder.add_problem("p-block", "Target theorem X.")
@@ -190,8 +198,10 @@ class BlockedScaffoldTests(ScaffoldExecutionTestBase):
         problem_dir, architect, worker, verifier, service, client = self._blocked_workspace()
 
         self.assertEqual(architect.calls, 1)
-        self.assertEqual(worker.goals, ["Lemma one.", "Lemma two."])
-        self.assertEqual(verifier.calls, 2)
+        self.assertEqual(
+            worker.goals, ["Lemma one.", "Lemma two.", "Lemma two.", "Lemma two."]
+        )
+        self.assertEqual(verifier.calls, 4)
         # The lemma1 Fact was admitted and retained; the target never ran.
         self.assertEqual(
             [fact.statement for fact in FactGraph(problem_dir).list_facts()],
@@ -215,11 +225,29 @@ class BlockedScaffoldTests(ScaffoldExecutionTestBase):
         finishes = [e for e in read_log(problem_dir) if e["kind"] == "ATTEMPT_FINISHED"]
         self.assertEqual(
             [(e["attempt_id"], e["outcome_stage"]) for e in finishes],
-            [("attempt-000001", "PASS"), ("attempt-000002", "FRESH_VERIFIER_REJECT")],
+            [
+                ("attempt-000001", "PASS"),
+                ("attempt-000002", "FRESH_VERIFIER_REJECT"),
+                ("attempt-000003", "FRESH_VERIFIER_REJECT"),
+                ("attempt-000004", "FRESH_VERIFIER_REJECT"),
+            ],
         )
 
     def test_manual_retry_resumes_without_architect_or_resolved_rerun(self) -> None:
+        """Retry coherence after a BLOCKED run WITH repair evidence: the resume
+        re-plans nothing, re-proves nothing resolved, and starts each node at
+        repair round 1 (repair context never crosses executions)."""
         problem_dir, architect, worker, verifier, service, client = self._blocked_workspace()
+        # The blocked run's repair rounds saw the verifier reason in context.
+        self.assertEqual(
+            [ctx is None for ctx in worker.repair_contexts],
+            [True, True, False, False],
+        )
+        for round_number, ctx in zip((2, 3), worker.repair_contexts[2:]):
+            self.assertEqual(ctx.attempt_number, round_number)
+            self.assertEqual(ctx.max_attempts, 3)
+            self.assertEqual(ctx.previous_statement, "Lemma two.")
+            self.assertTrue(ctx.verifier_reason)
         verifier.rejected.clear()
 
         self._run_to_idle(service, client, "p-block")
@@ -227,11 +255,132 @@ class BlockedScaffoldTests(ScaffoldExecutionTestBase):
         self.assertEqual(architect.calls, 1)  # resume never re-plans
         self.assertEqual(
             worker.goals,
-            ["Lemma one.", "Lemma two.", "Lemma two.", "Target theorem X."],
+            [
+                "Lemma one.",
+                "Lemma two.",
+                "Lemma two.",
+                "Lemma two.",
+                "Lemma two.",
+                "Target theorem X.",
+            ],
         )
+        # The retried lemma2 and the target are fresh solver runs: round 1.
+        self.assertIsNone(worker.repair_contexts[4])
+        self.assertIsNone(worker.repair_contexts[5])
         model = client.get("/api/problems/p-block").json()
         self.assertEqual(model["status"], "SOLVED")
         self.assertEqual(len(model["supporting_closure"]), 3)
+
+
+class FailOnceVerifier:
+    """Rejects each listed statement exactly once, then accepts it."""
+
+    def __init__(self, reject_once) -> None:
+        self.reject_once = set(reject_once)
+        self.failed = set()
+        self.calls = 0
+
+    def verify(self, problem, candidate, predecessors):
+        self.calls += 1
+        if candidate.statement in self.reject_once and candidate.statement not in self.failed:
+            self.failed.add(candidate.statement)
+            return VerificationResult(False, "scripted first-round rejection")
+        return VerificationResult(True, "scripted acceptance")
+
+
+class AttributedGoalWorker(GoalEchoWorker):
+    """Snapshots the service's current_attempt_id inside every propose call."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.service = None
+        self.problem_id = None
+        self.attempt_snapshots = []
+
+    def propose(self, *, problem, existing_facts, subgoal, repair_context=None):
+        self.attempt_snapshots.append(self.service.current_attempt_id(self.problem_id))
+        return super().propose(
+            problem=problem,
+            existing_facts=existing_facts,
+            subgoal=subgoal,
+            repair_context=repair_context,
+        )
+
+
+class ProductRepairAttributionTests(ScaffoldExecutionTestBase):
+    """N1.15: a FAIL-then-repair-PASS product execution produces one
+    ATTEMPT_FINISHED per attempt with correct per-attempt attribution, and
+    repair rounds are strictly sequential (exactly one RUNNING-verdict
+    attempt in flight at any moment)."""
+
+    def test_fail_then_repair_pass_attributes_every_attempt(self) -> None:
+        problem_dir = self.builder.add_problem("p-rep", "Target theorem REP.")
+        worker = AttributedGoalWorker()
+        verifier = FailOnceVerifier({"Lemma two."})
+        service = ExecutionService(
+            self.builder.root,
+            worker_factory=lambda: worker,
+            verifier_factory=lambda: verifier,
+            architect_factory=lambda: StubArchitect(
+                [linear_proposal("Target theorem REP.")]
+            ),
+            max_attempts_per_obligation=2,
+        )
+        worker.service = service
+        worker.problem_id = "p-rep"
+        client = self._client(service)
+
+        self._run_to_idle(service, client, "p-rep")
+
+        self.assertEqual(
+            worker.goals,
+            ["Lemma one.", "Lemma two.", "Lemma two.", "Target theorem REP."],
+        )
+        # Round 1 of every node is the legacy call shape; lemma2 round 2
+        # carries the rejection feedback.
+        self.assertEqual(
+            [ctx is None for ctx in worker.repair_contexts], [True, True, False, True]
+        )
+        repair = worker.repair_contexts[2]
+        self.assertEqual(repair.verifier_reason, "scripted first-round rejection")
+        self.assertEqual(repair.attempt_number, 2)
+        self.assertEqual(repair.max_attempts, 2)
+        # Live attribution: each worker invocation saw exactly its own
+        # in-flight attempt — never two RUNNING attempts at once.
+        self.assertEqual(
+            worker.attempt_snapshots,
+            ["attempt-000001", "attempt-000002", "attempt-000003", "attempt-000004"],
+        )
+
+        events = read_log(problem_dir)
+        attempt_ids = [f"attempt-{n:06d}" for n in range(1, 5)]
+        self.assertEqual(
+            [e["attempt_id"] for e in events if e["kind"] == "WORKER_INVOKED"],
+            attempt_ids,
+        )
+        self.assertEqual(
+            [e["attempt_id"] for e in events if e["kind"] == "VERIFIER_INVOKED"],
+            attempt_ids,
+        )
+        finishes = [e for e in events if e["kind"] == "ATTEMPT_FINISHED"]
+        self.assertEqual(
+            [(e["attempt_id"], e["outcome_stage"]) for e in finishes],
+            [
+                ("attempt-000001", "PASS"),
+                ("attempt-000002", "FRESH_VERIFIER_REJECT"),
+                ("attempt-000003", "PASS"),
+                ("attempt-000004", "PASS"),
+            ],
+        )
+
+        model = client.get("/api/problems/p-rep").json()
+        self.assertEqual(model["status"], "SOLVED")
+        self.assertEqual(len(model["attempts"]), 4)
+        # Exactly one verified Fact per node — repair never double-admits.
+        self.assertEqual(
+            sorted(fact.statement for fact in FactGraph(problem_dir).list_facts()),
+            ["Lemma one.", "Lemma two.", "Target theorem REP."],
+        )
 
 
 class ArchitectFailureTests(ScaffoldExecutionTestBase):

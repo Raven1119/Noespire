@@ -21,6 +21,21 @@ class SubmissionResult:
     fact: Optional[Fact]
 
 
+@dataclass(frozen=True)
+class RepairContext:
+    """Verifier feedback handed to the worker on repair rounds (round >= 2).
+
+    Pure prompt input: the verifier never sees it and never mutates state.
+    Round 1 is always invoked without a repair context (legacy call shape).
+    """
+
+    previous_statement: str
+    previous_proof: str
+    verifier_reason: str
+    attempt_number: int
+    max_attempts: int
+
+
 class Verifier(Protocol):
     def verify(
         self,

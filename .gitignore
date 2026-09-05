@@ -6,3 +6,30 @@ baselines/danus/
 experiments/danus_baseline_a/
 experiments/n1_triangular_sum_smoke/artifacts/
 docs/kimi_noespire_project_understanding.md
+*.egg-info/
+
+# Local experiment outputs; keep evidence on disk, outside future commits.
+/experiments/**/runs/
+/experiments/**/workspace/
+/experiments/**/workspaces/
+/experiments/**/evidence/
+/experiments/**/invocations/
+/experiments/**/codex_runs/
+/experiments/**/summary.json
+/experiments/**/aggregate_summary.json
+/experiments/**/preflight.json
+/workspaces/
+*.log
+
+# One-off frozen replay drivers and their local evidence.
+/experiments/n2a[b-m]_*/
+/experiments/n2z_live_boundary/environment_repair/
+/experiments/erdos_67_forensics/
+/experiments/n2v_two_stage_replication/replication_analysis.md
+
+# Generated reports for individual local runs.
+/docs/n2a[a-m]_*.md
+/docs/n2z_live_boundary_report.md
+/docs/n2*_report.md
+/docs/n2*_source_audit.md
+/docs/n2l_closed_book_fact_audit.md

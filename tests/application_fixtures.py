@@ -110,16 +110,21 @@ class BlockingWorker:
 class GoalEchoWorker:
     """Derives the candidate from the subgoal's ``Goal:\\n<text>`` tail and the
     provided premise Facts — contract-passing for root AND scaffold-node
-    obligations, so one double serves legacy and multi-node executions."""
+    obligations, so one double serves legacy and multi-node executions.
+
+    ``repair_contexts`` records the repair keyword of every call: ``None``
+    on first rounds, the ``RepairContext`` on repair rounds."""
 
     def __init__(self) -> None:
         self.calls = 0
         self.goals = []
+        self.repair_contexts = []
 
-    def propose(self, *, problem, existing_facts, subgoal):
+    def propose(self, *, problem, existing_facts, subgoal, repair_context=None):
         self.calls += 1
         goal = subgoal.split("Goal:\n", 1)[1]
         self.goals.append(goal)
+        self.repair_contexts.append(repair_context)
         return CandidateFact(
             goal,
             f"A candidate proof of {goal}",
@@ -135,12 +140,15 @@ class BlockingGoalWorker(GoalEchoWorker):
         self.started = started
         self.release = release
 
-    def propose(self, *, problem, existing_facts, subgoal):
+    def propose(self, *, problem, existing_facts, subgoal, repair_context=None):
         self.started.set()
         if not self.release.wait(timeout=10):
             raise RuntimeError("test release timeout")
         return super().propose(
-            problem=problem, existing_facts=existing_facts, subgoal=subgoal
+            problem=problem,
+            existing_facts=existing_facts,
+            subgoal=subgoal,
+            repair_context=repair_context,
         )
 
 

@@ -1,6 +1,8 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import json
+
 import pytest
 
 from research.fact import CandidateFact, Fact
@@ -489,3 +491,53 @@ def test_execution_failure_preserves_prior_fact_without_replanning() -> None:
         assert worker.calls == verifier.calls == 2
         assert [fact.statement for fact in graph.list_facts()] == ["Lemma H."]
         assert result.execution.advances[-1].node_id == "target"
+
+
+def test_successful_architect_proposal_is_persisted_beside_the_scaffold() -> None:
+    with TemporaryDirectory() as directory:
+        root = Path(directory)
+        proposal = ScaffoldProposal(
+            (
+                ScaffoldProposalNode("lemma", "Lemma H."),
+                ScaffoldProposalNode("target", "Target T.", depends_on=("lemma",)),
+            ),
+            "target",
+        )
+        result = run_static_scaffold_once(
+            scaffold_path=root / "scaffold.json",
+            problem=ProblemSpec("p", "Target T."),
+            allowed_facts=(),
+            config=ArchitectConfig(require_intermediate=True),
+            graph=FactGraph(root),
+            registry=ObligationRegistry(root / "obligations.json"),
+            architect=ScriptedArchitect(proposal),
+            author="worker",
+            worker=ScriptedWorker(("Lemma H.", "Target T.")),
+            verifier=ScriptedVerifier((True, True)),
+        )
+
+        assert result.status is StaticScaffoldStatus.SOLVED
+        evidence = json.loads((root / "architect_proposal.json").read_text(encoding="utf-8"))
+        assert evidence["target_node_id"] == "target"
+        assert [node["node_id"] for node in evidence["nodes"]] == ["lemma", "target"]
+        assert evidence["nodes"][1]["depends_on"] == ["lemma"]
+
+
+def test_architect_error_persists_no_proposal_evidence() -> None:
+    with TemporaryDirectory() as directory:
+        root = Path(directory)
+        result = run_static_scaffold_once(
+            scaffold_path=root / "scaffold.json",
+            problem=ProblemSpec("p", "Target T."),
+            allowed_facts=(),
+            config=ArchitectConfig(),
+            graph=FactGraph(root),
+            registry=ObligationRegistry(root / "obligations.json"),
+            architect=RaisingArchitect(),
+            author="worker",
+            worker=ScriptedWorker(()),
+            verifier=ScriptedVerifier(()),
+        )
+
+        assert result.status is StaticScaffoldStatus.ARCHITECT_ERROR
+        assert not (root / "architect_proposal.json").exists()

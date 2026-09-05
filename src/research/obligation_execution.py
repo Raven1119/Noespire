@@ -9,7 +9,7 @@ from .agents import ResearchWorker
 from .fact import CandidateFact, Fact
 from .graph import FactGraph
 from .obligation import ObligationRegistry, ObligationStatus, ProofObligation
-from .pipeline import VerificationResult, Verifier, submit_candidate
+from .pipeline import RepairContext, VerificationResult, Verifier, submit_candidate
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ def execute_obligation(
     author: str,
     worker: ResearchWorker,
     verifier: Verifier,
+    repair_context: Optional[RepairContext] = None,
 ) -> ObligationExecutionResult:
     obligation = registry.get(obligation_id)
     if obligation.status is ObligationStatus.DISCHARGED:
@@ -42,16 +43,22 @@ def execute_obligation(
         raise ValueError("all obligation premises must belong to problem_id")
 
     registry.transition(obligation_id, ObligationStatus.RUNNING)
-    candidate = worker.propose(
-        problem=problem,
-        existing_facts=premises,
-        subgoal=(
-            "Use every provided accepted Fact jointly as a premise. "
-            "Return the goal text verbatim as the candidate statement and return exactly "
-            "the provided fact IDs as predecessors.\n\n"
-            f"Goal:\n{obligation.goal}"
-        ),
+    subgoal = (
+        "Use every provided accepted Fact jointly as a premise. "
+        "Return the goal text verbatim as the candidate statement and return exactly "
+        "the provided fact IDs as predecessors.\n\n"
+        f"Goal:\n{obligation.goal}"
     )
+    if repair_context is None:
+        # Legacy call shape: first rounds and one-shot callers never see the keyword.
+        candidate = worker.propose(problem=problem, existing_facts=premises, subgoal=subgoal)
+    else:
+        candidate = worker.propose(
+            problem=problem,
+            existing_facts=premises,
+            subgoal=subgoal,
+            repair_context=repair_context,
+        )
     candidate_predecessors = tuple(sorted(set(candidate.predecessors)))
     if " ".join(candidate.statement.split()) != obligation.goal:
         return _open_without_submission(

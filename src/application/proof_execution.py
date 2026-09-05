@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from research.graph import FactGraph
+from research.node_solver import NodeSolverConfig
 from research.obligation import ObligationRegistry, ObligationStatus
 from research.problem import ProblemSpec, solve_problem_once
 from research.scaffold import ProofScaffold, solve_scaffold
@@ -97,14 +98,17 @@ def run_product_execution(
     worker,
     verifier,
     architect=None,
+    solver_config: Optional[NodeSolverConfig] = None,
 ) -> ProductExecutionResult:
     """One product execution: one claim, one call into the research core.
 
-    LEGACY_DIRECT runs ``solve_problem_once`` unchanged. STATIC_SCAFFOLD with
-    a persisted scaffold resumes through ``solve_scaffold`` (resolved nodes
-    are never re-executed; the Architect is never invoked). STATIC_SCAFFOLD
-    without a scaffold runs ``run_static_scaffold_once`` (Architect exactly
-    once, mechanical validation, materialization, then execution).
+    LEGACY_DIRECT runs ``solve_problem_once`` unchanged (always one-shot;
+    ``solver_config`` never applies to it). STATIC_SCAFFOLD with a persisted
+    scaffold resumes through ``solve_scaffold`` (resolved nodes are never
+    re-executed; the Architect is never invoked). STATIC_SCAFFOLD without a
+    scaffold runs ``run_static_scaffold_once`` (Architect exactly once,
+    mechanical validation, materialization, then execution). Both scaffold
+    branches forward ``solver_config`` — the per-obligation repair budget.
     """
     problem_dir = Path(problem_dir)
     registry = ObligationRegistry(problem_dir / "obligations.json")
@@ -136,6 +140,7 @@ def run_product_execution(
             author="noespire-app",
             worker=worker,
             verifier=verifier,
+            solver_config=solver_config,
         )
         return ProductExecutionResult(
             status="SOLVED" if result.status == "SOLVED" else "OPEN",
@@ -158,6 +163,7 @@ def run_product_execution(
         author="noespire-app",
         worker=worker,
         verifier=verifier,
+        solver_config=solver_config,
     )
     if result.status is StaticScaffoldStatus.SOLVED:
         status = "SOLVED"

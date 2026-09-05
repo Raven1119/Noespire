@@ -1,5 +1,14 @@
 # Noespire Product State — Static Scaffold Wiring (N1.14P)
 
+> **Supersession note (DANUS proposition core):** the "Known gaps" entry
+> "No automatic retry, repair" below is intentionally superseded by the
+> DANUS-level bounded Node Solver: the scaffold product path now runs a
+> bounded verifier-guided repair loop (`max_attempts_per_obligation`,
+> product default 3, research default 1 = the one-shot behavior frozen here).
+> LEGACY_DIRECT remains one-shot; all other semantics in this document
+> (architect-once, manual Retry, truth boundary, REST contract) are unchanged.
+> Evidence: `docs/danus_proposition_core_implementation_report.md`.
+
 Canonical state after wiring the validated static multi-node proof path into
 the product. Base: `ab171d5d92a12231d631b970a8aa6368e5bce64b`
 (`noespire-n114-frontend-sync`). Design evidence:

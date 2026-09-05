@@ -12,7 +12,7 @@ from .fact import CandidateFact, Fact
 from .graph import FactGraph
 from .obligation import ObligationRegistry, ObligationStatus
 from .obligation_execution import ObligationExecutionResult, execute_obligation
-from .pipeline import VerificationResult, Verifier
+from .pipeline import RepairContext, VerificationResult, Verifier
 
 
 @dataclass(frozen=True)
@@ -38,12 +38,21 @@ class _EvidenceWorker:
         problem: str,
         existing_facts: Sequence[Fact],
         subgoal: str,
+        repair_context: Optional[RepairContext] = None,
     ) -> CandidateFact:
-        candidate = self.worker.propose(
-            problem=problem,
-            existing_facts=existing_facts,
-            subgoal=subgoal,
-        )
+        if repair_context is None:
+            candidate = self.worker.propose(
+                problem=problem,
+                existing_facts=existing_facts,
+                subgoal=subgoal,
+            )
+        else:
+            candidate = self.worker.propose(
+                problem=problem,
+                existing_facts=existing_facts,
+                subgoal=subgoal,
+                repair_context=repair_context,
+            )
         _update_attempt(self.registry, self.attempt_id, candidate=candidate)
         return candidate
 
@@ -80,6 +89,7 @@ def execute_obligation_with_evidence(
     author: str,
     worker: ResearchWorker,
     verifier: Verifier,
+    repair_context: Optional[RepairContext] = None,
 ) -> AttemptExecutionResult:
     """Execute once while preserving candidate, verifier, and error evidence."""
     obligation = registry.get(obligation_id)
@@ -98,6 +108,7 @@ def execute_obligation_with_evidence(
             author=author,
             worker=attempt_worker,
             verifier=attempt_verifier,
+            repair_context=repair_context,
         )
     except Exception as error:
         evidence_error = None

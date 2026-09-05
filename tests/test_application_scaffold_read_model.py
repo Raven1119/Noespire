@@ -139,7 +139,9 @@ class PartiallyVerifiedScaffoldTests(ScaffoldReadModelTestBase):
         self.assertEqual(nodes["lemma1"]["latest_attempt_id"], "attempt-000001")
         self.assertEqual(nodes["lemma2"]["state"], "BLOCKED")
         self.assertIsNone(nodes["lemma2"]["resolved_fact_id"])
-        self.assertEqual(nodes["lemma2"]["latest_attempt_id"], "attempt-000002")
+        # Product default max_attempts_per_obligation=3: lemma2's latest
+        # attempt is its third repair round.
+        self.assertEqual(nodes["lemma2"]["latest_attempt_id"], "attempt-000004")
         self.assertEqual(nodes["target"]["state"], "PLANNED")
         self.assertIsNone(nodes["target"]["latest_attempt_id"])
 
@@ -157,7 +159,7 @@ class PartiallyVerifiedScaffoldTests(ScaffoldReadModelTestBase):
             if item["problem_id"] == "p-part"
         )
         self.assertEqual(summary["status"], "OPEN")
-        self.assertEqual(summary["attempt_count"], 2)
+        self.assertEqual(summary["attempt_count"], 4)
 
 
 class SolvedScaffoldTests(ScaffoldReadModelTestBase):

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
 import json
 from pathlib import Path
@@ -12,6 +12,7 @@ from .agents import CodexInvoker, ResearchWorker
 from .fact import Fact
 from .graph import FactGraph
 from .obligation import ObligationRegistry
+from .node_solver import NodeSolverConfig
 from .pipeline import Verifier
 from .problem import ProblemSpec
 from .scaffold import (
@@ -229,6 +230,7 @@ def run_static_scaffold_once(
     author: str,
     worker: ResearchWorker,
     verifier: Verifier,
+    solver_config: Optional[NodeSolverConfig] = None,
 ) -> StaticScaffoldResult:
     try:
         proposal = architect.propose(
@@ -241,6 +243,7 @@ def run_static_scaffold_once(
             StaticScaffoldStatus.ARCHITECT_ERROR,
             error=f"{type(error).__name__}: {error}",
         )
+    _write_architect_proposal(scaffold_path.with_name("architect_proposal.json"), proposal)
     try:
         validated = validate_scaffold_proposal(
             proposal=proposal,
@@ -278,6 +281,7 @@ def run_static_scaffold_once(
             author=author,
             worker=worker,
             verifier=verifier,
+            solver_config=solver_config,
         )
     except Exception as error:
         return StaticScaffoldResult(
@@ -298,6 +302,16 @@ def run_static_scaffold_once(
         execution,
         execution.target_fact_id,
     )
+
+
+def _write_architect_proposal(path: Path, proposal: ScaffoldProposal) -> None:
+    """Persist the parsed architect proposal beside ``scaffold.json`` (evidence)."""
+    temporary = path.with_name(f"{path.name}.tmp")
+    temporary.write_text(
+        json.dumps(asdict(proposal), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
 
 
 def _target_ancestors(

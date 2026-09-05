@@ -2,6 +2,7 @@ import unittest
 
 from research.agents import ResearchWorker
 from research.fact import CandidateFact, Fact
+from research.pipeline import RepairContext
 
 
 class StaticCodex:
@@ -47,6 +48,44 @@ class WorkerContractTests(unittest.TestCase):
         self.assertIn("first four positive odd integers", runner.prompt)
         self.assertIn("prior-id", runner.prompt)
         self.assertIn("adding 5", runner.prompt)
+
+    def test_base_prompt_carries_the_danus_reasoning_policy(self) -> None:
+        runner = StaticCodex()
+        worker = ResearchWorker(runner)
+
+        worker.propose(problem="Prove T.", existing_facts=[], subgoal="Goal:\nT.")
+
+        self.assertIn("Reasoning policy", runner.prompt)
+        self.assertIn("toy examples", runner.prompt)
+        self.assertIn("counterexamples", runner.prompt)
+        self.assertIn("internal subgoals are proof steps", runner.prompt)
+        self.assertNotIn("Repair round", runner.prompt)
+
+    def test_repair_context_adds_verifier_feedback_and_attempt_budget(self) -> None:
+        runner = StaticCodex()
+        worker = ResearchWorker(runner)
+        repair = RepairContext(
+            previous_statement="Every integer is even.",
+            previous_proof="Claimed without justification.",
+            verifier_reason="counterexample n=1",
+            attempt_number=2,
+            max_attempts=3,
+        )
+
+        worker.propose(
+            problem="Prove T.",
+            existing_facts=[],
+            subgoal="Goal:\nT.",
+            repair_context=repair,
+        )
+
+        self.assertIn("Repair round 2 of 3", runner.prompt)
+        self.assertIn("Every integer is even.", runner.prompt)
+        self.assertIn("Claimed without justification.", runner.prompt)
+        self.assertIn("counterexample n=1", runner.prompt)
+        self.assertIn("key failure", runner.prompt)
+        self.assertIn("root cause", runner.prompt)
+        self.assertIn("materially identical proof", runner.prompt)
 
 
 if __name__ == "__main__":

@@ -48,6 +48,7 @@ from uuid import uuid4
 from research.agents import ResearchVerifier, ResearchWorker
 from research.fact import Fact
 from research.graph import FactGraph
+from research.node_solver import NodeSolverConfig
 from research.obligation import ObligationRegistry, ObligationStatus
 from research.problem import ProblemSpec
 from research.scaffold_architect import ScaffoldArchitect
@@ -166,7 +167,7 @@ class _LoggingWorker:
         self._before_attempt_ids = before_attempt_ids
         self._attributed_attempt_ids = attributed_attempt_ids
 
-    def propose(self, *, problem, existing_facts, subgoal):
+    def propose(self, *, problem, existing_facts, subgoal, repair_context=None):
         self._service._append_event(
             self._problem_dir,
             {
@@ -179,8 +180,15 @@ class _LoggingWorker:
                 "ts": _utc_now(),
             },
         )
+        if repair_context is None:
+            return self._inner.propose(
+                problem=problem, existing_facts=existing_facts, subgoal=subgoal
+            )
         return self._inner.propose(
-            problem=problem, existing_facts=existing_facts, subgoal=subgoal
+            problem=problem,
+            existing_facts=existing_facts,
+            subgoal=subgoal,
+            repair_context=repair_context,
         )
 
 
@@ -275,6 +283,7 @@ class ExecutionService:
         worker_factory: Optional[Callable[[], object]] = None,
         verifier_factory: Optional[Callable[[], object]] = None,
         architect_factory: Optional[Callable[[], object]] = None,
+        max_attempts_per_obligation: int = 3,
     ) -> None:
         self.workspaces_root = Path(workspaces_root)
         self.worker_factory = worker_factory or (
@@ -286,6 +295,9 @@ class ExecutionService:
         self.architect_factory = architect_factory or (
             lambda: ScaffoldArchitect(self._isolated_invoker())
         )
+        # Product repair budget (N1.15): conservative and bounded; scaffold-mode
+        # executions only — the legacy direct path stays one-shot regardless.
+        self._solver_config = NodeSolverConfig(max_attempts_per_obligation)
         self._lock = Lock()
         self._active: Dict[str, _ActiveExecution] = {}
         self._log_locks: Dict[Path, Lock] = {}
@@ -402,6 +414,7 @@ class ExecutionService:
                 worker=worker,
                 verifier=adapter,
                 architect=architect,
+                solver_config=self._solver_config,
             )
         except Exception as error:
             new_ids = sorted(_attempt_ids(problem_dir) - set(before))

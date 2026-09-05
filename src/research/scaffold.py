@@ -5,11 +5,12 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 import json
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Protocol, Sequence, Tuple
 
 from .agents import ResearchWorker
 from .attempt import execute_obligation_with_evidence
 from .graph import FactGraph
+from .node_solver import NodeSolver, NodeSolverConfig
 from .obligation import ObligationRegistry, ObligationStatus, ProofObligation
 from .obligation_execution import ObligationExecutionResult
 from .pipeline import Verifier
@@ -18,11 +19,22 @@ from .problem import ProblemSpec
 
 @dataclass(frozen=True)
 class ScaffoldNode:
+    """One scaffold node.
+
+    ``depends_on`` is the node's current route: an AND set of sibling nodes
+    that must all resolve before this node may execute. Together with the
+    obligation's ``route_id`` (see ``research.obligation.Route``) this is the
+    nominal OR-route seam; supporting multiple alternative routes per
+    obligation is a deliberate future extension — no route machinery exists yet.
+    """
+
     node_id: str
     goal: str
     depends_on: Tuple[str, ...] = ()
     premise_fact_ids: Tuple[str, ...] = ()
     resolved_by_fact_id: Optional[str] = None
+    superseded_by: Optional[str] = None
+    parked_by: Optional[str] = None
 
     def __post_init__(self) -> None:
         node_id = self.node_id.strip()
@@ -32,18 +44,49 @@ class ScaffoldNode:
         resolved = self.resolved_by_fact_id
         if resolved is not None:
             resolved = resolved.strip()
+        superseded = self.superseded_by
+        if superseded is not None:
+            superseded = superseded.strip()
+        parked = self.parked_by
+        if parked is not None:
+            parked = parked.strip()
         if not node_id or not goal or any(not item for item in dependencies + premises):
             raise ValueError("node_id, goal, dependencies, and premise Fact IDs must be non-empty")
         if self.resolved_by_fact_id is not None and not resolved:
             raise ValueError("resolved Fact ID must be non-empty")
+        if self.superseded_by is not None and not superseded:
+            raise ValueError("superseded_by proposal ID must be non-empty")
+        if self.parked_by is not None and not parked:
+            raise ValueError("parked_by proposal ID must be non-empty")
         object.__setattr__(self, "node_id", node_id)
         object.__setattr__(self, "goal", goal)
         object.__setattr__(self, "depends_on", dependencies)
         object.__setattr__(self, "premise_fact_ids", premises)
         object.__setattr__(self, "resolved_by_fact_id", resolved)
+        object.__setattr__(self, "superseded_by", superseded)
+        object.__setattr__(self, "parked_by", parked)
 
 
 class ProofScaffold:
+    """Persisted proof scaffold.
+
+    Invariant: a persisted node's mathematical semantics (``goal``,
+    ``depends_on``, ``premise_fact_ids``) are immutable after creation. The
+    only writable fields are ``resolved_by_fact_id``, written only via
+    ``resolve``, which requires the resolving Fact's statement to equal the
+    node's goal and its predecessors to equal the materialized dependency set,
+    and ``superseded_by``, written only by the audited local-redecomposition
+    split (``research.local_refinement.apply_split``), which additionally
+    rewires unexecuted downstream ``depends_on`` references from the superseded
+    node to the split's sink children. A superseded node stays ``open`` with
+    its attempt history intact but is never scheduled again. ``parked_by``,
+    written only by the audited alternative-route insertion
+    (``research.local_refinement.apply_alternative_route``), marks a node's
+    route as exhausted but retained as route-of-record (distinct from
+    superseded = refined away); a parked node likewise keeps its row and
+    attempt history and is never scheduled again.
+    """
+
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
         payload = json.loads(self.path.read_text(encoding="utf-8"))
@@ -57,6 +100,8 @@ class ProofScaffold:
                     depends_on=tuple(item["depends_on"]),
                     premise_fact_ids=tuple(item["premise_fact_ids"]),
                     resolved_by_fact_id=item["resolved_by_fact_id"],
+                    superseded_by=item.get("superseded_by"),
+                    parked_by=item.get("parked_by"),
                 )
                 for item in payload["nodes"]
             ),
@@ -139,6 +184,39 @@ class ScaffoldResult:
     advances: Tuple[ScaffoldAdvanceResult, ...]
 
 
+def ready_nodes(scaffold: ProofScaffold, registry: ObligationRegistry) -> List[ScaffoldNode]:
+    """Return the currently executable nodes in deterministic ``node_id`` order.
+
+    A node is ready when it is unresolved, neither superseded nor parked,
+    every node in ``depends_on`` is resolved, and its obligation is not
+    RUNNING.
+    """
+    return [
+        node
+        for node in scaffold.list_nodes()
+        if node.resolved_by_fact_id is None
+        and node.superseded_by is None
+        and node.parked_by is None
+        and all(scaffold.get(dependency).resolved_by_fact_id for dependency in node.depends_on)
+        and not _is_running(registry, _obligation_id(scaffold.problem_id, node.node_id))
+    ]
+
+
+class ScaffoldScheduler(Protocol):
+    """Selection policy over the currently ready scaffold nodes."""
+
+    def select(self, ready: Sequence[ScaffoldNode]) -> Optional[ScaffoldNode]:
+        """Pick one node from ``ready``, or ``None`` to defer execution."""
+        ...
+
+
+class FirstReadyScheduler:
+    """Default deterministic policy: the first ready node in ``node_id`` order."""
+
+    def select(self, ready: Sequence[ScaffoldNode]) -> Optional[ScaffoldNode]:
+        return ready[0] if ready else None
+
+
 def advance_scaffold_once(
     *,
     scaffold: ProofScaffold,
@@ -148,53 +226,79 @@ def advance_scaffold_once(
     author: str,
     worker: ResearchWorker,
     verifier: Verifier,
+    scheduler: Optional[ScaffoldScheduler] = None,
+    solver_config: Optional[NodeSolverConfig] = None,
 ) -> ScaffoldAdvanceResult:
-    """Execute at most one deterministic ready scaffold node."""
+    """Execute at most one deterministic ready scaffold node.
+
+    With ``solver_config=None`` the node runs the legacy single-attempt path,
+    byte-identical to the pre-solver behavior. With a config, the node's
+    obligation is solved by a bounded ``NodeSolver`` repair loop over the
+    same worker/verifier; each repair round is its own durable attempt.
+    """
     _validate_runtime(scaffold, problem, graph)
     target = scaffold.get(scaffold.target_node_id)
     if target.resolved_by_fact_id:
         return _solved_advance(graph, target.resolved_by_fact_id)
 
-    ready = [
-        node
-        for node in scaffold.list_nodes()
-        if node.resolved_by_fact_id is None
-        and all(scaffold.get(dependency).resolved_by_fact_id for dependency in node.depends_on)
-        and not _is_running(registry, _obligation_id(problem.problem_id, node.node_id))
-    ]
+    ready = ready_nodes(scaffold, registry)
     if not ready:
         return ScaffoldAdvanceResult("BLOCKED", None, None, None, (), None)
 
-    node = ready[0]
+    selector = scheduler if scheduler is not None else FirstReadyScheduler()
+    node = selector.select(ready)
+    if node is None:
+        return ScaffoldAdvanceResult("BLOCKED", None, None, None, (), None)
     premise_fact_ids = _materialized_predecessors(scaffold, node)
     obligation = _get_or_create_obligation(problem, node, premise_fact_ids, registry)
-    attempt = execute_obligation_with_evidence(
-        registry=registry,
-        obligation_id=obligation.obligation_id,
-        graph=graph,
-        problem_id=problem.problem_id,
-        problem=problem.statement,
-        author=author,
-        worker=worker,
-        verifier=verifier,
-    )
-    execution = attempt.execution
-    if execution.fact is None:
+    if solver_config is None:
+        attempt = execute_obligation_with_evidence(
+            registry=registry,
+            obligation_id=obligation.obligation_id,
+            graph=graph,
+            problem_id=problem.problem_id,
+            problem=problem.statement,
+            author=author,
+            worker=worker,
+            verifier=verifier,
+        )
+        execution = attempt.execution
+        attempt_id = attempt.attempt_id
+        fact = execution.fact
+    else:
+        outcome = NodeSolver(
+            worker=worker, verifier=verifier, config=solver_config
+        ).solve_obligation(
+            problem=problem,
+            registry=registry,
+            graph=graph,
+            author=author,
+            obligation_id=obligation.obligation_id,
+            goal=node.goal,
+            premise_fact_ids=premise_fact_ids,
+        )
+        if outcome.status == "ERROR":
+            # Current error semantics: worker/verifier exceptions propagate.
+            raise outcome.error
+        execution = outcome.execution
+        attempt_id = outcome.attempt_ids[-1] if outcome.attempt_ids else None
+        fact = outcome.fact
+    if fact is None:
         return ScaffoldAdvanceResult(
-            "BLOCKED", node.node_id, execution, None, (), attempt.attempt_id
+            "BLOCKED", node.node_id, execution, None, (), attempt_id
         )
 
-    scaffold.resolve(node.node_id, execution.fact.fact_id, graph)
+    scaffold.resolve(node.node_id, fact.fact_id, graph)
     if node.node_id == scaffold.target_node_id:
-        solved = _solved_advance(graph, execution.fact.fact_id)
+        solved = _solved_advance(graph, fact.fact_id)
         return replace(
             solved,
             node_id=node.node_id,
             execution=execution,
-            attempt_id=attempt.attempt_id,
+            attempt_id=attempt_id,
         )
     return ScaffoldAdvanceResult(
-        "ADVANCED", node.node_id, execution, None, (), attempt.attempt_id
+        "ADVANCED", node.node_id, execution, None, (), attempt_id
     )
 
 
@@ -207,6 +311,8 @@ def solve_scaffold(
     author: str,
     worker: ResearchWorker,
     verifier: Verifier,
+    scheduler: Optional[ScaffoldScheduler] = None,
+    solver_config: Optional[NodeSolverConfig] = None,
 ) -> ScaffoldResult:
     """Advance distinct nodes until the target resolves or one advance blocks."""
     advances = []
@@ -219,6 +325,8 @@ def solve_scaffold(
             author=author,
             worker=worker,
             verifier=verifier,
+            scheduler=scheduler,
+            solver_config=solver_config,
         )
         advances.append(advance)
         if advance.status != "ADVANCED":
@@ -260,11 +368,10 @@ def _validate_runtime(scaffold: ProofScaffold, problem: ProblemSpec, graph: Fact
         raise ValueError("scaffold problem_id does not match problem")
     if scaffold.get(scaffold.target_node_id).goal != problem.statement:
         raise ValueError("target scaffold goal does not match problem statement")
-    allowed = set(problem.premise_fact_ids)
     for node in scaffold.list_nodes():
-        if not set(node.premise_fact_ids).issubset(allowed):
-            raise ValueError("scaffold base Facts must be declared problem premises")
         for fact_id in node.premise_fact_ids:
+            # Proof predecessors: any accepted, non-revoked Fact of this
+            # problem is legal (get_fact raises KeyError for unknown/revoked).
             if graph.get_fact(fact_id).problem_id != problem.problem_id:
                 raise ValueError("all scaffold base Facts must belong to problem_id")
         if node.resolved_by_fact_id:

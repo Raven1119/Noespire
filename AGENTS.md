@@ -50,6 +50,7 @@ For the MVP:
 - The Cross-DAG Compiler / formalization architect MUST run as Codex.
 - Lean proof workers MUST run as Codex agents.
 - Any LLM-based research verifier, critic, repair agent, or fidelity checker MUST default to a fresh Codex session unless an experiment explicitly studies another model.
+- New experiments default to GPT-5.6 Sol (`gpt-5.6-sol`), per the user's 2026-09-05 preference, unless the user specifies otherwise. Complete experiments already in progress with their frozen model configuration.
 - Long-lived mathematical state MUST live in persisted project state, Fact DAGs, mappings, Lean files, and audit artifacts; it MUST NOT depend on one indefinitely growing Codex conversation.
 - Independent workers SHOULD use isolated sessions/workspaces where practical, as in Danus/LeanMarathon-style execution.
 
