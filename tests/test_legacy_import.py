@@ -47,7 +47,8 @@ def test_import_rejects_a_copy_that_does_not_match_frozen_source(tmp_path, monke
 
 @pytest.mark.parametrize("operator,corruption", [("SPLIT", None), ("INSERT_CUT_SET", None),
     ("ADD_ALTERNATIVE_ROUTE", None), ("INSERT_CUT_SET", "missing"), ("INSERT_CUT_SET", "post_image"),
-    ("INSERT_CUT_SET", "audit")])
+    ("INSERT_CUT_SET", "audit"), ("INSERT_CUT_SET", "wrapper"),
+    ("SPLIT", "completed"), ("INSERT_CUT_SET", "completed"), ("ADD_ALTERNATIVE_ROUTE", "completed")])
 def test_import_reconstructs_routes_from_actual_legacy_refinement_evidence(tmp_path, operator, corruption):
     import json
     from test_local_refinement import make_workspace, StubBuilder
@@ -70,7 +71,17 @@ def test_import_reconstructs_routes_from_actual_legacy_refinement_evidence(tmp_p
         builder=StubBuilder(parser(raw, blocked_node_id="mid")), auditor=StructuralAuditor(AuditorCodex(), operation=operator.lower()))
     assert result.outcome == "APPLIED"
     destination = tmp_path / "v3"
-    if corruption:
+    if corruption == "completed":
+        from test_local_refinement import GoalEchoWorker, RejectingVerifier
+        from research.scaffold import solve_scaffold
+        from research.obligation import ObligationRegistry
+        from research.graph import FactGraph
+        outcome = solve_scaffold(scaffold=ProofScaffold(source / "scaffold.json"),
+            problem=ProblemSpec("p", "Target theorem T."), registry=ObligationRegistry(source / "obligations.json"),
+            graph=FactGraph(source), author="fixture", worker=GoalEchoWorker(), verifier=RejectingVerifier())
+        assert outcome.status == "SOLVED"
+        original_facts = {p.name: p.read_bytes() for p in (source / "facts").glob("*.md")}
+    elif corruption:
         from research.run_storage import read_json, write_json
         path = next((source / "local_refinements").glob("*.json"))
         if corruption == "missing":
@@ -79,6 +90,12 @@ def test_import_reconstructs_routes_from_actual_legacy_refinement_evidence(tmp_p
             record = read_json(path)
             if corruption == "post_image":
                 record["post_patch_nodes"][0]["goal"] = "unsupported rewrite"
+            elif corruption == "wrapper":
+                wrapper = next(n for n in record["post_patch_nodes"] if n["node_id"] == "mid__cut")
+                wrapper["depends_on"] = ["a"]
+                scaffold = read_json(source / "scaffold.json")
+                next(n for n in scaffold["nodes"] if n["node_id"] == "mid__cut")["depends_on"] = ["a"]
+                write_json(source / "scaffold.json", scaffold)
             else:
                 record["auditor_raw"] = json.dumps(dict(verdict="REJECT", reasons=[], checks={}))
             write_json(path, record)
@@ -88,6 +105,11 @@ def test_import_reconstructs_routes_from_actual_legacy_refinement_evidence(tmp_p
         return
     imported = LegacyScaffoldImporter(source).import_to(destination)
     graph = ProofGraph(destination)
+    if corruption == "completed":
+        assert graph.obligation(graph.target_obligation_id).truth_state == "DISCHARGED"
+        assert graph.supporting_closure()
+        assert {p.name: p.read_bytes() for p in (destination / "facts").glob("*.md")} == original_facts
+        return
     mid = imported["obligation_ids"]["mid"]
     assert len(graph.obligations()) == 5
     routes = graph.routes_for(mid)
@@ -108,3 +130,23 @@ def test_import_reconstructs_routes_from_actual_legacy_refinement_evidence(tmp_p
     assert len(packet["refinement_history"]) == 1
     assert packet["refinement_history"][0]["operator"] == operator
     assert packet["refinement_history"][0]["claims"] == ["First local claim", "Second local claim"]
+
+
+@pytest.mark.parametrize("remaining", [1, 3])
+def test_imported_partial_attempt_history_limits_and_informs_continuation(tmp_path, remaining):
+    from test_local_refinement import make_workspace
+    from test_proof_execution import ScriptedCodex
+    from research.agents import ResearchWorker
+    from research.closed_book import ClosedBookVerifier
+    from research.node_solver import NodeSolver, NodeSolverConfig
+    source, destination = tmp_path / "legacy", tmp_path / "v3"
+    make_workspace(source)
+    imported = LegacyScaffoldImporter(source).import_to(destination)
+    no_result = dict(kind="NO_RESULT", reason="same gap", statement="", proof="", predecessors=[], counterexample="")
+    backend = ScriptedCodex([("research_worker", no_result)] * min(remaining, 2))
+    solver = NodeSolver(worker=ResearchWorker(backend), verifier=ClosedBookVerifier(backend), config=NodeSolverConfig(remaining))
+    result = solver.solve_route(graph=ProofGraph(destination), route_id=imported["route_ids"]["mid"], author="fixture")
+    assert result.status == "BLOCKED"
+    assert "scripted verdict" in backend.calls[0][1]
+    assert len(backend.calls) == min(remaining, 2)
+    assert not backend.responses

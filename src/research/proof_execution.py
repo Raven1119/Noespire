@@ -24,8 +24,13 @@ def solve_route(solver, graph, route_id, author, *, event=None):
     route = graph.route(route_id)
     obligation = graph.obligation(route.target_obligation_id)
     path = solver.progress_path or graph.root / "attempts" / route_id / "solver.json"
+    attempts = graph.root / "attempts"
+    legacy_ids = [p.stem for p in sorted(attempts.glob("attempt-*.json"))
+                  if (a := read_json(p)).get("legacy_path") and a["route_id"] == route_id]
+    # Imported partial work consumes the same three-attempt route allowance.
+    maximum = min(3, len(legacy_ids) + solver.config.max_attempts_per_obligation)
     initial = dict(obligation_id=obligation.obligation_id, route_id=route_id,
-                   max_attempts=solver.config.max_attempts_per_obligation, attempt_ids=[])
+                   max_attempts=maximum, attempt_ids=legacy_ids)
     progress = read_json(path) if path.exists() else initial
     if any(progress[k] != initial[k] for k in ("obligation_id", "route_id", "max_attempts")):
         raise ValueError("route solver resume identity/configuration mismatch")
@@ -33,7 +38,6 @@ def solve_route(solver, graph, route_id, author, *, event=None):
     if len(ids) != len(set(ids)) or len(ids) > progress["max_attempts"] or any(
             not k.startswith("attempt-") or not k[8:].isdigit() for k in ids):
         raise ValueError("invalid replay attempt identity")
-    attempts = graph.root / "attempts"
     history = []
     for index in range(progress["max_attempts"]):
         if len(progress["attempt_ids"]) <= index:

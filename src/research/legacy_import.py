@@ -70,10 +70,32 @@ def _reconstruct_history(source, final_nodes, problem_id):
         working[blocked["node_id"]] = blocked
         for node in context["local_nodes"]:
             working[node["node_id"]] = node
+        _check_legacy_transition(source, record, working)
         history.append(record)
     if any(n.get("parked_by") or n.get("superseded_by") or "__" in k for k, n in working.items()):
         raise ValueError("legacy refinements require complete provenance evidence")
     return working, list(reversed(history))
+
+
+def _check_legacy_transition(source, record, before):
+    """Replay the original mechanical operator in scratch storage, never the source."""
+    from tempfile import TemporaryDirectory
+    from .scaffold import ProofScaffold
+    from .local_refinement import (SplitChildSpec, SplitProposal, CutSetProposal, AlternativeRouteProposal,
+                                   apply_split, apply_cut_set, apply_alternative_route)
+    proposal_type, apply = {"SPLIT": (SplitProposal, apply_split),
+        "INSERT_CUT_SET": (CutSetProposal, apply_cut_set),
+        "ADD_ALTERNATIVE_ROUTE": (AlternativeRouteProposal, apply_alternative_route)}[record["context"]["allowed_operation"]]
+    proposal = proposal_type(**{**record["proposal"],
+        "children": tuple(SplitChildSpec(**c) for c in record["proposal"]["children"])})
+    # TemporaryDirectory owns only its generated child of the isolated import.
+    with TemporaryDirectory(dir=source.parent) as scratch:
+        path = Path(scratch) / "scaffold.json"
+        write_json(path, {**read_json(source / "scaffold.json"), "nodes": list(before.values())})
+        apply(ProofScaffold(path), proposal)
+        expected = {n["node_id"]: n for n in read_json(path)["nodes"]}
+    if _shape(expected) != _shape({n["node_id"]: n for n in record["post_patch_nodes"]}):
+        raise ValueError("legacy post-images do not match the recorded operator transition")
 
 
 class LegacyScaffoldImporter:
@@ -140,6 +162,15 @@ class LegacyScaffoldImporter:
         resolved = {}
         for key, node in nodes.items():
             if node["resolved_by_fact_id"]:
+                # Only already-proved historical targets retain the exact old
+                # direct lineage. New/open refinement routes still AND all claims.
+                original_route = routes[key]
+                historical_route = ProofRoute.create(obligations[key].obligation_id,
+                    [obligations[k].obligation_id for k in node["depends_on"]], node["premise_fact_ids"],
+                    kind=original_route.kind, origin_patch_id="legacy:scaffold.json")
+                if historical_route.route_id != original_route.route_id:
+                    routes["canonical:" + original_route.route_id] = original_route
+                    routes[key] = historical_route
                 item = replace(obligations[key], truth_state="DISCHARGED",
                     resolved_fact_id=node["resolved_by_fact_id"], resolved_route_id=routes[key].route_id)
                 if item.obligation_id in resolved and resolved[item.obligation_id] != item:
