@@ -24,21 +24,34 @@ export function drawerContent(
   inspection: Inspection
 ): DrawerContent {
   switch (inspection.kind) {
-    case "problem":
+    case "problem": {
+      const fields: InspectorField[] = [
+        { label: "problem_id", value: model.problem_id, mono: true },
+        { label: "derived_from", value: model.derived_from ?? "—", mono: true },
+        { label: "archived", value: model.archived ? "true" : "false" },
+      ];
+      if (model.dynamic !== null) {
+        // v3: the legacy obligation registry does not exist here — show the
+        // dynamic run's authoritative state instead of "no obligation yet".
+        fields.push(
+          { label: "execution_mode", value: model.execution_mode },
+          { label: "run_id", value: model.dynamic.run_id, mono: true },
+          { label: "run phase", value: model.dynamic.phase },
+          { label: "stop_reason", value: model.dynamic.stop_reason ?? "—" }
+        );
+      } else {
+        fields.push({
+          label: "obligation status",
+          value: model.obligation?.status ?? "— (no obligation yet)",
+        });
+      }
       return {
         title: "Problem",
         subtitle: model.statement,
-        fields: [
-          { label: "problem_id", value: model.problem_id, mono: true },
-          { label: "derived_from", value: model.derived_from ?? "—", mono: true },
-          { label: "archived", value: model.archived ? "true" : "false" },
-          {
-            label: "obligation status",
-            value: model.obligation?.status ?? "— (no obligation yet)",
-          },
-        ],
+        fields,
         raw: model,
       };
+    }
     case "fact":
       return {
         title: "Fact",

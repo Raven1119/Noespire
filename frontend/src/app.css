@@ -160,6 +160,10 @@ body {
   color: hsl(var(--text-tertiary));
 }
 
+.problem-row__stopped {
+  color: hsl(var(--status-open));
+}
+
 .problem-row__lineage {
   color: hsl(var(--text-secondary));
 }
@@ -558,8 +562,11 @@ body {
   color: hsl(var(--text-tertiary));
 }
 
+/* Zero basis keeps a long statement on the glyph's line (wrapping
+   internally) instead of wrapping to its own line and orphaning the
+   glyph; badges wrap below when space runs out. */
 .proof-plan__statement {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -714,6 +721,20 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: hsl(var(--status-verified));
+}
+
+/* A verified refutation is truth, but it is NOT a Fact: amber, not the
+   verified-blue reserved for accepted Facts (ADR-0003 hue discipline). */
+.attempt-accepted__label--refuted {
+  color: hsl(var(--status-open));
+}
+
+/* Collapsed v3 attempt rows name their obligation so multi-node timelines
+   stay scannable without expanding every card. */
+.attempt-card__goal {
+  font-weight: 400;
+  font-size: 12px;
+  color: hsl(var(--text-tertiary));
 }
 
 /* ---------- failure panels ---------- */
@@ -942,6 +963,43 @@ body {
 
 /* ---------- v3 dynamic proof plan (AND/OR route tree) ---------- */
 
+/* The v3 tree item is a block: a header row (glyph + statement + badges)
+   above its route group — unlike the flat scaffold list item. */
+.proof-plan__item--tree {
+  display: block;
+}
+
+.proof-plan__row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.proof-plan__badges {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: none;
+  margin-left: auto;
+}
+
+.proof-plan__route-group,
+.proof-plan__and-group {
+  margin-top: 4px;
+}
+
+.proof-plan__connective {
+  margin: 0 0 4px;
+  padding-left: 18px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--text-tertiary));
+}
+
 .proof-plan__list .proof-plan__list,
 .proof-plan__routes {
   list-style: none;
@@ -951,10 +1009,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 100%;
 }
 
-.proof-plan__item {
+.proof-plan__route-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -970,8 +1030,15 @@ body {
 }
 
 .proof-plan__route-reason {
-  flex: 1 1 100%;
+  margin: 2px 0 0;
   font-size: 12px;
+  color: hsl(var(--text-tertiary));
+}
+
+.proof-plan__route-caption {
+  margin: 2px 0 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
   color: hsl(var(--text-tertiary));
 }
 
@@ -979,7 +1046,7 @@ body {
   flex: none;
   font-family: var(--font-ui);
   font-size: 11px;
-  color: hsl(var(--text-secondary));
+  color: hsl(var(--status-running));
 }
 
 /* REFUTED uses the amber failure accent; OPEN stays muted. */
@@ -1016,6 +1083,11 @@ body {
   font-family: var(--font-ui);
   font-size: 12px;
   color: hsl(var(--text-secondary));
+}
+
+.proof-plan__refinement-target {
+  font-weight: 400;
+  color: hsl(var(--text-tertiary));
 }
 
 .proof-plan__refinement-goals {

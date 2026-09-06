@@ -27,7 +27,9 @@ interface WorkspaceHeaderProps {
  * LLM-verified badge ONLY when SOLVED, and state-gated actions — fresh OPEN
  * (no attempts, no execution-level failure) → "Start proving"; OPEN/ERROR/
  * interrupted/failed runs → "Retry"; RUNNING
- * → Retry disabled with an honest hint; SOLVED → no retry action. "Revise &
+ * → Retry disabled with an honest hint; a terminally STOPPED v3 run → Retry
+ * disabled with a Revise & Fork hint (the core allows one run per workspace);
+ * SOLVED → no retry action. "Revise &
  * Fork" opens the fork dialog (allowed in every state — forking a RUNNING
  * parent never blocks or stops its execution). Archive/Unarchive is a
  * metadata-only toggle shown as a SECONDARY "Archived" badge; the main
@@ -46,6 +48,13 @@ export function WorkspaceHeader({
   const [forkOpen, setForkOpen] = useState(false);
   const solved = model.status === "SOLVED";
   const running = model.status === "RUNNING";
+  // A v3 run with a persisted stop_reason is terminal (core contract: one
+  // run per workspace) — Retry would only 409. Disable it up front and point
+  // at the one real continuation: Revise & Fork.
+  const runStopped =
+    model.dynamic !== null &&
+    model.dynamic.phase === "STOPPED" &&
+    model.dynamic.stop_reason !== null;
   // An execution-level failure (e.g. architect-stage) leaves no attempts but
   // is still a failed run — the action is "Retry", not "Start proving".
   const noAttempts =
@@ -62,7 +71,7 @@ export function WorkspaceHeader({
             <>
               <button
                 className="button button--primary"
-                disabled={running || starting}
+                disabled={running || starting || runStopped}
                 onClick={onStartAttempt}
               >
                 {noAttempts ? "Start proving" : "Retry"}
@@ -70,6 +79,12 @@ export function WorkspaceHeader({
               {running && (
                 <span className="workspace-actions__hint">
                   An attempt is already running.
+                </span>
+              )}
+              {runStopped && !running && (
+                <span className="workspace-actions__hint">
+                  This run has stopped — Revise &amp; Fork continues in a fresh
+                  lineage.
                 </span>
               )}
             </>

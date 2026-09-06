@@ -427,6 +427,50 @@ class DynamicV3WiringTests(unittest.TestCase):
 
     # -- old modes unaffected --------------------------------------------------
 
+    def test_problem_list_projects_terminal_stop_reason(self):
+        invoker = ScriptedV3(reject_direct=True)
+        service = self.service(invoker)
+        client = self.client(service)
+        stopped_id = self.create_problem(client)
+        self.run_to_completion(client, service, stopped_id)
+        fresh_id = self.create_problem(client, "Fresh statement, never run.")
+
+        summaries = {p["problem_id"]: p for p in build_problem_list(self.builder.root)}
+        self.assertEqual(summaries[stopped_id]["stop_reason"], "STRATEGIST_DECLINE")
+        self.assertIsNone(summaries[fresh_id]["stop_reason"])
+
+        # Legacy workspaces carry the same stable key, always null.
+        problem_dir = self.builder.add_problem("legacy-2", "Legacy statement.")
+        add_open_obligation(problem_dir, "legacy-2", "Legacy statement.")
+        summaries = {p["problem_id"]: p for p in build_problem_list(self.builder.root)}
+        self.assertIsNone(summaries["legacy-2"]["stop_reason"])
+
+    def test_projection_cleans_lone_surrogates_without_rewriting_evidence(self):
+        invoker = ScriptedV3(counterexample=True)
+        service = self.service(invoker)
+        client = self.client(service)
+        problem_id = self.create_problem(client)
+        self.run_to_completion(client, service, problem_id)
+
+        # Raw invocation capture can persist partial UTF-8 as lone
+        # surrogates; the projection must render U+FFFD, never mojibake.
+        attempt_path = (
+            self.builder.root / problem_id / "attempts" / "attempt-000001.json"
+        )
+        raw = json.loads(attempt_path.read_text(encoding="utf-8"))
+        raw["verification"]["reason"] = "valid when k\udca50"
+        attempt_path.write_text(json.dumps(raw), encoding="utf-8")
+
+        model = client.get(f"/api/problems/{problem_id}").json()
+        reason = model["attempts"][0]["verifier"]["reason"]
+        self.assertIn("\ufffd", reason)
+        self.assertNotIn("\udca5", reason)
+        # Stored evidence is untouched (projection-only cleaning).
+        stored = json.loads(attempt_path.read_text(encoding="utf-8"))
+        self.assertEqual(stored["verification"]["reason"], "valid when k\udca50")
+
+    # -- old modes unaffected --------------------------------------------------
+
     def test_legacy_root_workspace_still_legacy(self):
         problem_dir = self.builder.add_problem("legacy-1", "Legacy statement.")
         add_open_obligation(problem_dir, "legacy-1", "Legacy statement.")

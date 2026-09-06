@@ -6,6 +6,7 @@ import { WorkspaceShell } from "./WorkspaceShell";
 import {
   errorModel,
   interruptedModel,
+  makeAttempt,
   makeModel,
   openRejectionModel,
   runningGeneratingModel,
@@ -93,6 +94,27 @@ describe("WorkspaceShell — header actions", () => {
     expect(fork.disabled).toBe(false);
   });
 
+  it("a terminally stopped v3 run disables Retry and points to Revise & Fork", async () => {
+    mockedApi.getProblem.mockResolvedValue(
+      makeModel({
+        execution_mode: "DYNAMIC_PROOF_V3",
+        attempts: [makeAttempt({})],
+        dynamic: {
+          run_id: "run-1",
+          phase: "STOPPED",
+          stop_reason: "STRATEGIST_DECLINE",
+          error: null,
+          frontier_obligation_id: null,
+        },
+      })
+    );
+    await renderWorkspace();
+
+    const button = screen.getByRole("button", { name: "Retry" }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+    expect(screen.getByText(/This run has stopped/)).toBeTruthy();
+  });
+
   it("always shows the Inspector button", async () => {
     mockedApi.getProblem.mockResolvedValue(makeModel({}));
     await renderWorkspace();
@@ -120,6 +142,7 @@ describe("WorkspaceShell — derived-from line", () => {
           attempt_count: 1,
           derived_from: null,
           archived: false,
+          stop_reason: null,
           last_activity: null,
         },
       ],

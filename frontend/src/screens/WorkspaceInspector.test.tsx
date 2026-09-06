@@ -134,6 +134,30 @@ describe("WorkspaceShell — Problem inspector (header ⓘ)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open inspector" }));
     expect(await screen.findByRole("dialog", { name: "Problem" })).toBeTruthy();
   });
+
+  it("shows the v3 dynamic run state instead of a misleading legacy obligation line", async () => {
+    mockedApi.getProblem.mockResolvedValue(
+      makeModel({
+        execution_mode: "DYNAMIC_PROOF_V3",
+        obligation: null,
+        dynamic: {
+          run_id: "run-abc",
+          phase: "STOPPED",
+          stop_reason: "TARGET_SOLVED",
+          error: null,
+          frontier_obligation_id: null,
+        },
+      })
+    );
+    await renderWorkspace();
+
+    fireEvent.click(screen.getByRole("button", { name: "Open inspector" }));
+    const dialog = await screen.findByRole("dialog", { name: "Problem" });
+    expect(dialog.textContent).toContain("DYNAMIC_PROOF_V3");
+    expect(dialog.textContent).toContain("run-abc");
+    expect(dialog.textContent).toContain("TARGET_SOLVED");
+    expect(dialog.textContent).not.toContain("no obligation yet");
+  });
 });
 
 describe("WorkspaceShell — Fact inspector (proof document ⓘ)", () => {

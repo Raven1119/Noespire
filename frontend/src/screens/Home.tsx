@@ -10,6 +10,24 @@ function formatActivity(iso: string | null): string {
   return `Last activity ${new Date(iso).toLocaleString()}`;
 }
 
+/** Short list-row hint for a terminally stopped v3 run — the badge stays
+ *  OPEN/SOLVED (truth state); this explains why an OPEN row is not resumable. */
+const STOPPED_ROW_HINT: Record<string, string> = {
+  TARGET_REFUTED: "Run stopped · statement refuted",
+  FRONTIER_EXHAUSTED: "Run stopped · search exhausted",
+  BUDGET_EXHAUSTED: "Run stopped · budget exhausted",
+  STRATEGIST_DECLINE: "Run stopped · no useful decomposition",
+  STRATEGIST_TIMEOUT: "Run stopped · strategist timeout",
+  INTERRUPTED: "Run stopped · interrupted",
+};
+
+function stoppedRowHint(reason: string | null, status: ProblemSummary["status"]): string | null {
+  // A solved run also persists a stop reason (TARGET_SOLVED) — that is the
+  // success terminal, not a stall; the Solved badge already says it.
+  if (reason === null || status !== "OPEN") return null;
+  return STOPPED_ROW_HINT[reason] ?? "Run stopped";
+}
+
 function ProblemRow({
   problem,
   parentStatement,
@@ -31,6 +49,11 @@ function ProblemRow({
               ? "1 attempt"
               : `${problem.attempt_count} attempts`}
           </span>
+          {stoppedRowHint(problem.stop_reason, problem.status) !== null && (
+            <span className="problem-row__stopped">
+              {stoppedRowHint(problem.stop_reason, problem.status)}
+            </span>
+          )}
           <span>{formatActivity(problem.last_activity)}</span>
         </div>
       </Link>

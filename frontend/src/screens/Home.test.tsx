@@ -25,6 +25,7 @@ function summary(overrides: Partial<ProblemSummary>): ProblemSummary {
     attempt_count: 0,
     derived_from: null,
     archived: false,
+    stop_reason: null,
     last_activity: null,
     ...overrides,
   };
@@ -125,6 +126,41 @@ describe("Home", () => {
       })
     );
     expect(await screen.findByText("Workspace for problem")).toBeTruthy();
+  });
+
+  it("hints when an OPEN row is a terminally stopped run", async () => {
+    mockedApi.listProblems.mockResolvedValue({
+      problems: [
+        summary({ problem_id: "p-fresh", statement: "Fresh problem." }),
+        summary({
+          problem_id: "p-refuted",
+          statement: "A refuted statement.",
+          attempt_count: 1,
+          stop_reason: "TARGET_REFUTED",
+        }),
+        summary({
+          problem_id: "p-declined",
+          statement: "An exhausted statement.",
+          attempt_count: 3,
+          stop_reason: "STRATEGIST_DECLINE",
+        }),
+        // A solved run also persists a stop reason — never shown as stopped.
+        summary({
+          problem_id: "p-solved",
+          statement: "A solved statement.",
+          status: "SOLVED",
+          display_status: "SOLVED",
+          attempt_count: 1,
+          stop_reason: "TARGET_SOLVED",
+        }),
+      ],
+    });
+    renderHome();
+
+    expect(await screen.findByText("Run stopped · statement refuted")).toBeTruthy();
+    expect(screen.getByText("Run stopped · no useful decomposition")).toBeTruthy();
+    // Fresh OPEN and SOLVED rows carry no stopped hint.
+    expect(screen.getAllByText(/Run stopped/)).toHaveLength(2);
   });
 
   it("shows the empty state when there are no problems", async () => {

@@ -272,6 +272,132 @@ describe("DynamicProofPlan (v3 route tree)", () => {
     expect(screen.getByText(/Proving the current obligation…/)).toBeTruthy();
     expect(screen.queryByText(/phase inferred/)).not.toBeTruthy();
   });
+
+  it("withholds frontier markers on a terminal run (nothing will act on them)", () => {
+    const model = blockedModel();
+    const graph_with_frontier = model.proof_graph;
+    if (graph_with_frontier === null) throw new Error("fixture");
+    renderAttempts({
+      ...model,
+      proof_graph: {
+        ...graph_with_frontier,
+        frontiers: [
+          { kind: "PROOF", obligation_id: TARGET_ID, route_id: "route-direct" },
+        ],
+      },
+    });
+    expect(screen.queryByText("◂ frontier")).not.toBeTruthy();
+  });
+
+  it("makes OR alternatives and AND prerequisites explicit", () => {
+    renderAttempts(solvedSplitModel());
+    // The target has two routes (direct + split): an OR choice.
+    expect(
+      screen.getByText("OR — any one route can discharge this obligation")
+    ).toBeTruthy();
+    // The split route has two prerequisite lemmas: an AND requirement.
+    expect(
+      screen.getByText("AND — every prerequisite must be verified")
+    ).toBeTruthy();
+  });
+
+  it("explains an impossible route with a static caption", () => {
+    const model = v3Model({
+      dynamic: {
+        run_id: "run-1",
+        phase: "STOPPED",
+        stop_reason: "MECHANICAL_FAIL",
+        error: null,
+        frontier_obligation_id: null,
+      },
+      proof_graph: graph({
+        obligations: [
+          obligation({}),
+          obligation({
+            obligation_id: LEMMA_A_ID,
+            goal: LEMMA_ONE.statement,
+            statement: LEMMA_ONE.statement,
+            truth_state: "REFUTED",
+            refutation_id: "ref-1",
+          }),
+        ],
+        routes: [
+          route({ lifecycle: "EXHAUSTED", derived_state: "EXHAUSTED", exhaustion_reason: "x" }),
+          route({
+            route_id: "route-split",
+            kind: "SPLIT",
+            prerequisite_obligation_ids: [LEMMA_A_ID],
+            derived_state: "IMPOSSIBLE",
+            origin_patch_id: "patch-1",
+          }),
+        ],
+      }),
+      patches: [
+        {
+          step: 1,
+          patch_id: "patch-1",
+          operator: "SPLIT",
+          target_obligation_id: TARGET_ID,
+          obligation_goals: [LEMMA_ONE.statement],
+        },
+      ],
+    });
+    renderAttempts(model);
+    expect(screen.getByText("Split route · Impossible")).toBeTruthy();
+    expect(
+      screen.getByText("A prerequisite was refuted — this route can never succeed.")
+    ).toBeTruthy();
+    // Refinement entries name the obligation they applied to.
+    expect(screen.getByText(/applied to/)).toBeTruthy();
+    // MECHANICAL_FAIL gets its own honest title, not a generic fallback.
+    expect(screen.getByText("Refinement failed validation")).toBeTruthy();
+  });
+
+  it("names a timeout as a timeout, never as a generic runtime error", () => {
+    const model = v3Model({
+      attempts: [
+        v3Attempt({
+          verdict: "ERROR",
+          outcome: "TIMEOUT",
+          failure_class: "runtime",
+          error: "worker exceeded 600s",
+        }),
+      ],
+    });
+    renderAttempts(model);
+    expect(screen.getByText("Attempt timed out")).toBeTruthy();
+    expect(screen.queryByText("Runtime error")).not.toBeTruthy();
+  });
+
+  it("attributes collapsed attempts to their obligation", () => {
+    const model = v3Model({
+      attempts: [
+        v3Attempt({
+          attempt_id: "attempt-000001",
+          verdict: "FAIL",
+          outcome: "PROOF_REJECTED",
+          failure_class: "rejection",
+          obligation_goal: "First helper claim, plain text.",
+        }),
+        v3Attempt({
+          attempt_id: "attempt-000002",
+          verdict: "FAIL",
+          outcome: "PROOF_REJECTED",
+          failure_class: "rejection",
+          obligation_goal: "Second helper claim, plain text.",
+        }),
+        v3Attempt({ attempt_id: "attempt-000003", verdict: "RUNNING", outcome: "RUNNING" }),
+      ],
+    });
+    const { container } = renderAttempts(model);
+    // The two older attempts are collapsed; each row still names its goal.
+    // (Class-scoped queries: jsdom's accessible-name computation crashes on
+    // KaTeX markup inside buttons.)
+    const goals = container.querySelectorAll(".attempt-card__goal");
+    expect(goals).toHaveLength(2);
+    expect(goals[0].textContent).toContain("Second helper claim");
+    expect(goals[1].textContent).toContain("First helper claim");
+  });
 });
 
 describe("v3 attempts", () => {

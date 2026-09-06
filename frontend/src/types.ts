@@ -18,6 +18,9 @@ export interface ProblemSummary {
   attempt_count: number;
   derived_from: string | null;
   archived: boolean;
+  /** Persisted terminal stop reason (v3 runs only); null while live/fresh
+   *  and always null for legacy/scaffold workspaces. */
+  stop_reason: string | null;
   last_activity: string | null;
 }
 

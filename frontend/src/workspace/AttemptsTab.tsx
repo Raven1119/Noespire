@@ -116,7 +116,20 @@ function AttemptBody({
 }) {
   const accepted = attempt.verdict === "PASS";
   const refuted = attempt.outcome === "REFUTATION_ADMITTED";
-  const panel = failurePanel(attempt);
+  // A typed timeout is not a generic runtime error: name it honestly. The
+  // shared failure classifier maps TIMEOUT to "runtime" (coarse); the v3
+  // outcome is the precise display source.
+  const panel =
+    attempt.outcome === "TIMEOUT"
+      ? {
+          glyph: "⏱",
+          title: "Attempt timed out",
+          reason: attempt.error,
+          lines: [
+            "The model produced no answer within the bounded time limit; no verdict was recorded for this attempt.",
+          ],
+        }
+      : failurePanel(attempt);
   const nodeStatement = nodeStatementFor(model, attempt);
   const obligationGoal = attempt.obligation_goal;
   const refutation =
@@ -140,7 +153,9 @@ function AttemptBody({
       {refuted ? (
         <>
           <div className="attempt-accepted">
-            <span className="attempt-accepted__label">LLM-verified refutation</span>
+            <span className="attempt-accepted__label attempt-accepted__label--refuted">
+              LLM-verified refutation
+            </span>
           </div>
           <CandidateCard
             attempt={attempt}
@@ -254,10 +269,7 @@ function DynamicRunPanel({ model }: { model: WorkspaceReadModel }) {
   }
   if (dynamic.stop_reason === null) return null;
 
-  const copy = STOP_REASON_COPY[dynamic.stop_reason] ?? {
-    title: "Run stopped",
-    line: "The run stopped before reaching a verified result.",
-  };
+  const copy = stopReasonCopy(dynamic.stop_reason);
   return (
     <div className="failure-panel failure-panel--stopped">
       <p className="failure-panel__title">
@@ -301,6 +313,26 @@ const STOP_REASON_COPY: Record<string, { title: string; line: string }> = {
     title: "Strategist timeout",
     line: "The strategy step timed out.",
   },
+  MECHANICAL_FAIL: {
+    title: "Refinement failed validation",
+    line: "The proposed graph change failed mechanical validation, so no refinement was applied.",
+  },
+  PATCH_COMPILATION_INVALID: {
+    title: "Refinement could not be compiled",
+    line: "The strategist's proposal could not be compiled into a valid graph change.",
+  },
+  PATCH_BUILDER_TIMEOUT: {
+    title: "Refinement timed out",
+    line: "Compiling the proposed graph change exceeded its time limit.",
+  },
+  REVISION_FAILED: {
+    title: "Refinement revision failed",
+    line: "The single allowed revision of the proposed graph change did not pass.",
+  },
+  STRATEGY_GATE_REJECT: {
+    title: "Strategy rejected at the gate",
+    line: "The proposed strategy did not pass the difficulty-reduction gate.",
+  },
   INTERRUPTED: {
     title: "Run interrupted",
     line: "A model call was interrupted; the run stopped conservatively rather than guessing a result.",
@@ -315,13 +347,33 @@ const STOP_REASON_COPY: Record<string, { title: string; line: string }> = {
   },
 };
 
-/**
- * Attempts timeline: newest first, latest expanded by default, earlier
+/** Structural-auditor rejections carry the audit verdict in the stop reason
+ *  (``STRUCTURAL_AUDITOR_<VERDICT>``); map the family, not every suffix. */
+function stopReasonCopy(reason: string): { title: string; line: string } {
+  const exact = STOP_REASON_COPY[reason];
+  if (exact !== undefined) return exact;
+  if (reason.startsWith("STRUCTURAL_AUDITOR_")) {
+    return {
+      title: "Refinement rejected on audit",
+      line: "The structural auditor rejected the proposed graph change.",
+    };
+  }
+  return {
+    title: "Run stopped",
+    line: "The run stopped before reaching a verified result.",
+  };
+}
+
+/** Attempts timeline: newest first, latest expanded by default, earlier
  * attempts collapsed (spec §9). Scaffold workspaces (N1.14P) show the Proof
  * plan projection at the top; v3 workspaces show the AND/OR route tree
  * (DynamicProofPlan) plus run-state panels. Candidates render in the
- * unverified register; ids and artifacts stay in the Inspector.
- */
+ * unverified register; ids and artifacts stay in the Inspector. */
+function goalSnippet(text: string, max = 56): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max)}…` : flat;
+}
+
 export function AttemptsTab({ model, onInspectAttempt }: Props) {
   const latestId =
     model.attempts.length > 0
@@ -371,7 +423,11 @@ export function AttemptsTab({ model, onInspectAttempt }: Props) {
         <ProofPlan structure={model.proof_structure} />
       )}
       {model.proof_graph !== null && (
-        <DynamicProofPlan projection={model.proof_graph} patches={model.patches} />
+        <DynamicProofPlan
+          projection={model.proof_graph}
+          patches={model.patches}
+          showFrontiers={model.dynamic?.phase !== "STOPPED"}
+        />
       )}
       {hasExecutionFailure && <ExecutionFailurePanel model={model} />}
       <ol className="attempt-list">
@@ -405,6 +461,12 @@ export function AttemptsTab({ model, onInspectAttempt }: Props) {
                       ? V3_OUTCOME_LABELS[attempt.outcome]
                       : attempt.verdict}
                   </span>
+                  {!isExpanded && attempt.obligation_goal !== null && (
+                    <span className="attempt-card__goal">
+                      {" — "}
+                      <MathText text={goalSnippet(attempt.obligation_goal)} />
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"

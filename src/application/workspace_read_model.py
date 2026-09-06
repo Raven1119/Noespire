@@ -80,7 +80,7 @@ def build_read_model(
     problem_dir = index.root / problem_id
     mode = detect_execution_mode(problem_dir, problem_id)
     if mode == DYNAMIC_PROOF_V3:
-        return _v3_read_model(entry, problem_dir, execution_service)
+        return _clean_display(_v3_read_model(entry, problem_dir, execution_service))
     obligation = _root_obligation(problem_dir, problem_id)
     events = _read_events(problem_dir)
     attempts = [
@@ -146,7 +146,30 @@ def build_read_model(
                 execution_service, live_execution, problem_id, attempts
             ),
         }
-    return model
+    return _clean_display(model)
+
+
+def _clean_display(value):
+    """Replace lone UTF-16 surrogates with U+FFFD in projected strings.
+
+    Raw model output captured through the invocation evidence can contain
+    partial UTF-8 sequences persisted as lone surrogates (surrogateescape).
+    They are unrecoverable and would surface as mojibake; the projection
+    renders the replacement character instead. Stored evidence files are
+    never rewritten — this is display-only, at the REST boundary.
+    """
+    if isinstance(value, str):
+        if any(0xD800 <= ord(char) <= 0xDFFF for char in value):
+            return "".join(
+                "\ufffd" if 0xD800 <= ord(char) <= 0xDFFF else char
+                for char in value
+            )
+        return value
+    if isinstance(value, list):
+        return [_clean_display(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _clean_display(item) for key, item in value.items()}
+    return value
 
 
 def _current_attempt_id(
@@ -169,10 +192,10 @@ def _current_attempt_id(
 def build_problem_list(workspaces_root: Path, execution_service=None) -> List[dict]:
     """The spec §6 list payload, in ProblemIndex (last-activity) order."""
     index = ProblemIndex(workspaces_root)
-    return [
+    return _clean_display([
         _summarize(index.root / entry.problem_id, entry, execution_service)
         for entry in index.list()
-    ]
+    ])
 
 
 def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -> dict:
@@ -183,6 +206,7 @@ def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -
     if mode == DYNAMIC_PROOF_V3:
         v3_attempts = _v3_attempts(problem_dir, None)
         status = _v3_status(problem_dir, entry.problem_id, live_execution)
+        state = read_run_state(problem_dir)
         activity = workspace_last_activity(problem_dir)
         return {
             "problem_id": entry.problem_id,
@@ -192,6 +216,9 @@ def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -
             "derived_from": entry.derived_from,
             "archived": entry.archived,
             "attempt_count": len(v3_attempts),
+            # Persisted terminal stop reason (None while live/fresh): lets the
+            # list distinguish a fresh OPEN from a stopped/refuted OPEN.
+            "stop_reason": state.get("stop_reason") if state is not None else None,
             "last_activity": (
                 datetime.fromtimestamp(activity, timezone.utc).isoformat()
                 if activity is not None
@@ -215,6 +242,7 @@ def _summarize(problem_dir: Path, entry: ProblemEntry, execution_service=None) -
         "derived_from": entry.derived_from,
         "archived": entry.archived,
         "attempt_count": len(attempts),
+        "stop_reason": None,
         "last_activity": (
             datetime.fromtimestamp(activity, timezone.utc).isoformat()
             if activity is not None
