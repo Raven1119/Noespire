@@ -6,23 +6,18 @@ from pathlib import Path
 import subprocess
 from uuid import uuid4
 
-from .agents import ResearchWorker, StructuralAuditor
+from .agents import ResearchWorker
 from .closed_book import ClosedBookVerifier
 from .fact_audit import FactAuditor, cascade_invalid
 from .graph import FactGraph
-from .local_refinement import _build_context
-from .node_solver import NodeSolverConfig
-from .obligation import ObligationRegistry, ObligationStatus
+from .local_attention import strategist_packet, AttentionLimit
+from .proof_graph import ProofGraph
+from .refutation import RefutationVerifier
+from .node_solver import NodeSolver, NodeSolverConfig
 from .problem import ProblemSpec
-from .scaffold import ProofScaffold, advance_scaffold_once, ready_nodes
 from .refinement.budget import LongHorizonBudget
-from .refinement.boundary_builder import BoundaryAwarePatchBuilder
-from .refinement.checkpoint import restore_context
-from .refinement.handoff import make_solve_error_handoff
-from .refinement.patch_builder import FidelityAuditor
-from .refinement.reviser import MathematicalReviser
-from .refinement.sketch import StrategySketcher, SketchAuditor, parse_sketch_output
-from .refinement.two_stage_driver import run_patch_stages
+from .refinement.sketch import StrategySketcher, parse_sketch_output
+from .refinement.route_driver import run_route_refinement
 from .run_invocations import RecordedInvoker, RunStopped, SolInvoker, invocation_usage, real_runtime
 from .run_storage import read_json, write_json, run_lock
 
@@ -40,16 +35,9 @@ def _usage(root, state):
     for p in directory.glob("steps/*/solver.json"):
         attempts.update(read_json(p)["attempt_ids"])
     counts["solver_attempts"] = len(attempts - set(state["initial_attempts"]))
-    # An applied intent is authoritative even before the loop advances its state.
-    counts["mutation_episodes"] = sum(
-        read_json(p)["episode"]["applied"] for p in directory.glob("steps/*/patch.json")
-    )
-    if state["phase"] == "PATCH" and not (directory / "steps" / f"{state['step']:06d}" / "patch.json").exists():
-        for p in (directory / "steps" / f"{state['step']:06d}" / "patch").glob("*/intent.json"):
-            intent = read_json(p)
-            if intent["after"] is not None and (root / "scaffold.json").read_text(encoding="utf-8") == intent["after"]:
-                counts["mutation_episodes"] += 1
-                break
+    # Canonical applied patch IDs count even if the completion journal was interrupted.
+    patches = read_json(root / "proof_graph.json")["applied_patches"]
+    counts["mutation_episodes"] = len(set(patches) - set(state["initial_patches"]))
     for key, value in state["initial_consumed"].items():
         counts[key] = counts.get(key, 0) + value
     return counts
@@ -59,12 +47,13 @@ def read_status(problem_dir):
     """Read-only status; requires neither Docker nor a model invocation."""
     root = Path(problem_dir).resolve()
     state = read_json(root / "dynamic_run/state.json")
-    scaffold = ProofScaffold(root / "scaffold.json")
-    registry = ObligationRegistry(root / "obligations.json")
+    graph = ProofGraph(root)
+    progress = root / "dynamic_run/steps" / f"{state['step']:06d}" / "solver.json"
     return {**state, "consumed": _usage(root, state),
-            "ready": [n.node_id for n in ready_nodes(scaffold, registry)],
-            "facts": [f.fact_id for f in FactGraph(root).list_facts()],
-            "workspace": str(root)}
+            "ready": [asdict(f) for f in graph.frontiers()],
+            "current_attempt": read_json(progress).get("active_attempt_id") if progress.exists() else None,
+            "facts": [f.fact_id for f in FactGraph(root).list_facts()], "workspace": str(root)}
+
 
 
 def start_run(problem_dir, *, budget=LongHorizonBudget(), consumed=None,
@@ -88,20 +77,20 @@ def start_run(problem_dir, *, budget=LongHorizonBudget(), consumed=None,
         raise ValueError("solver_attempts must be between 1 and 3")
     if any(initial[k] > limits["max_" + k] for k in initial):
         raise ValueError("consumed budget exceeds limits")
-    scaffold = ProofScaffold(root / "scaffold.json")
-    registry = ObligationRegistry(root / "obligations.json")
-    if any(o.status is ObligationStatus.RUNNING for o in registry.list()):
-        raise ValueError("imported workspace contains unresolved RUNNING obligations")
+    if not (root / "proof_graph.json").exists():
+        raise ValueError("v3 requires proof_graph.json; import a legacy workspace into an isolated copy first")
+    graph = ProofGraph(root)
     runtime = {"backend": "injected"} if invoker is not None else real_runtime()
     with run_lock(directory):
         if (directory / "state.json").exists():
             raise ValueError("run already exists; use resume_run")
-        state = {"run_id": uuid4().hex, "phase": "SOLVE", "step": 0, "frontier": None,
+        state = {"schema_version": 3, "run_id": uuid4().hex, "phase": "SELECT", "step": 0, "frontier": None,
                  "stop_reason": None, "decided": [], "budget": limits,
                  "initial_consumed": initial, "solver_attempts_per_node": solver_attempts,
                  "initial_attempts": [p.stem for p in (root / "attempts").glob("attempt-*.json")],
                  "initial_facts": [f.fact_id for f in FactGraph(root).list_facts()],
-                 "problem_id": scaffold.problem_id, "runtime": runtime,
+                 "problem_id": graph.problem_id, "runtime": runtime,
+                 "initial_patches": list(read_json(graph.path)["applied_patches"]), "route_id": None,
                  "code_digest": _code_digest(), "fact_audits": [], "horizon_handoffs": 0}
         write_json(directory / "state.json", state)
         return _Run(root, state, invoker, on_event).execute()
@@ -112,6 +101,8 @@ def resume_run(problem_dir, *, invoker=None, on_event=None):
     root = Path(problem_dir).resolve()
     with run_lock(root / "dynamic_run"):
         state = read_json(root / "dynamic_run/state.json")
+        if state.get("schema_version") != 3:
+            raise ValueError("legacy run state cannot resume under v3; import an isolated copy")
         if state["phase"] == "STOPPED":
             return read_status(root)
         if state["code_digest"] != _code_digest():
@@ -127,8 +118,9 @@ class _Run:
     def __init__(self, root, state, backend, on_event):
         self.root, self.state, self.backend, self.on_event = root, state, backend, on_event
         self.directory = root / "dynamic_run"
-        scaffold = ProofScaffold(root / "scaffold.json")
-        self.problem = ProblemSpec(scaffold.problem_id, scaffold.get(scaffold.target_node_id).goal)
+        graph = ProofGraph(root)
+        self.problem = ProblemSpec(graph.problem_id, graph.obligation(graph.target_obligation_id).statement)
+
 
     @property
     def step_dir(self):
@@ -163,7 +155,9 @@ class _Run:
                                       audit_dir=self.directory / "invocations")
         try:
             while self.state["phase"] != "STOPPED":
-                if self.state["phase"] == "SOLVE":
+                if self.state["phase"] == "SELECT":
+                    self.select()
+                elif self.state["phase"] == "SOLVE":
                     self.solve()
                 elif self.state["phase"] == "STRATEGY":
                     self.strategy()
@@ -184,126 +178,104 @@ class _Run:
             progress_path = self.step_dir / "solver.json"
             if self.state["phase"] == "SOLVE" and progress_path.exists():
                 progress = read_json(progress_path)
-                registry = ObligationRegistry(self.root / "obligations.json")
-                obligation = registry.get(progress["obligation_id"])
-                if obligation.status is ObligationStatus.RUNNING:
-                    registry.transition(obligation.obligation_id, ObligationStatus.OPEN)
                 attempt_path = self.root / "attempts" / (progress["active_attempt_id"] + ".json")
                 if attempt_path.exists():
                     attempt = read_json(attempt_path)
-                    if attempt["verdict"] == "RUNNING":
-                        write_json(self.step_dir / "interrupted_attempt.json", attempt)
-                        write_json(attempt_path, {**attempt, "verdict": "ERROR", "error": "INTERRUPTED: no confirmed invocation completion"})
+                    if attempt["outcome"] == "RUNNING":
+                        write_json(attempt_path, {**attempt, "outcome": "INTERRUPTED",
+                            "reason": "no confirmed invocation completion"})
             self.save(phase="STOPPED", stop_reason=error.reason)
         except Exception as error:
-            self.save(phase="STOPPED", stop_reason="SYSTEM_ERROR", error=f"{type(error).__name__}: {error}")
+            if self.state["phase"] == "FACT_AUDIT":
+                self.save(phase="STOPPED", audit_error=f"{type(error).__name__}: {error}")
+            else:
+                self.stop("ATTENTION_LIMIT" if isinstance(error, AttentionLimit) else "SYSTEM_ERROR",
+                          f"{type(error).__name__}: {error}")
+                return self.execute()
         return read_status(self.root)
 
-    def solve(self):
-        scaffold = ProofScaffold(self.root / "scaffold.json")
-        registry = ObligationRegistry(self.root / "obligations.json")
-        graph = FactGraph(self.root)
-        progress_path = self.step_dir / "solver.json"
-        advance_path = self.step_dir / "advance.json"
-        if advance_path.exists():
-            advance = read_json(advance_path)
-        else:
-            if progress_path.exists():
-                progress = read_json(progress_path)
-                node_id = progress["obligation_id"].removeprefix(f"scaffold:{self.problem.problem_id}:")
-                node = scaffold.get(node_id)
-                if node.resolved_by_fact_id:
-                    graph.get_fact(node.resolved_by_fact_id)
-                    advance = {"status": "SOLVED" if node_id == scaffold.target_node_id else "ADVANCED", "node_id": node_id}
-                    write_json(advance_path, advance)
-                    return self.finish_advance(advance)
-                obligation = registry.get(progress["obligation_id"])
-                if obligation.status is ObligationStatus.RUNNING:
-                    registry.transition(obligation.obligation_id, ObligationStatus.OPEN)
-                max_attempts = progress["max_attempts"]
-            else:
-                remaining = self.state["budget"]["max_solver_attempts"] - self.usage()["solver_attempts"]
-                if remaining <= 0:
-                    return self.stop("BUDGET_EXHAUSTED")
-                max_attempts = min(self.state["solver_attempts_per_node"], remaining)
-                ready = ready_nodes(scaffold, registry)
-                self.save(frontier=ready[0].node_id if ready else None)
-            try:
-                result = advance_scaffold_once(
-                    scaffold=scaffold, problem=self.problem, registry=registry, graph=graph,
-                    author="n3a", worker=ResearchWorker(self.invoker("worker")),
-                    verifier=ClosedBookVerifier(self.invoker("verifier")),
-                    solver_config=NodeSolverConfig(max_attempts), solver_progress_path=progress_path,
-                )
-            except Exception as error:
-                frontier = make_solve_error_handoff(self.problem.problem_id)(error, self.root)
-                if frontier is None:
-                    return self.stop("SYSTEM_ERROR", f"{type(error).__name__}: {error}")
-                advance = {"status": "HORIZON", "node_id": frontier}
-            else:
-                advance = {"status": result.status, "node_id": result.node_id}
-                if result.execution and result.execution.fact:
-                    self.event("fact_stored")
-            write_json(advance_path, advance)
-        self.finish_advance(advance)
-
-    def finish_advance(self, advance):
-        if advance["status"] == "SOLVED":
+    def select(self):
+        graph = ProofGraph(self.root)
+        target = graph.obligation(graph.target_obligation_id)
+        if target.truth_state == "DISCHARGED":
             return self.stop("TARGET_SOLVED")
-        if advance["status"] == "ADVANCED":
-            return self.save(step=self.state["step"] + 1, frontier=None)
-        if advance["status"] != "HORIZON" and self.usage()["solver_attempts"] >= self.state["budget"]["max_solver_attempts"]:
-            return self.stop("BUDGET_EXHAUSTED")
-        frontier = advance["node_id"]
-        if frontier is None or frontier in self.state["decided"]:
+        if target.truth_state == "REFUTED":
+            return self.stop("TARGET_REFUTED")
+        frontiers = graph.frontiers()
+        if not frontiers:
             return self.stop("FRONTIER_EXHAUSTED")
-        usage = self.usage()
-        if any(usage[key] >= self.state["budget"]["max_" + key] for key in ("mutation_episodes", "builder_proposals", "auditor_calls")):
+        frontier = frontiers[0]
+        used = self.usage()
+        remaining = self.state["budget"]["max_solver_attempts"] - used["solver_attempts"]
+        if frontier.kind == "PROOF":
+            if remaining <= 0:
+                return self.stop("BUDGET_EXHAUSTED")
+            return self.save(phase="SOLVE", frontier=frontier.obligation_id, route_id=frontier.route_id,
+                             attempt_limit=min(self.state["solver_attempts_per_node"], remaining))
+        if remaining <= 0 and self.state.get("last_solve_status") != "HORIZON":
             return self.stop("BUDGET_EXHAUSTED")
-        context = _build_context(scaffold=ProofScaffold(self.root / "scaffold.json"), graph=FactGraph(self.root),
-                                 registry=ObligationRegistry(self.root / "obligations.json"), problem_id=self.problem.problem_id,
-                                 blocked_node_id=frontier, allowed_operation="SPLIT")
-        context_path = self.step_dir / "context.json"
-        if not context_path.exists():
-            write_json(context_path, asdict(context))
-        self.save(phase="STRATEGY", frontier=frontier, decided=[*self.state["decided"], frontier],
+        if any(used[k] >= self.state["budget"]["max_" + k] for k in
+               ("mutation_episodes", "builder_proposals", "auditor_calls")):
+            return self.stop("BUDGET_EXHAUSTED")
+        packet = strategist_packet(graph, frontier.obligation_id)
+        key = sha256(json.dumps(packet, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        if key in self.state["decided"]:
+            return self.stop("FRONTIER_EXHAUSTED")
+        path = self.step_dir / "context.json"
+        if path.exists() and read_json(path) != packet:
+            raise ValueError("pending local decision state changed")
+        if not path.exists():
+            write_json(path, packet)
+        self.save(phase="STRATEGY", frontier=frontier.obligation_id, route_id=None,
+                  decided=[*self.state["decided"], key])
+        self.event("frontier_selected", kind="STRUCTURAL")
+
+    def solve(self):
+        path = self.step_dir / "advance.json"
+        if path.exists():
+            advance = read_json(path)
+        else:
+            outcome = NodeSolver(worker=ResearchWorker(self.invoker("worker")),
+                verifier=ClosedBookVerifier(self.invoker("verifier")),
+                refutation_verifier=RefutationVerifier(self.invoker("refutation-verifier")),
+                config=NodeSolverConfig(self.state["attempt_limit"]), progress_path=self.step_dir / "solver.json"
+            ).solve_route(graph=ProofGraph(self.root), route_id=self.state["route_id"], author="proof-core-v3", event=self.event)
+            advance = dict(status=outcome.status, reason=outcome.reason, attempt_ids=list(outcome.attempt_ids))
+            write_json(path, advance)
+        if advance["status"] == "ERROR":
+            return self.stop("SYSTEM_ERROR", advance["reason"])
+        self.save(phase="SELECT", step=self.state["step"] + 1, frontier=None, route_id=None,
+                  last_solve_status=advance["status"],
                   horizon_handoffs=self.state["horizon_handoffs"] + (advance["status"] == "HORIZON"))
 
     def strategy(self):
-        context = restore_context(read_json(self.step_dir / "context.json"))
+        packet = read_json(self.step_dir / "context.json")
         try:
-            sketch = StrategySketcher(self.invoker("strategy")).strategize(context)
+            sketch = StrategySketcher(self.invoker("strategy")).strategize_local(packet)
         except subprocess.TimeoutExpired:
             return self.stop("STRATEGIST_TIMEOUT")
+        path = self.step_dir / "sketch.json"
+        if not path.exists():
+            write_json(path, {"raw": sketch.raw})
         if sketch.operator == "DECLINE":
             return self.stop("STRATEGIST_DECLINE", sketch.decline_reason)
-        write_json(self.step_dir / "sketch.json", {"raw": sketch.raw})
         self.save(phase="PATCH")
+        self.event("strategy_decided", operator=sketch.operator)
 
     def patch(self):
         path = self.step_dir / "patch.json"
         if path.exists():
-            saved = read_json(path)
+            result = read_json(path)
         else:
-            context = restore_context(read_json(self.step_dir / "context.json"))
+            packet = read_json(self.step_dir / "context.json")
             sketch = parse_sketch_output(read_json(self.step_dir / "sketch.json")["raw"], blocked_node_id=self.state["frontier"])
-            audit_number = 0
-            def auditor_for(operation):
-                nonlocal audit_number
-                audit_number += 1
-                return StructuralAuditor(self.invoker(f"structural-{audit_number}"), operation=operation)
-            episode, evidence, counts = run_patch_stages(
-                self.root, problem_id=self.problem.problem_id, frontier=self.state["frontier"], context=context, sketch=sketch,
-                gate=SketchAuditor(self.invoker("gate")), fidelity=FidelityAuditor(self.invoker("fidelity")),
-                patch_builder=BoundaryAwarePatchBuilder(self.invoker("builder")), reviser=MathematicalReviser(self.invoker("reviser")),
-                auditor_for=auditor_for, checkpoint_dir=self.step_dir / "patch", checkpoint_event=self.event,
-            )
-            saved = {"episode": episode, "evidence": evidence, "counts": counts}
-            write_json(path, saved)
-        if saved["episode"]["applied"]:
-            self.save(phase="SOLVE", step=self.state["step"] + 1, frontier=None)
+            result = run_route_refinement(ProofGraph(self.root), packet, sketch,
+                invoker_for=self.invoker, directory=self.step_dir / "patch", event=self.event)
+            write_json(path, result)
+        if result["outcome"] == "PATCH_APPLIED":
+            self.save(phase="SELECT", step=self.state["step"] + 1, frontier=None, route_id=None)
         else:
-            self.stop(saved["episode"]["outcome"], saved["episode"].get("error"))
+            self.stop(result["outcome"], result.get("reason"))
 
     def audit_facts(self):
         graph = FactGraph(self.root)
@@ -332,7 +304,7 @@ def main(argv=None):
 
     parser = argparse.ArgumentParser(description="Run or resume one bounded, closed-book research workspace.")
     subcommands = parser.add_subparsers(dest="command", required=True)
-    run = subcommands.add_parser("run", help="start a new run on an existing scaffold")
+    run = subcommands.add_parser("run", help="start a new run on a v3 ProofGraph")
     resume = subcommands.add_parser("resume", help="resume with frozen budget and runtime")
     status = subcommands.add_parser("status", help="read persisted status without model calls")
     for command in (run, resume, status):
@@ -343,7 +315,7 @@ def main(argv=None):
     run.add_argument("--solver-attempts", type=int, choices=(1, 2, 3), default=3)
     run.add_argument("--consumed", type=Path, help="JSON with pre-N3A consumed budget counters")
     for command in (run, resume):
-        command.add_argument("--pause-after", choices=("call_completed", "audit_completed", "patch_applied", "fact_stored"),
+        command.add_argument("--pause-after", choices=("call_completed", "audit_completed", "patch_approved", "patch_applied", "candidate_stored", "verification_stored", "fact_stored", "refutation_stored", "obligation_resolved", "frontier_selected", "strategy_decided"),
                              help="recovery probe: exit 75 at this durable event, then use resume")
     args = parser.parse_args(argv)
     if args.command == "status":

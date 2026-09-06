@@ -37,7 +37,7 @@ class RecordedInvoker:
     def invoke(self, *, prompt, schema, label):
         scope = f"{self.run.state['step']}:{self.role}"
         solver = self.run.step_dir / "solver.json"
-        if self.role in ("worker", "verifier") and solver.exists():
+        if self.role in ("worker", "verifier", "refutation-verifier") and solver.exists():
             scope += ":" + read_json(solver)["active_attempt_id"]
         packet = {"scope": scope, "prompt": prompt, "schema": schema, "label": label}
         key = sha256(json.dumps(packet, ensure_ascii=False, sort_keys=True).encode()).hexdigest()

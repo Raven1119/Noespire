@@ -15,9 +15,8 @@ import json
 import re
 import pytest
 from research.graph import FactGraph
-from research.obligation import ObligationRegistry
 from research.problem import ProblemSpec
-from research.scaffold import ProofScaffold, ScaffoldNode
+from research.proof_graph import ProofGraph, ProofObligation, ProofRoute
 from research.refinement.budget import LongHorizonBudget
 
 STATEMENT = "For every integer n, n(n+1) is even."
@@ -26,10 +25,9 @@ LEMMA = "For every integer n, either n or n+1 is even."
 
 def workspace(path):
     path.mkdir()
-    ProofScaffold.create(path / "scaffold.json", problem=ProblemSpec("parity", STATEMENT),
-                         target_node_id="target", nodes=(ScaffoldNode("mid", STATEMENT),
-                         ScaffoldNode("target", STATEMENT, depends_on=("mid",))))
-    ObligationRegistry(path / "obligations.json")
+    target = ProofObligation.create("parity", "", STATEMENT)
+    ProofGraph.create(path, problem_id="parity", target=target,
+                      routes=(ProofRoute.create(target.obligation_id),))
     return path
 
 
@@ -40,10 +38,12 @@ class ScriptedCodex:
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
         if label == "research_worker":
-            goal = prompt.split("Goal:\n", 1)[1].split("\n\nExisting accepted facts:", 1)[0].strip()
-            facts, _ = json.JSONDecoder().raw_decode(prompt.split("Existing accepted facts:\n", 1)[1])
+            packet = json.loads(prompt.split("Local packet:\n", 1)[1])
+            goal = packet["obligation"]["statement"]
+            facts = packet["predecessor_facts"]
             proof = "missing argument" if goal == STATEMENT and not facts else "By parity of consecutive integers, an even factor makes the product even."
-            return {"statement": goal, "proof": proof, "predecessors": [f["fact_id"] for f in facts]}
+            return {"kind": "PROOF_CANDIDATE", "statement": goal, "proof": proof,
+                    "predecessors": [f["fact_id"] for f in facts], "counterexample": "", "reason": ""}
         if label == "closed_book_verifier":
             return {"accepted": "missing argument" not in prompt, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "Elementary parity argument."}
@@ -56,7 +56,7 @@ class ScriptedCodex:
             return {"strategy_class": "USEFUL_STRATEGY", "difficulty_reduction": "REAL_REDUCTION",
                     "strategy_family": "parity", "reasons": ["Elementary local cases."]}
         if label == "boundary_aware_patch_builder":
-            return {"compilation_decline": False, "decline_reason": "", "new_nodes": [
+            return {"compilation_decline": False, "decline_reason": "", "support_fact_ids": [], "new_nodes": [
                 {"node_id": "parity_cases", "goal": LEMMA, "depends_on": [], "premise_fact_ids": []},
                 {"node_id": "even_product", "goal": "For any even integer a and integer b, ab is even.", "depends_on": [], "premise_fact_ids": []}]}
         if label == "n2t_fidelity_audit":
@@ -80,7 +80,7 @@ def test_failed_proof_refines_and_continues_through_public_entry(tmp_path):
     assert status["phase"] == "STOPPED"
     assert status["consumed"]["solver_attempts"] == 4
     assert status["consumed"]["mutation_episodes"] == 1
-    assert status["decided"] == ["mid"]
+    assert len(status["decided"]) == 1
     assert len(status["facts"]) == 3
     assert all(a["classification"] == "SUBSTANTIVE" for a in status["fact_audits"])
     assert backend.calls.count("strategy_sketcher") == 1
@@ -95,12 +95,15 @@ class ProcessCrash(BaseException):
 
 def semantic_state(root):
     from dataclasses import asdict
-    return ([asdict(n) for n in ProofScaffold(root / "scaffold.json").list_nodes()],
+    from research.run_storage import read_json
+    from research.refutation import RefutationStore
+    return (read_json(root / "proof_graph.json"),
             [asdict(f) for f in FactGraph(root).list_facts()],
-            [asdict(o) for o in ObligationRegistry(root / "obligations.json").list()])
+            [asdict(r) for r in RefutationStore(root).list()])
 
 
-@pytest.mark.parametrize("checkpoint", ["audit_completed", "patch_applied", "fact_stored", "fact_write_before_resolution"])
+
+@pytest.mark.parametrize("checkpoint", ["call_completed", "candidate_stored", "verification_stored", "audit_completed", "patch_approved", "patch_applied", "fact_stored", "obligation_resolved", "fact_write_before_resolution"])
 def test_restart_matches_uninterrupted_graph_and_budget(tmp_path, monkeypatch, checkpoint):
     reference = workspace(tmp_path / "reference")
     expected_backend = ScriptedCodex()
@@ -131,7 +134,9 @@ def test_restart_matches_uninterrupted_graph_and_budget(tmp_path, monkeypatch, c
     assert semantic_state(root) == semantic_state(reference)
     assert before_backend.calls + after_backend.calls == expected_backend.calls
     assert all(p.read_bytes() == raw for p, raw in requests_before.items())
-    assert len(list((root / "local_refinements").glob("*.json"))) == 1
+    assert len(list((root / "graph_patches").glob("*/completion.json"))) == 1
+    assert not (root / "scaffold.json").exists()
+    assert not (root / "obligations.json").exists()
 
 
 def test_unknown_call_is_interrupted_and_keeps_reserved_budget(tmp_path):
@@ -148,7 +153,8 @@ def test_unknown_call_is_interrupted_and_keeps_reserved_budget(tmp_path):
     assert actual["consumed"]["model_calls"] == 1
     assert not actual["facts"]
     assert not backend.calls
-    assert not any(o.status.value == "RUNNING" for o in ObligationRegistry(root / "obligations.json").list())
+    assert all(o.truth_state == "OPEN" for o in ProofGraph(root).obligations())
+    assert not (root / "obligations.json").exists()
 
 
 @pytest.mark.parametrize("label,expected", [("strategy_sketcher", "STRATEGIST_TIMEOUT"),
@@ -252,7 +258,7 @@ def test_single_revision_remains_bounded_across_restart(tmp_path, final_verdict,
                 sketch = template.invoke(prompt="", schema={}, label="strategy_sketcher")
                 sketch.pop("candidate_claims")
                 patch = template.invoke(prompt="", schema={}, label="boundary_aware_patch_builder")
-                return {**sketch, "repairable": True, "new_nodes": patch["new_nodes"]}
+                return {**patch, "repairable": True}
             response = super().invoke(**packet)
             if label == "structural_auditor":
                 # The revision audit is a distinct fresh role/session even for
@@ -295,11 +301,17 @@ def test_cli_status_needs_no_backend(tmp_path):
 def test_budget_stop_inside_compilation_still_audits_earlier_facts(tmp_path):
     root = tmp_path / "problem"
     root.mkdir()
-    ProofScaffold.create(root / "scaffold.json", problem=ProblemSpec("parity", STATEMENT),
-                         target_node_id="target", nodes=(ScaffoldNode("a_easy", "2+2=4."),
-                         ScaffoldNode("mid", STATEMENT), ScaffoldNode("target", STATEMENT,
-                         depends_on=("a_easy", "mid"))))
-    backend = ScriptedCodex()
+    easy = ProofObligation.create("parity", "", "2+2=4.")
+    target = ProofObligation.create("parity", "", STATEMENT)
+    ProofGraph.create(root, problem_id="parity", target=target, obligations=(easy,),
+        routes=(ProofRoute.create(easy.obligation_id), ProofRoute.create(target.obligation_id, (easy.obligation_id,))))
+    class FailingTargetCodex(ScriptedCodex):
+        def invoke(self, **packet):
+            response = super().invoke(**packet)
+            if packet["label"] == "research_worker" and response["statement"] == STATEMENT:
+                response["proof"] = "missing argument"
+            return response
+    backend = FailingTargetCodex()
     actual = start_run(root, invoker=backend, solver_attempts=1,
                        budget=LongHorizonBudget(max_builder_proposals=1))
     assert actual["stop_reason"] == "BUDGET_EXHAUSTED"
@@ -340,3 +352,72 @@ def test_completed_run_resume_is_read_only_even_after_code_changes(tmp_path, mon
     before = list(backend.calls)
     assert resume_run(root, invoker=backend) == expected
     assert backend.calls == before
+
+
+FALSE_HELPER = "Every integer is even."
+
+
+def counterexample_workspace(path):
+    path.mkdir()
+    target = ProofObligation.create("parity", "", STATEMENT)
+    child = ProofObligation.create("parity", "", FALSE_HELPER)
+    ProofGraph.create(path, problem_id="parity", target=target, obligations=(child,),
+        routes=(ProofRoute.create(target.obligation_id, (child.obligation_id,)), ProofRoute.create(child.obligation_id)))
+    return path
+
+
+class CounterexampleCodex(ScriptedCodex):
+    def invoke(self, **packet):
+        label = packet["label"]
+        if label == "refutation_verifier":
+            self.calls.append(label)
+            return dict(accepted=True, assumptions_satisfied=True, conclusion_falsified=True,
+                        closed_book_clean=True, reason="1 is an integer but is odd.")
+        response = super().invoke(**packet)
+        if label == "research_worker" and response["statement"] == FALSE_HELPER:
+            response.update(kind="COUNTEREXAMPLE_CANDIDATE", proof="", counterexample="n=1")
+        return response
+
+
+@pytest.mark.parametrize("checkpoint", ["candidate_stored", "verification_stored", "refutation_stored", "obligation_resolved"])
+def test_refutation_recovery_and_automatic_parent_handoff_match_uninterrupted_run(tmp_path, checkpoint):
+    expected_root = counterexample_workspace(tmp_path / "reference")
+    reference_backend = CounterexampleCodex()
+    expected = start_run(expected_root, invoker=reference_backend, solver_attempts=1)
+    root = counterexample_workspace(tmp_path / "interrupted")
+    before = CounterexampleCodex()
+    def crash(name, details):
+        if name == checkpoint:
+            raise ProcessCrash()
+    with pytest.raises(ProcessCrash):
+        start_run(root, invoker=before, solver_attempts=1, on_event=crash)
+    after = CounterexampleCodex()
+    actual = resume_run(root, invoker=after)
+    assert actual["stop_reason"] == expected["stop_reason"] == "TARGET_SOLVED", actual
+    assert actual["consumed"] == expected["consumed"]
+    assert semantic_state(root) == semantic_state(expected_root)
+    assert before.calls + after.calls == reference_backend.calls
+    graph = ProofGraph(root)
+    assert graph.obligation(ProofObligation.create("parity", "", FALSE_HELPER).obligation_id).truth_state == "REFUTED"
+    assert len(graph.supporting_closure()) == 3
+    assert all(f.statement != FALSE_HELPER for f in graph.supporting_closure())
+
+
+def test_unknown_refutation_verifier_response_stops_without_inventing_falsehood(tmp_path):
+    from research.refutation import RefutationStore
+    from research.run_storage import read_json
+    root = counterexample_workspace(tmp_path / "problem")
+    def crash(name, details):
+        if name == "call_started" and details.get("label") == "refutation_verifier":
+            raise ProcessCrash()
+    with pytest.raises(ProcessCrash):
+        start_run(root, invoker=CounterexampleCodex(), solver_attempts=1, on_event=crash)
+    after = CounterexampleCodex()
+    status = resume_run(root, invoker=after)
+    assert status["stop_reason"] == "INTERRUPTED"
+    assert status["consumed"]["model_calls"] == 2
+    assert status["consumed"]["solver_attempts"] == 1
+    assert RefutationStore(root).list() == ()
+    assert not after.calls
+    assert all(o.truth_state == "OPEN" for o in ProofGraph(root).obligations())
+    assert read_json(root / "attempts/attempt-000001.json")["outcome"] == "INTERRUPTED"
