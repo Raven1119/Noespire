@@ -215,6 +215,31 @@ class StrategySketcher:
             blocked_node_id=context.blocked_node.node_id,
         )
 
+    def strategize_local(self, packet) -> SketchResult:
+        prompt = """You are the Codex Mathematical Local Strategist for an AND/OR ProofGraph.
+Design local proof ARCHITECTURE, not proofs or assertions of verified truth.
+CLOSED BOOK: judge only the supplied local state; no retrieval.
+1. Diagnose the actual remaining mathematical obstruction from recorded failures.
+   Distinguish a rejected proof, exhausted route, and independently refuted claim.
+2. Identify ONE promising local strategy. Explain why its obligations materially
+   reduce or reorganize difficulty. Stress-test every helper for restatement,
+   circularity, and the supplied accepted counterexamples.
+3. Select exactly one existing operator:
+   SPLIT: narrower constituents of the same goal;
+   INSERT_CUT_SET: intermediate propositions bridging the current gap;
+   ADD_ALTERNATIVE_ROUTE: a materially different mechanism for the same goal;
+   DECLINE: no reliable local restructuring after a bounded diagnosis.
+4. Give 1-4 self-contained one-sentence mathematical candidate claims. No graph
+   serialization, full proofs, or invented verifier-accepted Facts.
+All operators add a route to the SAME contextual obligation; truth is unchanged.
+Only the supplied verified boundary Facts may be reused as established knowledge.
+Local decision packet:
+""" + json.dumps(packet, ensure_ascii=False, indent=2)
+        self.last_prompt = prompt
+        response = self.codex.invoke(prompt=prompt, schema=SKETCH_SCHEMA, label="strategy_sketcher")
+        return parse_sketch_output(json.dumps(response, ensure_ascii=False),
+                                    blocked_node_id=packet["obligation"]["obligation_id"])
+
 
 def build_sketch_audit_packet(context, sketch: SketchResult) -> Dict[str, Any]:
     """Independent quality-audit input (§12/§13): the decision-time local

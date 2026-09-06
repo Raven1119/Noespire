@@ -65,9 +65,8 @@ def solve_route(solver, graph, route_id, author, *, event=None):
             if attempt["outcome"] == "RUNNING":
                 predecessors = graph.materialized_predecessors(route_id)
                 if "candidate" not in attempt:
-                    packet = dict(obligation={**asdict(obligation), "statement": obligation.statement},
-                                  route=asdict(route), predecessor_facts=[asdict(f) for f in predecessors],
-                                  attempt_history=history)
+                    from .local_attention import worker_packet
+                    packet = worker_packet(graph, route_id, history)
                     attempt["candidate"] = solver.worker.propose_outcome(packet)
                     write_json(artifact, attempt)
                     event("candidate_stored", attempt_id=key)

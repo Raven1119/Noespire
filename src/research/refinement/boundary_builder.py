@@ -71,3 +71,10 @@ class BoundaryAwarePatchBuilder:
             prompt=prompt, schema=PATCH_SCHEMA, label="boundary_aware_patch_builder"
         )
         return parse_patch_build_output(json.dumps(response, ensure_ascii=False))
+
+    def compile_local(self, packet, sketch):
+        from .route_driver import route_build_prompt, ROUTE_BUILD_SCHEMA, parse_route_build
+        self.last_prompt = route_build_prompt(packet, sketch)
+        response = self.codex.invoke(prompt=self.last_prompt, schema=ROUTE_BUILD_SCHEMA,
+                                      label="boundary_aware_patch_builder")
+        return parse_route_build(response)

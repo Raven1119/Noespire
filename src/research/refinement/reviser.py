@@ -194,6 +194,21 @@ class MathematicalReviser:
         self.codex = codex
         self.last_prompt: Optional[str] = None
 
+    def revise_local(self, packet, sketch, build, reasons):
+        from .route_driver import ROUTE_BUILD_SCHEMA, parse_route_build, route_build_prompt
+        schema = {**ROUTE_BUILD_SCHEMA, "properties": {**ROUTE_BUILD_SCHEMA["properties"],
+                  "repairable": {"type": "boolean"}}, "required": [*ROUTE_BUILD_SCHEMA["required"], "repairable"]}
+        self.last_prompt = ("You are the Mathematical Reviser, performing the ONE allowed local revision.\n"
+            "Repair only the Structural Auditor's reported issues within the frozen strategy.\n"
+            "If repair requires another strategy, return repairable=false and decline; do not re-plan.\n"
+            + route_build_prompt(packet, sketch) + "\nRevision input:\n"
+            + json.dumps(dict(v1=build, auditor_reasons=reasons), ensure_ascii=False))
+        response = self.codex.invoke(prompt=self.last_prompt, schema=schema, label="mathematical_reviser")
+        if type(response.get("repairable")) is not bool:
+            raise ValueError("revision needs an explicit repairable verdict")
+        parse_route_build({k: v for k, v in response.items() if k != "repairable"})
+        return response
+
     def revise(
         self, context, v1: StrategistResult, auditor_reasons: Tuple[str, ...]
     ) -> RevisionResult:

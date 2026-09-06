@@ -16,7 +16,17 @@ route viability, Fact lineage, exhaustion, and persisted resolution checks.
 Slice B adds typed proof/counterexample/no-result execution, bounded repair,
 independent RefutationVerifier admission, exact route lineage, and typed
 timeout/error records. Replayed attempts must match canonical truth and IDs.
-Slices C–F (operators, bounded attention, recovery, migration/replay) are pending;
+Slices C–D compile the same three operators into routes on a stable target,
+retain the Gate/Fidelity/Structural checks and one bounded revision, and apply
+approved patches atomically and idempotently. Local packets traverse only direct
+relations: at most 8 routes, 32 prerequisites/Facts, 16 parent consumers, 24 route
+failure records, 8 local patch records; Worker history is capped at 3 attempts.
+Packets over 256000 UTF-8 bytes fail closed without silently truncating premises.
+The v3 Builder exposes existing route support_fact_ids separately from child
+support, because a Fact can support the target route without supporting a child.
+Legacy frozen prompt methods remain available; v3 methods render first-class
+obligations/routes without duplicate scaffold targets.
+Slices E–F (run/resume migration and frozen #67 import/replay) are pending;
 the existing run entry is still N3A until Slice E.
 
 Identity canonicalizes whitespace, preserving case and the supplied context.

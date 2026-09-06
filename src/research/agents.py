@@ -607,6 +607,30 @@ class StructuralAuditor:
         )
         return parse_auditor_output(json.dumps(response, ensure_ascii=False))
 
+    def audit_local(self, packet, patch, sketch):
+        from .proof_patch import structural_schema
+        schema = structural_schema(patch.operator)
+        checks = schema["properties"]["checks"]["required"]
+        prompt = """You are an independent fresh Codex Structural Auditor.
+CLOSED BOOK: judge only this affected local region, strategy, patch and boundary.
+PASS means worth attempting as OPEN obligations, never that any claim is true.
+The target is the SAME Gamma |- G. New routes are OR alternatives; prerequisites
+of each route are AND. Even when ready, a worker and verifier must prove G.
+Check preservation of target and assumptions, absence of hidden circularity,
+coherent self-contained quantifiers/domains, genuinely narrower intermediates,
+and a plausible composition back to G. Reject cosmetic restatements and named
+deep theorem black boxes presented as established truth. Boundary Facts are
+accepted inputs, but every proposed dependency must be mathematically relevant.
+The patch must faithfully implement the supplied strategy and operator.
+SPLIT requires narrower constituents; CUT requires meaningful intermediate
+claims; ALTERNATIVE requires a materially different mechanism. Use REVISE only
+for a repair local to this strategy; use REJECT if a new strategy is required.
+Return every operator-specific check explicitly:
+""" + json.dumps(checks) + "\n" + json.dumps(dict(local=packet, patch=asdict(patch),
+                                                  strategy=asdict(sketch)), ensure_ascii=False, indent=2)
+        self.last_prompt = prompt
+        return self.codex.invoke(prompt=prompt, schema=schema, label="structural_auditor")
+
 
 def _node_lines(nodes) -> str:
     return "\n".join(

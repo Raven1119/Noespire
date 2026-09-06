@@ -58,3 +58,53 @@ def test_route_can_reuse_a_shared_obligation_without_resetting_its_route(tmp_pat
     proposed = patch.validate(graph, boundary_fact_ids=())
     assert len(proposed["obligations"]) == 2
     assert proposed["routes"][direct.route_id]["origin_patch_id"] is None
+
+
+@pytest.mark.parametrize("audit_verdicts", [("PASS",), ("REVISE", "PASS"), ("REVISE", "REVISE")])
+def test_two_stage_roles_compile_a_boundary_supported_route_without_truth_admission(tmp_path, audit_verdicts):
+    from research.refinement.route_driver import run_route_refinement
+    from research.refinement.sketch import parse_sketch_output
+    from research.local_attention import strategist_packet
+    from research.proof_patch import structural_schema
+    from research.fact import Fact
+    from research.graph import FactGraph
+    from research.run_storage import write_json
+    from test_proof_execution import ScriptedCodex
+    import json
+    target = ProofObligation.create("p", "", "target")
+    fact = FactGraph(tmp_path).add_fact(Fact.create(problem_id="p", statement="support", proof="inline", author="fixture"))
+    old = ProofRoute.create(target.obligation_id, support_fact_ids=(fact.fact_id,))
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(old,))
+    write_json(tmp_path / "attempts/attempt-000001.json", dict(attempt_id="attempt-000001",
+        obligation_id=target.obligation_id, route_id=old.route_id, outcome="NO_RESULT", reason="gap"))
+    graph.exhaust_route(old.route_id, ("attempt-000001",), "gap")
+    sketch = parse_sketch_output(json.dumps(dict(operator="ADD_ALTERNATIVE_ROUTE", obstruction="gap", evidence=[],
+        mathematical_idea="new mechanism", why_this_reduces_difficulty="local helper", why_current_route_is_exhausted="gap",
+        decline_reason="", candidate_claims=["helper"])), blocked_node_id=target.obligation_id)
+    codex = ScriptedCodex([
+        ("n2s_sketch_audit", dict(strategy_class="PLAUSIBLE_STRATEGY", difficulty_reduction="UNCLEAR", strategy_family="test", reasons=[])),
+        ("boundary_aware_patch_builder", dict(compilation_decline=False, decline_reason="", support_fact_ids=[fact.fact_id],
+            new_nodes=[dict(node_id="a", goal="helper", depends_on=[], premise_fact_ids=[])])),
+        ("n2t_fidelity_audit", dict(strategy_fidelity="FAITHFUL", operator_check="OPERATOR_PRESERVED", claim_fidelity=[], reasons=[])),
+        ("structural_auditor", dict(verdict=audit_verdicts[0], reasons=["clarify helper"], checks={k: True for k in
+            structural_schema(sketch.operator)["properties"]["checks"]["required"]})),
+    ])
+    if len(audit_verdicts) == 2:
+        codex.responses.extend([
+            ("mathematical_reviser", dict(repairable=True, compilation_decline=False, decline_reason="", support_fact_ids=[fact.fact_id],
+                new_nodes=[dict(node_id="a", goal="precise helper", depends_on=[], premise_fact_ids=[])])),
+            ("structural_auditor", dict(verdict=audit_verdicts[1], reasons=["checked"], checks={k: True for k in
+                structural_schema(sketch.operator)["properties"]["checks"]["required"]})),
+        ])
+    result = run_route_refinement(graph, strategist_packet(graph, target.obligation_id), sketch,
+                                  invoker_for=lambda role: codex, directory=tmp_path / "step/patch")
+    accepted = audit_verdicts[-1] == "PASS"
+    assert result["outcome"] == ("PATCH_APPLIED" if accepted else "REVISION_FAILED")
+    graph = ProofGraph(tmp_path)
+    assert len(graph.routes_for(target.obligation_id)) == (2 if accepted else 1)
+    if accepted:
+        new = next(r for r in graph.routes_for(target.obligation_id) if r.route_id != old.route_id)
+        assert new.support_fact_ids == (fact.fact_id,)
+    assert graph.obligation(target.obligation_id).truth_state == "OPEN"
+    assert len(FactGraph(tmp_path).list_facts()) == 1
+    assert not codex.responses

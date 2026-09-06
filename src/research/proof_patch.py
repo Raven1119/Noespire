@@ -31,7 +31,7 @@ class GraphPatch:
     routes: tuple
 
     @classmethod
-    def compile(cls, graph, target_id, operator, new_nodes, *, boundary_fact_ids):
+    def compile(cls, graph, target_id, operator, new_nodes, *, boundary_fact_ids, support_fact_ids=()):
         target = graph.obligation(target_id)
         if operator not in KINDS or target.truth_state != "OPEN":
             raise ValueError("operator needs an OPEN mathematical target")
@@ -43,14 +43,13 @@ class GraphPatch:
         obligations = tuple(ProofObligation.create(graph.problem_id, target.context, n["goal"]) for n in new_nodes)
         mapping = dict(zip(aliases, (o.obligation_id for o in obligations)))
         routes = []
-        consumed, support = set(), set()
+        consumed, support = set(), set(support_fact_ids)
         for node, obligation in zip(new_nodes, obligations):
             if set(node) != {"node_id", "goal", "depends_on", "premise_fact_ids"}:
                 raise ValueError("patch cannot carry truth or runtime fields")
             if any(key not in mapping for key in node["depends_on"]):
                 raise ValueError("dependencies must be patch sibling aliases")
             consumed.update(node["depends_on"])
-            support.update(node["premise_fact_ids"])
             routes.append(ProofRoute.create(obligation.obligation_id,
                 [mapping[key] for key in node["depends_on"]], node["premise_fact_ids"]))
         routes.append(ProofRoute.create(target_id, [mapping[key] for key in aliases if key not in consumed],
