@@ -84,7 +84,7 @@ class ProofGraph:
         self._validate(self._data)
         self.problem_id = self._data["problem_id"]
         self.target_obligation_id = self._data["target_obligation_id"]
-        self._check_truth()
+        self._check_evidence(self.root, self._data)
 
     @classmethod
     def create(cls, root, *, problem_id, target, obligations=(), routes=()):
@@ -100,6 +100,7 @@ class ProofGraph:
                 "routes": {r.route_id: asdict(r) for r in routes},
                 "applied_patches": {}}
         cls._validate(data)
+        cls._check_evidence(Path(root), data)
         write_json(path, data)
         return cls(root)
 
@@ -140,6 +141,8 @@ class ProofGraph:
                 raise ValueError("only route lifecycle is persistent")
             if item.lifecycle == "EXHAUSTED" and not (item.exhaustion_attempt_ids and item.exhaustion_reason):
                 raise ValueError("route exhaustion requires evidence")
+            if item.lifecycle == "OPEN" and (item.exhaustion_attempt_ids or item.exhaustion_reason):
+                raise ValueError("OPEN route cannot carry exhaustion evidence")
             if item.target_obligation_id not in obligations or any(
                     p not in obligations for p in item.prerequisite_obligation_ids):
                 raise ValueError("unknown route obligation")
@@ -150,20 +153,54 @@ class ProofGraph:
     def obligation(self, obligation_id):
         return ProofObligation(**self._data["obligations"][obligation_id])
 
-    def _check_truth(self):
+    @staticmethod
+    def _check_evidence(root, data):
         from .graph import FactGraph
         from .refutation import RefutationStore
-        for item in self.obligations():
+        facts = FactGraph(root)
+
+        def checked_fact(key):
+            if not isinstance(key, str) or len(key) != 16 or any(c not in "0123456789abcdef" for c in key):
+                raise ValueError("invalid Fact ID")
+            fact = facts.get_fact(key)
+            if any(f.problem_id != data["problem_id"] for f in facts.supporting_closure(key)):
+                raise ValueError("support Fact belongs to another problem")
+            return fact
+
+        for value in data["routes"].values():
+            route = ProofRoute(**value)
+            for key in route.support_fact_ids:
+                checked_fact(key)
+            ids = route.exhaustion_attempt_ids
+            if len(ids) != len(set(ids)):
+                raise ValueError("duplicate exhaustion attempts")
+            for key in ids:
+                if not key.startswith("attempt-") or not key[8:].isdigit():
+                    raise ValueError("invalid attempt ID")
+                path = root / "attempts" / (key + ".json")
+                if not path.is_file():
+                    raise ValueError("missing exhaustion attempt evidence")
+                attempt = read_json(path)
+                if (attempt.get("attempt_id"), attempt.get("obligation_id"), attempt.get("route_id")) != (
+                        key, route.target_obligation_id, route.route_id):
+                    raise ValueError("exhaustion evidence identity mismatch")
+                if attempt.get("outcome") not in ("PROOF_REJECTED", "COUNTEREXAMPLE_REJECTED", "NO_RESULT", "TIMEOUT"):
+                    raise ValueError("system errors and successes do not exhaust a proof route")
+        for value in data["obligations"].values():
+            item = ProofObligation(**value)
             if item.truth_state == "REFUTED":
-                if RefutationStore(self.root).get(item.refutation_id).obligation_id != item.obligation_id:
+                if RefutationStore(root).get(item.refutation_id).obligation_id != item.obligation_id:
                     raise ValueError("persisted refutation does not establish this obligation's falsity")
             elif item.truth_state == "DISCHARGED":
-                fact = FactGraph(self.root).get_fact(item.resolved_fact_id)
-                route = self.route(item.resolved_route_id)
+                fact = checked_fact(item.resolved_fact_id)
+                route = ProofRoute(**data["routes"][item.resolved_route_id])
                 if (fact.problem_id != item.problem_id or fact.statement != item.statement
                         or route.target_obligation_id != item.obligation_id):
                     raise ValueError("persisted Fact does not resolve this obligation")
-                expected = {f.fact_id for f in self.materialized_predecessors(route.route_id)}
+                prerequisites = [ProofObligation(**data["obligations"][key]) for key in route.prerequisite_obligation_ids]
+                if route.lifecycle != "OPEN" or any(o.truth_state != "DISCHARGED" for o in prerequisites):
+                    raise ValueError("resolved route lacks discharged prerequisites")
+                expected = set(route.support_fact_ids) | {o.resolved_fact_id for o in prerequisites}
                 if set(fact.predecessors) != expected:
                     raise ValueError("persisted Fact lost selected-route lineage")
 
@@ -213,6 +250,7 @@ class ProofGraph:
 
     def _save(self, data):
         self._validate(data)
+        self._check_evidence(self.root, data)
         write_json(self.path, data)
         self._data = data
 
@@ -278,14 +316,6 @@ class ProofGraph:
             raise ValueError("cannot exhaust a resolved obligation's route")
         if not attempt_ids or not reason.strip():
             raise ValueError("exhaustion requires recorded local failure evidence")
-        for key in attempt_ids:
-            if not key.startswith("attempt-") or not key[8:].isdigit():
-                raise ValueError("invalid attempt ID")
-            attempt = read_json(self.root / "attempts" / (key + ".json"))
-            if (attempt["obligation_id"], attempt["route_id"]) != (route.target_obligation_id, route_id):
-                raise ValueError("exhaustion evidence belongs to another route")
-            if attempt["outcome"] not in ("PROOF_REJECTED", "COUNTEREXAMPLE_REJECTED", "NO_RESULT", "TIMEOUT"):
-                raise ValueError("system errors and successes do not exhaust a proof route")
         if route.lifecycle == "EXHAUSTED":
             if route.exhaustion_attempt_ids != tuple(attempt_ids) or route.exhaustion_reason != reason:
                 raise ValueError("cannot overwrite exhaustion history")

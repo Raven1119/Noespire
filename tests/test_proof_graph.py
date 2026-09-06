@@ -130,3 +130,31 @@ def test_forged_persisted_resolution_is_not_loaded_as_truth(tmp_path):
     write_json(graph.path, data)
     with pytest.raises((KeyError, ValueError)):
         ProofGraph(tmp_path)
+
+
+@pytest.mark.parametrize("corruption", ["missing_attempt", "mismatched_id", "duplicate_ids", "open_with_evidence"])
+def test_exhaustion_is_revalidated_when_loading_persisted_graph(tmp_path, corruption):
+    from research.run_storage import read_json, write_json
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    write_json(tmp_path / "attempts/attempt-000001.json", {
+        "attempt_id": "wrong" if corruption == "mismatched_id" else "attempt-000001",
+        "obligation_id": target.obligation_id, "route_id": route.route_id, "outcome": "PROOF_REJECTED"})
+    data = read_json(graph.path)
+    ids = ["attempt-999999"] if corruption == "missing_attempt" else ["attempt-000001"]
+    if corruption == "duplicate_ids":
+        ids *= 2
+    data["routes"][route.route_id].update(lifecycle="OPEN" if corruption == "open_with_evidence" else "EXHAUSTED",
+                                         exhaustion_attempt_ids=ids, exhaustion_reason="spent")
+    write_json(graph.path, data)
+    with pytest.raises(ValueError):
+        ProofGraph(tmp_path)
+
+
+def test_unknown_support_fact_is_rejected_before_graph_creation(tmp_path):
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id, support_fact_ids=("1234567890abcdef",))
+    with pytest.raises((KeyError, ValueError)):
+        ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    assert not (tmp_path / "proof_graph.json").exists()
