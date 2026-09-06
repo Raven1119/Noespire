@@ -36,7 +36,12 @@ Slice F provides the one-time isolated legacy importer. It checks source/copy
 fingerprints and replays the actual legacy mechanical operators against recorded
 post-images. Already-proved legacy routes keep exact Fact lineage; incomplete
 attempts keep feedback and their remaining allowance. Missing evidence fails closed.
-The frozen #67 independent refutation and automatic handoff replay is pending.
+The frozen N2AE/#67 replay passed independent Sol refutation admission and
+automatic parent-frontier handoff. A real CLI process exited after frontier
+selection; resume kept its run ID and consumed budget, then produced one
+INSERT_CUT_SET sketch with a Mellin parameter. Execution stopped at the requested
+handoff boundary, before Gate/Builder/proof. The sketch is unverified; no new
+Fact or proof of EDP is claimed. Existing entropy Fact bytes remained unchanged.
 
 Identity canonicalizes whitespace, preserving case and the supplied context.
 It does not attempt semantic equivalence of arbitrary mathematical sentences.
@@ -50,3 +55,27 @@ truth fails closed. Model execution remains fresh Codex/Sol and closed-book.
 
 Historical workspaces remain untouched; runtime evidence stays under ignored
 `workspaces/proof_core_v3/`. No automatic push or product integration is planned.
+
+Validation: 717 product tests passed, 6 skipped, 42 subtests passed. The only
+warning was the existing Starlette/httpx deprecation. Deterministic crash tests
+cover audit, patch, Fact and Refutation windows; the real replay covers a CLI
+restart at the selected structural frontier. These are distinct evidence scopes.
+The maintained entry is [Current Research Core](CURRENT_RESEARCH_CORE.md).
+
+## Standards
+
+No open blocker. Source preservation, independent truth admission and recorded
+runtime settings passed review. One optional smell remains: the one-time importer
+uses ProofGraph's private validation/persistence seam; a general restore framework
+was deferred under the repository's minimal-change rule.
+
+## Spec
+
+No open blocker. Review-found recovery identity, horizon ownership, complete AND
+dependencies, frozen inputs, legacy lineage, partial attempt history and transition
+provenance issues were fixed with regressions. One conservative limitation remains:
+ambiguous legacy duplicate-goal wrappers can fail closed, even when a human could
+disambiguate them. No topology-only inference or Fact rewriting is used.
+
+Review totals: Standards 0 blocking / 1 optional; Spec 0 blocking / 1 conservative
+limitation. The real semantics replay completes the final promotion evidence.
