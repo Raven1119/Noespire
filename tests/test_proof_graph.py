@@ -158,3 +158,14 @@ def test_unknown_support_fact_is_rejected_before_graph_creation(tmp_path):
     with pytest.raises((KeyError, ValueError)):
         ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
     assert not (tmp_path / "proof_graph.json").exists()
+
+
+def test_failure_driven_scheduler_hands_off_structural_frontier_before_ready_sibling(tmp_path):
+    target = ProofObligation.create("p", "", "target")
+    blocked = ProofObligation.create("p", "", "ready sibling")
+    ready = ProofObligation.create("p", "", "blocked mechanism")
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, obligations=(blocked, ready), routes=(
+        ProofRoute.create(target.obligation_id, (blocked.obligation_id, ready.obligation_id)),
+        ProofRoute.create(ready.obligation_id)))
+    assert graph.frontiers()[0].kind == "STRUCTURAL"
+    assert graph.frontiers()[0].obligation_id == blocked.obligation_id

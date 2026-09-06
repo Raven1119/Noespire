@@ -47,12 +47,19 @@ def read_status(problem_dir):
     """Read-only status; requires neither Docker nor a model invocation."""
     root = Path(problem_dir).resolve()
     state = read_json(root / "dynamic_run/state.json")
-    graph = ProofGraph(root)
+    graph = _run_graph(root, state)
     progress = root / "dynamic_run/steps" / f"{state['step']:06d}" / "solver.json"
     return {**state, "consumed": _usage(root, state),
             "ready": [asdict(f) for f in graph.frontiers()],
             "current_attempt": read_json(progress).get("active_attempt_id") if progress.exists() else None,
             "facts": [f.fact_id for f in FactGraph(root).list_facts()], "workspace": str(root)}
+
+
+def _run_graph(root, state):
+    graph = ProofGraph(root)
+    if (state["problem_id"], state["target_obligation_id"]) != (graph.problem_id, graph.target_obligation_id):
+        raise ValueError("run problem/target identity changed")
+    return graph
 
 
 
@@ -90,6 +97,7 @@ def start_run(problem_dir, *, budget=LongHorizonBudget(), consumed=None,
                  "initial_attempts": [p.stem for p in (root / "attempts").glob("attempt-*.json")],
                  "initial_facts": [f.fact_id for f in FactGraph(root).list_facts()],
                  "problem_id": graph.problem_id, "runtime": runtime,
+                 "target_obligation_id": graph.target_obligation_id, "pending_horizon": None,
                  "initial_patches": list(read_json(graph.path)["applied_patches"]), "route_id": None,
                  "code_digest": _code_digest(), "fact_audits": [], "horizon_handoffs": 0}
         write_json(directory / "state.json", state)
@@ -118,7 +126,7 @@ class _Run:
     def __init__(self, root, state, backend, on_event):
         self.root, self.state, self.backend, self.on_event = root, state, backend, on_event
         self.directory = root / "dynamic_run"
-        graph = ProofGraph(root)
+        graph = _run_graph(root, state)
         self.problem = ProblemSpec(graph.problem_id, graph.obligation(graph.target_obligation_id).statement)
 
 
@@ -195,7 +203,7 @@ class _Run:
         return read_status(self.root)
 
     def select(self):
-        graph = ProofGraph(self.root)
+        graph = _run_graph(self.root, self.state)
         target = graph.obligation(graph.target_obligation_id)
         if target.truth_state == "DISCHARGED":
             return self.stop("TARGET_SOLVED")
@@ -211,8 +219,9 @@ class _Run:
             if remaining <= 0:
                 return self.stop("BUDGET_EXHAUSTED")
             return self.save(phase="SOLVE", frontier=frontier.obligation_id, route_id=frontier.route_id,
-                             attempt_limit=min(self.state["solver_attempts_per_node"], remaining))
-        if remaining <= 0 and self.state.get("last_solve_status") != "HORIZON":
+                             attempt_limit=min(self.state["solver_attempts_per_node"], remaining), pending_horizon=None)
+        horizon = self.state.get("pending_horizon") == frontier.obligation_id
+        if remaining <= 0 and not horizon:
             return self.stop("BUDGET_EXHAUSTED")
         if any(used[k] >= self.state["budget"]["max_" + k] for k in
                ("mutation_episodes", "builder_proposals", "auditor_calls")):
@@ -227,7 +236,8 @@ class _Run:
         if not path.exists():
             write_json(path, packet)
         self.save(phase="STRATEGY", frontier=frontier.obligation_id, route_id=None,
-                  decided=[*self.state["decided"], key])
+                  decided=[*self.state["decided"], key], pending_horizon=None,
+                  horizon_handoffs=self.state["horizon_handoffs"] + horizon)
         self.event("frontier_selected", kind="STRUCTURAL")
 
     def solve(self):
@@ -246,7 +256,7 @@ class _Run:
             return self.stop("SYSTEM_ERROR", advance["reason"])
         self.save(phase="SELECT", step=self.state["step"] + 1, frontier=None, route_id=None,
                   last_solve_status=advance["status"],
-                  horizon_handoffs=self.state["horizon_handoffs"] + (advance["status"] == "HORIZON"))
+                  pending_horizon=self.state["frontier"] if advance["status"] == "HORIZON" else None)
 
     def strategy(self):
         packet = read_json(self.step_dir / "context.json")

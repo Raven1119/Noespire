@@ -246,7 +246,8 @@ class ProofGraph:
                     found.append(Frontier("PROOF", key, route.route_id))
                 else:
                     pending.extend(route.prerequisite_obligation_ids)
-        return tuple(sorted(found, key=lambda f: (f.obligation_id, f.route_id or "")))
+        # Hand off known structural failures before starting an unrelated proof.
+        return tuple(sorted(found, key=lambda f: (f.kind != "STRUCTURAL", f.obligation_id, f.route_id or "")))
 
     def _save(self, data):
         self._validate(data)

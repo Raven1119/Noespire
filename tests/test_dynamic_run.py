@@ -421,3 +421,37 @@ def test_unknown_refutation_verifier_response_stops_without_inventing_falsehood(
     assert not after.calls
     assert all(o.truth_state == "OPEN" for o in ProofGraph(root).obligations())
     assert read_json(root / "attempts/attempt-000001.json")["outcome"] == "INTERRUPTED"
+
+
+def test_timeout_with_another_ready_route_does_not_claim_a_strategy_handoff(tmp_path):
+    import subprocess
+    target = ProofObligation.create("p", "", "target")
+    ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(ProofRoute.create(target.obligation_id),
+        ProofRoute.create(target.obligation_id, kind="ALTERNATIVE")))
+    class TimeoutCodex(ScriptedCodex):
+        def invoke(self, **packet):
+            self.calls.append(packet["label"])
+            raise subprocess.TimeoutExpired("codex", 600)
+    backend = TimeoutCodex()
+    status = start_run(tmp_path, invoker=backend, budget=LongHorizonBudget(max_solver_attempts=1))
+    assert status["stop_reason"] == "BUDGET_EXHAUSTED"
+    assert status["horizon_handoffs"] == 0
+    assert backend.calls == ["research_worker"]
+
+
+@pytest.mark.parametrize("problem,goal", [("parity", "different target"), ("other", STATEMENT)])
+def test_resume_cannot_silently_switch_problem_or_target(tmp_path, problem, goal):
+    root = workspace(tmp_path / "problem")
+    def crash(name, details):
+        if name == "call_completed":
+            raise ProcessCrash()
+    with pytest.raises(ProcessCrash):
+        start_run(root, invoker=ScriptedCodex(), solver_attempts=1, on_event=crash)
+    target = ProofObligation.create(problem, "", goal)
+    replacement = tmp_path / "replacement"
+    ProofGraph.create(replacement, problem_id=problem, target=target, routes=(ProofRoute.create(target.obligation_id),))
+    (root / "proof_graph.json").write_bytes((replacement / "proof_graph.json").read_bytes())
+    after = ScriptedCodex()
+    with pytest.raises(ValueError, match="identity"):
+        resume_run(root, invoker=after)
+    assert not after.calls
