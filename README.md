@@ -1,9 +1,10 @@
 # Noespire
 
-Noespire develops a resumable natural-language mathematical proof core. Fresh
-Codex workers propose proofs; an independent closed-book verifier admits Facts.
-Failed or locally timed-out obligations enter the existing two-stage refinement
-pipeline, then the default scheduler continues on the resulting graph.
+Noespire develops a resumable AND/OR natural-language mathematical proof core.
+Obligations have stable mathematical identities; alternative routes share them.
+Fresh Codex workers propose proofs or counterexamples, and independent closed-book
+verifiers admit Facts or Refutations. Failed routes expose local structural
+frontiers for the existing two-stage refinement pipeline.
 
 ```
 Problem workspace -> NodeSolver -> closed-book verifier -> accepted Fact
@@ -23,13 +24,15 @@ an accepted Research Fact is an LLM-verified mathematical claim, not a Lean theo
 
 ## Run, inspect, resume
 
-Install the source checkout with `pip install -e .`. An existing problem workspace
-contains `scaffold.json`, `obligations.json`, `facts/`, and any earlier attempts.
+Install the source checkout with `pip install -e .`. A v3 problem workspace
+contains `proof_graph.json` and separate Fact, Refutation, and execution evidence.
+Import a legacy scaffold once into a fresh destination; its source stays intact.
 Real runs require Docker, the `noespire-codex-isolated:local` image, and Codex
 authentication; models never mount the problem workspace. New runs pin GPT-5.6 Sol,
 `xhigh`, the local image digest and CLI version, with a 600-second call limit.
 
 ```powershell
+python -m research.legacy_import LEGACY_PROBLEM FRESH_V3_PROBLEM
 python -m research.dynamic_run run PATH_TO_PROBLEM --max-solver-attempts 6 --max-mutation-episodes 1 --max-builder-proposals 3 --max-auditor-calls 4
 python -m research.dynamic_run status PATH_TO_PROBLEM
 python -m research.dynamic_run resume PATH_TO_PROBLEM
@@ -58,4 +61,4 @@ source, tests, and maintained docs belong in Git; local runs and raw evidence do
 
 The existing frontend remains the static proof workspace. Run it with
 `python -m application.dev` after installing dependencies in `frontend/`.
-N3A does not connect dynamic refinement to the frontend.
+Proof Core v3 does not connect dynamic refinement to the frontend.

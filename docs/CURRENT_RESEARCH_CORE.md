@@ -1,93 +1,121 @@
-# Current research core — N3A
+﻿# Current research core - v3
 
-The supported research entry is `research.dynamic_run.start_run`, `read_status`,
-and `resume_run`, also available through `python -m research.dynamic_run`.
-It operates on an existing problem workspace. Creating a top-level scaffold and
-frontend integration remain separate concerns.
+The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,
+Global Persistence**. The public entry is `research.dynamic_run.start_run`,
+`read_status`, and `resume_run`, also available as `python -m research.dynamic_run`
+and `noespire-research`. Runs require a canonical `proof_graph.json` workspace.
+Top-level architecture generation and frontend integration remain separate.
 
-## Execution and truth boundaries
+## Mathematical and execution state
 
-The default `advance_scaffold_once` scheduler selects each node. NodeSolver uses
-at most three proof attempts, capped by the remaining run budget. A rejection
-produces failure evidence; a typed `TimeoutExpired` uses the existing horizon
-handoff. Both can expose a local refinement frontier. True system errors stop.
+`ProofObligation` identity is problem + context + goal, normalizing whitespace
+while preserving case. A route is independent of that identity. All prerequisites
+of one route are AND; routes targeting the same obligation are OR alternatives.
+Every introduced claim is a direct prerequisite of the new parent route, including
+claims also consumed by later children. A false earlier cut therefore invalidates
+the whole route, without falsely refuting its parent obligation.
 
-Each frontier gets one Strategist decision. A passing Strategy Gate permits the
-BoundaryAware Builder, fidelity check, existing mechanical validator, and fresh
-Structural Auditor. `REVISE` permits the existing single revision; other terminal
-outcomes stop. Accepted patches return to default scheduling. There is no new
-operator, strategist resampling, automated parent backtracking, or mathematical
-memory. Historical manually prepared backtracking states do not imply an automatic
-search capability.
+Truth is OPEN, DISCHARGED, or REFUTED. Only independently verified Facts and
+Refutations resolve truth; a failed proof or timeout leaves it OPEN. Route
+lifecycle is OPEN or evidence-backed EXHAUSTED; READY, WAITING, and IMPOSSIBLE
+are derived. READY still requires Worker and Verifier to prove the target, with
+the exact union of prerequisite Facts and route support in its lineage.
 
-Only ClosedBookVerifier PASS admits a Fact. A Structural PASS authorizes OPEN
-obligations, not mathematical truth. Post-run FactAuditor classifications and their
-dependency cascade are reporting evidence; they do not change search policy or
-silently revoke Facts. Report mathematical progress separately from engineering
-recovery. Research verification is distinct from later Lean-kernel verification.
+From the target, `ProofGraph.frontiers()` traverses viable routes and returns
+proof and structural frontiers. A reachable OPEN obligation with no viable route
+is structural. The deterministic policy handles structural frontiers first,
+then stable obligation/route IDs. This preserves immediate failure handoff before
+starting another sibling proof, without mathematical ranking or problem-specific
+selection. Refutation invalidates consuming routes, preserving viable alternatives
+and previously verified Facts; it never propagates falsity to an OPEN ancestor.
 
-## Durable run contract
+NodeSolver permits at most three attempts per route, clipped to remaining budget.
+A typed timeout exhausts the route and may hand the same structural obligation
+to Strategist even when the final solver attempt was consumed. Other errors stop.
+Each frozen frontier packet gets one Strategist decision. Gate, BoundaryAware
+Builder, fidelity, mechanical validation, and fresh Structural Auditor precede
+apply; REVISE permits the existing single revision. No new operator or resampling.
 
-The existing graph, registry, attempts, and Fact files remain authoritative. The
-additional `dynamic_run/` directory stores:
+## Attention and truth boundaries
 
-- `state.json`: run ID, current phase/frontier, original runtime and code digest,
-  initial budget consumption, completed frontier identities, and stop reason.
-- `steps/`: solver attempt IDs, frozen decision contexts/sketches, stage outcomes,
-  patch commit intents, and associated evidence. These records are never inserted
-  into a model's mathematical context.
-- `calls/`: immutable request reservations and completion/error records. A reserved
-  call consumes budget even if its process dies. Confirmed responses are replayed
-  only inside their original step/role/attempt scope.
-- `invocations/`: raw closed-book Codex evidence for fresh calls.
+Worker receives only its obligation, selected route, predecessor Facts, and up
+to three own attempts. Strategist receives direct routes/prerequisites, failure
+evidence, accepted child Refutations, direct parent intent, verified local boundary
+Facts, and this obligation's refinement history. Limits are enforced in code:
+8 routes, 32 prerequisites/Facts, 16 parent consumers, 24 failure records, and
+8 local patch records. A packet over 256000 UTF-8 bytes fails closed. Unrelated
+branches and global transcripts do not enter model packets.
 
-One OS file lock owns the workspace; process exit releases it. `status` reads
-without claiming ownership. External graph edits and simultaneous product execution
-are unsupported while a run is active. Active runs fail closed on code/runtime
-changes. Resuming an already stopped run only reads its final status.
+Post-run FactAuditor classifications and their dependency cascade are reporting
+evidence; they do not silently revoke Facts or alter search policy. Explicit Fact
+revocation retains existing cascade semantics. Target extraction uses only its
+accepted supporting closure. Research verification remains distinct from Lean.
 
-Recovery reuses completed decisions and attempts. An audited patch has a durable
-commit intent containing its exact before/after scaffold. An atomic replacement
-applies it once; recovery recognizes an already-written after-state. Fact files
-are atomically written and content-addressed; recorded candidate/verifier evidence
-reconciles a Fact written before registry/scaffold resolution. History is retained.
+## Persistence and recovery
 
-A request without a durable completion is recorded as `INTERRUPTED`; recovery
-does not infer a proof or resample the missing decision. The same run stops with
-its consumed budget intact. Terminal runs are inspectable and idempotent to resume.
-The recovery guarantee covers process interruption on a local filesystem, not a
-distributed transaction or hardware/storage corruption.
+Canonical search state is `proof_graph.json`; no scaffold/registry shadow writes.
+Facts, Refutations, attempts, graph patches, and dynamic run state have separate
+stores. Persisted graph references validate identity, lineage, closure, and
+referenced evidence on load and save. Files use temporary writes + atomic replace.
 
-## Budget and validation
+An approved patch is stored before graph mutation. The graph records its unique
+patch ID atomically; the completion journal follows. Resume applies an approved
+pending patch once, or finishes the journal for an already-applied patch. Candidate
+and verifier responses precede Fact/Refutation admission; recovery reconciles
+stored truth with obligation resolution without repeating confirmed model calls.
 
-The existing default limits are 24 solver attempts, 6 applied mutation episodes,
-12 proposal-side calls, and 12 audit-side calls. Proposal-side includes Strategist,
-Builder, and Reviser; audit-side includes Gate, Fidelity, and Structural Auditor.
-The formal runner enforces caps before each call and clips the final NodeSolver
-slice to remaining attempts, avoiding the legacy loop's whole-node/whole-episode
-overshoot. No restart replenishes a limit. Post-run Fact audits are separately
-counted and bounded to once per newly admitted Fact.
+`dynamic_run/state.json` pins run ID, problem/target identity, phase/frontier,
+route, original code/runtime, budgets, completed decision packets, and stop reason.
+`steps/` stores local inputs and progress; `calls/` stores immutable reservations
+and responses; `invocations/` retains raw closed-book Codex evidence. These records
+are execution state, not additional mathematical memory.
 
-For imported pre-N3A runs, `--consumed FILE` reads explicit cumulative counters:
-`solver_attempts`, `mutation_episodes`, `builder_proposals`, and `auditor_calls`.
-The old workspace alone cannot reliably reconstruct every historical model call;
-the importer must supply the recorded consumption when continuing such a run.
+One OS lock owns the workspace. External graph editing during an active run is
+unsupported. `status` is read-only and needs no model runtime. Active resume fails
+closed on code/runtime changes; terminal resume remains stopped. An unconfirmed
+call is recorded INTERRUPTED and stops, with its reservation still consumed.
+Recovery covers process interruption on a local filesystem, not distributed
+transactions or arbitrary storage corruption.
 
-Deterministic tests exercise failure → audited graph refinement → verified Facts,
-then compare interrupted/resumed runs against uninterrupted graph and budget
-outcomes. They cover completed audit, committed patch, completed node, the gap
-between Fact storage and obligation resolution, uncertain calls, horizon handoff,
-stage timeouts, budget exhaustion, exclusive ownership, and actual process exit.
-Real-run inputs and results stay local under the repository contents policy.
+## Migration and budgets
 
-## Module ownership and later direction
+`python -m research.legacy_import SOURCE FRESH_DESTINATION` copies and fingerprints
+the frozen legacy workspace. It reconstructs parked/superseded wrappers using
+exact recorded refinement post-images, proposal identity, and Structural PASS
+checks. Missing, ambiguous, or manually altered history fails closed. Raw source
+evidence remains under `legacy_source/`; old accepted Facts retain their bytes.
+Historical FAIL records remain failures until a fresh RefutationVerifier accepts
+a counterexample. Partial route attempts retain their feedback and consume the
+same three-attempt allowance. Already-proved historical targets retain an evidence
+route with their exact original direct lineage, alongside the canonical full-AND
+route. Accepted Fact content is never rewritten to fit a new decomposition.
 
-`research/refinement/` owns the promoted strategy/compilation/audit composition;
-experiment modules retain compatibility imports and historical evaluation harnesses.
-The formal entry does not import experiment runners or splice their paths into
-`sys.path`. Promoted mathematical prompts and schemas retain their existing text.
+The existing default limits remain 24 solver attempts, 6 applied mutation episodes,
+12 proposal-side calls, and 12 audit-side calls. Proposal calls include Strategist,
+Builder, Reviser; audit calls include Gate, Fidelity, Structural Auditor. Limits
+are checked before calls. Post-run Fact audits are counted separately, once per
+newly admitted Fact. A restart never replenishes any budget.
 
-The [natural-language v2 design](Noespire_Natural_Language_Proof_Engine_Design_v2.md)
-records an earlier plan. The [Dual-DAG design](Dual_DAG_Math_Research_Architecture.md)
-preserves the deferred direction: supporting closure → Cross-DAG Compiler → Lean.
-Neither document's old implementation-status claims override this current entry.
+For a continuation, `run --consumed FILE` imports explicit historical counters:
+`solver_attempts`, `mutation_episodes`, `builder_proposals`, `auditor_calls`.
+Legacy files alone cannot reconstruct all historical calls. The caller must use
+recorded cumulative consumption, not silently start its accounting at zero.
+
+Deterministic tests cover AND/OR state, truth admission, refutation handoff, local
+attention, all three operators, and interrupted audit/apply/Fact/Refutation steps.
+`--pause-after EVENT` exits 75 after a durable event for an actual restart probe.
+Experiment evidence remains local under the repository contents policy.
+
+## Ownership and historical direction
+
+`research/proof_graph.py` owns mathematical search state; `proof_execution.py`
+owns typed route attempts; `proof_patch.py` owns audited transactions;
+`local_attention.py` owns model packet boundaries. `research/refinement/` composes
+the existing mathematical actors. The formal entry imports no experiment runner
+and does not splice experiment paths into `sys.path`.
+
+The v3 actor methods render first-class obligations/routes; frozen legacy methods
+remain available for historical replay. N3A `fbd43b3` records the previous scaffold
+runtime. The [v2 natural-language design](Noespire_Natural_Language_Proof_Engine_Design_v2.md)
+and [Dual-DAG design](Dual_DAG_Math_Research_Architecture.md) remain historical.
+Cross-DAG compilation and Lean remain deferred.

@@ -227,7 +227,7 @@ class ProofGraph:
         return "WAITING" if "OPEN" in states else "READY"
 
     def frontiers(self):
-        """Target-reachable frontiers through viable routes, in stable ID order."""
+        """Target-reachable viable frontiers: structural first, then stable IDs."""
         seen, found = set(), []
         pending = [self.target_obligation_id]
         while pending:

@@ -10,7 +10,7 @@ model responses or process interruption; graph traversal, files, lineage, and
 validation run as real code.
 
 Slice A provides persistent obligations, routes, verified refutations, AND/OR
-readiness, and target-reachable frontiers. Nineteen deterministic tests cover
+readiness, and target-reachable frontiers. Deterministic tests cover
 identity, cycles, rejection before writes, evidence-backed falsity, independent
 route viability, Fact lineage, exhaustion, and persisted resolution checks.
 Slice B adds typed proof/counterexample/no-result execution, bounded repair,
@@ -26,8 +26,17 @@ The v3 Builder exposes existing route support_fact_ids separately from child
 support, because a Fact can support the target route without supporting a child.
 Legacy frozen prompt methods remain available; v3 methods render first-class
 obligations/routes without duplicate scaffold targets.
-Slices E–F (run/resume migration and frozen #67 import/replay) are pending;
-the existing run entry is still N3A until Slice E.
+Slice E migrates `python -m research.dynamic_run run|status|resume WORKSPACE`
+to the canonical ProofGraph, without scaffold/registry shadow writes. Thirty-three
+runtime tests cover proof/refutation recovery, automatic parent handoff, budgets,
+unknown calls, one revision, and all specified durable crash windows.
+Every new claim is a direct AND prerequisite of its parent route, even when
+also used by later claims, so a refuted cut invalidates that whole route.
+Slice F provides the one-time isolated legacy importer. It checks source/copy
+fingerprints and replays the actual legacy mechanical operators against recorded
+post-images. Already-proved legacy routes keep exact Fact lineage; incomplete
+attempts keep feedback and their remaining allowance. Missing evidence fails closed.
+The frozen #67 independent refutation and automatic handoff replay is pending.
 
 Identity canonicalizes whitespace, preserving case and the supplied context.
 It does not attempt semantic equivalence of arbitrary mathematical sentences.

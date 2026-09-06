@@ -6,22 +6,25 @@ This file governs all agent and Codex work in the Noespire repository.
 
 Before changing the natural-language graph, verification, scheduling, or recovery,
 read `docs/CURRENT_RESEARCH_CORE.md`. It is the current architecture entry.
+Read `docs/Noespire_Proof_Core_v3.md` before changing obligation identity, route
+semantics, refutation admission, local attention, or legacy migration.
 `docs/Noespire_Natural_Language_Proof_Engine_Design_v2.md` records the earlier
 natural-language design; its implementation-status paragraphs are historical.
 
 ## Current Project Goal
 
-Noespire currently develops a resumable natural-language proof core:
+Noespire currently develops a resumable AND/OR natural-language proof core:
 
 ```
-Existing problem workspace -> default NodeSolver / closed-book verifier
+Canonical ProofGraph -> deterministic frontier -> NodeSolver / closed-book verifier
     -> failure or local horizon -> Strategist -> Gate -> BoundaryAware Builder
     -> fidelity / mechanical validation -> independent structural audit
     -> at most one existing revision -> apply local patch -> continue proving
 ```
 
 Use `research.dynamic_run` for new bounded research runs and same-run recovery.
-Keep accepted Facts, OPEN obligations, and run-control checkpoints distinct.
+Keep accepted Facts, verified Refutations, obligation truth, and run control distinct.
+ProofGraph is canonical; migrate legacy scaffolds only into an isolated copy.
 Checkpoint data is execution metadata, never additional mathematical memory.
 All new experiments use GPT-5.6 Sol in fresh Codex sessions by default.
 
