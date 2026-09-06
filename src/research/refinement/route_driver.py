@@ -4,7 +4,8 @@ import json
 import subprocess
 
 from ..agents import StructuralAuditor
-from ..proof_patch import GraphPatch
+from ..proof_patch import GraphPatch, graph_digest
+from ..local_attention import strategist_packet
 from ..run_storage import read_json, write_json
 from .boundary_builder import BoundaryAwarePatchBuilder
 from .patch_builder import PATCH_SCHEMA, FidelityAuditor, parse_patch_build_output
@@ -24,7 +25,7 @@ Refine its 1-4 candidate claims into self-contained propositions with explicit
 domains, quantifiers and definitions. All inherit exactly the parent's context.
 Return new_nodes with local aliases, goals, sibling depends_on, and premise_fact_ids.
 The compiler makes each child one obligation plus a route requiring its siblings;
-the sink children jointly become prerequisites of a new route to the SAME target.
+ALL new claims jointly become prerequisites of a new route to the SAME target.
 Use top-level support_fact_ids for accepted boundary Facts needed directly by
 that target route; child premise_fact_ids are support of that child's route.
 Only boundary_facts IDs may be cited, only where mathematically needed. Do not
@@ -45,6 +46,30 @@ def parse_route_build(response):
 
 def run_route_refinement(graph, packet, sketch, *, invoker_for, directory, event=None):
     """Durable stage artifacts retain a frozen packet and one compilation decision."""
+    inputs = json.loads(json.dumps(dict(packet=packet, sketch=asdict(sketch)), ensure_ascii=False))
+    manifest_path = directory / "inputs.json"
+    if manifest_path.exists():
+        manifest = read_json(manifest_path)
+        if inputs != manifest["inputs"]:
+            raise ValueError("refinement inputs changed across replay")
+        if graph_digest(graph) != manifest["base_digest"]:
+            applied = read_json(graph.path)["applied_patches"]
+            completed_patch = False
+            for path in (directory / "v1.json", directory / "v2.json"):
+                if path.exists():
+                    previous = GraphPatch.from_dict(read_json(path))
+                    completed_patch |= (previous.patch_id == previous.identity() and previous.patch_id in applied
+                                        and previous.base_digest == manifest["base_digest"])
+            if not completed_patch:
+                raise ValueError("refinement graph inputs changed before apply")
+    else:
+        if list(directory.glob("*.json")):
+            raise ValueError("refinement outputs lack frozen inputs")
+        canonical = strategist_packet(graph, packet["obligation"]["obligation_id"])
+        if inputs["packet"] != json.loads(json.dumps(canonical)):
+            raise ValueError("refinement inputs are not the canonical local packet")
+        write_json(manifest_path, dict(inputs=inputs, base_digest=graph_digest(graph)))
+
     def saved(name, call):
         path = directory / (name + ".json")
         if not path.exists():

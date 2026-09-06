@@ -43,16 +43,15 @@ class GraphPatch:
         obligations = tuple(ProofObligation.create(graph.problem_id, target.context, n["goal"]) for n in new_nodes)
         mapping = dict(zip(aliases, (o.obligation_id for o in obligations)))
         routes = []
-        consumed, support = set(), set(support_fact_ids)
+        support = set(support_fact_ids)
         for node, obligation in zip(new_nodes, obligations):
             if set(node) != {"node_id", "goal", "depends_on", "premise_fact_ids"}:
                 raise ValueError("patch cannot carry truth or runtime fields")
             if any(key not in mapping for key in node["depends_on"]):
                 raise ValueError("dependencies must be patch sibling aliases")
-            consumed.update(node["depends_on"])
             routes.append(ProofRoute.create(obligation.obligation_id,
                 [mapping[key] for key in node["depends_on"]], node["premise_fact_ids"]))
-        routes.append(ProofRoute.create(target_id, [mapping[key] for key in aliases if key not in consumed],
+        routes.append(ProofRoute.create(target_id, [mapping[key] for key in aliases],
                                          support, kind=KINDS[operator]))
         patch = cls("", graph_digest(graph), target_id, operator, obligations, tuple(routes))
         patch_id = patch.identity()
@@ -85,8 +84,12 @@ class GraphPatch:
             raise ValueError("patch duplicates a goal or restates its own target")
         if any(o.truth_state != "OPEN" or o.context != target.context for o in self.obligations):
             raise ValueError("patch cannot change truth or assumptions")
+        existing = {o.obligation_id: o for o in graph.obligations()}
+        if any(o.obligation_id in existing and existing[o.obligation_id].truth_state != "OPEN" for o in self.obligations):
+            raise ValueError("claim is already resolved; respect its refutation or cite its boundary Fact")
         parents = [r for r in self.routes if r.target_obligation_id == target.obligation_id]
-        if len(parents) != 1 or parents[0].kind != KINDS[self.operator]:
+        if (len(parents) != 1 or parents[0].kind != KINDS[self.operator]
+                or set(parents[0].prerequisite_obligation_ids) != keys):
             raise ValueError("patch needs one route for its selected operator")
         for route in self.routes:
             if (route.target_obligation_id not in keys | {target.obligation_id}

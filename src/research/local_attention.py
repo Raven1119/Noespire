@@ -26,6 +26,8 @@ def _packet(data):
 
 
 def worker_packet(graph, route_id, attempt_history):
+    if not any(f.kind == "PROOF" and f.route_id == route_id for f in graph.frontiers()):
+        raise ValueError("Worker route is not a target-reachable proof frontier")
     route = graph.route(route_id)
     obligation = graph.obligation(route.target_obligation_id)
     history = _bounded(attempt_history, 3, "route attempts")
@@ -37,6 +39,8 @@ def worker_packet(graph, route_id, attempt_history):
 
 
 def strategist_packet(graph, obligation_id):
+    if not any(f.kind == "STRUCTURAL" and f.obligation_id == obligation_id for f in graph.frontiers()):
+        raise ValueError("obligation is not a target-reachable structural frontier")
     obligation = graph.obligation(obligation_id)
     if obligation.truth_state != "OPEN":
         raise ValueError("only OPEN obligations can be structural frontiers")

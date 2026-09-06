@@ -29,6 +29,9 @@ def test_failed_route_packet_contains_only_direct_relations_and_verified_boundar
     assert packet["parent_consumers"][0]["goal"] == "target"
     assert "UNRELATED" not in json.dumps(packet)
     assert "SECRET_PROOF" not in json.dumps(packet)
+    import pytest
+    with pytest.raises(ValueError, match="reachable"):
+        strategist_packet(graph, unrelated.obligation_id)
 
 
 def test_packet_limit_and_unrelated_worker_history_fail_closed(tmp_path):
