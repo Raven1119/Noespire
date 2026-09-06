@@ -1,10 +1,23 @@
-﻿# Current research core - v3
+# Current research core - v3
 
 The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,
 Global Persistence**. The public entry is `research.dynamic_run.start_run`,
 `read_status`, and `resume_run`, also available as `python -m research.dynamic_run`
 and `noespire-research`. Runs require a canonical `proof_graph.json` workspace.
-Top-level architecture generation and frontend integration remain separate.
+Top-level architecture generation remains separate.
+
+## Freeze state
+
+**Proof Core v3: FROZEN** at `0b7e5418f87407b1a4e0e0141d2be7f7fc755d64`
+(annotated tag `noespire-proof-core-v3`). Core mechanism development is
+**COMPLETE**; no new operator, scheduler, or search-policy work without an
+explicit architecture decision. Product wiring is **CONNECTED** on branch
+`v3-product-wiring`: fresh problems execute through the v3 dynamic core via
+`application/proof_execution.py` (`DYNAMIC_PROOF_V3`), the workspace read
+model projects obligations/routes/refutations/patches, and the frontend
+renders the AND/OR route tree verbatim. Legacy direct and static-scaffold
+workspaces remain readable and executable unchanged. Next phase: evaluation
+and UX hardening.
 
 ## Mathematical and execution state
 

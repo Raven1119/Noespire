@@ -54,7 +54,9 @@ structural approval never resolve an obligation. Unknown/corrupt referenced
 truth fails closed. Model execution remains fresh Codex/Sol and closed-book.
 
 Historical workspaces remain untouched; runtime evidence stays under ignored
-`workspaces/proof_core_v3/`. No automatic push or product integration is planned.
+`workspaces/proof_core_v3/`. Product integration landed later on branch
+`v3-product-wiring` (application execution mode `DYNAMIC_PROOF_V3`); see
+[Current Research Core](CURRENT_RESEARCH_CORE.md) for the freeze state.
 
 Validation: 717 product tests passed, 6 skipped, 42 subtests passed. The only
 warning was the existing Starlette/httpx deprecation. Deterministic crash tests
