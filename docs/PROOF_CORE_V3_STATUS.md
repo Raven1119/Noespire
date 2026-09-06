@@ -10,11 +10,14 @@ model responses or process interruption; graph traversal, files, lineage, and
 validation run as real code.
 
 Slice A provides persistent obligations, routes, verified refutations, AND/OR
-readiness, and target-reachable frontiers. Fourteen deterministic tests cover
+readiness, and target-reachable frontiers. Nineteen deterministic tests cover
 identity, cycles, rejection before writes, evidence-backed falsity, independent
 route viability, Fact lineage, exhaustion, and persisted resolution checks.
-Slices B–F (execution, operators, bounded attention, recovery, migration/replay)
-are pending; the existing run entry is still N3A until Slice E.
+Slice B adds typed proof/counterexample/no-result execution, bounded repair,
+independent RefutationVerifier admission, exact route lineage, and typed
+timeout/error records. Replayed attempts must match canonical truth and IDs.
+Slices C–F (operators, bounded attention, recovery, migration/replay) are pending;
+the existing run entry is still N3A until Slice E.
 
 Identity canonicalizes whitespace, preserving case and the supplied context.
 It does not attempt semantic equivalence of arbitrary mathematical sentences.

@@ -29,6 +29,10 @@ def solve_route(solver, graph, route_id, author, *, event=None):
     progress = read_json(path) if path.exists() else initial
     if any(progress[k] != initial[k] for k in ("obligation_id", "route_id", "max_attempts")):
         raise ValueError("route solver resume identity/configuration mismatch")
+    ids = progress["attempt_ids"]
+    if len(ids) != len(set(ids)) or len(ids) > progress["max_attempts"] or any(
+            not k.startswith("attempt-") or not k[8:].isdigit() for k in ids):
+        raise ValueError("invalid replay attempt identity")
     attempts = graph.root / "attempts"
     history = []
     for index in range(progress["max_attempts"]):
@@ -46,6 +50,16 @@ def solve_route(solver, graph, route_id, author, *, event=None):
         attempt = read_json(artifact) if artifact.exists() else dict(
             attempt_id=key, obligation_id=obligation.obligation_id, route_id=route_id,
             outcome="RUNNING")
+        if (attempt.get("attempt_id"), attempt.get("obligation_id"), attempt.get("route_id")) != (
+                key, obligation.obligation_id, route_id):
+            raise ValueError("replay attempt identity mismatch")
+        if attempt["outcome"] == "FACT_ADMITTED" and (
+                obligation.truth_state != "DISCHARGED" or obligation.resolved_fact_id != attempt.get("fact_id")
+                or obligation.resolved_route_id != route_id):
+            raise ValueError("attempt disagrees with canonical Fact resolution")
+        if attempt["outcome"] == "REFUTATION_ADMITTED" and (
+                obligation.truth_state != "REFUTED" or obligation.refutation_id != attempt.get("refutation_id")):
+            raise ValueError("attempt disagrees with canonical refutation resolution")
         write_json(artifact, attempt)
         try:
             if attempt["outcome"] == "RUNNING":
@@ -66,8 +80,9 @@ def solve_route(solver, graph, route_id, author, *, event=None):
                         raise ValueError("unsupported candidate outcome")
                     if "verification" not in attempt:
                         if is_counterexample:
-                            from .refutation import RefutationVerifier
-                            verification = RefutationVerifier(solver.verifier.codex).verify(obligation, candidate["counterexample"])
+                            if solver.refutation_verifier is None:
+                                raise ValueError("route counterexample execution requires a RefutationVerifier")
+                            verification = solver.refutation_verifier.verify(obligation, candidate["counterexample"])
                         elif (_normalize(candidate["statement"]) != obligation.statement
                                 or set(candidate["predecessors"]) != {f.fact_id for f in predecessors}):
                             verification = dict(accepted=False, reason="candidate statement or selected-route lineage mismatch")
@@ -120,6 +135,8 @@ def solve_route(solver, graph, route_id, author, *, event=None):
             break  # Existing horizon handoff: do not spend another local attempt.
     if obligation.truth_state == "DISCHARGED":
         return NodeSolveOutcome("SOLVED", FactGraph(graph.root).get_fact(obligation.resolved_fact_id), (), None)
+    if obligation.truth_state == "REFUTED":
+        return NodeSolveOutcome("REFUTED", None, (), "already independently refuted")
     graph.exhaust_route(route_id, progress["attempt_ids"], history[-1]["reason"])
     return NodeSolveOutcome("HORIZON" if history[-1]["outcome"] == "TIMEOUT" else "BLOCKED",
                             None, tuple(progress["attempt_ids"]), history[-1]["reason"])

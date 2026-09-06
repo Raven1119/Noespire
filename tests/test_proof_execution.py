@@ -2,6 +2,7 @@ from research.agents import ResearchWorker
 from research.closed_book import ClosedBookVerifier
 from research.node_solver import NodeSolver, NodeSolverConfig
 from research.proof_graph import ProofGraph, ProofObligation, ProofRoute
+from research.refutation import RefutationVerifier
 import pytest
 
 
@@ -49,6 +50,26 @@ def test_route_solver_repairs_proof_and_admits_exact_contextual_fact(tmp_path):
     assert not codex.responses
 
 
+@pytest.mark.parametrize("corruption", ["identity", "fact", "refutation"])
+def test_replayed_attempt_cannot_forge_a_result_for_an_open_obligation(tmp_path, corruption):
+    from research.run_storage import write_json
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    progress = tmp_path / "step/solver.json"
+    write_json(progress, dict(obligation_id=target.obligation_id, route_id=route.route_id,
+        max_attempts=1, attempt_ids=["attempt-000001"], active_attempt_id="attempt-000001"))
+    write_json(tmp_path / "attempts/attempt-000001.json", dict(
+        attempt_id="attempt-999999" if corruption == "identity" else "attempt-000001",
+        obligation_id=target.obligation_id, route_id=route.route_id,
+        outcome="REFUTATION_ADMITTED" if corruption == "refutation" else "FACT_ADMITTED",
+        fact_id="not-a-fact", refutation_id="not-a-refutation", verification={"reason": "claimed"}))
+    solver = NodeSolver(worker=ResearchWorker(ScriptedCodex([])), verifier=ClosedBookVerifier(ScriptedCodex([])),
+                        progress_path=progress)
+    with pytest.raises(ValueError, match="identity|canonical"):
+        solver.solve_route(graph=graph, route_id=route.route_id, author="test")
+
+
 @pytest.mark.parametrize("failure,expected", [("none", "BLOCKED"), ("timeout", "HORIZON"), ("error", "ERROR")])
 def test_no_proof_and_runtime_failures_never_refute(tmp_path, failure, expected):
     import subprocess
@@ -62,7 +83,8 @@ def test_no_proof_and_runtime_failures_never_refute(tmp_path, failure, expected)
     elif failure == "error":
         response = RuntimeError("transport error")
     codex = ScriptedCodex([("research_worker", response)])
-    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex)).solve_route(
+    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        refutation_verifier=RefutationVerifier(codex)).solve_route(
         graph=graph, route_id=route.route_id, author="test")
     assert result.status == expected
     assert graph.obligation(target.obligation_id).truth_state == "OPEN"
@@ -86,7 +108,8 @@ def test_counterexample_requires_independent_verification_and_only_refutes_child
         ("refutation_verifier", dict(accepted=accepted, assumptions_satisfied=True,
                                     conclusion_falsified=accepted, closed_book_clean=True, reason="1 is odd")),
     ])
-    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex)).solve_route(
+    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        refutation_verifier=RefutationVerifier(codex)).solve_route(
         graph=graph, route_id=direct.route_id, author="test")
     assert result.status == ("REFUTED" if accepted else "BLOCKED")
     graph = ProofGraph(tmp_path)

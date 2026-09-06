@@ -15,7 +15,7 @@ immediately as ERROR — system errors do not consume the remaining budget.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Literal
 from pathlib import Path
 
 from .run_storage import read_json, write_json
@@ -44,7 +44,7 @@ class NodeSolverConfig:
 
 @dataclass(frozen=True)
 class NodeSolveOutcome:
-    status: str  # "SOLVED" | "BLOCKED" | "ERROR"
+    status: Literal["SOLVED", "BLOCKED", "ERROR", "REFUTED", "HORIZON"]
     fact: Optional[Fact]
     attempt_ids: Tuple[str, ...]
     reason: Optional[str]
@@ -62,11 +62,13 @@ class NodeSolver:
         verifier: Verifier,
         config: NodeSolverConfig = NodeSolverConfig(),
         progress_path: Optional[Path] = None,
+        refutation_verifier=None,
     ) -> None:
         self.worker = worker
         self.verifier = verifier
         self.config = config
         self.progress_path = progress_path
+        self.refutation_verifier = refutation_verifier
 
     def solve_route(self, *, graph, route_id, author, event=None):
         from .proof_execution import solve_route
