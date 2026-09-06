@@ -13,6 +13,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from application.execution import ExecutionService
+from application.proof_execution import STATIC_SCAFFOLD
 from application.workspace_read_model import build_problem_list, build_read_model
 
 from research.obligation import ObligationStatus
@@ -70,6 +71,7 @@ class ScaffoldReadModelTestBase(unittest.TestCase):
             architect_factory=lambda: StubArchitect(
                 [linear_proposal(self.statement)]
             ),
+            fresh_problem_mode=STATIC_SCAFFOLD,
         )
         service.start_attempt(problem_id)
         assert wait_for(lambda: not service.is_running(problem_id))

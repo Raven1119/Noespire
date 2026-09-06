@@ -939,3 +939,95 @@ body {
   color: hsl(var(--accent));
   text-decoration: none;
 }
+
+/* ---------- v3 dynamic proof plan (AND/OR route tree) ---------- */
+
+.proof-plan__list .proof-plan__list,
+.proof-plan__routes {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0 0 0 18px;
+  border-left: 1px solid hsl(var(--border-subtle));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 100%;
+}
+
+.proof-plan__item {
+  flex-wrap: wrap;
+}
+
+.proof-plan__route-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: hsl(var(--text-tertiary));
+}
+
+.proof-plan__route--exhausted .proof-plan__route-label,
+.proof-plan__route--impossible .proof-plan__route-label {
+  color: hsl(var(--status-open));
+}
+
+.proof-plan__route-reason {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: hsl(var(--text-tertiary));
+}
+
+.proof-plan__frontier {
+  flex: none;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: hsl(var(--text-secondary));
+}
+
+/* REFUTED uses the amber failure accent; OPEN stays muted. */
+.proof-plan__item--refuted .proof-plan__glyph,
+.proof-plan__state--refuted {
+  color: hsl(var(--status-open));
+}
+
+.proof-plan__refinements {
+  margin-top: 12px;
+  border-top: 1px solid hsl(var(--border-subtle));
+  padding-top: 8px;
+}
+
+.proof-plan__refinements-heading {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(var(--text-tertiary));
+  margin: 0 0 6px;
+}
+
+.proof-plan__refinements-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.proof-plan__refinement-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: hsl(var(--text-secondary));
+}
+
+.proof-plan__refinement-goals {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: hsl(var(--text-secondary));
+}
+
+.failure-panel--stopped,
+.failure-panel--interrupted {
+  max-width: 44rem;
+  margin: 0 0 16px;
+  border-left-color: hsl(var(--status-open));
+}

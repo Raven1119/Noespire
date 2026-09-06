@@ -42,6 +42,11 @@ export function makeAttempt(overrides: Partial<Attempt>): Attempt {
     finished_at: null,
     obligation_id: null,
     scaffold_node_id: null,
+    outcome: null,
+    route_id: null,
+    obligation_goal: null,
+    fact_id: null,
+    refutation_id: null,
     ...overrides,
   };
 }
@@ -67,6 +72,10 @@ export function makeModel(overrides: Partial<WorkspaceReadModel>): WorkspaceRead
     target_fact: null,
     supporting_closure: [],
     proof_structure: null,
+    dynamic: null,
+    proof_graph: null,
+    refutations: [],
+    patches: [],
     last_execution_failure: null,
     running_phase_hint: null,
     ...overrides,

@@ -31,6 +31,10 @@ function readModel(overrides: Partial<WorkspaceReadModel>): WorkspaceReadModel {
     target_fact: null,
     supporting_closure: [],
     proof_structure: null,
+    dynamic: null,
+    proof_graph: null,
+    refutations: [],
+    patches: [],
     last_execution_failure: null,
     running_phase_hint: null,
     ...overrides,
@@ -49,6 +53,11 @@ function attempt(overrides: Partial<Attempt>): Attempt {
     finished_at: null,
     obligation_id: "root:p-1",
     scaffold_node_id: null,
+    outcome: null,
+    route_id: null,
+    obligation_goal: null,
+    fact_id: null,
+    refutation_id: null,
     ...overrides,
   };
 }

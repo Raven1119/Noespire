@@ -18,6 +18,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 from application.execution import ExecutionService
+from application.proof_execution import STATIC_SCAFFOLD
 from application.http import create_app
 from application.workspace_read_model import build_read_model
 
@@ -77,6 +78,7 @@ class ScaffoldExecutionTestBase(unittest.TestCase):
             worker_factory=lambda: worker,
             verifier_factory=lambda: verifier,
             architect_factory=lambda: architect,
+            fresh_problem_mode=STATIC_SCAFFOLD,
         )
 
     def _client(self, service: ExecutionService) -> TestClient:
@@ -325,6 +327,7 @@ class ProductRepairAttributionTests(ScaffoldExecutionTestBase):
                 [linear_proposal("Target theorem REP.")]
             ),
             max_attempts_per_obligation=2,
+            fresh_problem_mode=STATIC_SCAFFOLD,
         )
         worker.service = service
         worker.problem_id = "p-rep"
@@ -541,7 +544,7 @@ class ScaffoldRecoveryTests(ScaffoldExecutionTestBase):
 
     def _service_recovery(self) -> ExecutionService:
         # Recovery never invokes worker/verifier/architect factories.
-        return ExecutionService(self.builder.root)
+        return ExecutionService(self.builder.root, fresh_problem_mode=STATIC_SCAFFOLD)
 
     def test_running_scaffold_obligation_recovers_interrupted_and_is_idempotent(self) -> None:
         problem_dir = self.builder.add_problem("p-j1", "Target J1.")

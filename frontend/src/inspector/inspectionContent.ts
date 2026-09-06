@@ -63,6 +63,18 @@ export function drawerContent(
         { label: "attempt_id", value: attempt.attempt_id, mono: true },
         { label: "verdict", value: attempt.verdict },
         { label: "failure_class", value: attempt.failure_class ?? "—" },
+      ];
+      if (attempt.outcome !== null) {
+        // v3 attempts: the raw core outcome and its graph attribution.
+        fields.push(
+          { label: "outcome", value: attempt.outcome },
+          { label: "obligation_id", value: attempt.obligation_id ?? "—", mono: true },
+          { label: "route_id", value: attempt.route_id ?? "—", mono: true },
+          { label: "fact_id", value: attempt.fact_id ?? "—", mono: true },
+          { label: "refutation_id", value: attempt.refutation_id ?? "—", mono: true }
+        );
+      }
+      fields.push(
         {
           label: "candidate artifact",
           value:
@@ -78,7 +90,7 @@ export function drawerContent(
         { label: "error", value: attempt.error ?? "—" },
         { label: "started_at", value: attempt.started_at ?? "—", mono: true },
         { label: "finished_at", value: attempt.finished_at ?? "—", mono: true },
-      ];
+      );
       if (attempt.verifier_called !== undefined) {
         fields.push({
           label: "verifier_called",

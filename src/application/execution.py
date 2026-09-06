@@ -12,7 +12,11 @@ execution result — never by text-matching evidence — and appends
 The execution mode is detected per workspace (proof_execution.py): legacy
 root-obligation workspaces run ``solve_problem_once`` exactly as before;
 scaffold-mode workspaces run the static multi-node path (Architect once on
-first start, ``solve_scaffold`` resume afterwards).
+first start, ``solve_scaffold`` resume afterwards); v3 workspaces (and fresh
+problems) run the Proof Core v3 dynamic loop via ``start_run`` /
+``resume_run`` — the core keeps its own write-ahead evidence, so the v3
+branch adds no per-attempt log records and startup recovery skips v3
+workspaces (core resume owns their recovery).
 
 Attempt correlation is snapshot-plus-attribution: the attempt-id set is
 captured before the execution, and each adapter invocation attributes the
@@ -57,10 +61,13 @@ from .codex_isolation import IsolatedCodexInvoker
 from .problem_index import EXECUTION_LOG_NAME, ProblemIndex, read_execution_events
 from .proof_execution import (
     ARCHITECT_STAGE_STATUSES,
+    DYNAMIC_PROOF_V3,
     LEGACY_DIRECT,
     STATIC_SCAFFOLD,
     detect_execution_mode,
     is_problem_solved,
+    read_run_state,
+    run_dynamic_execution,
     run_product_execution,
 )
 
@@ -71,6 +78,20 @@ class AlreadyRunningError(RuntimeError):
 
 class AlreadySolvedError(RuntimeError):
     """The root obligation is DISCHARGED; 202 would lie (HTTP 409, spec §6)."""
+
+
+class RunStoppedError(RuntimeError):
+    """The v3 run is terminally STOPPED and cannot be resumed (HTTP 409).
+
+    The core contract is one run per workspace: ``start_run`` refuses an
+    existing run and ``resume_run`` is a read-only no-op on STOPPED. A
+    stopped-but-unsolved workspace can only be continued through Revise &
+    Fork. Carries the core ``stop_reason`` for an honest UI message.
+    """
+
+    def __init__(self, problem_id: str, stop_reason: Optional[str]) -> None:
+        super().__init__(problem_id)
+        self.stop_reason = stop_reason
 
 
 def _utc_now() -> str:
@@ -284,6 +305,8 @@ class ExecutionService:
         verifier_factory: Optional[Callable[[], object]] = None,
         architect_factory: Optional[Callable[[], object]] = None,
         max_attempts_per_obligation: int = 3,
+        dynamic_invoker_factory: Optional[Callable[[], object]] = None,
+        fresh_problem_mode: str = DYNAMIC_PROOF_V3,
     ) -> None:
         self.workspaces_root = Path(workspaces_root)
         self.worker_factory = worker_factory or (
@@ -295,6 +318,13 @@ class ExecutionService:
         self.architect_factory = architect_factory or (
             lambda: ScaffoldArchitect(self._isolated_invoker())
         )
+        # v3 DI seam: None lets the core build its real Docker-isolated
+        # SolInvoker per invocation; tests inject one scripted invoker.
+        self.dynamic_invoker_factory = dynamic_invoker_factory
+        # Product policy (v3 wiring): workspaces with no persisted mode
+        # marker execute through the v3 dynamic core. Tests for the older
+        # modes pin this to STATIC_SCAFFOLD / seed legacy markers.
+        self._fresh_problem_mode = fresh_problem_mode
         # Product repair budget (N1.15): conservative and bounded; scaffold-mode
         # executions only — the legacy direct path stays one-shot regardless.
         self._solver_config = NodeSolverConfig(max_attempts_per_obligation)
@@ -324,9 +354,15 @@ class ExecutionService:
         with self._lock:
             if problem_id in self._active:
                 raise AlreadyRunningError(problem_id)
-            mode = detect_execution_mode(problem_dir, problem_id)
+            mode = detect_execution_mode(
+                problem_dir, problem_id, fresh_default=self._fresh_problem_mode
+            )
             if is_problem_solved(problem_dir, problem_id, mode):
                 raise AlreadySolvedError(problem_id)
+            if mode == DYNAMIC_PROOF_V3:
+                state = read_run_state(problem_dir)
+                if state is not None and state["phase"] == "STOPPED":
+                    raise RunStoppedError(problem_id, state.get("stop_reason"))
             execution_id = uuid4().hex
             self._active[problem_id] = _ActiveExecution(
                 execution_id=execution_id,
@@ -358,6 +394,31 @@ class ExecutionService:
         if active is None:
             return None
         problem_dir = self.workspaces_root / problem_id
+        if (
+            detect_execution_mode(
+                problem_dir, problem_id, fresh_default=self._fresh_problem_mode
+            )
+            == DYNAMIC_PROOF_V3
+        ):
+            # The run's own progress journal is authoritative: the active
+            # attempt of the current SOLVE step. None in any other phase or
+            # before the first solver.json write; never a guess.
+            state = read_run_state(problem_dir)
+            if state is None or state["phase"] != "SOLVE":
+                return None
+            progress = (
+                problem_dir
+                / "dynamic_run"
+                / "steps"
+                / f"{state['step']:06d}"
+                / "solver.json"
+            )
+            try:
+                return json.loads(progress.read_text(encoding="utf-8")).get(
+                    "active_attempt_id"
+                )
+            except (OSError, json.JSONDecodeError):
+                return None
         new_ids = sorted(_attempt_ids(problem_dir) - set(active.before_attempt_ids))
         running = [
             attempt_id
@@ -381,7 +442,24 @@ class ExecutionService:
             # ALL factory/adapter construction happens inside the try: a
             # raising factory (e.g. Codex CLI unavailable) must still land in
             # the finally below — the claim release is unconditional.
-            mode = detect_execution_mode(problem_dir, problem_id)
+            mode = detect_execution_mode(
+                problem_dir, problem_id, fresh_default=self._fresh_problem_mode
+            )
+            if mode == DYNAMIC_PROOF_V3:
+                # The v3 core keeps its own write-ahead evidence
+                # (dynamic_run/, attempts/, proof_graph.json); the
+                # application adds no per-attempt log records here.
+                invoker = (
+                    self.dynamic_invoker_factory()
+                    if self.dynamic_invoker_factory is not None
+                    else None
+                )
+                run_dynamic_execution(
+                    problem_dir=problem_dir,
+                    problem=ProblemSpec(problem_id, statement),
+                    invoker=invoker,
+                )
+                return
             adapter = _LoggingVerifier(
                 self.verifier_factory(),
                 self,
@@ -418,7 +496,24 @@ class ExecutionService:
             )
         except Exception as error:
             new_ids = sorted(_attempt_ids(problem_dir) - set(before))
-            if mode == STATIC_SCAFFOLD and new_ids:
+            if mode == DYNAMIC_PROOF_V3:
+                # Execution-level failure only; core attempt files keep their
+                # own outcome evidence and are never reinterpreted here.
+                self._append_event(
+                    problem_dir,
+                    {
+                        "kind": "ATTEMPT_FINISHED",
+                        "execution_id": execution_id,
+                        "problem_id": problem_id,
+                        "attempt_id": None,
+                        "started_at": started_at,
+                        "finished_at": _utc_now(),
+                        "outcome_stage": "RUNTIME_ERROR",
+                        "verifier_called": False,
+                        "error": f"{type(error).__name__}: {error}",
+                    },
+                )
+            elif mode == STATIC_SCAFFOLD and new_ids:
                 # The core already persisted verdict ERROR for the in-flight
                 # attempt; finalize every new attempt per the per-attempt rule.
                 self._finish_new_attempts(
@@ -595,6 +690,19 @@ class ExecutionService:
             if self.is_running(entry.problem_id):
                 continue
             problem_dir = index.root / entry.problem_id
+            if (
+                detect_execution_mode(
+                    problem_dir,
+                    entry.problem_id,
+                    fresh_default=self._fresh_problem_mode,
+                )
+                == DYNAMIC_PROOF_V3
+            ):
+                # v3 workspaces carry no legacy registry/verdict evidence;
+                # the core's resume path owns their recovery. Skipping also
+                # keeps the legacy verdict readers below away from the v3
+                # outcome-schema attempt files (they would KeyError).
+                continue
             self._recover_running_obligation(entry.problem_id, problem_dir)
             self._recover_residual_running_attempts(entry.problem_id, problem_dir)
             self._complete_missing_finish_records(entry.problem_id, problem_dir)

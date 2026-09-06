@@ -117,6 +117,13 @@ export function WorkspaceShell() {
       } else if (err instanceof ApiError && err.status === 409 && err.code === "already_solved") {
         // Single refetch to show the solved state; no polling follows.
         await refresh();
+      } else if (err instanceof ApiError && err.status === 409 && err.code === "run_stopped") {
+        // A v3 run is terminally stopped (core contract: one run per
+        // workspace). Refetch to surface the stop-reason panel.
+        await refresh();
+        setStartError(
+          "This run has stopped and cannot be retried. Revise & Fork starts a fresh lineage."
+        );
       } else if (err instanceof ApiError && err.status === 404) {
         setStartError(
           "The server does not know this problem (404). Nothing is ever deleted — it may never have existed."

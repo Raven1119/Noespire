@@ -19,6 +19,7 @@ from unittest import mock
 from fastapi.testclient import TestClient
 
 from application.execution import ExecutionService
+from application.proof_execution import STATIC_SCAFFOLD
 from application.http import create_app
 
 from research.fact import CandidateFact
@@ -501,7 +502,7 @@ class DefaultFactoryIsolationTests(unittest.TestCase):
         from application.codex_isolation import IsolationUnavailableError
 
         problem_dir = self.builder.add_problem("p-iso", "Isolated theorem.")
-        service = ExecutionService(self.builder.root)
+        service = ExecutionService(self.builder.root, fresh_problem_mode=STATIC_SCAFFOLD)
 
         def raising_invoker(**kwargs):
             raise IsolationUnavailableError("docker daemon unavailable")

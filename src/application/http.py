@@ -16,7 +16,12 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from .execution import AlreadyRunningError, AlreadySolvedError, ExecutionService
+from .execution import (
+    AlreadyRunningError,
+    AlreadySolvedError,
+    ExecutionService,
+    RunStoppedError,
+)
 from .problem_index import ProblemIndex
 from .workspace_read_model import build_problem_list, build_read_model
 
@@ -129,6 +134,11 @@ def create_app(
             return JSONResponse(status_code=409, content={"error": "already_solved"})
         except AlreadyRunningError:
             return JSONResponse(status_code=409, content={"error": "already_running"})
+        except RunStoppedError as error:
+            return JSONResponse(
+                status_code=409,
+                content={"error": "run_stopped", "stop_reason": error.stop_reason},
+            )
         # No attempt id in the response (freeze ruling 3): the attempt file
         # only exists once execution starts; the UI polls the read model.
         return JSONResponse(status_code=202, content={"status": "accepted"})

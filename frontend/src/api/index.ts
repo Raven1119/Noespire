@@ -76,7 +76,8 @@ export function getProblem(problemId: string): Promise<WorkspaceReadModel> {
 /**
  * POST /api/problems/{id}/attempts (spec §6). 202 on success; failure modes
  * are distinguishable via ApiError: 409 + code "already_running" /
- * "already_solved", 404 unknown id. Retry is deliberately not its own verb.
+ * "already_solved" / "run_stopped" (a terminal v3 run), 404 unknown id.
+ * Retry is deliberately not its own verb.
  */
 export function startAttempt(problemId: string): Promise<StartAttemptResponse> {
   return request<StartAttemptResponse>(
