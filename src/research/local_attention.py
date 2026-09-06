@@ -1,5 +1,6 @@
 """Code-enforced one-relation neighborhoods; no global state is a model packet."""
 from dataclasses import asdict
+from hashlib import sha256
 import json
 
 from .graph import FactGraph
@@ -68,6 +69,22 @@ def strategist_packet(graph, obligation_id):
     attempts = [read_json(graph.root / "attempts" / (k + ".json")) for k in failure_ids]
     refutations = [asdict(RefutationStore(graph.root).get(c.refutation_id)) for c in children if c.truth_state == "REFUTED"]
     history = []
+    imported = graph.root / "legacy_import.json"
+    if imported.exists():
+        evidence = read_json(imported)["route_evidence"]
+        for route in routes:
+            if route.route_id not in evidence:
+                continue
+            record = evidence[route.route_id]
+            source = (graph.root / "legacy_source").resolve()
+            path = (source / record["path"]).resolve()
+            if (source not in path.parents or record["target_obligation_id"] != obligation_id
+                    or sha256(path.read_bytes()).hexdigest() != record["sha256"]):
+                raise ValueError("legacy local refinement provenance changed")
+            prior = read_json(path)
+            history.append(dict(patch_id=prior["proposal"]["proposal_id"],
+                                operator=prior["context"]["allowed_operation"],
+                                claims=[c["goal"] for c in prior["proposal"]["children"]]))
     for path in sorted((graph.root / "graph_patches").glob("*/approved.json")):
         record = read_json(path)
         patch = record["patch"]
