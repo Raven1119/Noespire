@@ -68,6 +68,10 @@ class NodeSolver:
         self.config = config
         self.progress_path = progress_path
 
+    def solve_route(self, *, graph, route_id, author, event=None):
+        from .proof_execution import solve_route
+        return solve_route(self, graph, route_id, author, event=event)
+
     def solve_obligation(
         self,
         *,

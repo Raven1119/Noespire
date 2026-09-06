@@ -1,9 +1,32 @@
 """Verified counterexamples, kept outside the Research Fact DAG."""
 from dataclasses import asdict, dataclass
 from pathlib import Path
+import json
 
 from .proof_graph import ProofObligation, _identity
 from .run_storage import read_json, write_json
+
+
+class RefutationVerifier:
+    """Independent closed-book check of Gamma and the negation of the goal."""
+    def __init__(self, codex):
+        self.codex = codex
+
+    def verify(self, obligation, counterexample):
+        checks = ("accepted", "assumptions_satisfied", "conclusion_falsified", "closed_book_clean")
+        schema = {"type": "object", "additionalProperties": False,
+                  "properties": {**{k: {"type": "boolean"} for k in checks}, "reason": {"type": "string"}},
+                  "required": [*checks, "reason"]}
+        prompt = """You are an independent fresh Codex RefutationVerifier.
+Decide whether this explicit counterexample falsifies exactly the contextual
+obligation. Independently establish that every assumption in Gamma holds and
+that the conclusion fails. Rejected proofs, timeouts, or a false intermediate
+lemma do not refute the target. No change of quantifiers, domain, or parameters.
+CLOSED BOOK: only the explicit context and reasoning established inline may be
+used; a named external theorem without proof is not evidence. No retrieval.
+Return the four checks and a concise mathematical justification.
+""" + json.dumps({"obligation": asdict(obligation), "counterexample": counterexample}, ensure_ascii=False)
+        return self.codex.invoke(prompt=prompt, schema=schema, label="refutation_verifier")
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,98 @@
+from research.agents import ResearchWorker
+from research.closed_book import ClosedBookVerifier
+from research.node_solver import NodeSolver, NodeSolverConfig
+from research.proof_graph import ProofGraph, ProofObligation, ProofRoute
+import pytest
+
+
+class ScriptedCodex:
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def invoke(self, *, label, prompt, schema):
+        self.calls.append((label, prompt))
+        expected, response = self.responses.pop(0)
+        assert label == expected
+        if isinstance(response, BaseException):
+            raise response
+        return response
+
+
+def proof(statement, text):
+    return dict(kind="PROOF_CANDIDATE", statement=statement, proof=text,
+                predecessors=[], counterexample="", reason="")
+
+
+def verdict(accepted):
+    return dict(accepted=accepted, reason="valid" if accepted else "missing arithmetic",
+                external_authority_dependency=False, violation_type="NONE")
+
+
+def test_route_solver_repairs_proof_and_admits_exact_contextual_fact(tmp_path):
+    target = ProofObligation.create("p", "x=2", "x+x=4")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    codex = ScriptedCodex([
+        ("research_worker", proof(target.statement, "obvious")),
+        ("closed_book_verifier", verdict(False)),
+        ("research_worker", proof(target.statement, "Substitute x=2: x+x=2+2=4.")),
+        ("closed_book_verifier", verdict(True)),
+    ])
+    solver = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        config=NodeSolverConfig(3), progress_path=tmp_path / "step/solver.json")
+    result = solver.solve_route(graph=graph, route_id=route.route_id, author="test")
+    assert result.status == "SOLVED"
+    assert ProofGraph(tmp_path).obligation(target.obligation_id).truth_state == "DISCHARGED"
+    assert len(ProofGraph(tmp_path).supporting_closure()) == 1
+    assert "missing arithmetic" in codex.calls[2][1]
+    assert not codex.responses
+
+
+@pytest.mark.parametrize("failure,expected", [("none", "BLOCKED"), ("timeout", "HORIZON"), ("error", "ERROR")])
+def test_no_proof_and_runtime_failures_never_refute(tmp_path, failure, expected):
+    import subprocess
+    from research.run_storage import read_json
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    response = dict(kind="NO_RESULT", statement="", proof="", predecessors=[], counterexample="", reason="gap")
+    if failure == "timeout":
+        response = subprocess.TimeoutExpired("codex", 600)
+    elif failure == "error":
+        response = RuntimeError("transport error")
+    codex = ScriptedCodex([("research_worker", response)])
+    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex)).solve_route(
+        graph=graph, route_id=route.route_id, author="test")
+    assert result.status == expected
+    assert graph.obligation(target.obligation_id).truth_state == "OPEN"
+    assert graph.route_state(route.route_id) == ("READY" if failure == "error" else "EXHAUSTED")
+    assert read_json(tmp_path / "attempts/attempt-000001.json")["outcome"] == {
+        "none": "NO_RESULT", "timeout": "TIMEOUT", "error": "ERROR"}[failure]
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_counterexample_requires_independent_verification_and_only_refutes_child(tmp_path, accepted):
+    from research.refutation import RefutationStore
+    target = ProofObligation.create("p", "", "target")
+    child = ProofObligation.create("p", "n is an integer", "n is even")
+    parent_route = ProofRoute.create(target.obligation_id, (child.obligation_id,))
+    direct = ProofRoute.create(child.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target,
+                              obligations=(child,), routes=(parent_route, direct))
+    codex = ScriptedCodex([
+        ("research_worker", dict(kind="COUNTEREXAMPLE_CANDIDATE", statement="", proof="", predecessors=[],
+                                 counterexample="n=1 is an integer and is odd", reason="")),
+        ("refutation_verifier", dict(accepted=accepted, assumptions_satisfied=True,
+                                    conclusion_falsified=accepted, closed_book_clean=True, reason="1 is odd")),
+    ])
+    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex)).solve_route(
+        graph=graph, route_id=direct.route_id, author="test")
+    assert result.status == ("REFUTED" if accepted else "BLOCKED")
+    graph = ProofGraph(tmp_path)
+    assert graph.obligation(child.obligation_id).truth_state == ("REFUTED" if accepted else "OPEN")
+    assert graph.obligation(target.obligation_id).truth_state == "OPEN"
+    assert graph.route_state(parent_route.route_id) == ("IMPOSSIBLE" if accepted else "WAITING")
+    assert len(RefutationStore(tmp_path).list()) == int(accepted)
+    assert not list((tmp_path / "facts").glob("*.md"))
+    assert not codex.responses

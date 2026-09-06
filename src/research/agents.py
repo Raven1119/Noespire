@@ -208,6 +208,26 @@ class ResearchWorker:
     def __init__(self, codex: CodexInvoker) -> None:
         self.codex = codex
 
+    def propose_outcome(self, packet):
+        """The v3 worker sees only a selected route's local attention packet."""
+        from .proof_execution import OUTCOME_SCHEMA
+        prompt = """You are the Codex Research Worker. Work only on the contextual obligation below.
+Return PROOF_CANDIDATE, COUNTEREXAMPLE_CANDIDATE, or NO_RESULT.
+Restate the claim internally, check toy examples and stress-test fragile steps.
+Repair the cause of prior failures; do not repeat a rejected argument.
+You may decompose internally but submit only one outcome for this obligation.
+CLOSED BOOK: use explicit assumptions, supplied accepted Facts, and reasoning
+proved inline. A named unproved theorem is not evidence. No retrieval.
+A proof must use the exact obligation statement and every supplied predecessor
+Fact (and no others), collectively sufficient and genuinely used in the proof.
+A counterexample must satisfy the obligation's own context and falsify its goal;
+a flaw in the selected route alone is not a counterexample to its target.
+Use empty strings/arrays for fields irrelevant to the selected outcome.
+
+Local packet:
+""" + json.dumps(packet, ensure_ascii=False, indent=2)
+        return self.codex.invoke(prompt=prompt, schema=OUTCOME_SCHEMA, label="research_worker")
+
     def propose(
         self,
         *,
