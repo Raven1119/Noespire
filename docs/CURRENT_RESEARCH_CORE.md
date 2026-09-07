@@ -42,9 +42,13 @@ starting another sibling proof, without mathematical ranking or problem-specific
 selection. Refutation invalidates consuming routes, preserving viable alternatives
 and previously verified Facts; it never propagates falsity to an OPEN ancestor.
 
-NodeSolver permits at most three attempts per route, clipped to remaining budget.
-A typed timeout exhausts the route and may hand the same structural obligation
-to Strategist even when the final solver attempt was consumed. Other errors stop.
+NodeSolver permits at most three attempts per route per visit, clipped to
+remaining budget. Failed attempts are tallied per class — verifier-rejected
+candidates, worker declines (NO_RESULT), and timeouts — and a route exhausts
+only when one class reaches the route allowance (three by default); a single
+timeout ends the visit without killing the route. A timed-out route may still
+hand the same structural obligation to Strategist even when the final solver
+attempt was consumed. Other errors stop.
 Each frozen frontier packet gets one Strategist decision. Gate, BoundaryAware
 Builder, fidelity, mechanical validation, and fresh Structural Auditor precede
 apply; REVISE permits the existing single revision. No new operator or resampling.

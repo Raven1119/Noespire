@@ -7,9 +7,12 @@ one-shot path; rounds >= 2 carry a ``RepairContext`` built from the previous
 round's rejected candidate and the verifier/contract-guard reason.
 
 Truth boundary: only a verifier PASS admits a Fact (inside
-``execute_obligation``, unchanged). BLOCKED means "solver exhausted budget",
-never "the statement is false". A worker/verifier exception stops the loop
-immediately as ERROR — system errors do not consume the remaining budget.
+``execute_obligation``, unchanged). BLOCKED means "this visit ended without
+resolving the obligation", never "the statement is false"; whether the
+route also exhausted is recorded on the graph (see
+``proof_execution._route_failure_tallies``). A worker/verifier exception
+stops the loop immediately as ERROR — system errors do not consume the
+remaining budget.
 """
 
 from __future__ import annotations
@@ -32,14 +35,25 @@ from .problem import ProblemSpec
 
 @dataclass(frozen=True)
 class NodeSolverConfig:
-    """Per-obligation attempt budget. The research-layer default is 1:
-    without an explicit config the solver is exactly the one-shot path."""
+    """Per-visit attempt budget plus per-class route allowance.
+
+    ``max_attempts_per_obligation`` caps attempts inside one solve visit
+    (the research-layer default is 1: without an explicit config the solver
+    is exactly the one-shot path). ``route_attempt_allowance`` is the
+    per-failure-class route lifetime used by the v3 route solver: a route
+    exhausts only after this many verifier-rejected candidates, OR this
+    many worker declines (NO_RESULT), OR this many timeouts — tallied
+    separately per class from durable attempt artifacts, across visits.
+    """
 
     max_attempts_per_obligation: int = 1
+    route_attempt_allowance: int = 3
 
     def __post_init__(self) -> None:
         if self.max_attempts_per_obligation < 1:
             raise ValueError("max_attempts_per_obligation must be >= 1")
+        if self.route_attempt_allowance < 1:
+            raise ValueError("route_attempt_allowance must be >= 1")
 
 
 @dataclass(frozen=True)

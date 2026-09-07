@@ -248,7 +248,8 @@ class _Run:
             outcome = NodeSolver(worker=ResearchWorker(self.invoker("worker")),
                 verifier=ClosedBookVerifier(self.invoker("verifier")),
                 refutation_verifier=RefutationVerifier(self.invoker("refutation-verifier")),
-                config=NodeSolverConfig(self.state["attempt_limit"]), progress_path=self.step_dir / "solver.json"
+                config=NodeSolverConfig(self.state["attempt_limit"],
+                                        route_attempt_allowance=self.state["solver_attempts_per_node"]), progress_path=self.step_dir / "solver.json"
             ).solve_route(graph=ProofGraph(self.root), route_id=self.state["route_id"], author="proof-core-v3", event=self.event)
             advance = dict(status=outcome.status, reason=outcome.reason, attempt_ids=list(outcome.attempt_ids))
             write_json(path, advance)

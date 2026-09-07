@@ -1,4 +1,12 @@
-"""Bounded route execution; persisted candidates precede verifier admission."""
+"""Bounded route execution; persisted candidates precede verifier admission.
+
+A route does not die on the first failure: failed attempts are tallied per
+class (verifier-rejected candidates / worker NO_RESULT / TIMEOUT) from
+durable artifacts, and the route exhausts only when one class reaches
+``NodeSolverConfig.route_attempt_allowance``. A single timeout therefore
+ends the visit but keeps the route alive for later retries; routes still
+die once a class's allowance is spent.
+"""
 from dataclasses import asdict
 import subprocess
 
@@ -18,6 +26,31 @@ OUTCOME_SCHEMA = {
 }
 
 
+def _route_failure_tallies(attempts_dir, route_id):
+    """Per-class failed-attempt tallies for one route, rebuilt from durable
+    attempt artifacts (so they span visits and imported legacy work).
+
+    Classes: REJECTED — a verifier judged a real candidate (proof or
+    counterexample); NO_RESULT — the worker declined; TIMEOUT — the worker
+    call exceeded its limit. Counting classes separately keeps a
+    slow-but-engaged route alive after a single timeout while still
+    bounding a route the worker repeatedly abandons.
+    """
+    tallies = {"REJECTED": 0, "NO_RESULT": 0, "TIMEOUT": 0}
+    attempt_ids = []
+    for path in sorted(attempts_dir.glob("attempt-*.json")):
+        record = read_json(path)
+        if record.get("route_id") != route_id:
+            continue
+        attempt_ids.append(record["attempt_id"])
+        outcome = record.get("outcome")
+        if outcome in ("PROOF_REJECTED", "COUNTEREXAMPLE_REJECTED"):
+            tallies["REJECTED"] += 1
+        elif outcome in tallies:
+            tallies[outcome] += 1
+    return tallies, attempt_ids
+
+
 def solve_route(solver, graph, route_id, author, *, event=None):
     from .node_solver import NodeSolveOutcome
     event = event or (lambda *args, **kwargs: None)
@@ -27,8 +60,9 @@ def solve_route(solver, graph, route_id, author, *, event=None):
     attempts = graph.root / "attempts"
     legacy_ids = [p.stem for p in sorted(attempts.glob("attempt-*.json"))
                   if (a := read_json(p)).get("legacy_path") and a["route_id"] == route_id]
-    # Imported partial work consumes the same three-attempt route allowance.
-    maximum = min(3, len(legacy_ids) + solver.config.max_attempts_per_obligation)
+    # Imported partial work consumes the same per-class route allowance.
+    maximum = min(solver.config.route_attempt_allowance,
+                  len(legacy_ids) + solver.config.max_attempts_per_obligation)
     initial = dict(obligation_id=obligation.obligation_id, route_id=route_id,
                    max_attempts=maximum, attempt_ids=legacy_ids)
     progress = read_json(path) if path.exists() else initial
@@ -65,6 +99,9 @@ def solve_route(solver, graph, route_id, author, *, event=None):
                 obligation.truth_state != "REFUTED" or obligation.refutation_id != attempt.get("refutation_id")):
             raise ValueError("attempt disagrees with canonical refutation resolution")
         write_json(artifact, attempt)
+        # A replayed attempt spends nothing this visit; the TIMEOUT break
+        # below must only fire for attempts actually executed now.
+        replayed = attempt["outcome"] != "RUNNING"
         try:
             if attempt["outcome"] == "RUNNING":
                 predecessors = graph.materialized_predecessors(route_id)
@@ -134,12 +171,15 @@ def solve_route(solver, graph, route_id, author, *, event=None):
         if outcome == "ERROR":
             return NodeSolveOutcome("ERROR", None, tuple(progress["attempt_ids"]), attempt["reason"])
         history.append(attempt)
-        if outcome == "TIMEOUT":
-            break  # Existing horizon handoff: do not spend another local attempt.
+        if outcome == "TIMEOUT" and not replayed:
+            break  # Do not spend another local attempt this visit; the
+            # route survives unless the timeout class tally hits allowance.
     if obligation.truth_state == "DISCHARGED":
         return NodeSolveOutcome("SOLVED", FactGraph(graph.root).get_fact(obligation.resolved_fact_id), (), None)
     if obligation.truth_state == "REFUTED":
         return NodeSolveOutcome("REFUTED", None, (), "already independently refuted")
-    graph.exhaust_route(route_id, progress["attempt_ids"], history[-1]["reason"])
+    tallies, route_attempt_ids = _route_failure_tallies(attempts, route_id)
+    if any(count >= solver.config.route_attempt_allowance for count in tallies.values()):
+        graph.exhaust_route(route_id, route_attempt_ids, history[-1]["reason"])
     return NodeSolveOutcome("HORIZON" if history[-1]["outcome"] == "TIMEOUT" else "BLOCKED",
                             None, tuple(progress["attempt_ids"]), history[-1]["reason"])

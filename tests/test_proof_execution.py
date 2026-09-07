@@ -88,9 +88,78 @@ def test_no_proof_and_runtime_failures_never_refute(tmp_path, failure, expected)
         graph=graph, route_id=route.route_id, author="test")
     assert result.status == expected
     assert graph.obligation(target.obligation_id).truth_state == "OPEN"
-    assert graph.route_state(route.route_id) == ("READY" if failure == "error" else "EXHAUSTED")
+    # One failure of any class is below the default route allowance (3):
+    # the route stays READY for later visits instead of dying outright.
+    assert graph.route_state(route.route_id) == "READY"
     assert read_json(tmp_path / "attempts/attempt-000001.json")["outcome"] == {
         "none": "NO_RESULT", "timeout": "TIMEOUT", "error": "ERROR"}[failure]
+
+
+def test_timeout_exhausts_route_only_at_allowance_across_visits(tmp_path):
+    import subprocess
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    codex = ScriptedCodex([("research_worker", subprocess.TimeoutExpired("codex", 600))] * 3)
+    solver = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        config=NodeSolverConfig(3, route_attempt_allowance=3),
+                        refutation_verifier=RefutationVerifier(codex))
+    for visit in (1, 2):
+        result = solver.solve_route(graph=ProofGraph(tmp_path), route_id=route.route_id, author="test")
+        assert result.status == "HORIZON"
+        assert ProofGraph(tmp_path).route_state(route.route_id) == "READY", f"visit {visit}"
+    result = solver.solve_route(graph=ProofGraph(tmp_path), route_id=route.route_id, author="test")
+    assert result.status == "HORIZON"
+    exhausted = ProofGraph(tmp_path).route(route.route_id)
+    assert exhausted.lifecycle == "EXHAUSTED"
+    assert exhausted.exhaustion_attempt_ids == ("attempt-000001", "attempt-000002", "attempt-000003")
+    assert "timed out" in exhausted.exhaustion_reason
+    assert not codex.responses
+
+
+@pytest.mark.parametrize("count,exhausted", [(2, False), (3, True)])
+def test_no_result_tally_exhausts_at_allowance(tmp_path, count, exhausted):
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    decline = dict(kind="NO_RESULT", statement="", proof="", predecessors=[], counterexample="", reason="gap")
+    codex = ScriptedCodex([("research_worker", decline)] * count)
+    result = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        config=NodeSolverConfig(count, route_attempt_allowance=3)).solve_route(
+        graph=graph, route_id=route.route_id, author="test")
+    assert result.status == "BLOCKED"
+    assert (ProofGraph(tmp_path).route(route.route_id).lifecycle == "EXHAUSTED") == exhausted
+    assert not codex.responses
+
+
+def test_failure_classes_are_tallied_separately_across_visits(tmp_path):
+    target = ProofObligation.create("p", "", "target")
+    route = ProofRoute.create(target.obligation_id)
+    graph = ProofGraph.create(tmp_path, problem_id="p", target=target, routes=(route,))
+    decline = dict(kind="NO_RESULT", statement="", proof="", predecessors=[], counterexample="", reason="gap")
+    codex = ScriptedCodex([
+        ("research_worker", proof(target.statement, "missing argument")),
+        ("closed_book_verifier", verdict(False)),
+        ("research_worker", proof(target.statement, "still missing")),
+        ("closed_book_verifier", verdict(False)),
+        ("research_worker", decline),
+        ("research_worker", decline),
+    ])
+    solver = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                        config=NodeSolverConfig(2, route_attempt_allowance=3),
+                        refutation_verifier=RefutationVerifier(codex))
+    # Visit 1: two verifier rejections; visit 2: two worker declines.
+    # 2 + 2 failures, but no single class reaches the allowance of 3.
+    for step in ("step1", "step2"):
+        solver = NodeSolver(worker=ResearchWorker(codex), verifier=ClosedBookVerifier(codex),
+                            config=NodeSolverConfig(2, route_attempt_allowance=3),
+                            progress_path=tmp_path / step / "solver.json",
+                            refutation_verifier=RefutationVerifier(codex))
+        result = solver.solve_route(graph=ProofGraph(tmp_path), route_id=route.route_id, author="test")
+        assert result.status == "BLOCKED"
+    assert ProofGraph(tmp_path).route_state(route.route_id) == "READY"
+    assert len(list((tmp_path / "attempts").glob("attempt-*.json"))) == 4
+    assert not codex.responses
 
 
 @pytest.mark.parametrize("accepted", [True, False])
