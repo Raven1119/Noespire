@@ -38,6 +38,9 @@ def _card(study):
             "object_refs": study.get("object_refs", []),
             "known_fact_ids": study.get("known_fact_ids", []),
             "context_requests": study.get("context_requests", []),
+            "attention_notice": study.get("attention_notice", "")[:240],
+            "continuation_line_count": len(study.get("continuation", "").splitlines()),
+            "evidence_refs": study.get("evidence_refs", []),
             "relation_to_target": study.get("relation_to_target", "UNKNOWN")}
 
 

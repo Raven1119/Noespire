@@ -339,3 +339,134 @@ def test_status_and_export_are_read_only_and_cli_usable(tmp_path):
     assert json.loads(completed.stdout)["status"] == "SOLVED"
     after = {str(p.relative_to(tmp_path)): p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
     assert before == after
+
+
+def test_invalid_extra_metadata_cannot_repeat_verifier_after_fact_admission(tmp_path):
+    class BadMetadata(DirectResearch):
+        def invoke(self, **kwargs):
+            result = super().invoke(**kwargs)
+            if result.get("candidate"):
+                result["new_study"] = {"focus": "Renamed", "context": "", "object_refs": [],
+                                       "continues_study_id": "another-study"}
+            return result
+
+    model = BadMetadata()
+    first = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model)
+    final = resume_run(tmp_path, invoker=model)
+    assert first["status"] == final["status"] == "SOLVED"
+    assert model.calls.count("closed_book_verifier") == 1
+
+
+def test_overflow_can_reselect_a_smaller_window_without_counting_unserved_visit(tmp_path):
+    class WindowResearch(DirectResearch):
+        def invoke(self, *, prompt, schema, label):
+            if label == "continuous_selector":
+                self.calls.append(label)
+                selected = select_local(prompt)
+                packet = json.loads(prompt.split("\nPACKET:\n")[1])
+                if packet["cards"][0].get("attention_notice"):
+                    selected["continuation_window"] = {"start_line": 0, "end_line": 1}
+                return selected
+            if label == "continuous_worker" and not self.calls:
+                self.calls.append(label)
+                return {"continuation": "The equality has been reduced to addition.\n" + "Detailed notes.\n" * 3000,
+                        "next_work": "Continue the equality.", "candidate": None}
+            return super().invoke(prompt=prompt, schema=schema, label=label)
+
+    model = WindowResearch()
+    result = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model,
+                       settings={"worker_context_tokens": 2048})
+    assert result["status"] == "SOLVED"
+    assert model.calls.count("continuous_worker") == 2
+    assert model.calls.count("continuous_selector") == 2
+    assert result["schedule"]["channel_cursor"] == 1  # oversized visit wasn't service
+
+
+def test_compose_can_omit_extra_visible_fact_from_real_lineage(tmp_path):
+    class ExtraFact(ConnectedResearch):
+        started = False
+
+        def invoke(self, *, prompt, schema, label):
+            if label == "continuous_selector":
+                selected = select_local(prompt)
+                if selected["operation"] == "COMPOSE":
+                    packet = json.loads(prompt.split("\nPACKET:\n")[1])
+                    selected["material_refs"] = ["fact:" + k for c in packet["cards"] for k in c.get("known_fact_ids", [])]
+                return selected
+            if label == "continuous_worker" and not self.started:
+                self.started = True
+                return {"continuation": "An auxiliary equality is available.", "next_work": "Continue target.",
+                        "candidate": {"kind": "FACT", "goal": "3 = 3", "context": "", "proof": "Reflexivity.", "predecessors": []}}
+            result = super().invoke(prompt=prompt, schema=schema, label=label)
+            if label == "continuous_worker":
+                packet = json.loads(prompt.split("\nPACKET:\n")[1])
+                if packet["operation"] == "COMPOSE":
+                    result["candidate"]["predecessors"] = packet["required_fact_ids"]
+            return result
+
+    result = start_run(tmp_path, problem_id="extra", statement="2 + 2 = 4", invoker=ExtraFact())
+    assert result["status"] == "SOLVED"
+    assert len(export_proof(tmp_path)["facts"]) == 4
+    assert "3 = 3" not in [f["statement"] for f in export_proof(tmp_path)["facts"]]
+
+
+def test_non_boolean_verifier_answer_cannot_admit_truth(tmp_path):
+    class Malformed(DirectResearch):
+        def invoke(self, **kwargs):
+            result = super().invoke(**kwargs)
+            if kwargs["label"] == "closed_book_verifier":
+                result["accepted"] = "false"
+            return result
+
+    def observe(event, details):
+        if event == "visit_completed" and details["visit"] == 2:
+            pause_run(tmp_path)
+
+    result = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=Malformed(), on_event=observe)
+    assert result["target_state"] == "OPEN"
+
+
+def test_observer_error_after_completed_verifier_does_not_repeat_it(tmp_path):
+    model = DirectResearch()
+
+    def observer(event, details):
+        if event == "call_completed" and details["label"] == "closed_book_verifier":
+            raise RuntimeError("observer failed after durable response")
+
+    first = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model, on_event=observer)
+    assert first["status"] == "PAUSED"
+    assert resume_run(tmp_path, invoker=model)["status"] == "SOLVED"
+    assert model.calls.count("closed_book_verifier") == 1
+
+
+def test_generated_history_reference_reopens_exact_failed_candidate(tmp_path):
+    class History(DirectResearch):
+        rejected = False
+        read_original = False
+
+        def invoke(self, *, prompt, schema, label):
+            if label == "closed_book_verifier" and not self.rejected:
+                self.calls.append(label)
+                self.rejected = True
+                return {"accepted": False, "external_authority_dependency": False, "violation_type": "NONE",
+                        "reason": "Reopen the exact original candidate for repair."}
+            if label == "continuous_selector":
+                self.calls.append(label)
+                selected = select_local(prompt)
+                if self.rejected and not self.read_original:
+                    packet = json.loads(prompt.split("\nPACKET:\n")[1])
+                    selected["material_refs"] = [ref for ref in packet["cards"][0]["evidence_refs"]
+                                                  if ref.endswith("worker_result.json")]
+                return selected
+            if label == "continuous_worker" and self.rejected and not self.read_original:
+                packet = json.loads(prompt.split("\nPACKET:\n")[1])
+                original = packet["unverified_materials"][0]["evidence"]["candidate"]
+                assert original["proof"] == "By the definition of addition, 1 + 1 = 2."
+                assert original["goal"] == "1 + 1 = 2"
+                self.read_original = True
+            return super().invoke(prompt=prompt, schema=schema, label=label)
+
+    model = History()
+    result = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model)
+    assert result["status"] == "SOLVED"
+    assert model.read_original

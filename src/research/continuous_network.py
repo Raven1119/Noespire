@@ -170,7 +170,8 @@ class ContinuousNetwork:
             raise ValueError("accepted Fact belongs to another problem")
         return fact
 
-    def _scoped_fact(self, fact_id, context):
+    def visible_fact(self, fact_id, context):
+        """Load an accepted exact-scope interface, checking binding and closure."""
         contexts = {self.claim(key).context for key, ids in self.data["fact_bindings"].items()
                     if fact_id in ids}
         contexts.update(self.claim(s["conclusion_claim_id"]).context
@@ -210,7 +211,7 @@ class ContinuousNetwork:
         if not set(predecessors) <= set(visible):
             raise ValueError("used predecessors must be accepted visible Facts")
         for fact_id in visible:
-            self._scoped_fact(fact_id, claim.context)
+            self.visible_fact(fact_id, claim.context)
         prepared = CandidateFact(statement, candidate["proof"], predecessors)
         descriptor = {"kind": kind, "goal": claim.goal, "context": claim.context,
                       "requirements": requirements, "proof": prepared.proof,

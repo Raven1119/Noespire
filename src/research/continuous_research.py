@@ -9,7 +9,8 @@ from uuid import uuid4
 
 from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
-from .continuous_attention import expose, bounded_packet, AttentionOverflow, exact_object_index
+from .continuous_attention import expose, bounded_packet, AttentionOverflow
+from .continuous_materials import load_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
 from .pipeline import submit_candidate, VerificationResult
@@ -58,13 +59,14 @@ def read_status(problem_dir):
     for path in (directory / "invocations").glob("*.json"):
         events = read_json(path).get("events", [])
         usage = [e["usage"] for e in events if e.get("type") == "turn.completed" and e.get("usage")]
-        if usage:
-            usages.append(usage[-1])
+        if usage and all(isinstance(u, dict) and all(type(u.get(k)) is int for k in
+                ("input_tokens", "output_tokens")) for u in usage):
+            usages.append(sum(u["input_tokens"] + u["output_tokens"] for u in usage))
     return {**state, "target_state": network.truth(network.target_id),
             "studies": studies, **invocation_usage(directory),
             "completed_calls": sum(r["status"] == "COMPLETED" for r in results),
             "unconfirmed_reservations": len(reservations) - len(results),
-            "reported_tokens": sum(u.get("input_tokens", 0) + u.get("output_tokens", 0) for u in usages) if usages else None,
+            "reported_tokens": sum(usages) if usages else None,
             "unknown_usage_calls": len(reservations) - len(usages)}
 
 
@@ -144,7 +146,12 @@ class _Research:
 
     def event(self, name, **details):
         if self.on_event:
-            self.on_event(name, {"visit": self.state["step"], **details})
+            try:
+                self.on_event(name, {"visit": self.state["step"], **details})
+            except Exception as error:
+                # Observer code is outside the model call. Its failure must not
+                # cause RecordedInvoker to mark a confirmed response as failed.
+                raise _ObserverFailure(str(error)) from error
         if name in ("call_completed", "selection_saved", "continuation_saved", "fact_bound"):
             pending = [p for p in (self.directory / "pause_requests").glob("*.json")
                        if p.name not in self.state["acknowledged_pauses"]]
@@ -178,13 +185,22 @@ class _Research:
                 if pending:
                     self.save(status="PAUSED", pause_reason=read_json(pending[0])["reason"])
                     break
-                self.visit(network)
+                try:
+                    self.visit(network)
+                except AttentionOverflow as error:
+                    if getattr(self, "current_role", None) != "worker" or not (self.step_dir / "packet.json").exists():
+                        raise
+                    self.defer_window(error)
         except RunStopped as error:
             self.save(status="PAUSED", pause_reason=error.reason,
                       retry_role=self.current_role if error.reason == "INTERRUPTED" else None)
+        except _InvocationFailure as error:
+            self.save(status="PAUSED", pause_reason="INVOCATION_ERROR", error=str(error), retry_role=error.role)
+        except _ObserverFailure as error:
+            self.save(status="PAUSED", pause_reason="OBSERVER_ERROR", error=str(error), retry_role=None)
         except (subprocess.TimeoutExpired, RuntimeError, ValueError, KeyError, TypeError) as error:
             self.save(status="PAUSED", pause_reason=type(error).__name__, error=str(error),
-                      retry_role=getattr(self, "current_role", None))
+                      retry_role=self.current_role if isinstance(error, subprocess.TimeoutExpired) else None)
         return read_status(self.root)
 
     def visit(self, network):
@@ -218,13 +234,17 @@ class _Research:
             write_json(self.step_dir / "feedback.json", feedback)
             ref = f"studies/{study['study_id']}/timeout-{self.state['step']:08d}.json"
             write_json(self.directory / ref, {**study, "feedback_ref":
-                       str((self.step_dir / "feedback.json").relative_to(self.directory))})
+                       (self.step_dir / "feedback.json").relative_to(self.directory).as_posix()})
             self.finish_visit(study["study_id"], ref)
             return
+        if not (self.step_dir / "worker_result.json").exists():
+            write_json(self.step_dir / "worker_result.json", response)
         revision = {**study, "revision": study["revision"] + 1,
                     "continuation": response["continuation"], "next_work": response["next_work"],
                     "visit": self.state["step"], "previous_revision": self.state["studies"][study["study_id"]],
-                    "context_requests": response.get("context_requests", [])}
+                    "context_requests": response.get("context_requests", []),
+                    "evidence_refs": [(self.step_dir / name).relative_to(self.directory).as_posix()
+                                      for name in ("packet.json", "worker_result.json")]}
         self.persist_definitions(revision, response.get("definitions", []))
         ref = f"studies/{study['study_id']}/{revision['revision']:06d}.json"
         # The revision precedes verification; a rejection never erases returned work.
@@ -238,18 +258,22 @@ class _Research:
             except ValueError as error:
                 verification = VerificationResult(False, "MECHANICAL_REJECTION: " + str(error))
             write_json(self.step_dir / "verification.json", asdict(verification))
+            revision["evidence_refs"].append((self.step_dir / "verification.json").relative_to(self.directory).as_posix())
             evidence_path = self.step_dir / "admission.json"
             if evidence_path.exists():
                 evidence = read_json(evidence_path)
                 if evidence.get("fact_id") and candidate["context"] == study["scope"]:
                     revision["known_fact_ids"] = list(dict.fromkeys([*revision.get("known_fact_ids", []), evidence["fact_id"]]))
-            revision["feedback_ref"] = str((self.step_dir / "verification.json").relative_to(self.directory))
+            revision["feedback_ref"] = (self.step_dir / "verification.json").relative_to(self.directory).as_posix()
             # Keep the original returned revision immutable; feedback is a separate revision record.
             ref = f"studies/{study['study_id']}/{revision['revision']:06d}-verified.json"
             if not (self.directory / ref).exists():
                 write_json(self.directory / ref, revision)
             self.register_studies(network)
-        self.register_focus(study, response.get("new_study"))
+        try:
+            self.register_focus(study, response.get("new_study"))
+        except (ValueError, KeyError, TypeError) as error:
+            write_json(self.step_dir / "metadata_rejection.json", {"reason": str(error), "truth_effect": "NONE"})
         self.finish_visit(study["study_id"], ref)
 
     def finish_visit(self, study_id, ref):
@@ -261,6 +285,19 @@ class _Research:
         self.save(studies=studies, step=self.state["step"] + 1, retries={}, retry_role=None, schedule=schedule)
         self.event("visit_completed", study_id=study_id,
                    channel=read_json(plan_path)["exposure"]["channel"] if plan_path.exists() else "DIRECT")
+
+    def defer_window(self, error):
+        packet = read_json(self.step_dir / "packet.json")
+        key = packet["study"]["study_id"]
+        study = read_json(self.directory / self.state["studies"][key])
+        notice = (f"Packet estimated {error.measurement['estimated_tokens']} tokens exceeds {error.limit}. "
+                  "Choose fewer material_refs or an explicit continuation_window; no Worker service occurred.")
+        ref = f"studies/{key}/capacity-{self.state['step']:08d}.json"
+        write_json(self.directory / ref, {**study, "attention_notice": notice})
+        # A rejected exposure is not a fairness visit. Preserve the channel/snapshot cursor.
+        self.save(studies={**self.state["studies"], key: ref}, step=self.state["step"] + 1,
+                  retries={}, retry_role=None)
+        self.event("window_reselection_required", study_id=key)
 
     def admit_candidate(self, network, packet, candidate):
         if candidate["kind"] == "REFUTATION":
@@ -284,7 +321,7 @@ class _Research:
         if packet["operation"] == "COMPOSE":
             claim = network.claim(packet["study"]["claim_id"])
             if (candidate["kind"] != "FACT" or fact_candidate.statement != claim.statement
-                    or not visible <= set(fact_candidate.predecessors)):
+                    or not set(packet["required_fact_ids"]) <= set(fact_candidate.predecessors)):
                 raise ValueError("COMPOSE must retain its exact conclusion and bridge/condition lineage")
         result = submit_candidate(graph=FactGraph(self.root), problem_id=network.problem_id,
             problem=network.claim(network.target_id).statement, author="continuous-worker",
@@ -360,7 +397,7 @@ class _Research:
         if selected["operation"] == "CONNECT":
             refs += ["study:" + c["study_id"] for c in plan["exposure"].get("cards", [])
                      if c["study_id"] != study["study_id"]]
-        facts, unverified, notices = self.materials(network, study, refs)
+        facts, unverified, notices = load_materials(self.root, study, refs, self.state["studies"], network)
         if materials:
             facts.update({f.fact_id: {"fact_id": f.fact_id, "statement": f.statement} for f in materials["facts"]})
         window = selected.get("continuation_window")
@@ -375,40 +412,11 @@ class _Research:
         return {"operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,
+                "required_fact_ids": [f.fact_id for f in materials["facts"]] if materials else [],
                 "support": materials["support"] if materials else None,
                 "feedback": read_json(self.directory / study["feedback_ref"]) if study.get("feedback_ref") else None,
                 "material_notices": notices, "action": selected["reason"], "relation": selected["relation"],
                 "channel": plan["exposure"]["channel"]}
-
-    def materials(self, network, study, refs):
-        facts, unverified, notices = {}, [], []
-        for ref in refs:
-            if ref.startswith("fact:"):
-                fact = network._scoped_fact(ref[5:], study["scope"])
-                facts[fact.fact_id] = {"fact_id": fact.fact_id, "statement": fact.statement}
-            elif ref.startswith("study:") and ref[6:] in self.state["studies"]:
-                unverified.append({"ref": ref, "verified": False,
-                                   "study": read_json(self.directory / self.state["studies"][ref[6:]])})
-            elif ref.startswith("object:"):
-                key = ref[7:]
-                if not key.startswith("obj-") or not key[4:].isalnum():
-                    raise ValueError("invalid immutable object reference")
-                value = read_json(self.directory / "objects" / (key + ".json"))
-                unverified.append({"ref": ref, "verified": False, "definition": value})
-                studies = [{**read_json(self.directory / path), "ref": path} for path in self.state["studies"].values()]
-                notices.append({"object_ref": ref, "related": exact_object_index(studies).get(ref, []),
-                                "navigation_only": True})
-            elif ref.startswith("search:"):
-                query = ref[7:]
-                matches = [{"ref": "study:" + key, "navigation_only": True}
-                    for key, path in self.state["studies"].items()
-                    if query in read_json(self.directory / path)["focus"]]
-                matches += [{"ref": "fact:" + f.fact_id, "navigation_only": True}
-                            for f in FactGraph(self.root).list_facts() if query in f.statement]
-                notices.append({"query": query, "matches": matches, "navigation_only": True})
-            else:
-                notices.append({"ref": ref, "error": "unknown local reference"})
-        return facts, unverified, notices
 
     def persist_definitions(self, revision, definitions):
         from .proof_graph import _identity
@@ -457,7 +465,28 @@ class _LocalInvoker:
         path = self.run.step_dir / (self.role + suffix.replace(":", "-") + "-attention.json")
         if not path.exists():
             write_json(path, measurement)
-        return RecordedInvoker(self.run, self.role + suffix).invoke(prompt=prompt, schema=schema, label=label)
+        try:
+            response = RecordedInvoker(self.run, self.role + suffix).invoke(prompt=prompt, schema=schema, label=label)
+        except RuntimeError as error:
+            raise _InvocationFailure(self.role, str(error)) from error
+        if not isinstance(response, dict):
+            raise ValueError("model response is not a structured object")
+        for key, field in schema["properties"].items():
+            if field.get("type") == "boolean" and type(response.get(key)) is not bool:
+                raise ValueError("non-boolean verifier check: " + key)
+            if "enum" in field and response.get(key) not in field["enum"]:
+                raise ValueError("invalid structured verdict: " + key)
+        return response
+
+
+class _InvocationFailure(Exception):
+    def __init__(self, role, message):
+        self.role = role
+        super().__init__(message)
+
+
+class _ObserverFailure(BaseException):
+    """Do not let invocation exception handlers consume external observer faults."""
 
 
 class _StatementVerifier(ClosedBookVerifier):
