@@ -1,0 +1,79 @@
+# Continuous research entry
+
+The optional CRPN mode starts with the original Claim and one Study. It preserves
+explicit returned mathematical work across fresh calls; it does not generate a
+scaffold in advance. [Design](NOESPIRE_CONTINUOUS_PROOF_NETWORK_DESIGN.md) and
+[architecture decision](ADR_CONTINUOUS_RESEARCH.md) specify the replacement scope.
+The existing v3 product default and all historical workspaces remain unchanged.
+
+Use an installed checkout (`pip install -e .`) with the existing Docker Codex
+image and authentication. The real Selector, Worker and independent Verifier
+use GPT-5.6 Sol / xhigh, fresh closed-book sessions, 600 seconds per call.
+
+Create a local `problem.json` containing the exact original text:
+
+```json
+{"problem_id": "example", "statement": "Prove that 1 + 1 = 2.", "context": ""}
+```
+
+```powershell
+python -m research.continuous_research start workspaces/example --problem problem.json
+python -m research.continuous_research status workspaces/example
+python -m research.continuous_research pause workspaces/example --reason "user pause"
+python -m research.continuous_research resume workspaces/example
+python -m research.continuous_research export workspaces/example --output proof.json
+```
+
+`noespire-continuous` exposes the same commands. Issue `pause` from another
+process; an in-flight call finishes or reaches its existing timeout before the
+next durable pause point. The Python facade exposes
+`start_run`, `resume_run`, `read_status`, `pause_run`, and `export_proof`.
+Tests inject an invoker through that facade; real CLI execution uses the existing
+isolated Codex runtime. No model mounts the research workspace or its history.
+
+There is no cumulative attempt, node, or no-progress termination limit.
+`PAUSED` is resumable control state; it does not refute a Claim or exhaust a
+Study. An external evaluation observer may request a pause. Solved targets
+export only their accepted supporting closure. Explicit counterexamples use the
+existing independent RefutationVerifier and store; ordinary rejection and timeout
+leave truth OPEN.
+
+Each workspace contains one `proof_graph.json` (explicit CRPN schema), the
+existing `facts/` and `refutations/`, and `continuous_run/`. The latter contains
+immutable call reservations/results, original invocation evidence, Study
+revisions, local visit packets, selection decisions, object definitions and the
+current scheduling cursor. Study material and object definitions are unverified;
+only a checked candidate can create a Fact. A certified conditional Support is
+not its conclusion. Conditions becoming available schedule LLM composition;
+the bridge and actual condition Facts remain in the resulting lineage.
+
+After the initial direct-proof opportunity, the 3:1:1 advance/explore/revisit
+schedule exposes bounded navigation cards. Selector chooses local work; revisit
+pins the Study so a low-value ranking cannot remove its service. New Studies
+wait for the next revisit snapshot. Exploration alternates single regions and
+cross-region interfaces independently of value scoring. The schedule is an
+experimental initial policy, not a claim of optimality or proof completeness.
+
+Worker can request exact local material references and explicitly returned
+definitions. Selector chooses a movable material window. Accepted statements
+are separate from unverified notes; predecessor proofs are not recursively
+included. Explicit continuation line windows retain a reference to the full
+immutable revision. Complete assumptions, accepted statements and candidate
+proofs are never silently truncated. `--settings FILE` can set
+`worker_context_tokens`, `verifier_context_tokens`, `selector_context_tokens`;
+defaults are 64000, 96000, 8000. Current local counts use the explicitly labelled
+`ceil(UTF-8 bytes / 4)` estimate, not measured tokenizer counts. Real invocation
+usage is preserved separately; missing reported usage remains unknown.
+
+Confirmed model results are reused after restart. Unconfirmed reservations are
+recorded INTERRUPTED and pause; explicit resume then assigns a new identity only
+to that interrupted role. It does not repeat a confirmed Worker because its
+Verifier was interrupted. This is honest local recovery, not a claim of remote
+exactly-once execution. Code or runtime fingerprint changes fail closed; do not
+resume an old run under a silently modified implementation.
+
+Implementation acceptance and old-corpus evaluation are separate milestones.
+No live problem evaluation is authorized by a deterministic test result alone:
+complete all three slices and independent review, freeze the source SHA, then
+preregister and run the existing N3D/N3E corpus in fresh workspaces. Runtime
+evidence and derived experiment results remain local and untracked.

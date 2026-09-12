@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 noespire-research = "research.dynamic_run:main"
+noespire-continuous = "research.continuous_research:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,5 +1,11 @@
 # Noespire
 
+The optional [Continuous Research Proof Network](docs/CONTINUOUS_RESEARCH.md)
+starts from an original problem and preserves local Study continuations, shared
+verified Supports and fair revisits. Run it with `python -m research.continuous_research`.
+It is separate from the preserved v3 product mode described below; no whole
+proof graph is planned in advance and no cumulative failure count ends research.
+
 Noespire develops a resumable AND/OR natural-language mathematical proof core.
 Obligations have stable mathematical identities; alternative routes share them.
 Fresh Codex workers propose proofs or counterexamples, and independent closed-book

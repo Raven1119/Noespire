@@ -1,4 +1,13 @@
-# Current research core - v3
+# Current research core
+
+The optional [continuous research entry](CONTINUOUS_RESEARCH.md) implements the
+approved [CRPN design](NOESPIRE_CONTINUOUS_PROOF_NETWORK_DESIGN.md) alongside the
+frozen v3 mode below. Its [ADR](ADR_CONTINUOUS_RESEARCH.md) records the exact reuse
+and semantic differences. It begins from one original Claim/Study and grows
+verified Supports through local work; it has no cumulative research-lifetime
+limit. Product defaults and old workspaces retain their existing v3 behavior.
+
+## Preserved v3 core
 
 The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,
 Global Persistence**. The public entry is `research.dynamic_run.start_run`,
