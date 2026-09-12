@@ -53,6 +53,8 @@ pins the Study so a low-value ranking cannot remove its service. New Studies
 wait for the next revisit snapshot. Exploration alternates single regions and
 cross-region interfaces independently of value scoring. The schedule is an
 experimental initial policy, not a claim of optimality or proof completeness.
+The channel cycle and service cursors are persisted together; resuming does not
+reinitialize either. Rejected material windows do not count as Worker service.
 
 Worker can request exact local material references and explicitly returned
 definitions. Selector chooses a movable material window. Accepted statements
@@ -65,12 +67,25 @@ defaults are 64000, 96000, 8000. Current local counts use the explicitly labelle
 `ceil(UTF-8 bytes / 4)` estimate, not measured tokenizer counts. Real invocation
 usage is preserved separately; missing reported usage remains unknown.
 
+Invalid line bounds retain the confirmed Selector decision and attach local
+control feedback before a fresh selection. A timeout while reading a partial
+window preserves the complete last-confirmed Study. Object lookup returns paged
+Study/Fact navigation associations; only a separate exact-scope accepted Fact
+read can supply a proof predecessor. Navigation is not mathematical authority.
+
+Verifier PASS concerns the submitted interface. If its goal or context differs
+from the selected Claim, the original Claim stays OPEN. Local feedback records
+both the actual admission and selected Claim truth so subsequent research can
+address that distinction. There is no semantic rebinding by similarity.
+
 Confirmed model results are reused after restart. Unconfirmed reservations are
 recorded INTERRUPTED and pause; explicit resume then assigns a new identity only
 to that interrupted role. It does not repeat a confirmed Worker because its
 Verifier was interrupted. This is honest local recovery, not a claim of remote
 exactly-once execution. Code or runtime fingerprint changes fail closed; do not
 resume an old run under a silently modified implementation.
+Runtime discovery/fingerprint failure persists PAUSED before consuming any
+pending retry identity. Restoring the frozen environment permits normal resume.
 
 Implementation acceptance and old-corpus evaluation are separate milestones.
 No live problem evaluation is authorized by a deterministic test result alone:

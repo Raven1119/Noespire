@@ -13,6 +13,14 @@ natural-language design; its implementation-status paragraphs are historical.
 
 ## Current Project Goal
 
+The optional continuous research entry is `research.continuous_research`:
+original Claim/Study -> local work -> fresh verification -> certified Support
+or Fact -> further local research. Read `docs/CONTINUOUS_RESEARCH.md` and
+`docs/ADR_CONTINUOUS_RESEARCH.md` for its approved scope. It has no cumulative
+attempt/no-progress stopping rule and does not change the existing product mode.
+
+The preserved v3 path remains:
+
 Noespire currently develops a resumable AND/OR natural-language proof core:
 
 ```
@@ -62,24 +70,12 @@ MUST NOT during the MVP:
 
 A non-Codex model/backend may be introduced only as an explicit experimental variable with a recorded hypothesis and comparison.
 
-## Hard Rule 2 — Skills-Driven Development
+## Development Workflow
 
-**Agents MUST use appropriate available skills for repository development instead of inventing ad-hoc workflows.**
-
-Before non-trivial implementation work:
-
-1. Discover/read the relevant available skill(s).
-2. Follow the skill workflow for the task.
-3. Keep the resulting change to the smallest testable vertical slice.
-
-When available, the expected mapping is:
-
-- architecture/codebase changes → `codebase-design` or equivalent;
-- behavioral implementation/bug fixes → `tdd` or equivalent;
-- completion/promotion review → `code-review` or equivalent;
-- external project/reference inspection → appropriate research/reference skill.
-
-If no relevant skill exists, proceed with the repository rules in this file. **Do not create a new process abstraction merely because a skill is absent.**
+The user has removed skills and instructed that they no longer be used. Follow
+the task, repository instructions, actual source and tests directly. Trace the
+affected boundary, implement a complete minimal slice, verify its behavior and
+review the result. Do not introduce a replacement workflow framework.
 
 ## Preserved Dual-DAG Architectural Rules
 
@@ -161,7 +157,7 @@ src/
 ## Development Rules
 
 1. **Think before coding.** Inspect the architecture and relevant reference implementation first.
-2. **Use skills.** Follow Hard Rule 2 for every non-trivial development task.
+2. **Verify behavior.** Use meaningful deterministic checks at the affected boundary.
 3. **Use Codex.** Follow Hard Rule 1 for all semantic/agent execution paths.
 4. **Smallest vertical slice.** Implement only what is required to test the next hypothesis.
 5. **One variable at a time.** Do not bundle unrelated architecture changes into one experiment.
@@ -285,7 +281,7 @@ Wall-clock time is secondary unless scheduling is the experiment.
 For architecture-affecting changes:
 
 1. State the hypothesis.
-2. Use the relevant skill(s).
+2. Inspect the relevant source and settle the necessary interface.
 3. Implement the smallest testable change.
 4. Run the targeted experiment.
 5. Record evidence and failure modes.

@@ -8,6 +8,9 @@ from hashlib import sha256
 import json
 
 
+DEFAULT_CHANNEL_CYCLE = ("ADVANCE", "ADVANCE", "ADVANCE", "EXPLORE", "REVISIT")
+
+
 class AttentionOverflow(ValueError):
     def __init__(self, measurement, limit):
         self.measurement, self.limit = measurement, limit
@@ -39,6 +42,7 @@ def _card(study):
             "known_fact_ids": study.get("known_fact_ids", []),
             "context_requests": study.get("context_requests", []),
             "attention_notice": study.get("attention_notice", "")[:240],
+            "admission_summary": study.get("admission_summary", "")[:240],
             "continuation_line_count": len(study.get("continuation", "").splitlines()),
             "evidence_refs": study.get("evidence_refs", []),
             "relation_to_target": study.get("relation_to_target", "UNKNOWN")}
@@ -76,8 +80,11 @@ def expose(studies, schedule, *, card_budget=2048):
                     key=lambda s: s["study_id"])
     if not active:
         raise ValueError("no active Study to expose")
+    cycle = proposal.setdefault("channel_cycle", list(DEFAULT_CHANNEL_CYCLE))
+    if not isinstance(cycle, list) or any(not isinstance(c, str) for c in cycle) or set(cycle) != set(DEFAULT_CHANNEL_CYCLE):
+        raise ValueError("channel cycle must retain ADVANCE, EXPLORE and REVISIT")
     cursor = proposal.get("channel_cursor", 0)
-    channel = ("ADVANCE", "ADVANCE", "ADVANCE", "EXPLORE", "REVISIT")[cursor % 5]
+    channel = cycle[cursor % len(cycle)]
     proposal["channel_cursor"] = cursor + 1
     selected = active
     forced = None

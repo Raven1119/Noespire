@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
-from .continuous_attention import expose, bounded_packet, AttentionOverflow
+from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEFAULT_CHANNEL_CYCLE
 from .continuous_materials import load_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
@@ -106,7 +106,7 @@ def start_run(problem_dir, *, problem_id, statement, context="", invoker=None, o
         state = {"run_id": uuid4().hex, "code_digest": _code_digest(), "runtime": runtime,
                  "status": "RUNNING", "pause_reason": None, "step": 0,
                  "studies": {study_id: ref}, "acknowledged_pauses": [], "retries": {}, "retry_role": None,
-                 "settings": limits, "schedule": {}}
+                 "settings": limits, "schedule": {"channel_cycle": list(DEFAULT_CHANNEL_CYCLE)}}
         write_json(directory / "state.json", state)
         return _Research(root, state, invoker, on_event).execute()
 
@@ -121,15 +121,7 @@ def resume_run(problem_dir, *, invoker=None, on_event=None):
             raise ValueError("cannot change runtime backend")
         if state["status"] in ("SOLVED", "REFUTED"):
             return read_status(root)
-        if state.get("retry_role"):
-            # Explicit resume authorizes a new call identity; retain the old reservation.
-            role = state["retry_role"]
-            state["retries"][role] = state["retries"].get(role, 0) + 1
-            state["retry_role"] = None
-        state.update(status="RUNNING", pause_reason=None, error=None)
-        state["acknowledged_pauses"] = [p.name for p in (root / "continuous_run/pause_requests").glob("*.json")]
-        write_json(root / "continuous_run/state.json", state)
-        return _Research(root, state, invoker, on_event).execute()
+        return _Research(root, state, invoker, on_event).execute(resuming=True)
 
 
 class _Research:
@@ -166,13 +158,27 @@ class _Research:
         self.current_role = role
         return _LocalInvoker(self, role)
 
-    def execute(self):
+    def execute(self, *, resuming=False):
         if self.backend is None:
-            runtime = self.state["runtime"]
-            if real_runtime(runtime["image"]) != runtime:
-                raise ValueError("runtime fingerprint changed")
-            self.backend = SolInvoker(image=runtime["image"], timeout_seconds=runtime["timeout_seconds"],
-                                      audit_dir=self.directory / "invocations")
+            try:
+                runtime = self.state["runtime"]
+                if real_runtime(runtime["image"]) != runtime:
+                    raise ValueError("runtime fingerprint changed")
+                self.backend = SolInvoker(image=runtime["image"], timeout_seconds=runtime["timeout_seconds"],
+                                          audit_dir=self.directory / "invocations")
+            except (OSError, subprocess.SubprocessError, ValueError) as error:
+                # Discovery is not a model call. Preserve the pending retry identity
+                # and all confirmed work until the frozen environment is available.
+                self.save(status="PAUSED", pause_reason="RUNTIME_UNAVAILABLE", error=str(error))
+                return read_status(self.root)
+        if resuming:
+            if self.state.get("retry_role"):
+                # Explicit resume authorizes one fresh identity for the affected role.
+                role = self.state["retry_role"]
+                self.state["retries"][role] = self.state["retries"].get(role, 0) + 1
+                self.state["retry_role"] = None
+            self.save(status="RUNNING", pause_reason=None, error=None,
+                      acknowledged_pauses=[p.name for p in (self.directory / "pause_requests").glob("*.json")])
         try:
             while True:
                 network = ContinuousNetwork(self.root)
@@ -187,6 +193,8 @@ class _Research:
                     break
                 try:
                     self.visit(network)
+                except _InvalidWindow as error:
+                    self.reselect_window(error.study_id, str(error))
                 except AttentionOverflow as error:
                     if getattr(self, "current_role", None) != "worker" or not (self.step_dir / "packet.json").exists():
                         raise
@@ -211,7 +219,10 @@ class _Research:
         prompt = ("Continue this local mathematical study. All continuation is UNVERIFIED research. "
                   "Return explicit mathematical notes and a next step even without a complete proof. "
                   "A FACT must include its exact goal/context, complete proof, and only the accepted Fact IDs "
-                  "actually used (visible facts need not all be used). Closed book: prove needed results inline; "
+                  "actually used. To discharge the selected Claim, retain its exact goal AND context, "
+                  "including an empty context when assumptions are already in its goal. A different goal "
+                  "or context creates a separate Claim; its acceptance does not discharge this one. "
+                  "Visible facts need not all be used. Closed book: prove needed results inline; "
                   "no theorem authority, retrieval, or assumed missing lemmas. A SUPPORT proves only the "
                   "conditional implication from all explicit requirements to the given goal in its context; "
                   "include the full conditional proof, never treat unproved requirements as accepted Facts. "
@@ -223,10 +234,12 @@ class _Research:
                   "focus (possibly with UNKNOWN target relevance), not a renamed continuation. Set its "
                   "continues_study_id to this study_id for the same line of work. Definitions are immutable "
                   "unverified object descriptions, not existence proofs. Include all necessary definitions "
-                  "and assumptions explicitly in any candidate context. "
+                  "and assumptions explicitly in any new candidate interface. "
                   "COMPOSE must prove exactly the selected conclusion using the supplied bridge and conditions.\nPACKET:\n" +
                   json.dumps(packet, ensure_ascii=False))
-        study = packet["study"]
+        # A packet may contain only a selected view. Persistence always starts
+        # from the complete last-confirmed Study, especially when no work returns.
+        study = read_json(self.directory / self.state["studies"][packet["study"]["study_id"]])
         try:
             response = self.invoker("worker").invoke(prompt=prompt, schema=_WORKER_SCHEMA, label="continuous_worker")
         except subprocess.TimeoutExpired:
@@ -260,11 +273,23 @@ class _Research:
             write_json(self.step_dir / "verification.json", asdict(verification))
             revision["evidence_refs"].append((self.step_dir / "verification.json").relative_to(self.directory).as_posix())
             evidence_path = self.step_dir / "admission.json"
+            evidence = None
             if evidence_path.exists():
                 evidence = read_json(evidence_path)
                 if evidence.get("fact_id") and candidate["context"] == study["scope"]:
                     revision["known_fact_ids"] = list(dict.fromkeys([*revision.get("known_fact_ids", []), evidence["fact_id"]]))
-            revision["feedback_ref"] = (self.step_dir / "verification.json").relative_to(self.directory).as_posix()
+            selected_id = study.get("claim_id")
+            selected_claim = {"claim_id": selected_id, "truth": network.truth(selected_id)} if selected_id else None
+            # Verifier acceptance and the selected Claim's truth are distinct.
+            # Return the actual admission receipt without rebinding another scope.
+            feedback = {**asdict(verification), "admission": evidence, "selected_claim": selected_claim}
+            write_json(self.step_dir / "feedback.json", feedback)
+            revision["feedback_ref"] = (self.step_dir / "feedback.json").relative_to(self.directory).as_posix()
+            revision["evidence_refs"].append(revision["feedback_ref"])
+            revision["admission_summary"] = (
+                f"Last candidate verification: {'PASS' if verification.accepted else 'FAIL'}. "
+                f"Selected Claim after admission: {selected_claim['truth'] if selected_claim else 'no Claim'}. "
+                "Read feedback_ref for the exact admitted interface.")
             # Keep the original returned revision immutable; feedback is a separate revision record.
             ref = f"studies/{study['study_id']}/{revision['revision']:06d}-verified.json"
             if not (self.directory / ref).exists():
@@ -288,10 +313,12 @@ class _Research:
 
     def defer_window(self, error):
         packet = read_json(self.step_dir / "packet.json")
-        key = packet["study"]["study_id"]
-        study = read_json(self.directory / self.state["studies"][key])
         notice = (f"Packet estimated {error.measurement['estimated_tokens']} tokens exceeds {error.limit}. "
                   "Choose fewer material_refs or an explicit continuation_window; no Worker service occurred.")
+        self.reselect_window(packet["study"]["study_id"], notice)
+
+    def reselect_window(self, key, notice):
+        study = read_json(self.directory / self.state["studies"][key])
         ref = f"studies/{key}/capacity-{self.state['step']:08d}.json"
         write_json(self.directory / ref, {**study, "attention_notice": notice})
         # A rejected exposure is not a fairness visit. Preserve the channel/snapshot cursor.
@@ -314,6 +341,8 @@ class _Research:
                 RefutationStore(self.root).admit(refutation)
                 self.event("refutation_admitted", refutation_id=refutation.refutation_id)
                 network.bind_refutation(claim.obligation_id, refutation.refutation_id)
+                write_json(self.step_dir / "admission.json", {"kind": "REFUTATION",
+                    "claim_id": claim.obligation_id, "refutation_id": refutation.refutation_id})
                 return VerificationResult(True, verdict["reason"])
             return VerificationResult(False, verdict["reason"])
         visible = {f["fact_id"] for f in packet["accepted_facts"]}
@@ -404,8 +433,10 @@ class _Research:
         if window:
             lines = study["continuation"].splitlines()
             start, end = window["start_line"], window["end_line"]
-            if not 0 <= start < end <= len(lines):
-                raise ValueError("invalid continuation window")
+            if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(lines):
+                raise _InvalidWindow(study["study_id"],
+                    f"Invalid continuation window [{start}, {end}) for {len(lines)} lines. "
+                    "Choose valid zero-based bounds or null for full notes; no Worker service occurred.")
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
                                 "full_revision_ref": self.state["studies"][study["study_id"]]}}
@@ -477,6 +508,12 @@ class _LocalInvoker:
             if "enum" in field and response.get(key) not in field["enum"]:
                 raise ValueError("invalid structured verdict: " + key)
         return response
+
+
+class _InvalidWindow(ValueError):
+    def __init__(self, study_id, message):
+        self.study_id = study_id
+        super().__init__(message)
 
 
 class _InvocationFailure(Exception):

@@ -101,11 +101,25 @@ def _search(directory, study_refs, network, query):
             yield {"ref": "fact:" + fact.fact_id, "navigation_only": True}
 
 
-def _related(directory, study_refs, object_ref):
+def _related(directory, study_refs, object_ref, network):
+    seen_facts = set()
     for value in _studies(directory, study_refs):
         if object_ref in value.get("object_refs", []):
             yield {"kind": "Study", "id": value["study_id"], "ref": study_refs[value["study_id"]],
                    "scope_ref": sha256(value["scope"].encode("utf-8")).hexdigest(), "navigation_only": True}
+            scope = _normalize(value["scope"])
+            for fact_id in value.get("known_fact_ids", []):
+                if fact_id in seen_facts:
+                    continue
+                try:
+                    fact = network.visible_fact(fact_id, scope)
+                except ValueError:
+                    # A Study's remembered reference may have gone stale. It
+                    # neither admits a Fact nor overrides its accepted scope.
+                    continue
+                seen_facts.add(fact.fact_id)
+                yield {"kind": "Fact", "id": fact.fact_id, "ref": "fact:" + fact.fact_id,
+                       "scope_ref": sha256(scope.encode("utf-8")).hexdigest(), "navigation_only": True}
 
 
 def load_materials(root, study, refs, study_refs, network):
@@ -150,7 +164,7 @@ def load_materials(root, study, refs, study_refs, network):
                     object_ref = "object:" + key
                     if object_page is None:
                         unverified.append({"ref": ref, "verified": False, "definition": read_json(path)})
-                    related, next_ref = _page(_related(directory, study_refs, object_ref), offset,
+                    related, next_ref = _page(_related(directory, study_refs, object_ref, network), offset,
                                              f"object-page:{offset + _PAGE_SIZE}:{key}")
                     notices.append({"object_ref": object_ref, "related": related,
                                     "navigation_only": True, "next_ref": next_ref})

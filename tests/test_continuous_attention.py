@@ -28,6 +28,17 @@ def test_revisit_is_forced_in_three_one_one_cycle_and_proposal_is_not_committed(
     assert [card["study_id"] for card in packet["cards"]] == ["a"]
 
 
+def test_channel_configuration_is_persisted_and_read_with_its_cursor():
+    _, schedule = expose([study("a")], {})
+    assert schedule["channel_cycle"] == ["ADVANCE", "ADVANCE", "ADVANCE", "EXPLORE", "REVISIT"]
+    saved = {**schedule, "channel_cycle": ["REVISIT", "ADVANCE", "EXPLORE"], "channel_cursor": 0}
+    packet, restored = expose([study("a")], json.loads(json.dumps(saved)))
+    assert packet["channel"] == "REVISIT" and packet["forced_study_id"] == "a"
+    assert restored["channel_cycle"] == saved["channel_cycle"]
+    with pytest.raises(ValueError, match="channel"):
+        expose([study("a")], {"channel_cycle": ["ADVANCE"]})
+
+
 def next_revisit(studies, schedule):
     for _ in range(5):
         packet, schedule = expose(studies, schedule)

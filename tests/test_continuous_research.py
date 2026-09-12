@@ -51,10 +51,12 @@ def test_explicit_continuation_survives_pause_and_becomes_a_verified_fact(tmp_pa
     assert first["status"] == "PAUSED"
     assert first["target_state"] == "OPEN"
     assert first["model_calls"] == 1
+    assert first["schedule"]["channel_cycle"] == ["ADVANCE", "ADVANCE", "ADVANCE", "EXPLORE", "REVISIT"]
     assert first["studies"][0]["continuation"] == "The equality has been reduced to addition."
     final = resume_run(tmp_path, invoker=model)
     assert final["status"] == "SOLVED"
     assert final["model_calls"] == 4
+    assert final["schedule"]["channel_cycle"] == first["schedule"]["channel_cycle"]
     proof = export_proof(tmp_path)
     assert [f["statement"] for f in proof["facts"]] == ["1 + 1 = 2"]
     assert proof["facts"][0]["predecessors"] == []
