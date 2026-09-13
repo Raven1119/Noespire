@@ -58,6 +58,8 @@ class ContinuousNetwork:
                 raise ValueError("Support edges do not match the verified conditional statement")
             if active:
                 self._accepted_fact(bridge.fact_id)
+        from .conditional_recurrence import validate_deferred
+        validate_deferred(self)
         self._validate_representations()
         from .refutation import RefutationStore
         for claim_id, refutation_id in self.data["refutations"].items():
@@ -300,9 +302,15 @@ class ContinuousNetwork:
                            for sid,s in self.data["supports"].items() if sid != key):
                     raise ValueError("representation ancestor path is broken")
             fact, active = self._stored_fact(row["equivalence_fact_id"])
-            if (fact.statement != equivalence_statement(self,a.obligation_id,b.obligation_id) or
-                    fact.predecessors or fact.author != "representation-bridge"):
+            if fact.statement != equivalence_statement(self,a.obligation_id,b.obligation_id):
                 raise ValueError("representation lacks its exact equivalence certificate")
+            if fact.author == "representation-activation":
+                from .conditional_recurrence import validate_activation
+                validate_activation(self,key,row,fact)
+                if active:self._accepted_fact(fact.fact_id)
+                continue
+            if fact.predecessors or fact.author != "representation-bridge":
+                raise ValueError("direct representation requires its original zero-predecessor certificate")
             ref = row["evidence_ref"]
             if not re.fullmatch(r"continuous_run/visits/[0-9]{8,}/recurrence",ref):
                 raise ValueError("invalid representation evidence path")
@@ -345,6 +353,25 @@ class ContinuousNetwork:
             del rows[key]
             raise
 
+    def record_deferred_representation(self,record):
+        rows=self.data.setdefault("deferred_representations",{})
+        key=record["support_id"]
+        if key in rows:
+            if rows[key]!=record:raise ValueError("cannot overwrite deferred representation evidence")
+            return
+        rows[key]=record
+        try:self.save()
+        except Exception:
+            del rows[key]
+            raise
+
+    def waiting_on(self,claim_id):
+        from .conditional_recurrence import live_deferred
+        return next((r["helper_claim_id"] for r in live_deferred(self) if r["claim_id"]==claim_id),None)
+
+    def study_suppressed(self,claim_id):
+        return bool(self.alias_of(claim_id) or self.waiting_on(claim_id))
+
     def active_representations(self):
         for row in self.data.get("representations",{}).values():
             try:
@@ -367,14 +394,17 @@ class ContinuousNetwork:
 
     def effective_depth(self):
         """Search depth excluding certified recurrence edges; no truth inference."""
+        from .conditional_recurrence import live_deferred
         recurrent = {r["support_id"] for r in self.active_representations()}
+        deferred = {r["support_id"]:r for r in live_deferred(self)}
         def visit(key,path):
             depths = [0]
             for sid,support in self.data["supports"].items():
                 if sid in recurrent or support["conclusion_claim_id"] != key:
                     continue
-                for child in support["requirement_claim_ids"]:
-                    if child not in path and not self.alias_of(child):
+                children = ([deferred[sid]["helper_claim_id"]] if sid in deferred else support["requirement_claim_ids"])
+                for child in children:
+                    if child not in path and not self.study_suppressed(child):
                         depths.append(1+visit(child,path|{child}))
             return max(depths)
         return visit(self.target_id,{self.target_id})

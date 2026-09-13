@@ -197,6 +197,10 @@ class _Research:
                     self.save(status="PAUSED", pause_reason=read_json(pending[0])["reason"])
                     break
                 try:
+                    if not (self.step_dir / "packet.json").exists():
+                        from .conditional_recurrence import activate_ready
+                        activate_ready(self,network)
+                        self.restore_revoked_alias_studies(network)
                     self.visit(network)
                 except _InvalidWindow as error:
                     self.reselect_window(error.study_id, str(error))
@@ -312,7 +316,7 @@ class _Research:
                 f"Last candidate verification: {'PASS' if verification.accepted else 'FAIL'}. "
                 f"Selected Claim after admission: {selected_claim['truth'] if selected_claim else 'no Claim'}. "
                 "Read feedback_ref for the exact admitted interface.")
-            if recurrence and recurrence["status"] == "ALIAS":
+            if recurrence and recurrence["status"] in ("ALIAS","DEFERRED_ALIAS"):
                 revision["admission_summary"] += " " + recurrence["feedback"]
             # Keep the original returned revision immutable; feedback is a separate revision record.
             ref = f"studies/{study['study_id']}/{revision['revision']:06d}-verified.json"
@@ -395,16 +399,17 @@ class _Research:
 
     def restore_revoked_alias_studies(self, network):
         # Do not enumerate pending new Claims before their admission check.
-        if any(not network.alias_of(r["claim_id"]) and network.truth(r["claim_id"]) == "OPEN"
+        if any(not network.study_suppressed(r["claim_id"]) and network.truth(r["claim_id"]) == "OPEN"
                and "study-"+r["claim_id"] not in self.state["studies"]
-               for r in network.data.get("representations",{}).values()):
+               for r in [*network.data.get("representations",{}).values(),
+                         *network.data.get("deferred_representations",{}).values()]):
             self.register_studies(network)
             self.save()
 
     def register_studies(self, network):
         for key in network.data["obligations"]:
             study_id = "study-" + key
-            if study_id in self.state["studies"] or network.truth(key) != "OPEN" or network.alias_of(key):
+            if study_id in self.state["studies"] or network.truth(key) != "OPEN" or network.study_suppressed(key):
                 continue
             claim = network.claim(key)
             ref = f"studies/{study_id}/000000.json"
@@ -505,7 +510,7 @@ class _Research:
         entries = [{**s, "ref": self.state["studies"][s["study_id"]],
                     "last_served_visit": self.state["schedule"].get("last_served", {}).get(s["study_id"], -1),
                     "completed": bool(s.get("claim_id") and network.truth(s["claim_id"]) != "OPEN"),
-                    "disabled": bool(s.get("claim_id") and network.alias_of(s["claim_id"])),
+                    "disabled": bool(s.get("claim_id") and network.study_suppressed(s["claim_id"])),
                     "representation_ref": "representations:"+s["claim_id"] if s.get("claim_id") and network.representation_views(s["claim_id"]) else None}
                    for s in studies.values()]
         exposure, schedule = expose(entries, self.state["schedule"],

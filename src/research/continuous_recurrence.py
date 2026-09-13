@@ -10,7 +10,7 @@ import subprocess
 
 from .closed_book import ClosedBookVerifier
 from .fact import CandidateFact, Fact
-from .fact_bridge import _WORKER_SCHEMA, _write_once
+from .fact_bridge import _WORKER_SCHEMA as _FACT_BRIDGE_WORKER_SCHEMA, _write_once
 from .graph import FactGraph
 from .pipeline import submit_candidate
 from .proof_graph import ProofObligation
@@ -37,6 +37,11 @@ has no mathematical authority and is subject to independent proof/verification.
 For NO_MATCH return empty ancestor_claim_id and explicit_mapping. Closed book.
 PACKET:
 """
+_WORKER_SCHEMA = {**_FACT_BRIDGE_WORKER_SCHEMA,
+    "properties":{**_FACT_BRIDGE_WORKER_SCHEMA["properties"],
+        "status":{"type":"string","enum":["PROOF","NEEDS_LEMMA","DECLINE"]},
+        **{k:{"type":"string"} for k in ("helper_statement","helper_context","conditional_transport_proof","mapping")}},
+    "required":[*_FACT_BRIDGE_WORKER_SCHEMA["required"],"helper_statement","helper_context","conditional_transport_proof","mapping"]}
 _TRANSPORT = """Prove the frozen equivalence in BOTH directions. Neither Claim is known true.
 You may assume one side only within its respective conditional direction; never
 assume either side unconditionally. Keep all quantifiers, domains and ambient
@@ -45,8 +50,20 @@ rename, finite-set relabelling, explicit definition unfold/fold, harmless
 notation and trivial boundary cases are permitted. Justify each transport
 inline. If either direction requires a substantive theorem, new estimate or
 new mathematical proof of the research problem (even if you can supply it),
-DECLINE: that is outside representation transport. Closed book, no retrieval.
-Return a complete proof or DECLINE honestly. Do not prove either Claim itself.
+do not claim a direct PROOF. You may instead return NEEDS_LEMMA with exactly ONE
+self-contained unproved local helper_statement and its helper_context (verbatim
+ambient scope), explicit mapping and complete conditional_transport_proof of
+H implies (ancestor iff new Claim). The helper must state the local mathematical
+fact missing for this representation transport, not restate either Claim, their
+equivalence, a stronger version of the research theorem, or a bundle of independent
+helpers. Put all definitions/domains/quantifiers in helper_statement. Do not assume
+H is known: the implication must prove both directions conditionally on H, without
+any other hidden theorem. No helper planning or recursive decomposition is allowed.
+For NEEDS_LEMMA leave proof empty. For PROOF or DECLINE leave the helper fields,
+conditional_transport_proof and mapping empty. If no valid single-helper transport
+can be supplied, DECLINE. Direct PROOF retains the original representation-only
+restriction; NEEDS_LEMMA does not activate an alias. Closed book, no retrieval.
+Do not prove either Claim itself.
 PACKET:
 """
 _CHECKS = ("both_directions", "same_ambient_scope", "representation_only", "no_substantive_mathematics")
@@ -102,6 +119,8 @@ def prepare_origin(network, packet, candidate):
     if candidate["kind"] != "SUPPORT" or len(candidate.get("requirements",[])) != 1:
         return None
     selected = packet["study"].get("claim_id")
+    if any(r["helper_claim_id"]==selected for r in network.data.get("deferred_representations",{}).values()):
+        return None  # No recursive recurrence planning for transport helpers.
     conclusion = ProofObligation.create(network.problem_id,candidate["context"],candidate["goal"])
     if selected != conclusion.obligation_id:
         return None
@@ -184,7 +203,11 @@ def check_recurrence(run, network, support_id, origin):
             _write_once(directory/"worker_result.json",worker)
             run.event("representation_worker_completed")
             result.update(status="BRIDGE_DECLINED",ancestor_claim_id=ancestor,reason=worker["reason"])
-            if worker["status"] == "PROOF":
+            if worker["status"] == "NEEDS_LEMMA":
+                from .conditional_recurrence import admit_conditional
+                phase = "CONDITIONAL_VERIFIER"
+                result = admit_conditional(run,network,support_id,origin,ancestor,worker)
+            elif worker["status"] == "PROOF":
                 if not worker["proof"].strip():
                     raise ValueError("empty representation proof")
                 candidate = CandidateFact(statement,worker["proof"],())

@@ -17,6 +17,10 @@ The [unary representation recurrence slice](REPRESENTATION_RECURRENCE.md) adds a
 path-local Probe and fresh verified transport before new requirement Study
 registration. Aliases are research views, not Claim discharge or scope rebinding.
 
+The [conditional recurrence extension](CONDITIONAL_RECURRENCE.md) can retain one
+unproved local helper behind a verified conditional transport. The alias remains
+inactive until the helper Fact and fresh verified activation establish it.
+
 ## Preserved v3 core
 
 The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,
