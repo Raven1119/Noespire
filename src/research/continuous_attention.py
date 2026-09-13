@@ -45,6 +45,7 @@ def _card(study):
             "admission_summary": study.get("admission_summary", "")[:240],
             "continuation_line_count": len(study.get("continuation", "").splitlines()),
             "evidence_refs": study.get("evidence_refs", []),
+            **({"representation_ref": study["representation_ref"]} if study.get("representation_ref") else {}),
             "relation_to_target": study.get("relation_to_target", "UNKNOWN")}
 
 

@@ -136,6 +136,16 @@ def load_materials(root, study, refs, study_refs, network):
     for ref in refs:
         if not isinstance(ref, str):
             raise ValueError("local material references must be strings")
+        representation = re.fullmatch(r"representations:(ob-[0-9a-f]{24})(?::([0-9]+))?",ref)
+        if representation:
+            key, offset = representation[1], int(representation[2] or 0)
+            rows, next_ref = _page(iter(network.representation_views(key)),offset,
+                                   f"representations:{key}:{offset+_PAGE_SIZE}")
+            # These are views of OPEN propositions, not accepted premises. The
+            # certified equivalence does not establish either proposition.
+            unverified.append({"ref":ref,"verified":False,"representation_views":rows,
+                               "next_ref":next_ref,"authority":"TRANSPORT_ONLY"})
+            continue
         if ref.startswith("fact:"):
             fact = network.visible_fact(ref[5:], _normalize(study["scope"]))
             facts[fact.fact_id] = {"fact_id": fact.fact_id, "statement": fact.statement}

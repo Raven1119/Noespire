@@ -13,6 +13,10 @@ The [Support scope generation contract](SUPPORT_SCOPE_CONTRACT.md) keeps child
 ambient contexts identical and places new local definitions in complete goals;
 the exact-scope mechanical gate is unchanged.
 
+The [unary representation recurrence slice](REPRESENTATION_RECURRENCE.md) adds a
+path-local Probe and fresh verified transport before new requirement Study
+registration. Aliases are research views, not Claim discharge or scope rebinding.
+
 ## Preserved v3 core
 
 The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,

@@ -186,6 +186,7 @@ class _Research:
         try:
             while True:
                 network = ContinuousNetwork(self.root)
+                self.restore_revoked_alias_studies(network)
                 truth = network.truth(network.target_id)
                 if truth != "OPEN" and not (self.step_dir / "packet.json").exists():
                     self.save(status="SOLVED" if truth == "DISCHARGED" else "REFUTED")
@@ -292,11 +293,18 @@ class _Research:
                 evidence = read_json(evidence_path)
                 if evidence.get("fact_id") and candidate["context"] == study["scope"]:
                     revision["known_fact_ids"] = list(dict.fromkeys([*revision.get("known_fact_ids", []), evidence["fact_id"]]))
+            recurrence = None
+            origin_path = self.step_dir / "recurrence_input.json"
+            if verification.accepted and evidence and evidence.get("support_id") and origin_path.exists():
+                from .continuous_recurrence import check_recurrence
+                recurrence = check_recurrence(self, network, evidence["support_id"], read_json(origin_path))
             selected_id = study.get("claim_id")
             selected_claim = {"claim_id": selected_id, "truth": network.truth(selected_id)} if selected_id else None
             # Verifier acceptance and the selected Claim's truth are distinct.
             # Return the actual admission receipt without rebinding another scope.
             feedback = {**asdict(verification), "admission": evidence, "selected_claim": selected_claim}
+            if recurrence:
+                feedback["representation_recurrence"] = recurrence
             write_json(self.step_dir / "feedback.json", feedback)
             revision["feedback_ref"] = (self.step_dir / "feedback.json").relative_to(self.directory).as_posix()
             revision["evidence_refs"].append(revision["feedback_ref"])
@@ -304,6 +312,8 @@ class _Research:
                 f"Last candidate verification: {'PASS' if verification.accepted else 'FAIL'}. "
                 f"Selected Claim after admission: {selected_claim['truth'] if selected_claim else 'no Claim'}. "
                 "Read feedback_ref for the exact admitted interface.")
+            if recurrence and recurrence["status"] == "ALIAS":
+                revision["admission_summary"] += " " + recurrence["feedback"]
             # Keep the original returned revision immutable; feedback is a separate revision record.
             ref = f"studies/{study['study_id']}/{revision['revision']:06d}-verified.json"
             if not (self.directory / ref).exists():
@@ -366,6 +376,13 @@ class _Research:
             if (candidate["kind"] != "FACT" or fact_candidate.statement != claim.statement
                     or not set(packet["required_fact_ids"]) <= set(fact_candidate.predecessors)):
                 raise ValueError("COMPOSE must retain its exact conclusion and bridge/condition lineage")
+        from .continuous_recurrence import prepare_origin
+        from .fact_bridge import _write_once
+        origin_path = self.step_dir / "recurrence_input.json"
+        if not origin_path.exists():
+            origin = prepare_origin(network, packet, candidate)
+            if origin:
+                _write_once(origin_path, origin)
         result = submit_candidate(graph=FactGraph(self.root), problem_id=network.problem_id,
             problem=network.claim(network.target_id).statement, author="continuous-worker",
             candidate=fact_candidate, verifier=_StatementVerifier(self.invoker("verifier")))
@@ -376,10 +393,18 @@ class _Research:
             self.event("fact_bound", fact_id=result.fact.fact_id)
         return result.verification
 
+    def restore_revoked_alias_studies(self, network):
+        # Do not enumerate pending new Claims before their admission check.
+        if any(not network.alias_of(r["claim_id"]) and network.truth(r["claim_id"]) == "OPEN"
+               and "study-"+r["claim_id"] not in self.state["studies"]
+               for r in network.data.get("representations",{}).values()):
+            self.register_studies(network)
+            self.save()
+
     def register_studies(self, network):
         for key in network.data["obligations"]:
             study_id = "study-" + key
-            if study_id in self.state["studies"] or network.truth(key) != "OPEN":
+            if study_id in self.state["studies"] or network.truth(key) != "OPEN" or network.alias_of(key):
                 continue
             claim = network.claim(key)
             ref = f"studies/{study_id}/000000.json"
@@ -390,6 +415,7 @@ class _Research:
             self.state["studies"][study_id] = ref
 
     def select_work(self, network):
+        self.restore_revoked_alias_studies(network)
         studies = {key: read_json(self.directory / ref) for key, ref in self.state["studies"].items()}
         selection_path = self.step_dir / "selection.json"
         if not selection_path.exists():
@@ -421,7 +447,8 @@ class _Research:
                     "executed automatically. In reason, explain relevance, irrelevance, a need for more material, "
                     "or whether a separately verified bridge appears worth investigating. Lexical/reference "
                     "overlap is only a discovery reason, never an established object correspondence. "
-                    "bridge_candidate_pages are optional further navigation.\nPACKET:\n" +
+                    "bridge_candidate_pages are optional further navigation. representation_ref requests paged "
+                    "verified-equivalent representation views, not a proof of either open Claim.\nPACKET:\n" +
                     json.dumps(exposure, ensure_ascii=False))
                 selected = self.invoker("selector").invoke(prompt=prompt, schema=_SELECTOR_SCHEMA,
                                                           label="continuous_selector")
@@ -477,7 +504,9 @@ class _Research:
     def selector_exposure(self, network, studies):
         entries = [{**s, "ref": self.state["studies"][s["study_id"]],
                     "last_served_visit": self.state["schedule"].get("last_served", {}).get(s["study_id"], -1),
-                    "completed": bool(s.get("claim_id") and network.truth(s["claim_id"]) != "OPEN")}
+                    "completed": bool(s.get("claim_id") and network.truth(s["claim_id"]) != "OPEN"),
+                    "disabled": bool(s.get("claim_id") and network.alias_of(s["claim_id"])),
+                    "representation_ref": "representations:"+s["claim_id"] if s.get("claim_id") and network.representation_views(s["claim_id"]) else None}
                    for s in studies.values()]
         exposure, schedule = expose(entries, self.state["schedule"],
             card_budget=self.state["settings"]["selector_context_tokens"] // 2)
@@ -523,7 +552,7 @@ class _LocalInvoker:
         self.run, self.role = run, role
 
     def invoke(self, *, prompt, schema, label):
-        family = "selector" if self.role in ("selector", "selector-bridge") else "worker" if self.role == "worker" else "verifier"
+        family = "selector" if self.role in ("selector", "selector-bridge", "recurrence-probe") else "worker" if self.role in ("worker", "recurrence-worker") else "verifier"
         try:
             _, measurement = bounded_packet({"prompt": prompt, "schema": schema},
                                             self.run.state["settings"][family + "_context_tokens"])

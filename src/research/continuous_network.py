@@ -58,6 +58,7 @@ class ContinuousNetwork:
                 raise ValueError("Support edges do not match the verified conditional statement")
             if active:
                 self._accepted_fact(bridge.fact_id)
+        self._validate_representations()
         from .refutation import RefutationStore
         for claim_id, refutation_id in self.data["refutations"].items():
             claim = self.claim(claim_id)
@@ -279,6 +280,104 @@ class ContinuousNetwork:
         return {"support": support, "conclusion": asdict(self.claim(support["conclusion_claim_id"])),
                 "requirements": [asdict(self.claim(k)) for k in support["requirement_claim_ids"]],
                 "facts": tuple(facts.values())}
+
+    def _validate_representations(self):
+        from .continuous_recurrence import equivalence_statement, _CHECKS
+        import re
+        for key, row in self.data.get("representations", {}).items():
+            if set(row) != {"claim_id","ancestor_claim_id","support_id","equivalence_fact_id",
+                            "ancestor_path","evidence_ref"} or key != row["support_id"]:
+                raise ValueError("invalid representation record")
+            support = self.data["supports"][key]
+            a, b = self.claim(row["ancestor_claim_id"]), self.claim(row["claim_id"])
+            path = row["ancestor_path"]
+            if (support["requirement_claim_ids"] != [b.obligation_id] or not path or
+                    path[-1] != support["conclusion_claim_id"] or a.obligation_id not in path or
+                    len(set(path)) != len(path) or a.context != b.context):
+                raise ValueError("representation is not a unary path ancestor interface")
+            for parent, child in zip(path,path[1:]):
+                if not any(s["conclusion_claim_id"]==parent and child in s["requirement_claim_ids"]
+                           for sid,s in self.data["supports"].items() if sid != key):
+                    raise ValueError("representation ancestor path is broken")
+            fact, active = self._stored_fact(row["equivalence_fact_id"])
+            if (fact.statement != equivalence_statement(self,a.obligation_id,b.obligation_id) or
+                    fact.predecessors or fact.author != "representation-bridge"):
+                raise ValueError("representation lacks its exact equivalence certificate")
+            ref = row["evidence_ref"]
+            if not re.fullmatch(r"continuous_run/visits/[0-9]{8,}/recurrence",ref):
+                raise ValueError("invalid representation evidence path")
+            directory = self.root/ref
+            if directory.resolve() != self.root.resolve()/ref:
+                raise ValueError("representation evidence may not redirect")
+            verification = read_json(directory/"verification.json")
+            raw = read_json(directory/"verifier_result.json")
+            candidate = read_json(directory/"candidate.json")
+            if (verification.get("accepted") is not True or raw.get("accepted") is not True or
+                    raw.get("external_authority_dependency") is not False or raw.get("violation_type") != "NONE" or
+                    not all(raw.get(k) is True for k in _CHECKS) or candidate["predecessors"] or
+                    _normalize(candidate["statement"]) != fact.statement or _normalize(candidate["proof"]) != fact.proof):
+                raise ValueError("representation certificate/evidence mismatch")
+            if active:
+                self._accepted_fact(fact.fact_id)
+        # Alias edges cannot introduce an alias cycle. Exact identity recurrences
+        # are per-Support receipts, not a self alias of the original Study.
+        links = {r["claim_id"]:r["ancestor_claim_id"] for r in self.data.get("representations",{}).values()
+                 if r["claim_id"] not in r["ancestor_path"]}
+        for start in links:
+            seen = set()
+            while start in links:
+                if start in seen:
+                    raise ValueError("cyclic representation aliases")
+                seen.add(start)
+                start = links[start]
+
+    def record_representation(self, record):
+        rows = self.data.setdefault("representations",{})
+        key = record["support_id"]
+        if key in rows and rows[key] != record:
+            raise ValueError("cannot overwrite representation evidence")
+        if key in rows:
+            return
+        rows[key] = record
+        try:
+            self.save()
+        except Exception:
+            del rows[key]
+            raise
+
+    def active_representations(self):
+        for row in self.data.get("representations",{}).values():
+            try:
+                self._accepted_fact(row["equivalence_fact_id"])
+                self._accepted_fact(self.data["supports"][row["support_id"]]["bridge_fact_id"])
+            except ValueError:
+                continue
+            yield row
+
+    def alias_of(self, claim_id):
+        return next((r["ancestor_claim_id"] for r in self.active_representations()
+                     if r["claim_id"]==claim_id and claim_id not in r["ancestor_path"]),None)
+
+    def representation_views(self, ancestor_id):
+        self.claim(ancestor_id)
+        return tuple({**row,"statement":self.claim(row["claim_id"]).statement,
+                      "scope":self.claim(row["claim_id"]).context,"navigation_only":True,
+                      "claim_truth":self.truth(row["claim_id"])}
+                     for row in self.active_representations() if row["ancestor_claim_id"]==ancestor_id)
+
+    def effective_depth(self):
+        """Search depth excluding certified recurrence edges; no truth inference."""
+        recurrent = {r["support_id"] for r in self.active_representations()}
+        def visit(key,path):
+            depths = [0]
+            for sid,support in self.data["supports"].items():
+                if sid in recurrent or support["conclusion_claim_id"] != key:
+                    continue
+                for child in support["requirement_claim_ids"]:
+                    if child not in path and not self.alias_of(child):
+                        depths.append(1+visit(child,path|{child}))
+            return max(depths)
+        return visit(self.target_id,{self.target_id})
 
     def export(self):
         facts = self.facts_for(self.target_id)
