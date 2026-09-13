@@ -40,9 +40,13 @@ _WORKER_SCHEMA = _object({
         "object_refs": _REFS, "continues_study_id": _TEXT})]},
     "definitions": {"type": "array", "items": _object({"name": _TEXT, "text": _TEXT})},
     "candidate": {"anyOf": [{"type": "null"}, _object({
-        "kind": {"type": "string", "enum": ["FACT", "SUPPORT", "REFUTATION"]}, "goal": _TEXT, "context": _TEXT,
+        "kind": {"type": "string", "enum": ["FACT", "SUPPORT", "REFUTATION"]}, "goal": _TEXT,
+        "context": {**_TEXT, "description": "For a SUPPORT, ambient assumptions only. Keep the selected conclusion context; put new local definitions and explicit conditions in goals."},
         "proof": _TEXT, "predecessors": {"type": "array", "items": _TEXT},
-        "requirements": {"type": "array", "items": _object({"goal": _TEXT, "context": _TEXT})},
+        "requirements": {"type": "array", "items": _object({
+            "goal": {**_TEXT, "description": "Complete self-contained statement: include auxiliary definitions, variable domains and quantifiers; retain genuine new conditions explicitly. Do not refer to definitions only in a parent or notes."},
+            "context": {**_TEXT, "description": "Copy the SUPPORT conclusion candidate.context verbatim, including an empty string. Ambient assumptions only; no added definitions or hypotheses."},
+        })},
     })]},
 })
 
@@ -226,6 +230,16 @@ class _Research:
                   "no theorem authority, retrieval, or assumed missing lemmas. A SUPPORT proves only the "
                   "conditional implication from all explicit requirements to the given goal in its context; "
                   "include the full conditional proof, never treat unproved requirements as accepted Facts. "
+                  "For every SUPPORT child, copy the conclusion context verbatim, including an empty string. "
+                  "A SUPPORT context contains ambient assumptions only. Put new auxiliary functions, notation, "
+                  "local variables and parameterized objects in each child's complete self-contained goal, "
+                  "with all definitions, domains and quantifiers; never change context to introduce them. "
+                  "Do not substitute 'defined above' or a reference to the Support goal or metadata for a "
+                  "child's full mathematical interface. A named object is not an existence proof: an existence "
+                  "claim, required property or extra hypothesis is not a mere definition. Prove such conditions "
+                  "or explicitly quantify or conditionalize them in the child goal; never silently assume them "
+                  "through context. The Support proof must justify that these precise conditional children "
+                  "suffice for its conclusion, including any conditions needed to use them. "
                   "A REFUTATION requires an explicit counterexample proved inline for the current claim; "
                   "a proof gap, suspected falsity or timeout is not a counterexample. "
                   "You may return context_requests for exact local fact:<id>, study:<id>, object:<id>, "
