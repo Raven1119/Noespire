@@ -180,6 +180,22 @@ class ContinuousNetwork:
             raise ValueError("visible Fact lacks an accepted binding in the exact scope")
         return self._accepted_fact(fact_id)
 
+    def inspect_fact(self, fact_id):
+        """Inspect the complete source interface; this grants no local premise.
+
+        Explicit bridge work may inspect another scope, but ordinary material
+        reads and candidate admission still use visible_fact in the local scope.
+        """
+        contexts = {self.claim(key).context for key, ids in self.data["fact_bindings"].items()
+                    if fact_id in ids}
+        contexts.update(self.claim(s["conclusion_claim_id"]).context
+                        for s in self.data["supports"].values() if s["bridge_fact_id"] == fact_id)
+        if len(contexts) != 1:
+            raise ValueError("source Fact requires an unambiguous accepted scope binding")
+        context = next(iter(contexts))
+        fact = self.visible_fact(fact_id, context)
+        return {"fact_id": fact.fact_id, "scope": context, "statement": fact.statement}
+
     def _conditional_statement(self, claim, requirements):
         goal = ("The conjunction of these statements "
                 + json.dumps([r.goal for r in requirements], ensure_ascii=False)

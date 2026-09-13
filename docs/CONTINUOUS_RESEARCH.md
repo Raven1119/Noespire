@@ -73,6 +73,11 @@ window preserves the complete last-confirmed Study. Object lookup returns paged
 Study/Fact navigation associations; only a separate exact-scope accepted Fact
 read can supply a proof predecessor. Navigation is not mathematical authority.
 
+An [explicit verified Fact bridge](FACT_SCOPE_BRIDGES.md) can create a new accepted
+interface in a different scope. Its separate on-demand entry preserves all source
+conditions, verifies the correspondence, and records the source Fact in lineage.
+It does not alter ordinary scope checks, navigation exposure, or the scheduler.
+
 Verifier PASS concerns the submitted interface. If its goal or context differs
 from the selected Claim, the original Claim stays OPEN. Local feedback records
 both the actual admission and selected Claim truth so subsequent research can

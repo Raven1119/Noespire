@@ -33,3 +33,16 @@ preplanning, new graph operator, global planner or cumulative mathematical
 termination rule is added. An external observation pause leaves research OPEN.
 Only after all slices, deterministic regression and independent review pass is
 a feature-complete SHA frozen for the existing N3D/N3E evaluation corpus.
+
+## Explicit scope bridge decision (2026-09-13)
+
+The n3d-13 material-chain audit distinguished discoverability from lawful use.
+The approved next slice is a [verified explicit Fact bridge](FACT_SCOPE_BRIDGES.md):
+inspect the complete accepted source interface, freeze an auxiliary target and
+correspondence, obtain a Worker proof and fresh Verifier verdict, then admit a
+new target-scope Fact with the actual source predecessor. Normal exact-scope
+materialization remains unchanged. No automatic scope bypass, semantic rebinding,
+source Fact rewrite, new graph operator, scheduler change, or automatic discovery
+is authorized by this slice. Validate deterministic recovery first, then one
+isolated bridge/materialization experiment; do not resume frozen historical runs
+under the changed code fingerprint.
