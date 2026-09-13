@@ -46,3 +46,12 @@ source Fact rewrite, new graph operator, scheduler change, or automatic discover
 is authorized by this slice. Validate deterministic recovery first, then one
 isolated bridge/materialization experiment; do not resume frozen historical runs
 under the changed code fingerprint.
+
+## Bridge candidate discovery decision (2026-09-13)
+
+The user separately authorized [discovery and inspection](BRIDGE_CANDIDATE_DISCOVERY.md)
+after freezing the verified bridge baseline at `328b8324b61bfec418969981546b82bce1ca6c2f`.
+Expose bounded, condition-preserving candidates using explicit references or exact
+notation; keep inspection distinct from ordinary accepted-Fact materialization.
+Freeze each Selector input before invocation for recovery. No scheduler change,
+automatic bridge or requirement proof is authorized by the discovery-only trial.

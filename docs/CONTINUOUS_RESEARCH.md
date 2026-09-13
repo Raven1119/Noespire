@@ -78,6 +78,11 @@ interface in a different scope. Its separate on-demand entry preserves all sourc
 conditions, verifies the correspondence, and records the source Fact in lineage.
 It does not alter ordinary scope checks, navigation exposure, or the scheduler.
 
+[Bridge candidate discovery](BRIDGE_CANDIDATE_DISCOVERY.md) separately adds bounded
+cross-scope navigation to Selector exposure. Requested foreign interfaces remain
+inspection notices, never accepted predecessors. Ordinary scope checks and the
+3:1:1 scheduler are unchanged; no bridge is automatically executed.
+
 Verifier PASS concerns the submitted interface. If its goal or context differs
 from the selected Claim, the original Claim stays OPEN. Local feedback records
 both the actual admission and selected Claim truth so subsequent research can

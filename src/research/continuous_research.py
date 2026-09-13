@@ -10,7 +10,7 @@ from uuid import uuid4
 from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
 from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEFAULT_CHANNEL_CYCLE
-from .continuous_materials import load_materials
+from .continuous_materials import expose_bridge_candidates, load_selector_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
 from .pipeline import submit_candidate, VerificationResult
@@ -385,16 +385,12 @@ class _Research:
                             "relation": "RELEVANT", "continuation_window": None}
                 schedule, exposure = self.state["schedule"], {"channel": "DIRECT", "forced_study_id": None}
             else:
-                entries = [{**s, "ref": self.state["studies"][s["study_id"]],
-                            "last_served_visit": self.state["schedule"].get("last_served", {}).get(s["study_id"], -1),
-                            "completed": bool(s.get("claim_id") and network.truth(s["claim_id"]) != "OPEN")}
-                           for s in studies.values()]
-                exposure, schedule = expose(entries, self.state["schedule"],
-                    card_budget=self.state["settings"]["selector_context_tokens"] // 2)
-                exposed = {card["study_id"] for card in exposure["cards"]}
-                exposure["ready_supports"] = [{"support_id": s["support_id"],
-                    "study_id": "study-" + s["conclusion_claim_id"]} for s in network.ready_supports()
-                    if "study-" + s["conclusion_claim_id"] in exposed]
+                input_path = self.step_dir / 'selector_input.json'
+                if not input_path.exists():
+                    write_json(input_path, self.selector_exposure(network, studies))
+                frozen = read_json(input_path)
+                exposure, schedule = frozen['exposure'], frozen['next_schedule']
+                exposed = {card['study_id'] for card in exposure['cards']}
                 prompt = ("You are the fresh local Research Selector. Choose a concrete local action using only "
                     "these navigation cards. They are not proof evidence. Judge advancement, obstruction "
                     "discrimination and new-interface value; no goal-distance scores. UNKNOWN relevance is "
@@ -404,7 +400,14 @@ class _Research:
                     "when needed; consider the Study's context_requests and known_fact_ids. Choose this "
                     "visit's material_refs explicitly so the window can move instead of accumulating every "
                     "old input. continuation_window optionally selects explicit zero-based lines of the "
-                    "unverified notes; assumptions and candidate proofs are never truncated.\nPACKET:\n" +
+                    "unverified notes; assumptions and candidate proofs are never truncated. "
+                    "BRIDGE_CANDIDATE cards are possible connections from another scope, not local accepted "
+                    "premises. Ignore them or request their fact:<source_fact_id> for inspection in material_refs. "
+                    "Inspection retains original conditions and cannot supply accepted_facts; no bridge is "
+                    "executed automatically. In reason, explain relevance, irrelevance, a need for more material, "
+                    "or whether a separately verified bridge appears worth investigating. Lexical/reference "
+                    "overlap is only a discovery reason, never an established object correspondence. "
+                    "bridge_candidate_pages are optional further navigation.\nPACKET:\n" +
                     json.dumps(exposure, ensure_ascii=False))
                 selected = self.invoker("selector").invoke(prompt=prompt, schema=_SELECTOR_SCHEMA,
                                                           label="continuous_selector")
@@ -426,7 +429,15 @@ class _Research:
         if selected["operation"] == "CONNECT":
             refs += ["study:" + c["study_id"] for c in plan["exposure"].get("cards", [])
                      if c["study_id"] != study["study_id"]]
-        facts, unverified, notices = load_materials(self.root, study, refs, self.state["studies"], network)
+        try:
+            facts, unverified, notices = load_selector_materials(self.root, study, refs, self.state["studies"], network,
+                candidates=plan['exposure'].get('bridge_candidates', []),
+                token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        except AttentionOverflow as error:
+            raise _InvalidWindow(study['study_id'],
+                f"Discovery inspection window exceeds its local limit ({error}). "
+                "Choose fewer material_refs; do not request a page and its full interfaces together. "
+                "No Worker service occurred.") from error
         if materials:
             facts.update({f.fact_id: {"fact_id": f.fact_id, "statement": f.statement} for f in materials["facts"]})
         window = selected.get("continuation_window")
@@ -448,6 +459,21 @@ class _Research:
                 "feedback": read_json(self.directory / study["feedback_ref"]) if study.get("feedback_ref") else None,
                 "material_notices": notices, "action": selected["reason"], "relation": selected["relation"],
                 "channel": plan["exposure"]["channel"]}
+
+    def selector_exposure(self, network, studies):
+        entries = [{**s, "ref": self.state["studies"][s["study_id"]],
+                    "last_served_visit": self.state["schedule"].get("last_served", {}).get(s["study_id"], -1),
+                    "completed": bool(s.get("claim_id") and network.truth(s["claim_id"]) != "OPEN")}
+                   for s in studies.values()]
+        exposure, schedule = expose(entries, self.state["schedule"],
+            card_budget=self.state["settings"]["selector_context_tokens"] // 2)
+        exposed = {card["study_id"] for card in exposure["cards"]}
+        exposure["ready_supports"] = [{"support_id": s["support_id"],
+            "study_id": "study-" + s["conclusion_claim_id"]} for s in network.ready_supports()
+            if "study-" + s["conclusion_claim_id"] in exposed]
+        exposure = expose_bridge_candidates(self.root, exposure, studies, self.state['studies'], network,
+            token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        return {'exposure': exposure, 'next_schedule': schedule}
 
     def persist_definitions(self, revision, definitions):
         from .proof_graph import _identity

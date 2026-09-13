@@ -11,6 +11,7 @@ import re
 from .graph import FactGraph
 from .fact import _normalize
 from .run_storage import read_json
+from .continuous_attention import bounded_packet, AttentionOverflow
 
 
 _STUDY = re.compile(r"studies/([A-Za-z0-9_-]+)/([0-9]{6,}(?:-verified)?|(?:timeout|capacity)-[0-9]{8,})\.json\Z")
@@ -171,3 +172,158 @@ def load_materials(root, study, refs, study_refs, network):
                     continue
         notices.append({"ref": ref, "error": "unknown local reference"})
     return facts, unverified, notices
+
+
+# Exact callable notation only: bare single-letter variables and generic operators
+# are too weak to justify unsolicited navigation. No aliases or semantic matching.
+_CALLABLE = re.compile(r"(?<![\w])([A-Za-z\u0370-\u03ff][A-Za-z0-9\u0370-\u03ff]*(?:_(?:\{[A-Za-z0-9]+\}|[A-Za-z0-9]+))?)(?=\s*\()")
+_GENERIC = {"max", "min", "sum", "prod", "log", "exp", "sin", "cos", "if", "for"}
+
+
+def _notation(text):
+    return {name for name in _CALLABLE.findall(text) if name not in _GENERIC
+            and (len(name) > 1 or '\u0370' <= name <= '\u03ff')}
+
+
+def _bridge_rows(root, study, study_refs, network):
+    """Rebuild a lexical/reference index locally; emit only related interfaces."""
+    scope, terms = _normalize(study['scope']), _notation(study['focus'])
+    object_refs = set(study.get('object_refs', []))
+    associated = {}
+    for peer in _studies(Path(root) / 'continuous_run', study_refs):
+        shared = object_refs.intersection(peer.get('object_refs', []))
+        if shared:
+            for fact_id in peer.get('known_fact_ids', []):
+                associated.setdefault(fact_id, set()).update(shared)
+    # Accepted bindings, not every file in FactGraph. No proofs are exposed.
+    identities = {fact_id for ids in network.data['fact_bindings'].values() for fact_id in ids}
+    identities.update(s['bridge_fact_id'] for s in network.data['supports'].values())
+    for fact_id in sorted(identities):
+        try:
+            source = network.inspect_fact(fact_id)
+        except ValueError:
+            continue  # Revoked/unavailable material is not a lawful candidate.
+        if source['scope'] == scope:
+            continue
+        shared = sorted(associated.get(fact_id, []))
+        matches = sorted(terms.intersection(_notation(source['statement'])))
+        if not shared and not matches:
+            continue
+        yield {'kind': 'BRIDGE_CANDIDATE', 'study_id': study['study_id'],
+               'ref': 'fact:' + fact_id, 'source_fact_id': fact_id,
+               'source_scope': source['scope'], 'exact_statement': source['statement'],
+               'discovery_reason': {'shared_object_refs': shared, 'exact_notation': matches},
+               'navigation_only': True, 'requires_bridge': True}
+
+
+def bridge_candidate_page(root, study, study_refs, network, offset=0, *, token_budget=2000):
+    if type(offset) is not int or offset < 0:
+        raise ValueError('invalid bridge candidate page offset')
+    items, next_ref = _page(_bridge_rows(root, study, study_refs, network), offset,
+        f"bridge-candidates:{offset + _PAGE_SIZE}:{study['study_id']}")
+    page = {'study_id': study['study_id'], 'navigation_only': True,
+            'candidates': [], 'unexpanded': [], 'next_ref': next_ref}
+    for index, item in enumerate(items):
+        item = {**item, 'page_offset': offset + index}
+        following = (f"bridge-candidates:{offset + index + 1}:{study['study_id']}"
+                     if index + 1 < len(items) else next_ref)
+        proposed = {**page, 'candidates': page['candidates'] + [item], 'next_ref': following}
+        try:
+            bounded_packet(proposed, token_budget)
+        except AttentionOverflow:
+            try:
+                bounded_packet({**page, 'candidates': [item], 'unexpanded': [], 'next_ref': following}, token_budget)
+            except AttentionOverflow as error:
+                # This interface cannot fit even alone: do not hide all later
+                # candidates behind it or replace its conditions with a summary.
+                notice = {'ref': item['ref'], 'source_fact_id': item['source_fact_id'],
+                    'navigation_only': True, 'requires_bridge': True,
+                    'reason': 'complete_interface_exceeds_navigation_budget',
+                    'estimated_tokens': error.measurement['estimated_tokens']}
+                proposed = {**page, 'unexpanded': page['unexpanded'] + [notice], 'next_ref': following}
+                try:
+                    bounded_packet(proposed, token_budget)
+                except AttentionOverflow:
+                    page['next_ref'] = f"bridge-candidates:{offset + index}:{study['study_id']}"
+                    break
+            else:
+                page['next_ref'] = f"bridge-candidates:{offset + index}:{study['study_id']}"
+                break
+        page = proposed
+    bounded_packet(page, token_budget)
+    return page
+
+
+def expose_bridge_candidates(root, exposure, studies, study_refs, network, *, token_budget):
+    """Attach bounded navigation without changing Study exposure or scheduling."""
+    navigation = {'bridge_candidates': [], 'bridge_candidate_pages': []}
+    for card in exposure['cards']:
+        study = studies[card['study_id']]
+        page = bridge_candidate_page(root, study, study_refs, network, token_budget=token_budget)
+        if not page['candidates'] and not page['unexpanded']:
+            continue
+        pointer = {'study_id': study['study_id'], 'navigation_only': True,
+                   'ref': f"bridge-candidates:0:{study['study_id']}"}
+        if page['unexpanded']:
+            pointer['unexpanded'] = page['unexpanded']
+        pages = navigation['bridge_candidate_pages'] + [pointer]
+        try:
+            bounded_packet({**navigation, 'bridge_candidate_pages': pages}, token_budget)
+        except AttentionOverflow:
+            break
+        navigation['bridge_candidate_pages'] = pages
+        for index, candidate in enumerate(page['candidates']):
+            next_ref = (f"bridge-candidates:{candidate['page_offset'] + 1}:{study['study_id']}"
+                        if index + 1 < len(page['candidates']) else page['next_ref'])
+            next_pages = pages[:-1] + ([{**pointer, 'ref': next_ref or pointer['ref']}]
+                                      if next_ref or page['unexpanded'] else [])
+            proposed = {'bridge_candidates': navigation['bridge_candidates'] + [candidate],
+                        'bridge_candidate_pages': next_pages}
+            try:
+                bounded_packet(proposed, token_budget)
+            except AttentionOverflow:
+                break  # The full conditional interface remains reachable by page.
+            navigation = proposed
+    return {**exposure, **navigation}
+
+
+def load_selector_materials(root, study, refs, study_refs, network, *, candidates=(), token_budget=2000):
+    """Inspect exposed foreign interfaces, keeping the ordinary resolver intact.
+
+    Cards authorize inspection only, never proof use. Revalidate the source on
+    every read; stale or fabricated cards cannot grant acceptance or scope access.
+    """
+    normal, inspections, allowed = [], [], {c['ref']: c for c in candidates
+        if c.get('kind') == 'BRIDGE_CANDIDATE' and c.get('study_id') == study['study_id']}
+    pages = []
+    for ref in dict.fromkeys(refs):
+        page = re.fullmatch(r'bridge-candidates:([0-9]+):(study-[A-Za-z0-9_-]+)', ref) if isinstance(ref, str) else None
+        if page:
+            if page[2] != study['study_id']:
+                raise ValueError('candidate page concerns another Study')
+            value = bridge_candidate_page(root, study, study_refs, network, int(page[1]), token_budget=token_budget)
+            pages.append(value)
+            allowed.update((c['ref'], c) for c in value['candidates'])
+        else:
+            normal.append(ref)
+    remaining = []
+    for ref in normal:
+        card = allowed.get(ref) if isinstance(ref, str) else None
+        if card is None:
+            remaining.append(ref)
+            continue
+        source = network.inspect_fact(card['source_fact_id'])
+        if ref != 'fact:' + source['fact_id'] or source['scope'] != card['source_scope'] or source['statement'] != card['exact_statement']:
+            raise ValueError('bridge candidate source interface changed')
+        if source['scope'] == _normalize(study['scope']):
+            remaining.append(ref)
+            continue
+        fact = FactGraph(Path(root)).get_fact(source['fact_id'])
+        inspections.append({**card, 'kind': 'BRIDGE_CANDIDATE_INSPECTION',
+            'accepted_in_target_scope': False,
+            'provenance': {'problem_id': fact.problem_id, 'source_accepted': True,
+                'predecessors': list(fact.predecessors),
+                'claim_ids': sorted(k for k, ids in network.data['fact_bindings'].items() if fact.fact_id in ids)}})
+    facts, notes, notices = load_materials(root, study, remaining, study_refs, network)
+    bounded_packet(pages + inspections, token_budget)
+    return facts, notes, notices + pages + inspections
