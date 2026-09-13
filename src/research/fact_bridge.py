@@ -130,25 +130,36 @@ def read_bridge(problem_dir, bridge_id):
 def bridge_fact(problem_dir, *, source_fact_id, target_context, target_goal, correspondence,
                 invoker=None, on_event=None, image="noespire-codex-isolated:local"):
     """Start or reuse one explicit bridge; never resume the enclosing research run."""
+    root = Path(problem_dir).resolve()
+    with run_lock(root / "continuous_run"):
+        return _bridge_fact_locked(root, source_fact_id=source_fact_id, target_context=target_context,
+            target_goal=target_goal, correspondence=correspondence, invoker=invoker,
+            on_event=on_event, image=image)
+
+
+def _bridge_fact_locked(root, *, source_fact_id, target_context, target_goal, correspondence,
+                        invoker=None, on_event=None, image="noespire-codex-isolated:local",
+                        on_prepared=None):
+    """Internal composition seam; caller MUST own the continuous_run writer lock."""
     if (not all(isinstance(v, str) for v in (target_context, target_goal, correspondence))
             or not correspondence.strip()):
         raise ValueError("bridge needs a target interface and explicit correspondence")
-    root = Path(problem_dir).resolve()
-    with run_lock(root / "continuous_run"):
-        network = ContinuousNetwork(root)
-        target = ProofObligation.create(network.problem_id, target_context, target_goal)
-        packet = {"problem_id": network.problem_id, "source_fact": network.inspect_fact(source_fact_id),
-                  "target": {"obligation_id": target.obligation_id, "context": target.context,
-                             "goal": target.goal, "statement": target.statement},
-                  "correspondence": _normalize(correspondence), "accepted_facts": []}
-        bridge_id = _identity("bridge-", packet)
-        directory = root / "fact_bridges" / bridge_id
-        if not (directory / "request.json").exists():
-            runtime = {"backend": "injected"} if invoker is not None else real_runtime(image)
-            write_json(directory / "request.json", {"bridge_id": bridge_id, "packet": packet,
-                "run_id": uuid4().hex, "code_digest": _code_digest(), "runtime": runtime,
-                "budget": {"max_model_calls": 2}, "created_at": time.time()})
-        return _resume(root, bridge_id, invoker, on_event)
+    network = ContinuousNetwork(root)
+    target = ProofObligation.create(network.problem_id, target_context, target_goal)
+    packet = {"problem_id": network.problem_id, "source_fact": network.inspect_fact(source_fact_id),
+              "target": {"obligation_id": target.obligation_id, "context": target.context,
+                         "goal": target.goal, "statement": target.statement},
+              "correspondence": _normalize(correspondence), "accepted_facts": []}
+    bridge_id = _identity("bridge-", packet)
+    directory = root / "fact_bridges" / bridge_id
+    if not (directory / "request.json").exists():
+        runtime = {"backend": "injected"} if invoker is not None else real_runtime(image)
+        write_json(directory / "request.json", {"bridge_id": bridge_id, "packet": packet,
+            "run_id": uuid4().hex, "code_digest": _code_digest(), "runtime": runtime,
+            "budget": {"max_model_calls": 2}, "created_at": time.time()})
+    if on_prepared:
+        on_prepared(bridge_id)  # Persist the owning stage's ledger link before any model reservation.
+    return _resume(root, bridge_id, invoker, on_event)
 
 
 def resume_bridge(problem_dir, bridge_id, *, invoker=None, on_event=None):

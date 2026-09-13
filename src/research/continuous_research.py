@@ -509,7 +509,7 @@ class _LocalInvoker:
         self.run, self.role = run, role
 
     def invoke(self, *, prompt, schema, label):
-        family = "selector" if self.role == "selector" else "worker" if self.role == "worker" else "verifier"
+        family = "selector" if self.role in ("selector", "selector-bridge") else "worker" if self.role == "worker" else "verifier"
         try:
             _, measurement = bounded_packet({"prompt": prompt, "schema": schema},
                                             self.run.state["settings"][family + "_context_tokens"])

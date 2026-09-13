@@ -6,6 +6,9 @@ frozen v3 mode below. Its [ADR](ADR_CONTINUOUS_RESEARCH.md) records the exact re
 and semantic differences. It begins from one original Claim/Study and grows
 verified Supports through local work; it has no cumulative research-lifetime
 limit. Product defaults and old workspaces retain their existing v3 behavior.
+The optional [automatic Fact materialization entry](AUTOMATIC_FACT_MATERIALIZATION.md)
+connects discovery and inspection to a requested verified scope bridge, then stops
+before requirement proof service. It does not change the scheduler or normal loop.
 
 ## Preserved v3 core
 
