@@ -128,7 +128,6 @@ def materialize_once(problem_dir, *, invoker=None, on_event=None):
     root = Path(problem_dir).resolve()
     with run_lock(root/'continuous_run'):
         state, directory = _paths(root)
-        origin = {k:state[k] for k in ('run_id','step','code_digest','runtime','studies','schedule','settings','retries')}
         if state['code_digest'] != _code_digest():
             raise ValueError('code fingerprint changed; create a new isolated evaluation run')
         if (state['runtime']['backend']=='injected') != (invoker is not None):
@@ -140,9 +139,6 @@ def materialize_once(problem_dir, *, invoker=None, on_event=None):
         if (visit/'packet.json').exists() or any(r['scope'].startswith(str(state['step'])+':') and
                 r['label'] not in ('continuous_selector','continuous_selector_bridge') for r in calls):
             raise ValueError('proof service already started; cannot replace its frozen material packet')
-        _write_once(directory/'origin.json', origin)
-        if (directory/'state.json').exists() and read_json(directory/'state.json')['status'] in _TERMINAL:
-            return read_materialization(root)
         backend = invoker
         if backend is None:
             runtime = state['runtime']
@@ -151,75 +147,158 @@ def materialize_once(problem_dir, *, invoker=None, on_event=None):
             backend = SolInvoker(image=runtime['image'], timeout_seconds=runtime['timeout_seconds'],
                                  audit_dir=root/'continuous_run/invocations')
         run = _Research(root,state,backend,on_event)
-        phase = 'INSPECTION'
-        bridge = None
-        def save(**value):
-            write_json(directory/'state.json', {**({'bridge_id':bridge['bridge_id']} if bridge else {}), **value})
-        try:
-            path = directory/'inspection_packet.json'
-            if not path.exists():
-                _write_once(path,run.select_work(ContinuousNetwork(root)))
-                run.event('inspection_saved')
-            packet = read_json(path)
-            inspections = [n for n in packet['material_notices'] if n.get('kind')=='BRIDGE_CANDIDATE_INSPECTION']
-            if not inspections or packet['claim'] is None:
-                save(status='NO_BRIDGE_REQUEST',reason='No inspected cross-scope candidate and target Claim.')
-                return read_materialization(root)
-            if ContinuousNetwork(root).truth(packet['claim']['obligation_id']) != 'OPEN':
-                raise ValueError('enclosing requirement is no longer OPEN')
-            phase = 'SELECTOR'
-            response = run.invoker('selector-bridge').invoke(prompt=_PROMPT+json.dumps(packet,ensure_ascii=False),
-                schema=_SCHEMA,label='continuous_selector_bridge')
-            _write_once(directory/'selector_result.json',response)
-            phase = 'REQUEST'
-            if (set(response)!=set(_SCHEMA['required']) or not isinstance(response['reason'],str)
-                    or not response['reason'].strip()):
-                raise ValueError('malformed Selector bridge decision')
-            if response['action']=='IGNORE':
-                if response['bridge_request'] is not None:
-                    raise ValueError('IGNORE must not carry a bridge request')
-                save(status='NO_BRIDGE_REQUEST',reason=response['reason'])
-                return read_materialization(root)
-            request = response['bridge_request']
-            if _write_once(directory/'bridge_request.json',request):
-                run.event('bridge_request_saved')
-            _validate_request(root,packet,request)
-            phase = 'BRIDGE'
-            bridge = _bridge_fact_locked(root,source_fact_id=request['source_fact_id'],
-                target_context=request['target_scope'],target_goal=request['target_auxiliary_statement'],
-                correspondence=request['correspondence'],invoker=invoker,on_event=on_event,
-                image=state['runtime'].get('image','noespire-codex-isolated:local'),
-                on_prepared=lambda key:_write_once(directory/'bridge_reference.json',{'bridge_id':key}))
-            if bridge['status']!='COMPLETED' or not bridge['usable']:
-                save(status='PAUSED' if bridge['status']=='PAUSED' else 'BRIDGE_FAILED',
-                     bridge_id=bridge['bridge_id'],reason=bridge.get('reason') or bridge.get('unavailable_reason'))
-                return read_materialization(root)
-            phase = 'MATERIALIZATION'
-            _validate_request(root,packet,request)
-            network = ContinuousNetwork(root)
-            refs = ['fact:'+f['fact_id'] for f in packet['accepted_facts']] + ['fact:'+bridge['fact_id']]
-            facts, _, _ = load_materials(root,packet['study'],refs,state['studies'],network)
-            if not set(packet['required_fact_ids']).issubset(facts):
-                raise ValueError('missing required local Fact')
-            # Revalidate and retain existing local premises; add only the new
-            # auxiliary. Foreign inspections never become accepted predecessors.
-            output = {**packet,'accepted_facts':list(facts.values())}
-            closure = [f.fact_id for f in FactGraph(root).supporting_closure(bridge['fact_id'])]
-            if request['source_fact_id'] not in closure:
-                raise ValueError('bridge lost source lineage')
-            _write_once(directory/'material_packet.json',output)
-            _write_once(directory/'closure.json',closure)
-            save(status='MATERIALIZED',bridge_id=bridge['bridge_id'],fact_id=bridge['fact_id'],closure=closure)
-            run.event('materialized',fact_id=bridge['fact_id'])
-        except RunStopped as error:
-            save(status='INTERRUPTED' if error.reason=='INTERRUPTED' else 'PAUSED',reason=error.reason,phase=phase)
-        except subprocess.TimeoutExpired as error:
-            save(status='TIMEOUT',reason=str(error),phase=phase)
-        except (OSError,ValueError,KeyError,TypeError,RuntimeError,_InvocationFailure) as error:
-            status = ('INVALID_BRIDGE_REQUEST' if phase=='REQUEST' and isinstance(error,(ValueError,KeyError,TypeError))
-                      else 'MATERIALIZATION_FAILED' if phase=='MATERIALIZATION' else 'ERROR')
-            save(status=status,reason=f'{type(error).__name__}: {error}',phase=phase)
+        return _materialize_locked(run, invoker=invoker, on_event=on_event)
+
+
+class _LoopPause(BaseException):
+    """Carry loop control through the bridge without making it a bridge failure."""
+    def __init__(self, reason):
+        self.reason = reason
+
+
+def _materialize_locked(run, *, packet=None, invoker=None, on_event=None, integrated=False):
+    """Shared durable opportunity. Caller owns the continuous-run writer lock."""
+    root, state = run.root, run.state
+    directory = run.step_dir/'automatic_bridge'
+    origin = {k:state[k] for k in ('run_id','step','code_digest','runtime','studies','schedule','settings','retries')}
+    if integrated and (directory/'origin.json').exists():
+        frozen = read_json(directory/'origin.json')
+        # A successful material binding may already have changed the Study ref.
+        # The original opportunity remains immutable; only its identity is checked.
+        if any(frozen[k] != origin[k] for k in ('run_id','step','code_digest','runtime','settings','retries')):
+            raise ValueError('bridge opportunity fingerprint changed')
+    else:
+        _write_once(directory/'origin.json',origin)
+    if (directory/'state.json').exists() and read_json(directory/'state.json')['status'] in _TERMINAL:
         return read_materialization(root)
+    phase = 'INSPECTION'
+    bridge = None
+    def save(**value):
+        write_json(directory/'state.json', {**({'bridge_id':bridge['bridge_id']} if bridge else {}), **value})
+    try:
+        path = directory/'inspection_packet.json'
+        if not path.exists():
+            _write_once(path, packet if packet is not None else run.select_work(ContinuousNetwork(root)))
+            run.event('inspection_saved')
+        packet = read_json(path)
+        inspections = [n for n in packet['material_notices'] if n.get('kind')=='BRIDGE_CANDIDATE_INSPECTION']
+        if not inspections or packet['claim'] is None:
+            save(status='NO_BRIDGE_REQUEST',reason='No inspected cross-scope candidate and target Claim.')
+            return read_materialization(root)
+        if ContinuousNetwork(root).truth(packet['claim']['obligation_id']) != 'OPEN':
+            raise ValueError('enclosing requirement is no longer OPEN')
+        phase = 'SELECTOR'
+        response = run.invoker('selector-bridge').invoke(prompt=_PROMPT+json.dumps(packet,ensure_ascii=False),
+            schema=_SCHEMA,label='continuous_selector_bridge')
+        _write_once(directory/'selector_result.json',response)
+        phase = 'REQUEST'
+        if (set(response)!=set(_SCHEMA['required']) or not isinstance(response['reason'],str)
+                or not response['reason'].strip()):
+            raise ValueError('malformed Selector bridge decision')
+        if response['action']=='IGNORE':
+            if response['bridge_request'] is not None:
+                raise ValueError('IGNORE must not carry a bridge request')
+            save(status='NO_BRIDGE_REQUEST',reason=response['reason'])
+            return read_materialization(root)
+        request = response['bridge_request']
+        if _write_once(directory/'bridge_request.json',request):
+            run.event('bridge_request_saved')
+        _validate_request(root,packet,request)
+        phase = 'RUNTIME'
+        if integrated and state['runtime']['backend'] != 'injected':
+            if real_runtime(state['runtime']['image']) != state['runtime']:
+                raise ValueError('runtime fingerprint changed')
+        phase = 'BRIDGE'
+        bridge = _bridge_fact_locked(root,source_fact_id=request['source_fact_id'],
+            target_context=request['target_scope'],target_goal=request['target_auxiliary_statement'],
+            correspondence=request['correspondence'],invoker=invoker,on_event=on_event,
+            image=state['runtime'].get('image','noespire-codex-isolated:local'),
+            expected_runtime=state['runtime'] if integrated else None,
+            on_prepared=lambda key:_write_once(directory/'bridge_reference.json',{'bridge_id':key}))
+        if bridge['status']!='COMPLETED' or not bridge['usable']:
+            save(status='PAUSED' if bridge['status']=='PAUSED' else 'BRIDGE_FAILED',
+                 bridge_id=bridge['bridge_id'],reason=bridge.get('reason') or bridge.get('unavailable_reason'))
+            if integrated and bridge['status']=='PAUSED':
+                raise RunStopped('RUNTIME_UNAVAILABLE')
+            return read_materialization(root)
+        phase = 'MATERIALIZATION'
+        _validate_request(root,packet,request)
+        network = ContinuousNetwork(root)
+        refs = ['fact:'+f['fact_id'] for f in packet['accepted_facts']] + ['fact:'+bridge['fact_id']]
+        facts, _, _ = load_materials(root,packet['study'],refs,state['studies'],network)
+        if not set(packet['required_fact_ids']).issubset(facts):
+            raise ValueError('missing required local Fact')
+        # Revalidate and retain existing local premises; add only the new
+        # auxiliary. Foreign inspections never become accepted predecessors.
+        output = {**packet,'accepted_facts':list(facts.values())}
+        closure = [f.fact_id for f in FactGraph(root).supporting_closure(bridge['fact_id'])]
+        if request['source_fact_id'] not in closure:
+            raise ValueError('bridge lost source lineage')
+        _write_once(directory/'material_packet.json',output)
+        _write_once(directory/'closure.json',closure)
+        save(status='MATERIALIZED',bridge_id=bridge['bridge_id'],fact_id=bridge['fact_id'],closure=closure)
+        run.event('materialized',fact_id=bridge['fact_id'])
+    except _LoopPause as error:
+        save(status='PAUSED',reason=error.reason,phase=phase)
+        raise RunStopped(error.reason) from error
+    except RunStopped as error:
+        save(status='INTERRUPTED' if error.reason=='INTERRUPTED' else 'PAUSED',reason=error.reason,phase=phase)
+        if integrated and error.reason != 'INTERRUPTED':
+            raise
+    except subprocess.TimeoutExpired as error:
+        if integrated and phase=='RUNTIME':
+            save(status='PAUSED',reason=str(error),phase=phase)
+            raise RunStopped('RUNTIME_UNAVAILABLE') from error
+        save(status='TIMEOUT',reason=str(error),phase=phase)
+    except (OSError,subprocess.SubprocessError,ValueError,KeyError,TypeError,RuntimeError,_InvocationFailure) as error:
+        if integrated and phase=='RUNTIME':
+            save(status='PAUSED',reason=str(error),phase=phase)
+            raise RunStopped('RUNTIME_UNAVAILABLE') from error
+        status = ('INVALID_BRIDGE_REQUEST' if phase=='REQUEST' and isinstance(error,(ValueError,KeyError,TypeError))
+                  else 'MATERIALIZATION_FAILED' if phase=='MATERIALIZATION' else 'ERROR')
+        save(status=status,reason=f'{type(error).__name__}: {error}',phase=phase)
+    return read_materialization(root)
+
+def prepare_loop_materials(run, network):
+    """Refresh a selected opportunity before freezing its ordinary Worker packet.
+
+    Bridging neither completes a visit nor commits its proposed next_schedule.
+    Immutable material-only Study metadata keeps future navigation aware of F'.
+    """
+    directory = run.step_dir/'automatic_bridge'
+    inspection = directory/'inspection_packet.json'
+    packet = read_json(inspection) if inspection.exists() else run.select_work(network)
+    if not directory.exists() and not any(n.get('kind')=='BRIDGE_CANDIDATE_INSPECTION'
+                                         for n in packet['material_notices']):
+        return packet
+
+    def event(name, details):
+        try:
+            run.event(name, **details)
+        except RunStopped as error:
+            raise _LoopPause(error.reason) from error
+
+    result = _materialize_locked(run, packet=packet, integrated=True,
+        invoker=run.backend if run.state['runtime']['backend']=='injected' else None, on_event=event)
+    if not result['usable']:
+        return {**packet, 'material_notices':[*packet['material_notices'],
+            {'kind':'BRIDGE_RESULT','status':result['status'],'reason':result.get('reason') or result.get('unavailable_reason'),
+             'evidence_ref':(directory/'state.json').relative_to(run.directory).as_posix()}]}
+    packet = read_json(directory/'material_packet.json')
+    key = packet['study']['study_id']
+    ref = f"studies/{key}/materials-{run.state['step']:08d}.json"
+    if not (run.directory/ref).exists():
+        previous = run.state['studies'][key]
+        study = read_json(run.directory/previous)
+        _write_once(run.directory/ref, {**study,
+            'known_fact_ids':list(dict.fromkeys([*study.get('known_fact_ids',[]),result['fact_id']])),
+            'previous_material_revision':previous})
+    if run.state['studies'][key] != ref:
+        run.state['studies'][key] = ref
+        run.save()
+        run.event('bridge_materials_bound',fact_id=result['fact_id'],study_id=key)
+    return packet
+
 
 
 def main(argv=None):

@@ -13,6 +13,7 @@ from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEF
 from .continuous_materials import expose_bridge_candidates, load_selector_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
+from .fact import _normalize
 from .pipeline import submit_candidate, VerificationResult
 from .proof_graph import ProofObligation
 from .refutation import Refutation, RefutationStore, RefutationVerifier
@@ -66,12 +67,22 @@ def read_status(problem_dir):
         if usage and all(isinstance(u, dict) and all(type(u.get(k)) is int for k in
                 ("input_tokens", "output_tokens")) for u in usage):
             usages.append(sum(u["input_tokens"] + u["output_tokens"] for u in usage))
+    # Bridges retain their existing independent journals. Count each referenced
+    # ledger once even when several opportunities reuse the same request.
+    from .fact_bridge import read_bridge
+    bridge_ids = sorted({read_json(p)['bridge_id'] for p in
+                         directory.glob('visits/*/automatic_bridge/bridge_reference.json')})
+    bridges = [read_bridge(root,key) for key in bridge_ids]
+    bridge_calls = sum(b['model_calls'] for b in bridges)
+    bridge_tokens = [b['reported_tokens'] for b in bridges if b['model_calls'] > b['unknown_usage_calls']]
     return {**state, "target_state": network.truth(network.target_id),
             "studies": studies, **invocation_usage(directory),
-            "completed_calls": sum(r["status"] == "COMPLETED" for r in results),
-            "unconfirmed_reservations": len(reservations) - len(results),
-            "reported_tokens": sum(usages) if usages else None,
-            "unknown_usage_calls": len(reservations) - len(usages)}
+            "bridge_ids": bridge_ids, "bridge_model_calls": bridge_calls,
+            "model_calls": len(reservations) + bridge_calls,
+            "completed_calls": sum(r["status"] == "COMPLETED" for r in results) + sum(b["completed_calls"] for b in bridges),
+            "unconfirmed_reservations": len(reservations) - len(results) + sum(b["unconfirmed_calls"] for b in bridges),
+            "reported_tokens": sum(usages + bridge_tokens) if usages or bridge_tokens else None,
+            "unknown_usage_calls": len(reservations) - len(usages) + sum(b["unknown_usage_calls"] for b in bridges)}
 
 
 def pause_run(problem_dir, reason="user pause"):
@@ -148,7 +159,7 @@ class _Research:
                 # Observer code is outside the model call. Its failure must not
                 # cause RecordedInvoker to mark a confirmed response as failed.
                 raise _ObserverFailure(str(error)) from error
-        if name in ("call_completed", "selection_saved", "continuation_saved", "fact_bound"):
+        if name in ("call_completed", "selection_saved", "continuation_saved", "fact_bound", "bridge_materials_bound", "material_surface_ready"):
             pending = [p for p in (self.directory / "pause_requests").glob("*.json")
                        if p.name not in self.state["acknowledged_pauses"]]
             if pending:
@@ -223,8 +234,16 @@ class _Research:
     def visit(self, network):
         path = self.step_dir / "packet.json"
         if not path.exists():
-            write_json(path, self.select_work(network))
+            from .continuous_fact_bridge import prepare_loop_materials
+            write_json(path, prepare_loop_materials(self, network))
         packet = read_json(path)
+        # Bridge admission changed bindings; never retain the pre-bridge graph.
+        network = ContinuousNetwork(self.root)
+        for fact in packet['accepted_facts']:
+            current = network.visible_fact(fact['fact_id'], _normalize(packet['study']['scope']))
+            if current.statement != fact['statement']:
+                raise ValueError('frozen material Fact interface changed')
+        self.event('material_surface_ready',study_id=packet['study']['study_id'])
         prompt = ("Continue this local mathematical study. All continuation is UNVERIFIED research. "
                   "Return explicit mathematical notes and a next step even without a complete proof. "
                   "A FACT must include its exact goal/context, complete proof, and only the accepted Fact IDs "

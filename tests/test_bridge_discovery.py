@@ -303,6 +303,8 @@ def test_large_inspection_window_uses_existing_reselection_without_consuming_ser
                 return {'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
                     'material_refs':materials, 'reason':'Inspect this bounded interface.',
                     'relation':'UNKNOWN', 'continuation_window':None}
+            if label == 'continuous_selector_bridge':
+                return {'action':'IGNORE','bridge_request':None,'reason':'Inspect applicability later.'}
             assert label == 'continuous_worker'
             workers.append(packet)
             return {'continuation':'The foreign interface still requires a verified bridge.',
@@ -324,7 +326,7 @@ def test_large_inspection_window_uses_existing_reselection_without_consuming_ser
     if crash_after_reselection:
         assert all(p.read_bytes() == value for p,value in old.items())
     assert len(selectors) == 2 and len(workers) == 1
-    assert result['model_calls'] == 3 and result['status'] == 'PAUSED'
+    assert result['model_calls'] == 4 and result['status'] == 'PAUSED'  # includes post-inspection Selector
     assert result['schedule']['channel_cursor'] == 5
     assert workers[0]['accepted_facts'] == []
     assert not (tmp_path/'continuous_run/visits/00000001/packet.json').exists()

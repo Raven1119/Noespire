@@ -81,7 +81,9 @@ It does not alter ordinary scope checks, navigation exposure, or the scheduler.
 [Bridge candidate discovery](BRIDGE_CANDIDATE_DISCOVERY.md) separately adds bounded
 cross-scope navigation to Selector exposure. Requested foreign interfaces remain
 inspection notices, never accepted predecessors. Ordinary scope checks and the
-3:1:1 scheduler are unchanged; no bridge is automatically executed.
+3:1:1 scheduler are unchanged. After an inspected candidate, the existing second
+Selector may request a bridge. The ordinary loop now executes that request before
+freezing the selected Study's Worker packet; see [loop integration](CONTINUOUS_LOOP_FACT_BRIDGE.md).
 
 Verifier PASS concerns the submitted interface. If its goal or context differs
 from the selected Claim, the original Claim stays OPEN. Local feedback records

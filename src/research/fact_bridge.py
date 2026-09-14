@@ -139,7 +139,7 @@ def bridge_fact(problem_dir, *, source_fact_id, target_context, target_goal, cor
 
 def _bridge_fact_locked(root, *, source_fact_id, target_context, target_goal, correspondence,
                         invoker=None, on_event=None, image="noespire-codex-isolated:local",
-                        on_prepared=None):
+                        on_prepared=None, expected_runtime=None):
     """Internal composition seam; caller MUST own the continuous_run writer lock."""
     if (not all(isinstance(v, str) for v in (target_context, target_goal, correspondence))
             or not correspondence.strip()):
@@ -153,10 +153,15 @@ def _bridge_fact_locked(root, *, source_fact_id, target_context, target_goal, co
     bridge_id = _identity("bridge-", packet)
     directory = root / "fact_bridges" / bridge_id
     if not (directory / "request.json").exists():
-        runtime = {"backend": "injected"} if invoker is not None else real_runtime(image)
+        runtime = expected_runtime if expected_runtime is not None else (
+            {"backend": "injected"} if invoker is not None else real_runtime(image))
         write_json(directory / "request.json", {"bridge_id": bridge_id, "packet": packet,
             "run_id": uuid4().hex, "code_digest": _code_digest(), "runtime": runtime,
             "budget": {"max_model_calls": 2}, "created_at": time.time()})
+    if expected_runtime is not None:
+        frozen = read_json(directory / "request.json")
+        if frozen['runtime'] != expected_runtime or frozen['code_digest'] != _code_digest():
+            raise RunStopped('RUNTIME_UNAVAILABLE')
     if on_prepared:
         on_prepared(bridge_id)  # Persist the owning stage's ledger link before any model reservation.
     return _resume(root, bridge_id, invoker, on_event)

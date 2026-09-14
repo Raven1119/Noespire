@@ -8,7 +8,9 @@ verified Supports through local work; it has no cumulative research-lifetime
 limit. Product defaults and old workspaces retain their existing v3 behavior.
 The optional [automatic Fact materialization entry](AUTOMATIC_FACT_MATERIALIZATION.md)
 connects discovery and inspection to a requested verified scope bridge, then stops
-before requirement proof service. It does not change the scheduler or normal loop.
+before requirement proof service. The [normal loop integration](CONTINUOUS_LOOP_FACT_BRIDGE.md)
+now reuses that same bridge stage before ordinary Study materialization, without
+counting a bridge as Study service or changing the 3:1:1 scheduler.
 The [Support scope generation contract](SUPPORT_SCOPE_CONTRACT.md) keeps child
 ambient contexts identical and places new local definitions in complete goals;
 the exact-scope mechanical gate is unchanged.
