@@ -34,7 +34,7 @@ class RecordedInvoker:
     def __init__(self, run, role):
         self.run, self.role = run, role
 
-    def invoke(self, *, prompt, schema, label):
+    def invoke(self, *, prompt, schema, label, on_message=None):
         scope = f"{self.run.state['step']}:{self.role}"
         solver = self.run.step_dir / "solver.json"
         if self.role in ("worker", "verifier", "refutation-verifier") and solver.exists():
@@ -51,7 +51,12 @@ class RecordedInvoker:
             write_json(directory / "request.json", {**packet, "started_at": time.time()})
             self.run.event("call_started", label=label)
             try:
-                response = self.run.backend.invoke(prompt=prompt, schema=schema, label=label)
+                streamed = getattr(self.run.backend, "invoke_with_messages", None)
+                if on_message is not None and streamed is not None:
+                    response = streamed(prompt=prompt, schema=schema, label=label,
+                                        on_message=lambda text: on_message(directory, text))
+                else:
+                    response = self.run.backend.invoke(prompt=prompt, schema=schema, label=label)
             except Exception as error:
                 result = {"status": "TIMEOUT" if isinstance(error, subprocess.TimeoutExpired) else "ERROR",
                           "error": f"{type(error).__name__}: {error}",

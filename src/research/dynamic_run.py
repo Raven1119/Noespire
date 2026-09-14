@@ -24,7 +24,8 @@ from .run_storage import read_json, write_json, run_lock
 
 def _code_digest():
     source = Path(__file__).resolve().parents[1]
-    paths = sorted((source / "research").rglob("*.py")) + [source / "application/codex_isolation.py"]
+    paths = sorted((source / "research").rglob("*.py")) + [
+        source / "application/codex_isolation.py", source / "application/codex_stream.py"]
     return sha256(b"".join(p.relative_to(source).as_posix().encode() + p.read_bytes() for p in paths)).hexdigest()
 
 

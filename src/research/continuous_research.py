@@ -52,6 +52,43 @@ _WORKER_SCHEMA = _object({
 })
 
 
+def worker_prompt(packet):
+    """The ordinary Worker contract, also used for frozen delivery-only probes."""
+    from .research_delivery import DELIVERY_INSTRUCTIONS
+    return ("Continue this local mathematical study. All continuation is UNVERIFIED research. "
+              "Return explicit mathematical notes and a next step even without a complete proof. "
+              "A FACT must include its exact goal/context, complete proof, and only the accepted Fact IDs "
+              "actually used. To discharge the selected Claim, retain its exact goal AND context, "
+              "including an empty context when assumptions are already in its goal. A different goal "
+              "or context creates a separate Claim; its acceptance does not discharge this one. "
+              "Visible facts need not all be used. Closed book: prove needed results inline; "
+              "no theorem authority, retrieval, or assumed missing lemmas. A SUPPORT proves only the "
+              "conditional implication from all explicit requirements to the given goal in its context; "
+              "include the full conditional proof, never treat unproved requirements as accepted Facts. "
+              "For every SUPPORT child, copy the conclusion context verbatim, including an empty string. "
+              "A SUPPORT context contains ambient assumptions only. Put new auxiliary functions, notation, "
+              "local variables and parameterized objects in each child's complete self-contained goal, "
+              "with all definitions, domains and quantifiers; never change context to introduce them. "
+              "Do not substitute 'defined above' or a reference to the Support goal or metadata for a "
+              "child's full mathematical interface. A named object is not an existence proof: an existence "
+              "claim, required property or extra hypothesis is not a mere definition. Prove such conditions "
+              "or explicitly quantify or conditionalize them in the child goal; never silently assume them "
+              "through context. The Support proof must justify that these precise conditional children "
+              "suffice for its conclusion, including any conditions needed to use them. "
+              "A REFUTATION requires an explicit counterexample proved inline for the current claim; "
+              "a proof gap, suspected falsity or timeout is not a counterexample. "
+              "You may return context_requests for exact local fact:<id>, study:<id>, object:<id>, "
+              "or search:<literal words> references; these read files, never retrieve theorems. "
+              "Keep ordinary continuation in this same Study. A new_study is only a genuinely independent "
+              "focus (possibly with UNKNOWN target relevance), not a renamed continuation. Set its "
+              "continues_study_id to this study_id for the same line of work. Definitions are immutable "
+              "unverified object descriptions, not existence proofs. Include all necessary definitions "
+              "and assumptions explicitly in any new candidate interface. "
+              "COMPOSE must prove exactly the selected conclusion using the supplied bridge and conditions." +
+              DELIVERY_INSTRUCTIONS + "\nPACKET:\n" +
+              json.dumps(packet, ensure_ascii=False))
+
+
 def read_status(problem_dir):
     root = Path(problem_dir)
     directory = root / "continuous_run"
@@ -244,37 +281,9 @@ class _Research:
             if current.statement != fact['statement']:
                 raise ValueError('frozen material Fact interface changed')
         self.event('material_surface_ready',study_id=packet['study']['study_id'])
-        prompt = ("Continue this local mathematical study. All continuation is UNVERIFIED research. "
-                  "Return explicit mathematical notes and a next step even without a complete proof. "
-                  "A FACT must include its exact goal/context, complete proof, and only the accepted Fact IDs "
-                  "actually used. To discharge the selected Claim, retain its exact goal AND context, "
-                  "including an empty context when assumptions are already in its goal. A different goal "
-                  "or context creates a separate Claim; its acceptance does not discharge this one. "
-                  "Visible facts need not all be used. Closed book: prove needed results inline; "
-                  "no theorem authority, retrieval, or assumed missing lemmas. A SUPPORT proves only the "
-                  "conditional implication from all explicit requirements to the given goal in its context; "
-                  "include the full conditional proof, never treat unproved requirements as accepted Facts. "
-                  "For every SUPPORT child, copy the conclusion context verbatim, including an empty string. "
-                  "A SUPPORT context contains ambient assumptions only. Put new auxiliary functions, notation, "
-                  "local variables and parameterized objects in each child's complete self-contained goal, "
-                  "with all definitions, domains and quantifiers; never change context to introduce them. "
-                  "Do not substitute 'defined above' or a reference to the Support goal or metadata for a "
-                  "child's full mathematical interface. A named object is not an existence proof: an existence "
-                  "claim, required property or extra hypothesis is not a mere definition. Prove such conditions "
-                  "or explicitly quantify or conditionalize them in the child goal; never silently assume them "
-                  "through context. The Support proof must justify that these precise conditional children "
-                  "suffice for its conclusion, including any conditions needed to use them. "
-                  "A REFUTATION requires an explicit counterexample proved inline for the current claim; "
-                  "a proof gap, suspected falsity or timeout is not a counterexample. "
-                  "You may return context_requests for exact local fact:<id>, study:<id>, object:<id>, "
-                  "or search:<literal words> references; these read files, never retrieve theorems. "
-                  "Keep ordinary continuation in this same Study. A new_study is only a genuinely independent "
-                  "focus (possibly with UNKNOWN target relevance), not a renamed continuation. Set its "
-                  "continues_study_id to this study_id for the same line of work. Definitions are immutable "
-                  "unverified object descriptions, not existence proofs. Include all necessary definitions "
-                  "and assumptions explicitly in any new candidate interface. "
-                  "COMPOSE must prove exactly the selected conclusion using the supplied bridge and conditions.\nPACKET:\n" +
-                  json.dumps(packet, ensure_ascii=False))
+        from .research_delivery import DeliveryStore, worker_packet
+        packet = worker_packet(self, packet)
+        prompt = worker_prompt(packet)
         # A packet may contain only a selected view. Persistence always starts
         # from the complete last-confirmed Study, especially when no work returns.
         study = read_json(self.directory / self.state["studies"][packet["study"]["study_id"]])
@@ -282,6 +291,10 @@ class _Research:
             response = self.invoker("worker").invoke(prompt=prompt, schema=_WORKER_SCHEMA, label="continuous_worker")
         except subprocess.TimeoutExpired:
             feedback = {"status": "TIMEOUT", "reason": "No returned work; resume the last saved continuation."}
+            checkpoint = DeliveryStore(self.directory, self.state["run_id"]).latest(study)
+            if checkpoint:
+                feedback.update(reason="No final response. A complete UNVERIFIED research handover was retained.",
+                                research_delivery_ref=checkpoint["ref"])
             write_json(self.step_dir / "feedback.json", feedback)
             ref = f"studies/{study['study_id']}/timeout-{self.state['step']:08d}.json"
             write_json(self.directory / ref, {**study, "feedback_ref":
@@ -440,7 +453,10 @@ class _Research:
 
     def select_work(self, network):
         self.restore_revoked_alias_studies(network)
-        studies = {key: read_json(self.directory / ref) for key, ref in self.state["studies"].items()}
+        from .research_delivery import DeliveryStore, study_view
+        store = DeliveryStore(self.directory, self.state["run_id"])
+        studies = {key: study_view(store, read_json(self.directory / ref))
+                   for key, ref in self.state["studies"].items()}
         selection_path = self.step_dir / "selection.json"
         if not selection_path.exists():
             if self.state["step"] == 0:
@@ -515,7 +531,7 @@ class _Research:
                     "Choose valid zero-based bounds or null for full notes; no Worker service occurred.")
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
-                                "full_revision_ref": self.state["studies"][study["study_id"]]}}
+                                "full_revision_ref": study.get("research_delivery_ref", self.state["studies"][study["study_id"]])}}
         return {"operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,
@@ -590,7 +606,14 @@ class _LocalInvoker:
         if not path.exists():
             write_json(path, measurement)
         try:
-            response = RecordedInvoker(self.run, self.role + suffix).invoke(prompt=prompt, schema=schema, label=label)
+            on_message = None
+            if self.role == "worker":
+                from .research_delivery import DeliveryStore
+                store = DeliveryStore(self.run.directory, self.run.state["run_id"])
+                packet = json.loads(prompt.split("\nPACKET:\n", 1)[1])
+                on_message = lambda directory, text: store.capture(directory, packet, text)
+            response = RecordedInvoker(self.run, self.role + suffix).invoke(
+                prompt=prompt, schema=schema, label=label, on_message=on_message)
         except RuntimeError as error:
             raise _InvocationFailure(self.role, str(error)) from error
         if not isinstance(response, dict):

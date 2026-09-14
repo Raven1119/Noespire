@@ -38,6 +38,10 @@ export only their accepted supporting closure. Explicit counterexamples use the
 existing independent RefutationVerifier and store; ordinary rejection and timeout
 leave truth OPEN.
 
+Ordinary Workers can also [deliver unverified research while a call is running](RESEARCH_DELIVERY.md).
+Complete public handovers survive timeout/interruption and enter the next local
+continuation window without becoming Facts or advancing a service cursor.
+
 Each workspace contains one `proof_graph.json` (explicit CRPN schema), the
 existing `facts/` and `refutations/`, and `continuous_run/`. The latter contains
 immutable call reservations/results, original invocation evidence, Study

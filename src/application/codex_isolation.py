@@ -21,9 +21,10 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
-from tempfile import TemporaryDirectory
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 from uuid import uuid4
+
+from application.codex_stream import note_failure, run_with_messages, temporary_directory
 
 
 class IsolationUnavailableError(RuntimeError):
@@ -69,30 +70,37 @@ class IsolatedCodexInvoker:
         if completed.returncode:
             raise IsolationUnavailableError(message)
 
-    def invoke(self, *, prompt: str, schema: Dict[str, Any], label: str) -> Dict[str, Any]:
+    def invoke(
+        self, *, prompt: str, schema: Dict[str, Any], label: str,
+        on_message: Optional[Callable[[str], None]] = None,
+    ) -> Dict[str, Any]:
         name = f"noespire-{uuid4().hex}"
         # The fresh temp dir is the only rw mount; TemporaryDirectory removes
         # it on success, nonzero rc, timeout, and parse error alike.
-        with TemporaryDirectory(prefix="noespire-isolated-") as directory:
+        with temporary_directory(prefix="noespire-isolated-") as directory:
             workdir = Path(directory)
             (workdir / "schema.json").write_text(json.dumps(schema), encoding="utf-8")
             try:
-                completed = subprocess.run(
-                    self._run_argv(name, workdir),
-                    input=prompt,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    capture_output=True,
-                    timeout=self.timeout_seconds,
-                    check=False,
-                )
-            except subprocess.TimeoutExpired:
-                subprocess.run(
-                    [self.docker_executable, "rm", "-f", name],
-                    capture_output=True,
-                    check=False,
-                )
+                argv = self._run_argv(name, workdir)
+                if on_message is None:
+                    completed = subprocess.run(
+                        argv, input=prompt, text=True, encoding="utf-8",
+                        errors="replace", capture_output=True,
+                        timeout=self.timeout_seconds, check=False,
+                    )
+                else:
+                    completed = run_with_messages(
+                        argv, input=prompt, timeout=self.timeout_seconds,
+                        on_message=on_message,
+                    )
+            except BaseException as error:
+                try:
+                    subprocess.run(
+                        [self.docker_executable, "rm", "-f", name],
+                        capture_output=True, check=False, timeout=5,
+                    )
+                except BaseException as cleanup_error:
+                    note_failure(error, f"Codex container cleanup failed: {type(cleanup_error).__name__}")
                 raise
             return self._parse(completed)
 

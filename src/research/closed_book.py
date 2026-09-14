@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from application.codex_isolation import IsolatedCodexInvoker
+from application.codex_stream import note_failure
 from research.agents import _blind_exec_options
 from research.pipeline import VerificationResult
+from research.run_storage import write_json
 
 
 # Dropped from the blind profile: --ignore-user-config would discard the
@@ -33,6 +36,8 @@ def detect_network_attempts(events: List[Dict[str, Any]]) -> List[str]:
     attempts: List[str] = []
     for event in events:
         item = event.get("item") or {}
+        if not isinstance(item, dict):
+            continue
         item_type = str(item.get("type") or "")
         if not any(
             kind in item_type for kind in ("command", "tool", "function", "search")
@@ -52,9 +57,11 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
         self.audit_dir = Path(audit_dir) if audit_dir else None
         self._sequence = 0
         self._last_completed = None
+        self._last_failure = None
         if self.audit_dir:
             self.audit_dir.mkdir(parents=True, exist_ok=True)
-            self._sequence = len(list(self.audit_dir.glob("*.json")))
+            self._sequence = max((int(p.name.split("_", 1)[0]) for p in self.audit_dir.glob("*.json")
+                                  if p.name.split("_", 1)[0].isdigit()), default=0)
 
     def _container_prefix(self, name: str, workdir: Path) -> List[str]:
         # bwrap (codex's own sandbox) cannot create namespaces under Docker's
@@ -79,19 +86,41 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
         self._last_completed = completed
         return IsolatedCodexInvoker._parse(completed)
 
-    def invoke(self, *, prompt: str, schema: Dict[str, Any], label: str) -> Dict[str, Any]:
+    def invoke_with_messages(
+        self, *, prompt: str, schema: Dict[str, Any], label: str,
+        on_message: Callable[[str], None],
+    ) -> Dict[str, Any]:
+        """Stream completed public messages through the same audited call."""
+        return self.invoke(prompt=prompt, schema=schema, label=label, on_message=on_message)
+
+    def invoke(
+        self, *, prompt: str, schema: Dict[str, Any], label: str,
+        on_message: Optional[Callable[[str], None]] = None,
+    ) -> Dict[str, Any]:
         self._last_completed = None
+        self._last_failure = None
         result: Optional[Dict[str, Any]] = None
         error: Optional[str] = None
         t0 = time.time()
         try:
-            result = super().invoke(prompt=prompt, schema=schema, label=label)
+            if on_message is None:
+                result = super().invoke(prompt=prompt, schema=schema, label=label)
+            else:
+                result = super().invoke(
+                    prompt=prompt, schema=schema, label=label, on_message=on_message,
+                )
             return result
-        except Exception as exc:
+        except BaseException as exc:
+            self._last_failure = exc
             error = f"{type(exc).__name__}: {exc}"
             raise
         finally:
-            self._record(label, prompt, schema, result, error, round(time.time() - t0, 1))
+            try:
+                self._record(label, prompt, schema, result, error, round(time.time() - t0, 1))
+            except BaseException as audit_error:
+                if self._last_failure is None:
+                    raise
+                note_failure(self._last_failure, f"Codex audit failed: {type(audit_error).__name__}")
 
     def _record(
         self,
@@ -105,19 +134,52 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
         if not self.audit_dir:
             return
         completed = self._last_completed
+        failure = self._last_failure
+        stdout = completed.stdout if completed is not None else getattr(failure, "output", None)
+        stderr = completed.stderr if completed is not None else getattr(failure, "stderr", None)
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode("utf-8", errors="replace")
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode("utf-8", errors="replace")
         events: List[Dict[str, Any]] = []
-        if completed is not None and completed.stdout:
-            events = [
-                json.loads(line) for line in completed.stdout.splitlines() if line.strip()
-            ]
+        malformed_lines = []
+        truncated = False
+        for number, line in enumerate((stdout or "").splitlines(keepends=True), 1):
+            if not line.strip():
+                continue
+            if completed is None and not line.endswith("\n"):
+                truncated = True
+                continue
+            try:
+                event = json.loads(line)
+            except ValueError:
+                malformed_lines.append(number)
+                truncated = truncated or not line.endswith("\n")
+                continue
+            if isinstance(event, dict):
+                events.append(event)
+            else:
+                malformed_lines.append(number)
+        status = ("TIMEOUT" if isinstance(failure, subprocess.TimeoutExpired) else
+                  "INTERRUPTED" if failure is not None and not isinstance(failure, Exception) else
+                  "ERROR" if error else "COMPLETED")
         self._sequence += 1
         safe_label = "".join(c if c.isalnum() else "_" for c in label)
         artifact = {
             "label": label,
             "prompt": prompt,
             "schema": schema,
-            "returncode": completed.returncode if completed else None,
-            "stderr": completed.stderr if completed else None,
+            "returncode": completed.returncode if completed is not None else None,
+            "stdout": stdout,
+            "stderr": stderr,
+            "status": status,
+            "cleanup_errors": getattr(failure, "codex_cleanup_errors", []),
+            "stdout_truncated": truncated,
+            "malformed_event_lines": malformed_lines,
+            "usage_status": "REPORTED" if any(
+                e.get("type") == "turn.completed" and isinstance(e.get("usage"), dict)
+                for e in events
+            ) else "UNKNOWN",
             "elapsed_seconds": elapsed_seconds,
             "events": events,
             "network_attempts": detect_network_attempts(events),
@@ -125,7 +187,9 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
             "error": error,
         }
         path = self.audit_dir / f"{self._sequence:03d}_{safe_label}.json"
-        path.write_text(json.dumps(artifact, ensure_ascii=False, indent=2), encoding="utf-8")
+        if path.exists():
+            raise ValueError("cannot overwrite existing invocation evidence")
+        write_json(path, artifact)
 
 
 VIOLATION_TYPES = (
