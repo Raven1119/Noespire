@@ -220,13 +220,16 @@ def test_only_independent_counterexample_verification_can_refute(tmp_path, verif
     assert result["status"] == ("REFUTED" if verified else "PAUSED")
 
 
-def test_selector_is_fresh_and_only_sees_navigation_before_local_research(tmp_path):
+def test_selector_is_fresh_with_bounded_unverified_local_notes(tmp_path):
     class Selected(DirectResearch):
         def invoke(self, *, prompt, schema, label):
             if label == "continuous_selector":
                 self.calls.append(label)
                 packet = json.loads(prompt.split("\nPACKET:\n")[1])
-                assert "The equality has been reduced to addition." not in prompt
+                rows = packet['local_action_evidence']['items']
+                assert any('The equality has been reduced to addition.' in r.get('continuation','') for r in rows)
+                assert all(r['verified'] is False for r in rows)
+                assert 'accepted_facts' not in packet
                 assert "proof_graph" not in packet
                 return {"study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
                         "support_id": "", "material_refs": [], "reason": "Finish the local computation.",

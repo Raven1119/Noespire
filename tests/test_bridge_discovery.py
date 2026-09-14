@@ -187,7 +187,7 @@ def test_stale_or_other_study_candidate_cannot_be_inspected(tmp_path, case):
 def test_exposure_leaves_scheduler_and_base_cards_identical(tmp_path, case):
     from research.continuous_attention import expose
     network, target, refs, _ = case
-    state = {'step':1, 'studies':refs, 'schedule':{'channel_cursor':4}, 'settings':{'selector_context_tokens':8000}}
+    state = {'run_id':'discovery', 'step':1, 'studies':refs, 'schedule':{'channel_cursor':4}, 'settings':{'selector_context_tokens':8000}}
     run = _Research(tmp_path, state, None, None)
     expected, schedule = expose([{**target,'ref':refs[target['study_id']], 'last_served_visit':-1,
                                   'completed':False}], state['schedule'], card_budget=4000)

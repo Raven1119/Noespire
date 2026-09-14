@@ -1,8 +1,52 @@
-"""Read-only, paged Fact interfaces for one local Selector opportunity."""
+"""Bounded local evidence and non-authoritative research action framing."""
 import json
 
 from .continuous_attention import AttentionOverflow, bounded_packet
 from .run_storage import read_json, write_json
+
+
+ACTION_PROPERTIES = {
+    "action_mode": {"type": "string", "enum": ["RESEARCH", "CLOSE"]},
+    **{key: {"type": "string"} for key in (
+        "local_object", "proposed_boundary", "remaining_gap", "expected_deliverable")},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+}
+
+CLOSE_INSTRUCTIONS = """ Prioritize closing one mathematically self-contained local result
+from the accumulated research. Do not broaden the investigation or search for a
+new construction unless the current candidate is shown to be unusable. If the
+intended result is too strong, shrink it to the strongest complete local
+proposition that can actually be proved. A smaller complete Fact is preferable
+to a larger incomplete claim. The proposed boundary is a task, not an assumption.
+Return the existing FACT / SUPPORT / no-candidate format. SUPPORT requires a real
+mathematical premise, never 'more computation', 'check the logs', or 'machine
+output is correct'. If no result closes, record the specific remaining closing
+gap in continuation and next_work. All research artifacts remain UNVERIFIED;
+only actual accepted Facts may be predecessors. """
+
+
+def action_metadata(selected):
+    """Validate an action interface, not the mathematical maturity of its object.
+
+    Pre-extension frozen decisions remain implicit RESEARCH. Partial new
+    interfaces are invalid; no timeout/counter heuristic supplies missing fields.
+    """
+    if not set(ACTION_PROPERTIES).intersection(selected):
+        return {}
+    if (selected.get('action_mode') not in ('RESEARCH', 'CLOSE') or
+            any(not isinstance(selected.get(k), str) for k in (
+                'local_object', 'proposed_boundary', 'remaining_gap', 'expected_deliverable'))):
+        raise ValueError('invalid local action interface')
+    refs = selected.get('evidence_refs')
+    if not isinstance(refs, list) or any(not isinstance(r, str) or not r.strip() for r in refs):
+        raise ValueError('invalid action evidence_refs')
+    if selected['action_mode'] == 'CLOSE':
+        if not all(isinstance(selected.get(k), str) and selected[k].strip() for k in (
+                'local_object', 'proposed_boundary', 'remaining_gap', 'expected_deliverable', 'reason')):
+            raise ValueError('CLOSE requires object, boundary, gap, deliverable and reason')
+        if not refs:
+            raise ValueError('CLOSE requires explicit evidence references')
+    return {key: selected[key] for key in ACTION_PROPERTIES}
 
 
 INSTRUCTIONS = """You are the fresh local Research Selector. Choose concrete local work, not merely
@@ -29,6 +73,18 @@ intent, not evidence or a substitute for old conditions. Do not repeat pages. Ot
 CONNECT or COMPOSE and explicitly select this visit's material_refs; nothing
 inspected is automatically added to the Worker window. bridge_candidate_pages
 remain optional foreign navigation. No obligation to use every visible result.
+Choose action_mode from the current mathematical state, not a timeout count.
+RESEARCH is legitimate when no stable object/proposition exists, definitions or
+direction are changing, or the gap is unclear. A checkpoint alone is not grounds
+for CLOSE. Choose CLOSE only when the displayed research establishes a definite
+local object, an accurate boundary, most of the construction/derivation, and a
+few specific remaining links. Explain local_object, proposed_boundary,
+remaining_gap, expected_deliverable and evidence_refs using exact displayed refs.
+For RESEARCH these may state what remains undecided. Do not infer completed work
+from navigation summaries or unexpanded material. local_action_evidence contains
+complete UNVERIFIED notes, not facts. Describe why closure is or is not warranted.
+CLOSE is only a task within this service; it never changes the selected channel,
+fairness or proof authority. It is allowed in any channel, including EXPLORE.
 PACKET:
 """
 
@@ -101,12 +157,74 @@ def add_fact_interfaces(network, exposure, *, token_budget):
     return {**exposure, 'fact_interfaces':page}
 
 
+def add_action_evidence(exposure, studies, schema, *, token_budget, artifact_store=None, checkpoint_store=None):
+    """Project intact notes for already exposed Studies, inside the same ceiling.
+
+    Preserve card order and scope. An oversized record stays an explicit ref;
+    neither conditions nor proofs are truncated to suggest readiness to CLOSE.
+    """
+    page = {'items': [], 'unexpanded': []}
+    result = {**exposure, 'local_action_evidence': page}
+    def fits(value):
+        try:
+            bounded_packet({'prompt': INSTRUCTIONS + json.dumps(value, ensure_ascii=False),
+                            'schema': schema}, token_budget)
+        except AttentionOverflow:
+            return False
+        return True
+    def records():
+        for card in exposure['cards']:
+            study = studies[card['study_id']]
+            if study.get('continuation'):
+                yield {'ref': study.get('research_delivery_ref', card['ref']),
+                    'study_id': study['study_id'], 'claim_id': study.get('claim_id'),
+                    'scope': study['scope'], 'focus': study['focus'], 'verified': False,
+                    'continuation': study['continuation'], 'next_work': study['next_work']}
+            if artifact_store:
+                checkpoint = checkpoint_store.latest(study) if checkpoint_store else None
+                # Reuse the existing bounded, same-Study public-material page.
+                # Completed public items are research even without a checkpoint.
+                try:
+                    public = artifact_store.handover(study, token_budget=max(1, token_budget // 4), checkpoint=checkpoint)
+                except AttentionOverflow:
+                    public = {'unexpanded': [{'ref': 'research-artifacts:0'}]}
+                for notice in (public or {}).get('unexpanded', []):
+                    yield {'ref': notice['ref'], 'study_id': study['study_id'], 'unexpanded': True}
+                if (public or {}).get('next_ref'):
+                    yield {'ref': public['next_ref'], 'study_id': study['study_id'], 'unexpanded': True}
+                for item in (public or {}).get('public_messages', []):
+                    yield {**item, 'ref': item['material_ref']}
+    for item in records():
+        ref = item['ref']
+        proposed = {**page, 'items': page['items'] + [item]}
+        if item.get('unexpanded') or not fits({**result, 'local_action_evidence': proposed}):
+            proposed = {**page, 'unexpanded': page['unexpanded'] + [
+                {'ref': ref, 'study_id': item['study_id'], 'reason': 'complete_notes_exceed_remaining_context'}]}
+            if not fits({**result, 'local_action_evidence': proposed}):
+                break  # Its original card remains navigation; never imply inspection.
+        page = proposed
+    return {**exposure, 'local_action_evidence': page}
+
+
+def _displayed_refs(exposure):
+    refs = {r['ref'] for r in exposure.get('local_action_evidence', {}).get('items', [])}
+    refs.update(r['ref'] for r in exposure.get('fact_interfaces', {}).get('items', []))
+    for card in exposure['cards']:
+        refs.update([card['ref'], 'study:' + card['study_id']])
+    return refs
+
+
 def choose(run, network, exposure, schema):
     current, page_number = exposure, 0
+    displayed = set()
     while True:
+        displayed.update(_displayed_refs(current))
         role = 'selector' if page_number == 0 else f'selector-page-{page_number}'
         selected = run.invoker(role).invoke(prompt=INSTRUCTIONS+json.dumps(current,ensure_ascii=False),
                                            schema=schema,label='continuous_selector')
+        metadata = action_metadata(selected)
+        if not set(metadata.get('evidence_refs', [])).issubset(displayed):
+            raise ValueError('action references unexposed evidence')
         if selected['operation'] != 'INSPECT':
             return selected
         ref = current['fact_interfaces']['next_ref']

@@ -10,6 +10,7 @@ from uuid import uuid4
 from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
 from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEFAULT_CHANNEL_CYCLE
+from .continuous_selection import ACTION_PROPERTIES, action_metadata, CLOSE_INSTRUCTIONS
 from .continuous_materials import expose_bridge_candidates, load_selector_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
@@ -30,6 +31,7 @@ _REFS = {"type": "array", "items": _TEXT}
 _WINDOW = {"anyOf": [{"type": "null"}, _object({"start_line": {"type": "integer", "minimum": 0},
                                                 "end_line": {"type": "integer", "minimum": 1}})]}
 _SELECTOR_SCHEMA = _object({
+    **ACTION_PROPERTIES,
     "study_id": _TEXT, "operation": {"type": "string", "enum": ["ADVANCE", "CONNECT", "COMPOSE", "INSPECT"]},
     "support_id": _TEXT, "material_refs": _REFS, "reason": _TEXT,
     "relation": {"type": "string", "enum": ["RELEVANT", "UNKNOWN"]}, "continuation_window": _WINDOW,
@@ -94,6 +96,7 @@ def worker_prompt(packet):
               "no particular route, Fact or reuse is required. Checkpoint notes take priority. Exact "
               "same-Study research-artifact:<id> and research-artifacts:<offset> references may be requested "
               "through context_requests; an unexpanded item is not silently summarized or truncated." if "research_handover" in packet else "") +
+              (CLOSE_INSTRUCTIONS if packet.get("action_mode") == "CLOSE" else "") +
               DELIVERY_INSTRUCTIONS + "\nPACKET:\n" +
               json.dumps(packet, ensure_ascii=False))
 
@@ -527,7 +530,7 @@ class _Research:
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
                                 "full_revision_ref": study.get("research_delivery_ref", self.state["studies"][study["study_id"]])}}
-        return {"operation": selected["operation"], "study": study,
+        return {**action_metadata(selected), "operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,
                 "required_fact_ids": [f.fact_id for f in materials["facts"]] if materials else [],
@@ -554,6 +557,13 @@ class _Research:
         from .continuous_selection import add_fact_interfaces
         exposure = add_fact_interfaces(network, exposure,
             token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        from .continuous_selection import add_action_evidence
+        from .research_artifacts import ArtifactStore
+        from .research_delivery import DeliveryStore
+        exposure = add_action_evidence(exposure, studies, _SELECTOR_SCHEMA,
+            token_budget=self.state['settings']['selector_context_tokens'],
+            artifact_store=ArtifactStore(self.directory, self.state['run_id']),
+            checkpoint_store=DeliveryStore(self.directory, self.state['run_id']))
         return {'exposure': exposure, 'next_schedule': schedule}
 
     def persist_definitions(self, revision, definitions):
@@ -621,6 +631,10 @@ class _LocalInvoker:
         if not isinstance(response, dict):
             raise ValueError("model response is not a structured object")
         for key, field in schema["properties"].items():
+            # Legacy confirmed decisions/test backends predate local action modes.
+            # A partial new interface still fails validation in choose().
+            if label == 'continuous_selector' and key == 'action_mode' and not set(ACTION_PROPERTIES).intersection(response):
+                continue
             if field.get("type") == "boolean" and type(response.get(key)) is not bool:
                 raise ValueError("non-boolean verifier check: " + key)
             if "enum" in field and response.get(key) not in field["enum"]:

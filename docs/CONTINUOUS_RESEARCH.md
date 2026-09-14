@@ -57,6 +57,22 @@ pins the Study so a low-value ranking cannot remove its service. New Studies
 wait for the next revisit snapshot. Exploration alternates single regions and
 cross-region interfaces independently of value scoring. The schedule is an
 experimental initial policy, not a claim of optimality or proof completeness.
+Selector also chooses `RESEARCH` or `CLOSE` within that same service. It records
+`local_object`, `proposed_boundary`, `remaining_gap`, `expected_deliverable`,
+`evidence_refs`, and `reason`. CLOSE attempts one self-contained local result
+from existing work, permits a smaller proved statement, and may still leave a
+specific unverified gap. RESEARCH remains valid for unstable or unclear objects.
+Neither timeout counts nor checkpoint existence select this mode.
+
+Complete notes and a bounded page of public artifacts from already exposed
+Studies can inform this decision inside the unchanged Selector context ceiling.
+Oversized records retain references, not truncated conditions. These are
+unverified research; `evidence_refs` describe the action's basis and never grant
+Fact authority. Ordinary material/scope/predecessor checks remain mandatory.
+CLOSE adds no channel, priority, retry or service. Its confirmed action and
+ordinary Worker packet use the existing durable selection/call journal. Older
+decisions without the new interface retain implicit RESEARCH behavior.
+
 The channel cycle and service cursors are persisted together; resuming does not
 reinitialize either. Rejected material windows do not count as Worker service.
 
