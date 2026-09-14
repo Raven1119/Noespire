@@ -30,7 +30,7 @@ _REFS = {"type": "array", "items": _TEXT}
 _WINDOW = {"anyOf": [{"type": "null"}, _object({"start_line": {"type": "integer", "minimum": 0},
                                                 "end_line": {"type": "integer", "minimum": 1}})]}
 _SELECTOR_SCHEMA = _object({
-    "study_id": _TEXT, "operation": {"type": "string", "enum": ["ADVANCE", "CONNECT", "COMPOSE"]},
+    "study_id": _TEXT, "operation": {"type": "string", "enum": ["ADVANCE", "CONNECT", "COMPOSE", "INSPECT"]},
     "support_id": _TEXT, "material_refs": _REFS, "reason": _TEXT,
     "relation": {"type": "string", "enum": ["RELEVANT", "UNKNOWN"]}, "continuation_window": _WINDOW,
 })
@@ -471,27 +471,8 @@ class _Research:
                 frozen = read_json(input_path)
                 exposure, schedule = frozen['exposure'], frozen['next_schedule']
                 exposed = {card['study_id'] for card in exposure['cards']}
-                prompt = ("You are the fresh local Research Selector. Choose a concrete local action using only "
-                    "these navigation cards. They are not proof evidence. Judge advancement, obstruction "
-                    "discrimination and new-interface value; no goal-distance scores. UNKNOWN relevance is "
-                    "allowed, including CONNECT across apparently unrelated exposed regions. A forced_study_id "
-                    "must receive real research now: decide HOW to work on it, not whether to abandon it. "
-                    "COMPOSE is available only for a listed ready Support. Request exact local material_refs "
-                    "when needed; consider the Study's context_requests and known_fact_ids. Choose this "
-                    "visit's material_refs explicitly so the window can move instead of accumulating every "
-                    "old input. continuation_window optionally selects explicit zero-based lines of the "
-                    "unverified notes; assumptions and candidate proofs are never truncated. "
-                    "BRIDGE_CANDIDATE cards are possible connections from another scope, not local accepted "
-                    "premises. Ignore them or request their fact:<source_fact_id> for inspection in material_refs. "
-                    "Inspection retains original conditions and cannot supply accepted_facts; no bridge is "
-                    "executed automatically. In reason, explain relevance, irrelevance, a need for more material, "
-                    "or whether a separately verified bridge appears worth investigating. Lexical/reference "
-                    "overlap is only a discovery reason, never an established object correspondence. "
-                    "bridge_candidate_pages are optional further navigation. representation_ref requests paged "
-                    "verified-equivalent representation views, not a proof of either open Claim.\nPACKET:\n" +
-                    json.dumps(exposure, ensure_ascii=False))
-                selected = self.invoker("selector").invoke(prompt=prompt, schema=_SELECTOR_SCHEMA,
-                                                          label="continuous_selector")
+                from .continuous_selection import choose
+                selected = choose(self, network, exposure, _SELECTOR_SCHEMA)
                 if exposure["forced_study_id"]:
                     selected = {**selected, "study_id": exposure["forced_study_id"]}
                 if selected["study_id"] not in exposed:
@@ -556,6 +537,9 @@ class _Research:
             if "study-" + s["conclusion_claim_id"] in exposed]
         exposure = expose_bridge_candidates(self.root, exposure, studies, self.state['studies'], network,
             token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        from .continuous_selection import add_fact_interfaces
+        exposure = add_fact_interfaces(network, exposure,
+            token_budget=self.state['settings']['selector_context_tokens'] // 4)
         return {'exposure': exposure, 'next_schedule': schedule}
 
     def persist_definitions(self, revision, definitions):
@@ -592,7 +576,7 @@ class _LocalInvoker:
         self.run, self.role = run, role
 
     def invoke(self, *, prompt, schema, label):
-        family = "selector" if self.role in ("selector", "selector-bridge", "recurrence-probe") else "worker" if self.role in ("worker", "recurrence-worker") else "verifier"
+        family = "selector" if (self.role.startswith("selector") or self.role == "recurrence-probe") else "worker" if self.role in ("worker", "recurrence-worker") else "verifier"
         try:
             _, measurement = bounded_packet({"prompt": prompt, "schema": schema},
                                             self.run.state["settings"][family + "_context_tokens"])
