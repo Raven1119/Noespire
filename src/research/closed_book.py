@@ -109,6 +109,11 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
                 result = super().invoke(
                     prompt=prompt, schema=schema, label=label, on_message=on_message,
                 )
+            if label == "continuous_worker":
+                from .research_delivery import _marked_text
+                if _marked_text(json.dumps(result, ensure_ascii=False)) is not None:
+                    result = None
+                    raise ValueError("checkpoint handover is not a final Worker result")
             return result
         except BaseException as exc:
             self._last_failure = exc

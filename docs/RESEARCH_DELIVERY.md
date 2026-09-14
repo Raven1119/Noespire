@@ -11,9 +11,12 @@ callback. Other roles retain their normal invocation path.
 
 ## Delivery and authority
 
-The Worker receives generic instructions to emit a separate public commentary
-message beginning with `CRPN_RESEARCH_CHECKPOINT`, then a newline and one complete
-JSON object. Required fields are:
+The Worker emits a separate public commentary message using the existing Worker
+response schema. Its `continuation` string, after normal JSON decoding, begins
+with `CRPN_RESEARCH_CHECKPOINT`, an actual newline and one complete JSON object.
+Other envelope slots have no side effects: `candidate` and `new_study` are null,
+`context_requests` and `definitions` are empty, and `next_work` is a string.
+The checkpoint object's required fields are:
 
 - `goal` and `context`: the selected Study focus and ambient scope verbatim;
 - `derivation`: explicit self-contained local mathematical work and conditions;
@@ -25,7 +28,16 @@ JSON object. Required fields are:
 No fixed delivery frequency or independent-lemma quota is imposed. The Worker
 can continue one difficult argument across calls. It may correct or abandon a
 handover. Final candidate output still uses the unchanged Worker response schema
-and the existing independent Verifier.
+and the existing independent Verifier. A handover-only exit is an invocation
+error, not a completed ordinary Worker response or a Study service. A subsequent
+ordinary final response uses continuation without the checkpoint marker.
+
+The decoder accepts exactly two forms: the legacy standalone marked message, or
+the known complete Worker envelope's `continuation`. It JSON-decodes the envelope
+once, then the marked payload once, and applies the same six-field goal/scope
+checks. It never searches other/nested fields, repeatedly decodes strings,
+replaces escapes, repairs truncation, or promotes ordinary notes, examples or
+candidate proofs. Duplicate JSON keys are rejected.
 
 Only a complete `item.completed / agent_message` JSONL event can reach the
 delivery callback. Tool output, private reasoning, unmarked messages, incomplete
@@ -49,10 +61,17 @@ continuous_run/research_deliveries/<study_id>/<sequence>-<content_hash>.json
 
 Each immutable receipt records the new run identity, Study/Claim/scope,
 invocation identity and request hash, source visit/revision, receive time and
-content/message hashes. Writes use the existing flushed/fsynced temporary-file
+content/message hashes. Receipts also retain the exact public text and raw
+JSONL event, message ID, stream position and finite parse source. Host observation
+time and persistence time are distinct; offline replay observation is never an
+invented historical timestamp. Raw envelopes remain in evidence and are excluded
+from the Worker metadata projection so they cannot bypass a selected window.
+Writes use the existing flushed/fsynced temporary-file
 and atomic-rename primitive. An uncommitted `.tmp` never displaces a completed
-record. Identical consecutive delivery is idempotent; A -> B -> A preserves the
-last A as a new complete version.
+record. Replaying the same message ID within one call is durably idempotent,
+even after other versions or a process restart; changing that ID's text fails
+closed. Different message IDs preserve A -> B -> A as three versions. Legacy
+injected messages without IDs retain consecutive-content deduplication.
 
 Timeout and interrupted calls retain their original call state. Partial stdout
 and stderr are preserved in invocation evidence, with incomplete JSONL records
@@ -111,3 +130,25 @@ one ordinary continuation invocation is permitted; without one, stop as
 unobserved. Retained candidates are not accepted without normal verification.
 Such a probe establishes engineering delivery/continuation, not greater proving
 ability, better action selection, or autonomous scheduling utility.
+
+## Envelope replay protocol
+
+`application.codex_stream.PublicMessageStream.feed(bytes)` is the same complete
+JSONL framing entry used by the live invoker and offline evidence replay. Only
+completed public messages reach `DeliveryStore.capture`; partial chunks remain
+pending and unterminated final records are not synthesized.
+
+For offline recovery, use a new labeled directory with exact copies of the source
+request/result and raw invocation evidence. Record source run, file hashes and
+replay origin separately. Historical calls remain TIMEOUT/ERROR/INTERRUPTED with
+unknown usage where applicable; the offline receipt is not a new model result.
+An old stream lacking per-event timestamps permits an event-order report, not an
+invented exact time before its deadline. Old evidence and verdicts stay frozen.
+
+After deterministic replay and a source commit, an explicitly authorized single
+continuation may import the latest complete receipt, source call binding and
+unchanged Study/materials into a new run. The ordinary Worker material path reads
+the receipt as unverified continuation. Stop after that one Worker outcome and,
+if a candidate is mechanically legal, at most one normal fresh Verifier. No
+Selector resampling, new research direction, second attempt or graph follow-up
+is implied by this engineering protocol.

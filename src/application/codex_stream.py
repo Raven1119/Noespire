@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from contextlib import contextmanager, ExitStack
 import json
+from hashlib import sha256
 from pathlib import Path
 import subprocess
 from tempfile import TemporaryDirectory
 import time
+from time import time as wall_time
 from typing import Callable, Sequence
 
 
@@ -34,20 +36,53 @@ def temporary_directory(*, prefix: str):
         directory.cleanup()
 
 
-def _deliver(lines: bytes, on_message: Callable[[str], None]) -> None:
-    for line in lines.splitlines():
-        if not line.strip():
-            continue
-        try:
-            event = json.loads(line.decode("utf-8"))
-        except (ValueError, UnicodeError):
-            continue
-        if not isinstance(event, dict) or event.get("type") != "item.completed":
-            continue
-        item = event.get("item")
-        if (isinstance(item, dict) and item.get("type") == "agent_message"
-                and isinstance(item.get("text"), str)):
-            on_message(item["text"])
+class PublicMessage(str):
+    """A public string with host provenance; existing text callbacks still work."""
+
+    def __new__(cls, text, *, event, raw_event, event_index):
+        message = super().__new__(cls, text)
+        message.message_id = event["item"].get("id")
+        message.public_event = raw_event
+        message.event_index = event_index
+        message.message_received_at = wall_time()
+        return message
+
+
+class PublicMessageStream:
+    """One bounded JSONL framing seam shared by live capture and offline replay."""
+
+    def __init__(self, on_message):
+        self.on_message = on_message
+        self.pending = b""
+        self.event_index = 0
+        self.message_hashes = {}
+
+    def feed(self, chunk: bytes) -> None:
+        self.pending += chunk
+        while b"\n" in self.pending:
+            line, self.pending = self.pending.split(b"\n", 1)
+            index = self.event_index
+            self.event_index += 1
+            if not line.strip():
+                continue
+            try:
+                raw = (line + b"\n").decode("utf-8")
+                event = json.loads(raw)
+            except (ValueError, UnicodeError, RecursionError):
+                continue
+            if not isinstance(event, dict) or event.get("type") != "item.completed":
+                continue
+            item = event.get("item")
+            if (isinstance(item, dict) and item.get("type") == "agent_message"
+                    and isinstance(item.get("text"), str)):
+                message_id = item.get("id")
+                if isinstance(message_id, str) and message_id:
+                    digest = sha256(item["text"].encode("utf-8")).hexdigest()
+                    if self.message_hashes.get(message_id, digest) != digest:
+                        raise ValueError("public message identity changed within stream")
+                    self.message_hashes[message_id] = digest
+                self.on_message(PublicMessage(item["text"], event=event,
+                                              raw_event=raw, event_index=index))
 
 
 def run_with_messages(
@@ -76,16 +111,12 @@ def run_with_messages(
             reader = files.enter_context(output_path.open("rb"))
             try:
                 process = subprocess.Popen(argv, stdin=stdin, stdout=stdout, stderr=stderr)
-                pending = b""
+                messages = PublicMessageStream(on_message)
                 while True:
                     # Include setup/startup in the same deadline as execution.
                     expired = time.monotonic() >= deadline
                     returncode = process.poll()
-                    pending += reader.read()
-                    boundary = pending.rfind(b"\n")
-                    if boundary >= 0:
-                        _deliver(pending[:boundary + 1], on_message)
-                        pending = pending[boundary + 1:]
+                    messages.feed(reader.read())
                     # Drain complete records already present at the deadline
                     # once, without replaying prior messages or turning the
                     # expired invocation into a successful final response.

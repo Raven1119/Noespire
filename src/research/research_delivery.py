@@ -10,30 +10,28 @@ from .run_storage import read_json, write_json
 MARKER = "CRPN_RESEARCH_CHECKPOINT\n"
 DELIVERY_INSTRUCTIONS = """
 RESEARCH DELIVERY PROTOCOL:
-During this call, when you have a coherent piece of resumable work, explicitly
-hand it over in a separate public commentary message. Do not wait for your final
-answer to preserve completed work. Continue the same research after handing it
-over; a delivery need not prove a lemma or produce a Fact. No fixed delivery
-frequency is required. Write self-contained mathematical working notes intended
-for another researcher, not a transcript of private reasoning.
-The message must start exactly with CRPN_RESEARCH_CHECKPOINT followed by a newline
-and one complete JSON object, without a code fence or additional text:
-{"goal":"copy study.focus verbatim", "context":"copy study.scope verbatim",
- "derivation":"the local mathematical work explicitly written so far, including definitions and conditions",
- "obstruction":"the still unproved steps or precise obstacle",
- "next_work":"the next concrete work that can continue this study",
- "materials_used":["references to materials actually used, or an empty list"]}
-Each delivery is a complete standalone version, not a patch to earlier notes.
-Never promote a conditional or unproved step to an established premise. Delivery
-is UNVERIFIED research only: it cannot create a Fact, Support or refutation and
-does not replace your final response in the required output schema. Do not write
-files or request additional tools for delivery; use this public message channel.
-If PACKET contains research_checkpoint, its work is in study.continuation, with
-source metadata and a full artifact reference in research_checkpoint. Read this
-latest complete handover, or its explicitly marked continuation_window, from
-the same Study. Its source call may
-have timed out or been interrupted. Check and continue useful work; you may also
-correct or abandon it. It is not accepted evidence and adds no predecessor IDs.
+During research, hand over coherent resumable work in a separate public commentary
+message before your final answer. Continue researching afterward. No fixed
+frequency or lemma quota: write self-contained mathematical working notes, not
+private reasoning. Use the EXISTING Worker response schema, with candidate and
+new_study null, context_requests and definitions empty lists, and next_work set.
+The DECODED continuation string must start with CRPN_RESEARCH_CHECKPOINT, then
+one actual newline and one complete JSON object (no fence/example/extra text):
+{"goal":"study.focus verbatim", "context":"study.scope verbatim",
+ "derivation":"explicit local work, definitions and conditions",
+ "obstruction":"remaining unproved steps", "next_work":"next concrete work",
+ "materials_used":["actually used material references, or empty list"]}
+Serialize continuation normally in the outer JSON, not a second time. Each
+handover is a complete version, not a patch. Preserve unproved conditions.
+Checkpoints are UNVERIFIED: no Fact, Support, refutation or accepted predecessor
+authority. Do not write files or request tools for delivery. Your eventual final
+response keeps the same Worker schema with ordinary continuation WITHOUT the
+marker; a handover-only exit is not a completed Worker result.
+If PACKET has research_checkpoint, the latest complete handover (or explicitly
+marked continuation_window) is in study.continuation; metadata identifies its
+source call and full artifact. A timeout/interrupted source is not success.
+Check and continue useful work; correct or abandon it if needed. No new handover
+means the prior saved state remains available.
 """
 
 
@@ -51,6 +49,55 @@ def _valid(content, study):
             and all(isinstance(ref, str) and ref.strip() for ref in content["materials_used"]))
 
 
+def _json_object(text):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON field")
+            result[key] = value
+        return result
+    return json.loads(text, object_pairs_hook=unique)
+
+
+def _marked_text(message):
+    """Only the explicit legacy message or the known Worker.continuation field.
+
+    JSON syntax removes exactly the envelope's normal string escaping. No
+    recursive field search, repeated decoding, quote repair or text rewriting.
+    """
+    if not isinstance(message, str):
+        return None
+    text, source = message, "public_message"
+    try:
+        if not text.startswith(MARKER):
+            envelope = _json_object(text)
+            fields = {"continuation", "next_work", "context_requests", "new_study", "definitions", "candidate"}
+            if (not isinstance(envelope, dict) or set(envelope) != fields
+                    or not isinstance(envelope["continuation"], str)
+                    or not isinstance(envelope["next_work"], str)
+                    or envelope["candidate"] is not None or envelope["new_study"] is not None
+                    or envelope["context_requests"] != [] or envelope["definitions"] != []):
+                return None
+            text, source = envelope["continuation"], "worker.continuation"
+        if not text.startswith(MARKER):
+            return None
+        return text, source
+    except (ValueError, TypeError, RecursionError):
+        return None
+
+
+def _decode(message):
+    marked = _marked_text(message)
+    if marked is None:
+        return None
+    text, source = marked
+    try:
+        return _json_object(text[len(MARKER):]), source
+    except (ValueError, TypeError, RecursionError):
+        return None
+
+
 class DeliveryStore:
     def __init__(self, directory, run_id):
         self.directory, self.run_id = Path(directory), run_id
@@ -65,28 +112,40 @@ class DeliveryStore:
         Invalid/incomplete messages stay in raw invocation evidence, never
         replacing a valid version. Duplicate delivery is idempotent.
         """
-        if not isinstance(message, str) or not message.startswith(MARKER):
-            return False
-        try:
-            content = json.loads(message[len(MARKER):])
-        except (ValueError, TypeError):
+        if not isinstance(message, str):
             return False
         study = packet["study"]
-        if not _valid(content, study):
-            return False
         call_directory = Path(call_directory)
         request_path = call_directory / "request.json"
         if call_directory.parent.resolve() != (self.directory / "calls").resolve():
             raise ValueError("delivery must belong to this run's invocation journal")
+        state_path = self.directory / "state.json"
+        if state_path.exists() and read_json(state_path)["run_id"] != self.run_id:
+            raise ValueError("delivery run identity differs from its journal")
         request = read_json(request_path)
         if request["label"] != "continuous_worker":
             raise ValueError("only ordinary Worker calls can deliver Study research")
         original_packet = json.loads(request["prompt"].split("\nPACKET:\n", 1)[1])
         if original_packet != packet:
             raise ValueError("delivery packet differs from the frozen request")
-        digest = _digest(content)
         records = self._records(study["study_id"])
-        if (records and records[-1][1]["call_id"] == call_directory.name
+        message_id = getattr(message, "message_id", None)
+        if message_id is not None:
+            if not isinstance(message_id, str) or not message_id.strip():
+                return False
+            for _, previous in records:
+                if previous["call_id"] == call_directory.name and previous.get("message_id") == message_id:
+                    if previous["message_sha256"] != sha256(message.encode()).hexdigest():
+                        raise ValueError("public message identity changed")
+                    return False
+        decoded = _decode(message)
+        if decoded is None:
+            return False
+        content, parse_source = decoded
+        if not _valid(content, study):
+            return False
+        digest = _digest(content)
+        if (message_id is None and records and records[-1][1]["call_id"] == call_directory.name
                 and records[-1][1]["content_sha256"] == digest):
             return False
         sequence = max((r["sequence"] for _, r in records), default=0) + 1
@@ -95,7 +154,11 @@ class DeliveryStore:
                   "source_revision": study["revision"], "source_visit": int(request["scope"].split(":", 1)[0]),
                   "call_id": call_directory.name, "request_sha256": sha256(request_path.read_bytes()).hexdigest(),
                   "content": content, "content_sha256": digest, "verified": False,
-                  "received_at": time.time(), "message_sha256": sha256(message.encode()).hexdigest()}
+                  "received_at": time.time(), "message_sha256": sha256(message.encode()).hexdigest(),
+                  "raw_message": str(message), "parse_source": parse_source,
+                  "message_id": message_id, "public_event": getattr(message, "public_event", None),
+                  "event_index": getattr(message, "event_index", None),
+                  "message_received_at": getattr(message, "message_received_at", None)}
         path = self.directory / "research_deliveries" / study["study_id"] / f"{sequence:08d}-{digest[:16]}.json"
         if path.exists():
             raise ValueError("cannot overwrite an existing research delivery")
@@ -162,7 +225,8 @@ def worker_packet(run, packet):
     frozen = dict(packet)
     if checkpoint:
         frozen["study"] = study_view(store, packet["study"])
-        frozen["research_checkpoint"] = {k: v for k, v in checkpoint.items() if k != "content"}
+        frozen["research_checkpoint"] = {k: v for k, v in checkpoint.items()
+                                         if k not in {"content", "raw_message", "public_event"}}
         frozen["research_checkpoint"].update(
             notes_location="study.continuation",
             complete_in_packet=not bool(frozen["study"].get("window")))
