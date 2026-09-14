@@ -115,19 +115,7 @@ class DeliveryStore:
         if not isinstance(message, str):
             return False
         study = packet["study"]
-        call_directory = Path(call_directory)
-        request_path = call_directory / "request.json"
-        if call_directory.parent.resolve() != (self.directory / "calls").resolve():
-            raise ValueError("delivery must belong to this run's invocation journal")
-        state_path = self.directory / "state.json"
-        if state_path.exists() and read_json(state_path)["run_id"] != self.run_id:
-            raise ValueError("delivery run identity differs from its journal")
-        request = read_json(request_path)
-        if request["label"] != "continuous_worker":
-            raise ValueError("only ordinary Worker calls can deliver Study research")
-        original_packet = json.loads(request["prompt"].split("\nPACKET:\n", 1)[1])
-        if original_packet != packet:
-            raise ValueError("delivery packet differs from the frozen request")
+        call_directory, request_path, request = capture_request(self.directory, self.run_id, call_directory, packet)
         records = self._records(study["study_id"])
         message_id = getattr(message, "message_id", None)
         if message_id is not None:
@@ -230,5 +218,27 @@ def worker_packet(run, packet):
         frozen["research_checkpoint"].update(
             notes_location="study.continuation",
             complete_in_packet=not bool(frozen["study"].get("window")))
+    from .research_artifacts import attach_handover
+    frozen = attach_handover(run, frozen, checkpoint)
     write_json(path, {"source_packet_sha256": _digest(packet), "packet": frozen})
-    return frozen
+    # Use the serialized ordering on the first call too: prompt bytes must
+    # match a post-crash read, including newly attached material dictionaries.
+    return read_json(path)["packet"]
+
+
+def capture_request(directory, run_id, call_directory, packet):
+    """Shared ownership guard for public research and explicit checkpoints."""
+    call_directory = Path(call_directory)
+    request_path = call_directory / "request.json"
+    if call_directory.parent.resolve() != (directory / "calls").resolve():
+        raise ValueError("delivery must belong to this run's invocation journal")
+    state_path = directory / "state.json"
+    if state_path.exists() and read_json(state_path)["run_id"] != run_id:
+        raise ValueError("delivery run identity differs from its journal")
+    request = read_json(request_path)
+    if request["label"] != "continuous_worker":
+        raise ValueError("only ordinary Worker calls can deliver Study research")
+    original_packet = json.loads(request["prompt"].split("\nPACKET:\n", 1)[1])
+    if original_packet != packet:
+        raise ValueError("delivery packet differs from the frozen request")
+    return call_directory, request_path, request

@@ -108,6 +108,7 @@ class ClosedBookCodexInvoker(IsolatedCodexInvoker):
             else:
                 result = super().invoke(
                     prompt=prompt, schema=schema, label=label, on_message=on_message,
+                    include_public_tools=label == "continuous_worker",
                 )
             if label == "continuous_worker":
                 from .research_delivery import _marked_text

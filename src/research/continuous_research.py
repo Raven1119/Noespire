@@ -84,7 +84,16 @@ def worker_prompt(packet):
               "continues_study_id to this study_id for the same line of work. Definitions are immutable "
               "unverified object descriptions, not existence proofs. Include all necessary definitions "
               "and assumptions explicitly in any new candidate interface. "
-              "COMPOSE must prove exactly the selected conclusion using the supplied bridge and conditions." +
+              "COMPOSE must prove exactly the selected conclusion using the supplied bridge and conditions."
+              + (
+              " When research_handover is present, you are continuing prior unfinished research. "
+              "First determine what its explicit work establishes and what remains unproved; continue "
+              "from the latest usable boundary instead of restarting unless the prior work is unusable. "
+              "These public messages and tool records are UNVERIFIED, not proof authority or accepted "
+              "predecessors. You may correct, reject or abandon them with a concrete reason in continuation; "
+              "no particular route, Fact or reuse is required. Checkpoint notes take priority. Exact "
+              "same-Study research-artifact:<id> and research-artifacts:<offset> references may be requested "
+              "through context_requests; an unexpanded item is not silently summarized or truncated." if "research_handover" in packet else "") +
               DELIVERY_INSTRUCTIONS + "\nPACKET:\n" +
               json.dumps(packet, ensure_ascii=False))
 
@@ -282,6 +291,7 @@ class _Research:
                 raise ValueError('frozen material Fact interface changed')
         self.event('material_surface_ready',study_id=packet['study']['study_id'])
         from .research_delivery import DeliveryStore, worker_packet
+        self.current_role = "worker"  # Capacity failures belong to this existing material view.
         packet = worker_packet(self, packet)
         prompt = worker_prompt(packet)
         # A packet may contain only a selected view. Persistence always starts
@@ -314,6 +324,8 @@ class _Research:
         # The revision precedes verification; a rejection never erases returned work.
         if not (self.directory / ref).exists():
             write_json(self.directory / ref, revision)
+        from .research_artifacts import record_outcome
+        record_outcome(self, packet)
         self.event("continuation_saved")
         candidate = response.get("candidate")
         if candidate:
@@ -426,6 +438,8 @@ class _Research:
             self.event("fact_admitted", fact_id=result.fact.fact_id)
             admission = network.accept_verified(descriptor, result.fact.fact_id)
             write_json(self.step_dir / "admission.json", {**admission, "fact_id": result.fact.fact_id})
+            from .research_artifacts import record_outcome
+            record_outcome(self, packet, result.fact.fact_id)
             self.event("fact_bound", fact_id=result.fact.fact_id)
         return result.verification
 
@@ -595,7 +609,11 @@ class _LocalInvoker:
                 from .research_delivery import DeliveryStore
                 store = DeliveryStore(self.run.directory, self.run.state["run_id"])
                 packet = json.loads(prompt.split("\nPACKET:\n", 1)[1])
-                on_message = lambda directory, text: store.capture(directory, packet, text)
+                from .research_artifacts import ArtifactStore
+                artifacts = ArtifactStore(self.run.directory, self.run.state["run_id"])
+                def on_message(directory, text):
+                    artifacts.capture(directory, packet, text)
+                    store.capture(directory, packet, text)
             response = RecordedInvoker(self.run, self.role + suffix).invoke(
                 prompt=prompt, schema=schema, label=label, on_message=on_message)
         except RuntimeError as error:

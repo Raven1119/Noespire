@@ -51,8 +51,9 @@ class PublicMessage(str):
 class PublicMessageStream:
     """One bounded JSONL framing seam shared by live capture and offline replay."""
 
-    def __init__(self, on_message):
+    def __init__(self, on_message, *, include_public_tools=False):
         self.on_message = on_message
+        self.include_public_tools = include_public_tools
         self.pending = b""
         self.event_index = 0
         self.message_hashes = {}
@@ -73,21 +74,29 @@ class PublicMessageStream:
             if not isinstance(event, dict) or event.get("type") != "item.completed":
                 continue
             item = event.get("item")
-            if (isinstance(item, dict) and item.get("type") == "agent_message"
-                    and isinstance(item.get("text"), str)):
+            text = None
+            if isinstance(item, dict):
+                if item.get("type") == "agent_message" and isinstance(item.get("text"), str):
+                    text = item["text"]
+                elif (self.include_public_tools and item.get("type") == "command_execution"
+                      and isinstance(item.get("command"), str)
+                      and isinstance(item.get("aggregated_output"), str)):
+                    text = json.dumps(item, ensure_ascii=False, sort_keys=True)
+            if text is not None:
                 message_id = item.get("id")
                 if isinstance(message_id, str) and message_id:
-                    digest = sha256(item["text"].encode("utf-8")).hexdigest()
+                    digest = sha256(text.encode("utf-8")).hexdigest()
                     if self.message_hashes.get(message_id, digest) != digest:
                         raise ValueError("public message identity changed within stream")
                     self.message_hashes[message_id] = digest
-                self.on_message(PublicMessage(item["text"], event=event,
+                self.on_message(PublicMessage(text, event=event,
                                               raw_event=raw, event_index=index))
 
 
 def run_with_messages(
     argv: Sequence[str], *, input: str, timeout: float,
     on_message: Callable[[str], None],
+    include_public_tools: bool = False,
 ) -> subprocess.CompletedProcess:
     """Deliver only complete public JSONL messages, retaining raw output on error.
 
@@ -111,7 +120,7 @@ def run_with_messages(
             reader = files.enter_context(output_path.open("rb"))
             try:
                 process = subprocess.Popen(argv, stdin=stdin, stdout=stdout, stderr=stderr)
-                messages = PublicMessageStream(on_message)
+                messages = PublicMessageStream(on_message, include_public_tools=include_public_tools)
                 while True:
                     # Include setup/startup in the same deadline as execution.
                     expired = time.monotonic() >= deadline

@@ -136,6 +136,14 @@ def load_materials(root, study, refs, study_refs, network):
     for ref in refs:
         if not isinstance(ref, str):
             raise ValueError("local material references must be strings")
+        if ref.startswith(("research-artifact:", "research-artifacts:")):
+            from .research_artifacts import ArtifactStore
+            value = ArtifactStore(directory, read_json(directory / "state.json")["run_id"]).read_material(study, ref)
+            if value is not None:
+                unverified.append(value)
+            else:
+                notices.append({"ref": ref, "error": "unknown same-Study research artifact"})
+            continue
         representation = re.fullmatch(r"representations:(ob-[0-9a-f]{24})(?::([0-9]+))?",ref)
         if representation:
             key, offset = representation[1], int(representation[2] or 0)

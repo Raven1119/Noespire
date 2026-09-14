@@ -73,6 +73,7 @@ class IsolatedCodexInvoker:
     def invoke(
         self, *, prompt: str, schema: Dict[str, Any], label: str,
         on_message: Optional[Callable[[str], None]] = None,
+        include_public_tools: bool = False,
     ) -> Dict[str, Any]:
         name = f"noespire-{uuid4().hex}"
         # The fresh temp dir is the only rw mount; TemporaryDirectory removes
@@ -91,7 +92,7 @@ class IsolatedCodexInvoker:
                 else:
                     completed = run_with_messages(
                         argv, input=prompt, timeout=self.timeout_seconds,
-                        on_message=on_message,
+                        on_message=on_message, include_public_tools=include_public_tools,
                     )
             except BaseException as error:
                 try:

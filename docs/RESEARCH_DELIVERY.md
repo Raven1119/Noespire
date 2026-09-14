@@ -39,9 +39,9 @@ checks. It never searches other/nested fields, repeatedly decodes strings,
 replaces escapes, repairs truncation, or promotes ordinary notes, examples or
 candidate proofs. Duplicate JSON keys are rejected.
 
-Only a complete `item.completed / agent_message` JSONL event can reach the
-delivery callback. Tool output, private reasoning, unmarked messages, incomplete
-JSON, invalid UTF-8 and goal/scope mismatches cannot become deliveries. A
+Only a complete `item.completed / agent_message` JSONL event can become an
+explicit checkpoint. Tool output, private reasoning, unmarked messages, incomplete
+JSON, invalid UTF-8 and goal/scope mismatches cannot become checkpoints. A
 checkpoint is always **UNVERIFIED**. It creates no Claim, Fact, Support,
 Refutation, Study revision, service event or durable mathematical progress.
 References inside notes are not accepted predecessor edges.
@@ -152,3 +152,69 @@ the receipt as unverified continuation. Stop after that one Worker outcome and,
 if a candidate is mechanically legal, at most one normal fresh Verifier. No
 Selector resampling, new research direction, second attempt or graph follow-up
 is implied by this engineering protocol.
+
+
+## Ordinary public research continuity
+
+The ordinary loop also persists completed public `agent_message` and public
+`command_execution` records through the same host stream callback, during the
+call. Only the ordinary Worker opts into tool-record capture; no new execution
+permission, tool, Agent, hidden reasoning or filesystem access is granted.
+Unmarked messages, including candidate text, are research evidence only. A tool
+record means the public tool invocation completed, not that its mathematical
+claim is true. Unterminated JSONL, partial events and private reasoning are not
+materialized, and missing usage remains unknown.
+
+Receipts are append-only `UNVERIFIED_RESEARCH_ARTIFACT` records in
+`continuous_run/research_artifacts/<study_id>/<invocation-message-hash>.json`.
+They preserve exact public content/events, message ID, invocation, run,
+Study/Claim/scope, request hash and host receive time. `source_status_at_capture`
+is the observed status then; `source_status_ref` points at the unchanged call
+journal. Reads resolve its eventual COMPLETED/TIMEOUT/ERROR/INTERRUPTED status.
+They do not rewrite an original timeout as completion. An unpublished `.tmp`
+never replaces a complete receipt. Repeated events are idempotent across restart.
+
+At the next *normally scheduled* same-Study service, `worker_packet` adds a
+bounded `research_handover` alongside the unchanged `accepted_facts`. It includes
+the last action/goal and verbatim explicit unfinished work, never an inferred
+summary. The latest valid checkpoint retains priority and its existing movable
+continuation window. Up to three recent complete public items supplement that
+checkpoint; preceding items stay in history. The supplement uses at most a
+quarter of the existing Worker context limit, capped at 8192 estimated tokens,
+and must also fit the unchanged full-packet ceiling. Oversized items stay whole
+on disk with an explicit unexpanded reference; conditions are never truncated.
+No checkpoint means `NO_CLAIM_OF_COMPLETENESS`, not an invented proof interface.
+
+Ordinary context requests can read `research-artifact:<id>` (exact complete
+item) or `research-artifacts:<offset>` (2048-token navigation page). These reads
+are limited to the current Study/Claim/scope and remain unverified materials.
+The existing final capacity gate still defers an overlarge requested packet.
+Seeing any such reference cannot satisfy the ordinary accepted-Fact gate.
+
+A confirmed normal Worker response supersedes automatic injection of prior work
+through the existing Study visit/revision. Older artifacts remain inspectable.
+Immutable `outcomes/` sidecars retain the resulting visit, verbatim continuation
+and next work (including reasons for abandoning/correcting work), and any accepted
+resulting Fact ID. This records **exposure or generation**, not verified use or a
+proof-dependency edge. Actual mathematical reuse must still be audited against
+the returned proof and real Fact predecessors. Source timeout status is retained.
+
+Frozen Worker inputs are serialized and reread before their first invocation,
+so first execution and crash recovery produce identical prompt bytes, including
+newly attached dictionary order. No confirmed Worker, Verifier or admission is
+repeated. Artifact capture itself changes no Study revision, service count,
+channel/cursor, mathematical progress event or truth state. Timeouts do not cause
+an extra immediate retry; the existing scheduler decides when to return.
+
+### Bounded live observation protocol
+
+Freeze source and deterministic tests before one live observation. Import a
+historical timeout's frozen pre-Worker selection/material boundary into a new
+short-path run with explicit origin and consumed historical accounting. Do not
+import a manually written handover or edit old fingerprints. The first fresh
+Worker may naturally time out or finish; never shorten its 600-second limit to
+force the trigger. After a timeout, normal loop scheduling may return to the same
+Study. A preregistered observation window limits this integration experiment;
+not returning within that window is unobserved, not a scheduler failure. Stop
+after the same Study's next Worker and at most its normal fresh Verifier; retain
+all failures. No capability claim follows from this single engineering sample.
