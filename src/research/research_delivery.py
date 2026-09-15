@@ -252,8 +252,15 @@ def worker_packet(run, packet):
         frozen["research_checkpoint"].update(
             notes_location="study.continuation",
             complete_in_packet=not bool(frozen["study"].get("window")))
+    # Ordinary research artifacts retain their existing allocation. Advisory
+    # prose must yield to them, not cause the handover pager to remove messages.
+    advisory = frozen.pop('research_assessment_unverified', None)
     from .research_artifacts import attach_handover
     frozen = attach_handover(run, frozen, checkpoint)
+    if advisory is not None:
+        frozen = {**frozen, 'research_assessment_unverified': advisory}
+    from .research_progress import fit_worker_advisory
+    frozen = fit_worker_advisory(run, frozen)
     write_json(path, {"source_packet_sha256": _digest(packet), "packet": frozen})
     # Use the serialized ordering on the first call too: prompt bytes must
     # match a post-crash read, including newly attached material dictionaries.

@@ -3,7 +3,7 @@ import json
 
 from .continuous_attention import AttentionOverflow, bounded_packet
 from .run_storage import read_json, write_json
-from .research_progress import INSTRUCTIONS as PROGRESS_INSTRUCTIONS, validate_assessment, progress_page
+from .research_progress import INSTRUCTIONS as PROGRESS_INSTRUCTIONS, progress_page
 
 
 ACTION_PROPERTIES = {
@@ -348,7 +348,6 @@ def saved_object_metadata(run, selected, exposure):
     if frozen.get('object_comparison_contract') == 1 or any(
             k in selected for k in ('considered_objects', 'no_alternative_reason')):
         validate_object_comparison(selected, displayed)
-    validate_assessment(selected, facts)
     return metadata
 
 
@@ -429,7 +428,6 @@ def choose(run, network, exposure, schema, *, object_index=None, progress_index=
         if selected['operation'] != 'INSPECT':
             action_metadata(selected)
             validate_object_comparison(selected, objects)
-            validate_assessment(selected, fact_interfaces)
             return selected
         refs = selected['material_refs']
         if (not isinstance(refs, list) or len(refs) != 1 or not isinstance(refs[0], str)

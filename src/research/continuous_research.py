@@ -11,7 +11,7 @@ from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
 from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEFAULT_CHANNEL_CYCLE
 from .continuous_selection import ACTION_PROPERTIES, action_metadata, CLOSE_INSTRUCTIONS
-from .research_progress import ASSESSMENT_SCHEMA, assessment_material, history_rows, progress_page
+from .research_progress import ASSESSMENT_SCHEMA, assessment_material, history_rows, progress_page, record_assessment
 from .continuous_materials import expose_bridge_candidates, load_selector_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
@@ -525,6 +525,10 @@ class _Research:
         selected = plan["selected"]
         from .continuous_selection import saved_object_metadata
         selected_object = saved_object_metadata(self, selected, plan["exposure"])
+        # A diagnostic receipt is separate from the immutable raw decision. It
+        # cannot veto a legal action or supply mathematical authority.
+        assessment = record_assessment(self.step_dir, selected, plan['exposure'], network,
+            token_budget=self.state['settings']['selector_context_tokens']//4)
         if selected["operation"] not in ("ADVANCE", "CONNECT", "COMPOSE"):
             raise ValueError("unknown local research operation")
         study = studies[selected["study_id"]]
@@ -557,7 +561,7 @@ class _Research:
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
                                 "full_revision_ref": study.get("research_delivery_ref", self.state["studies"][study["study_id"]])}}
-        return {**action_metadata(selected), **selected_object, **assessment_material(selected),
+        return {**action_metadata(selected), **selected_object, **assessment_material(assessment),
                 "operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,

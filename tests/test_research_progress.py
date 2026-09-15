@@ -16,9 +16,9 @@ from test_bridge_discovery import Crash, snapshot
 def assessment(facts):
     refs = ['fact:'+f.fact_id for f in facts[:2]]
     return {'series':'Bounds for signed arguments', 'established':'Positive and negative domains differ.',
-        'latest_delta':'A negative-domain estimate is available.', 'fact_refs':refs,
-        'covered_work':[], 'method_limits':[{'fact_ref':refs[0],
-            'action_relation':'Only positive arguments; this negative-domain action is outside its conditions.'}],
+        'latest_delta':'A negative-domain estimate is available.',
+        'judgments':[{'work_refs':[], 'evidence_fact_refs':refs,
+            'explanation':'Only positive arguments in the first bound; this negative-domain action is outside its conditions.'}],
         'next_question':'Can the negative-domain recurrence extend the estimate?',
         'why_this_action':'Test the remaining boundary, not the count of accepted results.'}
 
@@ -73,22 +73,22 @@ def test_coverage_is_an_explicit_revisable_judgment_not_inferred_from_bounds(tmp
     value=assessment(facts)
     # Even an erroneous semantic judgment cannot rewrite the graph. The next
     # Worker still needs exact materialization and independent verification.
-    value['covered_work']=[{'fact_ref':value['fact_refs'][0], 'covered_by':value['fact_refs'][1],
-                           'reason':'Selector alleges coverage; conditions still need review.'}]
+    value['judgments'][0]['explanation']='Selector alleges coverage; conditions still need review.'
     before=snapshot(tmp_path)
-    validate_assessment({'research_assessment':value},set(value['fact_refs']))
+    validate_assessment({'research_assessment':value},set(value['judgments'][0]['evidence_fact_refs']))
     assert snapshot(tmp_path)==before
     assert len(list((tmp_path/'facts').glob('*.md')))==3
 
 
 @pytest.mark.parametrize('mutation',[
-    lambda a:a['fact_refs'].append('fact:unexposed'),
-    lambda a:a['covered_work'].append({'fact_ref':a['fact_refs'][0],'covered_by':'fact:unseen','reason':'covered'}),
-    lambda a:a['method_limits'].append({'fact_ref':'research-artifact:x','action_relation':'pretend truth'}),
+    lambda a:a['judgments'][0]['evidence_fact_refs'].append('fact:unexposed'),
+    lambda a:a['judgments'][0]['work_refs'].append('research-object:unseen'),
+    lambda a:a['judgments'][0]['evidence_fact_refs'].append('research-artifact:x'),
     lambda a:a.update(next_question=''),
 ])
 def test_uninspected_or_unverified_sources_cannot_author_assessment_relations(tmp_path,mutation):
-    _,_,_,facts=fixture(tmp_path);value=assessment(facts);seen=set(value['fact_refs']);mutation(value)
+    _,_,_,facts=fixture(tmp_path);value=assessment(facts)
+    seen=set(value['judgments'][0]['evidence_fact_refs']);mutation(value)
     with pytest.raises(ValueError):validate_assessment({'research_assessment':value},seen)
 
 
@@ -105,7 +105,8 @@ def test_recent_interfaces_round_robin_studies_without_claiming_strength(tmp_pat
 
 def test_previous_assessment_revocation_fails_closed_and_unexposed_study_is_absent(tmp_path):
     net,target,state,facts=fixture(tmp_path);run=_Research(tmp_path,state,None,None)
-    write_json(run.step_dir/'selection.json',{'selected':{**decision(target),'research_assessment':assessment(facts)}})
+    exposure=run.selector_exposure(net,{target['study_id']:target})['exposure']
+    write_json(run.step_dir/'selection.json',{'selected':{**decision(target),'research_assessment':assessment(facts)},'exposure':exposure})
     schedule={'last_served':{target['study_id']:1,'secret-study':99}}
     FactGraph(tmp_path).revoke(facts[0].fact_id,'test')
     rows=history_rows(run.directory,{'cards':[target]},schedule,net)

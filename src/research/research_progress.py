@@ -5,8 +5,11 @@ next local exposure derives a view from that journal and Study provenance; no
 additional model, graph mutation, or globally accumulated transcript is needed.
 """
 from copy import deepcopy
+from hashlib import sha256
+import json
 
-from .run_storage import read_json
+from .run_storage import read_json, write_json
+from .continuous_attention import bounded_packet, AttentionOverflow
 
 AUTHORITY = 'UNVERIFIED_RESEARCH_JUDGMENT'
 _TEXT = {'type': 'string'}
@@ -19,11 +22,12 @@ def _object(fields):
 
 ASSESSMENT_SCHEMA = {'anyOf': [{'type': 'null'}, _object({
     **{k: _TEXT for k in ('series', 'established', 'latest_delta', 'next_question', 'why_this_action')},
-    'fact_refs': {'type': 'array', 'items': _TEXT},
-    'covered_work': {'type': 'array', 'items': _object({
-        'fact_ref': _TEXT, 'covered_by': _TEXT, 'reason': _TEXT})},
-    'method_limits': {'type': 'array', 'items': _object({
-        'fact_ref': _TEXT, 'action_relation': _TEXT})},
+    'judgments': {'type': 'array', 'items': _object({
+        'work_refs': {'type': 'array', 'items': _TEXT,
+            'description': 'Displayed object/material refs being evaluated, not proof authority.'},
+        'evidence_fact_refs': {'type': 'array', 'items': _TEXT,
+            'description': 'Exact fact:<id> interfaces inspected in full; no prose.'},
+        'explanation': {**_TEXT, 'description': 'Advisory prose, never an identifier.'}})},
 })]}
 
 INSTRUCTIONS = """Research progress is a change in what remains worth investigating,
@@ -47,7 +51,12 @@ before judging applicability; do not reason from IDs or truncated conditions.
 On later pages, absence of a Study's cards is not evidence against its work.
 Reconsider recorded inspection_intents_unverified before the final action; explain
 continuing, changing or deferring relevant intentions. These never pin a Study.
-Only use fact_refs actually displayed in full in this decision's pages. A prior
+Separate subjects (work_refs: displayed objects/materials), evidence_fact_refs
+(exact fact:<id> interfaces read in full), and explanation (advisory prose).
+Subjects need not be Facts. Empty evidence records uncertainty, not an established
+limitation. Malformed optional judgments are retained raw with diagnostics and
+dropped from task context; they cannot veto an otherwise legal action.
+Only cite Fact interfaces actually displayed in full in this decision's pages. A prior
 research_progress assessment is UNVERIFIED and may be stale; re-read its referenced
 interfaces when relying on it. Null research_assessment is allowed for inspection
 or when no evidenced research assessment is possible; explain uncertainty in reason.
@@ -57,7 +66,8 @@ requirements apply when submitting ADVANCE/CONNECT/COMPOSE, not while reading.
 """
 
 
-def validate_assessment(selected, displayed_facts):
+def validate_assessment(selected, displayed_facts, displayed_work=()):
+    """Internal shape/reference check; callers must use the fail-soft projection."""
     value = selected.get('research_assessment')
     if value is None:
         return
@@ -67,29 +77,97 @@ def validate_assessment(selected, displayed_facts):
     for key in ('series', 'established', 'latest_delta', 'next_question', 'why_this_action'):
         if not isinstance(value[key], str) or not value[key].strip():
             raise ValueError('research assessment needs explicit judgments or UNKNOWN')
-    refs = value['fact_refs']
-    if (not isinstance(refs, list) or any(not isinstance(r, str) for r in refs)
-            or len(set(refs)) != len(refs) or not set(refs).issubset(displayed_facts)):
-        raise ValueError('research assessment references an uninspected Fact interface')
-    for key, expected in [('covered_work', {'fact_ref', 'covered_by', 'reason'}),
-                          ('method_limits', {'fact_ref', 'action_relation'})]:
-        if not isinstance(value[key], list):
-            raise ValueError('research assessment relations must be lists')
-        for row in value[key]:
-            if (not isinstance(row, dict) or set(row) != expected or
-                    any(not isinstance(v, str) or not v.strip() for v in row.values())):
-                raise ValueError('invalid research assessment relation')
-            used = [row['fact_ref']] + ([row['covered_by']] if key == 'covered_work' else [])
-            if not set(used).issubset(refs):
-                raise ValueError('research relation lacks inspected Fact references')
-            if key == 'covered_work' and row['fact_ref'] == row['covered_by']:
-                raise ValueError('research coverage cannot reference itself')
+    if not isinstance(value['judgments'], list):
+        raise ValueError('research judgments must be a list')
+    for row in value['judgments']:
+        if not isinstance(row, dict) or set(row) != {'work_refs', 'evidence_fact_refs', 'explanation'}:
+            raise ValueError('invalid research judgment interface')
+        if not isinstance(row['explanation'], str) or not row['explanation'].strip():
+            raise ValueError('research judgment explanation must be text')
+        for field, available in [('work_refs', displayed_work), ('evidence_fact_refs', displayed_facts)]:
+            refs = row[field]
+            if (not isinstance(refs, list) or any(not isinstance(r, str) or not r.strip() for r in refs)
+                    or len(set(refs)) != len(refs) or not set(refs).issubset(available)):
+                raise ValueError('invalid or unexposed research judgment ' + field)
 
 
-def assessment_material(selected):
-    value = selected.get('research_assessment')
-    return ({'research_assessment_unverified': {'authority': AUTHORITY, 'content': deepcopy(value)}}
-            if value is not None else {})
+def displayed_context(step_dir, exposure):
+    from .continuous_selection import _displayed_refs, _object_rows
+    pages = [exposure] + [read_json(p) for p in sorted(step_dir.glob('selector-page-*-input.json'))]
+    facts, work = {}, set()
+    for page in pages:
+        work.update(_displayed_refs({'cards': [], **page}))
+        work.update(r['object_id'] for r in _object_rows(page))
+        facts.update((r['ref'], r) for r in page.get('fact_interfaces', {}).get('items', []))
+    return facts, work
+
+
+def project_assessment(selected, fact_interfaces, work_refs, network, *, token_budget=2000):
+    """Discard invalid advisory content; never soften material/action authority."""
+    result = {'authority': AUTHORITY, 'status': 'ABSENT', 'content': None,
+              'diagnostics': [], 'unavailable_sources': []}
+    if selected.get('research_assessment') is None:
+        return result
+    try:
+        validate_assessment(selected, fact_interfaces, work_refs)
+    except (ValueError, TypeError, KeyError) as error:
+        return {**result, 'status': 'DROPPED', 'diagnostics': [str(error)]}
+    value = selected['research_assessment']
+    try:
+        bounded_packet(value, token_budget)
+    except AttentionOverflow:
+        return {**result, 'status': 'DROPPED', 'diagnostics': ['Complete advisory exceeds its material allocation; raw evidence retained.']}
+    refs = {r for row in value['judgments'] for r in row['evidence_fact_refs']}
+    for ref in sorted(refs):
+        try:
+            actual = network.inspect_fact(ref.removeprefix('fact:'))
+        except ValueError:
+            result['unavailable_sources'].append(ref)
+            continue
+        shown = fact_interfaces[ref]
+        if actual['statement'] != shown['exact_statement'] or actual['scope'] != shown['source_scope']:
+            result['unavailable_sources'].append(ref)
+    if result['unavailable_sources']:
+        return {**result, 'status': 'DROPPED', 'diagnostics': ['Evidence interface is no longer available as inspected.']}
+    return {**result, 'status': 'USABLE', 'content': deepcopy(value)}
+
+
+def record_assessment(step_dir, selected, exposure, network, *, token_budget=2000):
+    """Separate immutable diagnostic receipt; raw selection remains untouched."""
+    facts, work = displayed_context(step_dir, exposure)
+    result = project_assessment(selected, facts, work, network, token_budget=token_budget)
+    source_hash = sha256(json.dumps(selected, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    path = step_dir / 'research_assessment.json'
+    if path.exists():
+        if read_json(path)['source_selection_sha256'] != source_hash:
+            raise ValueError('confirmed selection changed after advisory projection')
+    elif result['status'] != 'ABSENT':
+        write_json(path, {'source_selection_sha256': source_hash, 'contract_version': 2, **result})
+    # Recompute current availability on recovery rather than trust a stale receipt.
+    return result
+
+
+def assessment_material(projection):
+    return ({'research_assessment_unverified': {'authority': AUTHORITY, 'content': projection['content']}}
+            if projection['status'] == 'USABLE' else {})
+
+
+def fit_worker_advisory(run, packet):
+    """An optional judgment cannot displace ordinary evidence or a checkpoint."""
+    if 'research_assessment_unverified' not in packet:
+        return packet
+    from .continuous_research import worker_prompt, _WORKER_SCHEMA
+    try:
+        bounded_packet({'prompt': worker_prompt(packet), 'schema': _WORKER_SCHEMA},
+                       run.state['settings']['worker_context_tokens'])
+    except AttentionOverflow:
+        packet = dict(packet)
+        packet.pop('research_assessment_unverified')
+        path = run.step_dir / 'research_assessment_capacity.json'
+        if not path.exists():
+            write_json(path, {'authority': AUTHORITY, 'status': 'DROPPED',
+                'diagnostics': ['Advisory omitted at full Worker material capacity; raw selection retained.']})
+    return packet
 
 
 def history_rows(directory, exposure, schedule, network):
@@ -103,21 +181,17 @@ def history_rows(directory, exposure, schedule, network):
         path = directory / ref
         if not path.exists():
             continue
-        selected = read_json(path)['selected']
-        value = selected.get('research_assessment')
+        plan = read_json(path)
+        selected = plan['selected']
         if selected.get('study_id') != card['study_id']:
             continue
-        # A revoked/missing source invalidates this derived judgment, not truth.
-        invalid = []
-        for fact_ref in (value or {}).get('fact_refs', []):
-            try:
-                network.inspect_fact(fact_ref.removeprefix('fact:'))
-            except ValueError:
-                invalid.append(fact_ref)
+        facts, work = displayed_context(path.parent, plan.get('exposure', {'cards': []}))
+        result = project_assessment(selected, facts, work, network)
         rows.append({'study_id': card['study_id'], 'source_ref': ref,
-            'authority': AUTHORITY, 'assessment': value if not invalid else None,
+            'authority': AUTHORITY, 'assessment': result['content'],
             'prior_action': {k: selected[k] for k in ('reason', 'local_object', 'remaining_gap') if k in selected},
-            'unavailable_sources': invalid})
+            'assessment_status': result['status'], 'diagnostics': result['diagnostics'],
+            'unavailable_sources': result['unavailable_sources']})
     return rows
 
 
