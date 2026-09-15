@@ -83,6 +83,9 @@ use the existing bounded INSPECT path and durable selection journal.
 
 Complete notes and a bounded page of public artifacts from already exposed
 Studies can inform this decision inside the unchanged Selector context ceiling.
+The [evidence-linked research view](RESEARCH_PROGRESS.md) retains local Selector
+judgments about result coverage, method limitations and remaining questions in
+the existing selection journal. These are unverified task context, never truth.
 Oversized records retain references, not truncated conditions. These are
 unverified research; `evidence_refs` describe the action's basis and never grant
 Fact authority. Ordinary material/scope/predecessor checks remain mandatory.

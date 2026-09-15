@@ -11,6 +11,7 @@ from .closed_book import ClosedBookVerifier
 from .continuous_network import ContinuousNetwork
 from .continuous_attention import expose, bounded_packet, AttentionOverflow, DEFAULT_CHANNEL_CYCLE
 from .continuous_selection import ACTION_PROPERTIES, action_metadata, CLOSE_INSTRUCTIONS
+from .research_progress import ASSESSMENT_SCHEMA, assessment_material, history_rows, progress_page
 from .continuous_materials import expose_bridge_candidates, load_selector_materials
 from .dynamic_run import _code_digest
 from .graph import FactGraph
@@ -26,12 +27,21 @@ def _object(properties):
     return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
 
 
+def _progress_fits(page, limit):
+    try:
+        bounded_packet(page, limit)
+    except AttentionOverflow:
+        return False
+    return True
+
+
 _TEXT = {"type": "string"}
 _REFS = {"type": "array", "items": _TEXT}
 _WINDOW = {"anyOf": [{"type": "null"}, _object({"start_line": {"type": "integer", "minimum": 0},
                                                 "end_line": {"type": "integer", "minimum": 1}})]}
 _SELECTOR_SCHEMA = _object({
     **ACTION_PROPERTIES,
+    'research_assessment': ASSESSMENT_SCHEMA,
     "selected_object_id": {"anyOf": [{"type": "null"}, _TEXT]},
     "considered_objects": {"type": "array", "items": _object({
         "object_id": _TEXT,
@@ -502,7 +512,8 @@ class _Research:
                 exposed = {card['study_id'] for card in exposure['cards']}
                 from .continuous_selection import choose, saved_object_metadata
                 selected = choose(self, network, exposure, _SELECTOR_SCHEMA,
-                                  object_index=frozen.get('research_object_index'))
+                                  object_index=frozen.get('research_object_index'),
+                                  progress_index=frozen.get('research_progress_index'))
                 if exposure["forced_study_id"]:
                     selected = {**selected, "study_id": exposure["forced_study_id"]}
                 if selected["study_id"] not in exposed:
@@ -546,7 +557,8 @@ class _Research:
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
                                 "full_revision_ref": study.get("research_delivery_ref", self.state["studies"][study["study_id"]])}}
-        return {**action_metadata(selected), **selected_object, "operation": selected["operation"], "study": study,
+        return {**action_metadata(selected), **selected_object, **assessment_material(selected),
+                "operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,
                 "required_fact_ids": [f.fact_id for f in materials["facts"]] if materials else [],
@@ -570,9 +582,18 @@ class _Research:
             if "study-" + s["conclusion_claim_id"] in exposed]
         exposure = expose_bridge_candidates(self.root, exposure, studies, self.state['studies'], network,
             token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        exposure['fact_order'] = 'RECENT_PER_STUDY'
         from .continuous_selection import add_fact_interfaces
         exposure = add_fact_interfaces(network, exposure,
             token_budget=self.state['settings']['selector_context_tokens'] // 4)
+        progress = history_rows(self.directory, exposure, self.state['schedule'], network)
+        from .continuous_selection import _fits
+        limit = self.state['settings']['selector_context_tokens']
+        # Share the existing allocation. Never truncate conditions or expand the
+        # context ceiling to retain a derived judgment.
+        exposure['research_progress'] = progress_page(progress, 0,
+            lambda page: _fits({**exposure, 'research_progress': page}, _SELECTOR_SCHEMA, limit)
+                and _progress_fits(page, limit//4))
         from .continuous_selection import add_action_evidence, add_object_cards
         from .research_artifacts import ArtifactStore
         from .research_delivery import DeliveryStore
@@ -588,6 +609,7 @@ class _Research:
             artifact_store=artifacts, checkpoint_store=checkpoints)
         return {'exposure': exposure, 'next_schedule': schedule,
                 'object_comparison_contract': 1,
+                'research_progress_index': progress,
                 'research_object_index': {'sources': sources, 'cards': cards}}
 
     def persist_definitions(self, revision, definitions):

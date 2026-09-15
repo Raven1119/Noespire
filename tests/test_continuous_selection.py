@@ -40,10 +40,12 @@ def test_complete_interfaces_keep_different_conditions_and_do_not_scan_unexposed
     exposure = _Research(tmp_path,state,None,None).selector_exposure(net,{target['study_id']:target})['exposure']
     rows = exposure['fact_interfaces']['items']
     assert {r['exact_statement'] for r in rows} == {f.statement for f in facts}
-    assert [r['source_scope'] for r in rows] == ['', '', 'Assume x = 1.']
+    by_ref={r['ref']:r for r in rows}
+    assert [by_ref['fact:'+f.fact_id]['source_scope'] for f in facts] == ['', '', 'Assume x = 1.']
     assert all(r['authority']=='SOURCE_INTERFACE_ONLY' for r in rows)
     assert 'accepted_facts' not in exposure and unrelated.fact_id not in json.dumps(exposure)
-    assert 'positive x' in rows[0]['exact_statement'] and 'negative x' in rows[1]['exact_statement']
+    assert 'positive x' in by_ref['fact:'+facts[0].fact_id]['exact_statement']
+    assert 'negative x' in by_ref['fact:'+facts[1].fact_id]['exact_statement']
     assert 'larger' in INSTRUCTIONS and 'conditions' in INSTRUCTIONS
     assert snapshot(tmp_path)==before
 

@@ -15,7 +15,7 @@ from .continuous_attention import bounded_packet, AttentionOverflow
 
 
 _STUDY = re.compile(r"studies/([A-Za-z0-9_-]+)/([0-9]{6,}(?:-verified)?|(?:timeout|capacity|materials)-[0-9]{8,})\.json\Z")
-_VISIT = re.compile(r"visits/[0-9]{8,}/(?:packet|worker_result|verification|admission|feedback)\.json\Z")
+_VISIT = re.compile(r"visits/[0-9]{8,}/(?:packet|worker_result|verification|admission|feedback|selection)\.json\Z")
 _OBJECT = re.compile(r"obj-[A-Za-z0-9]+\Z")
 _PAGE_SIZE = 16
 
