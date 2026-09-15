@@ -340,6 +340,8 @@ def _displayed_refs(exposure):
     refs.update(ref for row in _object_rows(exposure, include_unexpanded=True) for ref in row['evidence_refs'])
     for card in exposure['cards']:
         refs.update([card['ref'], 'study:' + card['study_id']])
+        # These are displayed navigation sources, not accepted proof premises.
+        refs.update(card.get('evidence_refs', []))
     return refs
 
 
