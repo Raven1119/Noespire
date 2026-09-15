@@ -55,13 +55,28 @@ results you will use or why not; what is new relative to them; and what resumabl
 work you expect to leave. Compare complete statements AND conditions: a larger
 bound need not supersede a different construction or assumptions. Reasonable
 nonuse, UNKNOWN relevance, new representations and deeper work are allowed.
-Cards are navigation, notes are unverified. research_object_cards distinguish
-explicit local research objects within a Study. Choose the Study, an optional
-selected_object_id from the displayed cards (or null), and action_mode separately.
-RESEARCH without a specific object remains legitimate. Explain object comparisons
-in reason; UNKNOWN fields remain unknown, never inferred readiness. Cards are
-UNVERIFIED_RESEARCH, not proof text or accepted Facts. Their evidence_refs locate
-the original material. fact_interfaces show accepted source statements with
+Cards are navigation, notes are unverified. Organize the decision as follows:
+1. Choose the Study.
+2. Inspect the visible Research Objects belonging to that Study.
+3. Identify the object you will actually work on, if any.
+4. Record the main object alternatives you considered in considered_objects.
+5. Only then choose RESEARCH or CLOSE for the selected object.
+considered_objects is an observable decision record, not a requirement to rank
+every visible card or read all pages. Include only objects in the selected Study.
+SELECT means this visit's object: exactly one SELECT must match selected_object_id
+when it is non-null. Record at least one DEFER/REJECT if you identify a real
+alternative, with a reason specific to that object. With only the SELECT entry,
+give a concrete no_alternative_reason. Otherwise no_alternative_reason is null.
+A null selected_object_id permits general RESEARCH with an empty list or only
+DEFER/REJECT entries, never SELECT. DEFER means not this visit, not low value,
+immaturity, falsity or permanent parking. REJECT requires visible evidence that
+the object is unsuitable for this action; UNKNOWN gap alone is not rejection.
+An object mentioned only as a supporting method does not count as an alternative.
+If it is also an independent actionable alternative, record its disposition.
+These records do not change scheduling or truth. Other Studies may be background
+in reason. Explain object comparisons there; UNKNOWN remains unknown, not a
+readiness judgment. Object cards are UNVERIFIED_RESEARCH, not proof text or
+accepted Facts. evidence_refs locate originals. fact_interfaces show statements with
 original scope, NOT automatic target premises. Request fact:<id>
 in material_refs for ordinary exact-scope use; foreign BRIDGE_CANDIDATE inspection
 retains conditions and requires a separately verified bridge before proof use.
@@ -258,14 +273,57 @@ def object_metadata(selected, displayed):
     return {'selected_object_id': key}
 
 
+def validate_object_comparison(selected, displayed):
+    """Check observable accounting, never the mathematical merits of a reason."""
+    if not {'selected_object_id', 'considered_objects', 'no_alternative_reason'} <= selected.keys():
+        raise ValueError('incomplete object comparison contract')
+    object_metadata(selected, displayed)
+    entries = selected['considered_objects']
+    if not isinstance(entries, list):
+        raise ValueError('considered_objects must be a list')
+    seen, chosen = set(), []
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != {'object_id', 'disposition', 'reason'}:
+            raise ValueError('invalid considered object entry')
+        key = entry['object_id']
+        if not isinstance(key, str) or key not in displayed:
+            raise ValueError('considered object was not exposed')
+        if displayed[key] != selected['study_id']:
+            raise ValueError('considered object belongs to another Study')
+        if key in seen:
+            raise ValueError('duplicate considered object')
+        seen.add(key)
+        if entry['disposition'] not in ('SELECT', 'DEFER', 'REJECT'):
+            raise ValueError('invalid object disposition')
+        if not isinstance(entry['reason'], str) or not entry['reason'].strip():
+            raise ValueError('considered object reason must be nonempty')
+        if entry['disposition'] == 'SELECT':
+            chosen.append(key)
+    target = selected['selected_object_id']
+    if chosen != ([] if target is None else [target]):
+        raise ValueError('SELECT must uniquely match selected_object_id')
+    reason = selected['no_alternative_reason']
+    if target is not None and len(entries) == 1:
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError('single selected object requires no_alternative_reason')
+    elif reason is not None:
+        raise ValueError('no_alternative_reason is only for a single selected object')
+
+
 def saved_object_metadata(run, selected, exposure):
     """Recheck the confirmed selection against its immutable displayed pages."""
-    if selected.get('selected_object_id') is None:
-        return object_metadata(selected, {})
     displayed = {r['object_id']: r['study_id'] for r in _object_rows(exposure)}
     for path in run.step_dir.glob('selector-page-*-input.json'):
         displayed.update((r['object_id'], r['study_id']) for r in _object_rows(read_json(path)))
-    return object_metadata(selected, displayed)
+    metadata = object_metadata(selected, displayed)
+    path = run.step_dir / 'selector_input.json'
+    frozen = read_json(path) if path.exists() else {}
+    # Legacy confirmed decisions are not rewritten into invented comparisons.
+    # New frozen inputs require the record even if fields were later removed.
+    if frozen.get('object_comparison_contract') == 1 or any(
+            k in selected for k in ('considered_objects', 'no_alternative_reason')):
+        validate_object_comparison(selected, displayed)
+    return metadata
 
 
 def _displayed_refs(exposure):
@@ -305,7 +363,7 @@ def choose(run, network, exposure, schema, *, object_index=None):
         selected = run.invoker(role).invoke(prompt=INSTRUCTIONS+json.dumps(current,ensure_ascii=False),
                                            schema=schema,label='continuous_selector')
         metadata = action_metadata(selected)
-        object_metadata(selected, objects)
+        validate_object_comparison(selected, objects)
         if not set(metadata.get('evidence_refs', [])).issubset(displayed):
             raise ValueError('action references unexposed evidence')
         if selected['operation'] != 'INSPECT':

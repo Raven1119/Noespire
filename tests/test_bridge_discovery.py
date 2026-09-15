@@ -1,4 +1,5 @@
 """Discovery is navigation; inspection never grants foreign-scope truth."""
+from selector_fixtures import object_choice
 from dataclasses import asdict
 import json
 
@@ -217,7 +218,7 @@ def test_normal_selector_opportunity_and_recovery_preserve_navigation_only_state
             assert packet['forced_study_id'] == target['study_id']
             assert packet['bridge_candidates'][0]['source_fact_id'] == foreign.fact_id
             assert 'accepted_facts' not in packet
-            return {'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
+            return {**object_choice(), 'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
                 'material_refs':['fact:' + foreign.fact_id], 'reason':'Inspect whether a bridge is justified.',
                 'relation':'RELEVANT', 'continuation_window':None}
 
@@ -253,7 +254,7 @@ def test_confirmed_selector_input_is_frozen_even_if_sources_change_during_pause(
     class Selector:
         def invoke(self, *, prompt, schema, label):
             calls.append(prompt)
-            return {'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
+            return {**object_choice(), 'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
                 'material_refs':['fact:' + foreign.fact_id], 'reason':'Inspect.',
                 'relation':'UNKNOWN', 'continuation_window':None}
 
@@ -300,7 +301,7 @@ def test_large_inspection_window_uses_existing_reselection_without_consuming_ser
                 else:
                     assert 'fewer material_refs' in packet['cards'][0]['attention_notice']
                     materials = ['fact:' + long_fact.fact_id]
-                return {'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
+                return {**object_choice(), 'study_id':target['study_id'], 'operation':'ADVANCE', 'support_id':'',
                     'material_refs':materials, 'reason':'Inspect this bounded interface.',
                     'relation':'UNKNOWN', 'continuation_window':None}
             if label == 'continuous_selector_bridge':

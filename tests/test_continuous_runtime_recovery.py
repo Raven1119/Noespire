@@ -1,4 +1,5 @@
 """Runtime preflight failures preserve a resumable, already-accounted visit."""
+from selector_fixtures import object_choice
 import json
 import subprocess
 
@@ -19,7 +20,7 @@ class LocalBackend:
         self.calls.append(label)
         if label == "continuous_selector":
             packet = json.loads(prompt.split("\nPACKET:\n")[1])
-            return {"study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
+            return {**object_choice(), "study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
                     "support_id": "", "material_refs": [], "reason": "Complete the equality.",
                     "relation": "RELEVANT", "continuation_window": None}
         if label == "continuous_worker":

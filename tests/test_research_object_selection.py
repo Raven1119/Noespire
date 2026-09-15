@@ -1,4 +1,5 @@
 """Object selection is bounded research navigation, never scheduling or truth."""
+from selector_fixtures import object_choice
 from copy import deepcopy
 import json
 
@@ -52,7 +53,7 @@ def test_object_interface_is_host_indexed_and_does_not_decide_action_maturity(tm
             assert row['remaining_gap'] == 'UNKNOWN'
             assert set(row) == {'object_id', 'study_id', 'object', 'boundary',
                 'established_components', 'remaining_gap', 'possible_deliverable', 'evidence_refs'}
-            return {**action(target, mode, row['evidence_refs']), 'selected_object_id': row['object_id']}
+            return {**action(target, mode, row['evidence_refs']), **object_choice(row['object_id'])}
     run = research._Research(tmp_path, state, Selector(), None)
     out = run.select_work(network)
     frozen = read_json(run.step_dir/'selector_input.json')
@@ -65,17 +66,25 @@ def test_object_interface_is_host_indexed_and_does_not_decide_action_maturity(tm
 
 
 @pytest.mark.parametrize('explicit_null', [False, True])
-def test_research_can_select_no_object_and_legacy_decisions_keep_their_packet(tmp_path, explicit_null):
-    network, target, state, _ = case(tmp_path)
-    class Selector:
-        def invoke(self, **kw):
-            return {**decision(target), **({'selected_object_id': None} if explicit_null else {})}
-    run = research._Research(tmp_path, state, Selector(), None)
-    out = run.select_work(network)
-    assert ('selected_object_id' in out) == explicit_null
+def test_legacy_confirmed_decisions_keep_their_packet_without_inventing_comparisons(tmp_path, explicit_null):
+    network, target, state, studies = case(tmp_path)
+    class Never:
+        def invoke(self, **kw):raise AssertionError('confirmed legacy selection must not call Selector')
+    run = research._Research(tmp_path, state, Never(), None)
+    frozen=run.selector_exposure(network,studies)
+    frozen.pop('object_comparison_contract')  # genuine pre-extension input contract
+    selected=decision(target)
+    for key in ('considered_objects','no_alternative_reason','selected_object_id'):
+        selected.pop(key,None)
+    if explicit_null:selected['selected_object_id']=None
+    write_json(run.step_dir/'selector_input.json',frozen)
+    write_json(run.step_dir/'selection.json',{'selected':selected,'exposure':frozen['exposure'],
+                                            'next_schedule':frozen['next_schedule']})
+    saved=snapshot(tmp_path)
+    out=run.select_work(network)
+    assert ('selected_object_id' in out)==explicit_null
     assert out.get('selected_object_id') is None
-    saved = snapshot(tmp_path)
-    assert run.select_work(network) == out and snapshot(tmp_path) == saved
+    assert run.select_work(network)==out and snapshot(tmp_path)==saved
 
 
 @pytest.mark.parametrize('boundary', [None, 'call_completed', 'selector_page_saved', 'selection_saved'])
@@ -96,8 +105,8 @@ def test_object_pages_are_read_before_selection_and_recover_without_new_calls(tm
                 assert p['local_action_evidence'] == {'items': [], 'unexpanded': []}
             if rows['next_ref']:
                 return {**decision(target, [rows['next_ref']]), 'operation': 'INSPECT',
-                        'selected_object_id': None}
-            return {**decision(target), 'selected_object_id': rows['items'][-1]['object_id']}
+                        **object_choice(None)}
+            return {**decision(target), **object_choice(rows['items'][-1]['object_id'])}
     fired = False
     def crash(event, details):
         nonlocal fired
@@ -135,7 +144,7 @@ def test_only_an_actually_displayed_same_study_object_can_be_selected(tmp_path, 
             elif kind == 'wrong-study':
                 key = next(r['object_id'] for r in p['research_object_cards']['items']
                            if r['study_id'] == 'study-peer')
-            return {**decision(target), 'selected_object_id': key}
+            return {**decision(target), **object_choice(key)}
     run.backend = Selector()
     with pytest.raises(ValueError, match='unexposed research object|another Study'):
         run.select_work(network)
@@ -152,7 +161,7 @@ def test_forced_study_override_rechecks_object_before_saving_selection(tmp_path)
         def invoke(self, *, prompt, **kw):
             row = next(r for r in packet(prompt)['research_object_cards']['items']
                        if r['study_id'] == 'study-peer')
-            return {**decision(studies['study-peer']), 'selected_object_id': row['object_id']}
+            return {**decision(studies['study-peer']), **object_choice(row['object_id'])}
     run.backend = Selector()
     with pytest.raises(ValueError, match='another Study'):
         run.select_work(network)
@@ -166,7 +175,7 @@ def test_recovery_revalidates_saved_object_identity(tmp_path, change):
         def invoke(self, *, prompt, **kw):
             row = next(r for r in packet(prompt)['research_object_cards']['items']
                        if r['study_id'] == target['study_id'])
-            return {**decision(target), 'selected_object_id': row['object_id']}
+            return {**decision(target), **object_choice(row['object_id'])}
     run = research._Research(tmp_path, state, Selector(), None)
     run.select_work(network)
     selection = read_json(run.step_dir/'selection.json')
@@ -197,7 +206,7 @@ def test_source_inspection_is_complete_same_study_and_not_automatically_forwarde
                                   for ref in r['evidence_refs']))
                 chosen.update(row)
                 return {**decision(target, [row['evidence_refs'][0]]), 'operation': 'INSPECT',
-                        'selected_object_id': row['object_id']}
+                        **object_choice(row['object_id'])}
             materials = p['local_action_evidence']['items']
             assert len(materials) == 1 and materials[0]['verified'] is False
             assert materials[0]['ref'] == chosen['evidence_refs'][0]
@@ -208,7 +217,7 @@ def test_source_inspection_is_complete_same_study_and_not_automatically_forwarde
                 assert materials[0]['raw_message'] and materials[0]['authority'] == 'UNVERIFIED_RESEARCH'
             assert p['fact_interfaces']['items'] == []
             bounded_packet({'prompt': prompt, 'schema': schema}, 8000)
-            return {**decision(target), 'selected_object_id': chosen['object_id']}
+            return {**decision(target), **object_choice(chosen['object_id'])}
     fired = False
     def crash(event, details):
         nonlocal fired
@@ -242,7 +251,7 @@ def test_source_inspection_never_repeats_or_expands_to_unadvertised_material(tmp
                 row = next(r for r in p['research_object_cards']['items'] if r['study_id'] == owner)
                 ref = row['evidence_refs'][0]
                 requested.append(ref)
-            return {**decision(target, [ref]), 'operation': 'INSPECT', 'selected_object_id': None}
+            return {**decision(target, [ref]), 'operation': 'INSPECT', **object_choice(None)}
     run = research._Research(tmp_path, state, Selector(), None)
     with pytest.raises(ValueError, match='INSPECT'):
         run.select_work(network)
@@ -261,11 +270,11 @@ def test_oversized_original_source_is_explicitly_unexpanded(tmp_path):
             calls.append(prompt)
             if len(calls) == 1:
                 ref = p['research_object_cards']['items'][0]['evidence_refs'][0]
-                return {**decision(target, [ref]), 'operation': 'INSPECT', 'selected_object_id': None}
+                return {**decision(target, [ref]), 'operation': 'INSPECT', **object_choice(None)}
             assert not p['local_action_evidence']['items']
             assert p['local_action_evidence']['unexpanded'][0]['reason'] == 'complete_source_exceeds_selector_context'
             assert target['continuation'] not in prompt
-            return {**decision(target), 'selected_object_id': None}
+            return {**decision(target), **object_choice(None)}
     out = research._Research(tmp_path, state, Selector(), None).select_work(network)
     assert len(calls) == 2 and out['accepted_facts'] == []
 
@@ -275,7 +284,7 @@ def test_selected_object_id_never_enters_accepted_facts_or_predecessors(tmp_path
     class Selector:
         def invoke(self, *, prompt, **kw):
             row = packet(prompt)['research_object_cards']['items'][0]
-            return {**decision(target, [row['object_id']]), 'selected_object_id': row['object_id']}
+            return {**decision(target, [row['object_id']]), **object_choice(row['object_id'])}
     out = research._Research(tmp_path, state, Selector(), None).select_work(network)
     assert out['accepted_facts'] == [] and out['unverified_materials'] == []
     assert out['material_notices'] == [{'ref': out['selected_object_id'], 'error': 'unknown local reference'}]

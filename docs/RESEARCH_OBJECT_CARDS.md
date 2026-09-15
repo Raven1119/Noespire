@@ -97,3 +97,40 @@ python -m pytest -q tests/test_research_objects.py tests/test_research_object_se
 ```
 The continuous-research, bridge, recurrence, artifact, and delivery regressions
 remain the integration gate. The [single-Selector diagnostic protocol](RESEARCH_OBJECT_CARDS_DIAGNOSTIC_PROTOCOL.md) stops before any mathematical Worker.
+
+
+## Explicit object-comparison decision evidence
+
+Selector still makes one ordinary decision per reading window. Its output now
+also requires `considered_objects` (ordered object_id/disposition/reason entries)
+and nullable `no_alternative_reason`. Choose the Study, inspect its visible
+objects, identify the intended object, account for alternatives, then choose the
+unchanged RESEARCH/CLOSE mode. No new role, ranking, or mathematical policy is
+introduced. Mere mention as a method is not an alternative disposition.
+
+Every considered ID must have been displayed and belong to the selected Study;
+IDs are unique and each reason is nonempty. A non-null selected_object_id has
+exactly one matching SELECT. Other entries are DEFER or REJECT. If there is only
+the selected entry, no_alternative_reason must be nonempty. In every other case
+it is null. With a null object, an empty list or only DEFER/REJECT entries remains
+valid general research. No mathematical reason is evaluated by these checks.
+UNKNOWN gap is not a mechanical rejection condition. DEFER does not mark an
+object low-value, false, immature, or parked. The existing CLOSE criteria remain
+unchanged; the comparison validator does not add another maturity test.
+
+The existing immutable response and selection.json retain the entries in their
+original order. Comparison fields stay in Selector decision evidence; they are
+not forwarded into the Worker packet, accepted_facts, research handovers,
+predecessors, object lifecycle, or scheduler. Selecting still causes no service.
+
+New host-only selector_input.json records `object_comparison_contract: 1` so
+recovery requires the fields even if someone removes both from selection.json.
+Confirmed pre-extension decisions lacking this marker and comparison fields are
+read unchanged; no comparison is invented for their history. This does not
+permit a new call to omit the new fields, or bypass runtime fingerprint checks.
+Every new Selector response is strictly validated, including inspection requests;
+forced-Study binding and recovery recheck all considered IDs. Existing fresh
+reading-window/page journals are reused. No comparison-specific retry is added.
+
+The [single-call comparison diagnostic](OBJECT_COMPARISON_DIAGNOSTIC_PROTOCOL.md)
+uses identical frozen mathematical exposure and stops before any Worker.

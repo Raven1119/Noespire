@@ -1,4 +1,5 @@
 """One autonomous materialization opportunity, with no requirement Worker."""
+from selector_fixtures import object_choice
 from dataclasses import asdict
 import json
 import subprocess
@@ -58,7 +59,7 @@ class Actors:
         packet = json.loads(prompt.split('\nPACKET:\n')[1])
         if label == 'continuous_selector':
             card = packet['bridge_candidates'][0]
-            return {'study_id':card['study_id'], 'operation':'CONNECT', 'support_id':'',
+            return {**object_choice(), 'study_id':card['study_id'], 'operation':'CONNECT', 'support_id':'',
                 'material_refs':[card['ref']] if self.inspect else [], 'reason':'Inspect the conditional estimate.',
                 'relation':'UNKNOWN', 'continuation_window':None}
         if label == 'continuous_selector_bridge':

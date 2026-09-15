@@ -1,4 +1,5 @@
 """Local evidence changes action inputs without changing proof authority."""
+from selector_fixtures import object_choice
 import json
 from copy import deepcopy
 
@@ -28,7 +29,7 @@ def fixture(root, *, large=False):
 
 
 def decision(target, refs=(), reason='Study x<0; do not use the positive-domain bound. Derive a recurrence and leave its boundary gap.'):
-    return {'study_id':target['study_id'],'operation':'ADVANCE','support_id':'',
+    return {**object_choice(), 'study_id':target['study_id'],'operation':'ADVANCE','support_id':'',
             'material_refs':list(refs),'reason':reason,'relation':'UNKNOWN','continuation_window':None}
 
 

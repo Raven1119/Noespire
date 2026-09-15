@@ -1,4 +1,5 @@
 """A model-selected view never replaces confirmed work or traps recovery."""
+from selector_fixtures import object_choice
 import json
 import subprocess
 
@@ -34,7 +35,7 @@ class WindowResearch:
                 window = {"start_line": 0, "end_line": 1}
             else:
                 window = {"start_line": 1, "end_line": 2}
-            return {"study_id": card["study_id"], "operation": "ADVANCE", "support_id": "",
+            return {**object_choice(), "study_id": card["study_id"], "operation": "ADVANCE", "support_id": "",
                     "material_refs": [], "reason": "Read the remaining local computation.",
                     "relation": "RELEVANT", "continuation_window": window}
         assert label == "continuous_worker"

@@ -1,4 +1,5 @@
 """Explicit public research handovers are durable notes, never truth or service."""
+from selector_fixtures import object_choice
 import json
 import subprocess
 
@@ -32,7 +33,7 @@ class DeliveringBackend:
                     "violation_type": "NONE", "reason": "The displayed addition is valid."}
         assert label == "continuous_selector"
         p = json.loads(prompt.split("\nPACKET:\n")[1])
-        return {"study_id": p["cards"][0]["study_id"], "operation": "ADVANCE",
+        return {**object_choice(), "study_id": p["cards"][0]["study_id"], "operation": "ADVANCE",
                 "support_id": "", "material_refs": [], "reason": "Continue the local work.",
                 "relation": "RELEVANT", "continuation_window": None}
 
@@ -286,7 +287,7 @@ def test_large_delivery_uses_existing_explicit_window_without_losing_full_source
             count=len(self.selectors)
             window=({"start_line":0,"end_line":1} if count==1 else None if count==2 else
                     {"start_line":2,"end_line":3})
-            return {"study_id":p["cards"][0]["study_id"],"operation":"ADVANCE","support_id":"",
+            return {**object_choice(), "study_id":p["cards"][0]["study_id"],"operation":"ADVANCE","support_id":"",
                     "material_refs":[],"reason":"Read one explicit line of the current notes.",
                     "relation":"RELEVANT","continuation_window":window}
         def invoke_with_messages(self, *, prompt, schema, label, on_message):

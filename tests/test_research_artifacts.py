@@ -1,4 +1,5 @@
 """Ordinary public research survives failures without acquiring truth authority."""
+from selector_fixtures import object_choice
 import json
 import subprocess
 
@@ -40,7 +41,7 @@ class Backend:
                     "violation_type": "NONE", "reason": "Explicit arithmetic."}
         assert label == "continuous_selector"
         p = json.loads(prompt.split("\nPACKET:\n")[1])
-        return {"study_id": p["cards"][0]["study_id"], "operation": "ADVANCE", "support_id": "",
+        return {**object_choice(), "study_id": p["cards"][0]["study_id"], "operation": "ADVANCE", "support_id": "",
                 "material_refs": [], "reason": "Continue the unfinished local calculation.",
                 "relation": "RELEVANT", "continuation_window": None}
 

@@ -1,4 +1,5 @@
 """A verifier PASS for another scoped Claim must not masquerade as target success."""
+from selector_fixtures import object_choice
 import json
 
 import pytest
@@ -22,7 +23,7 @@ class ScopeResearch:
         packet = json.loads(prompt.split("\nPACKET:\n")[1])
         if label == "continuous_selector":
             self.next_card = packet["cards"][0]
-            return {"study_id": self.next_card["study_id"], "operation": "ADVANCE", "support_id": "",
+            return {**object_choice(), "study_id": self.next_card["study_id"], "operation": "ADVANCE", "support_id": "",
                     "material_refs": [], "reason": "Prove the original exact Claim, which remains OPEN.",
                     "relation": "RELEVANT", "continuation_window": None}
         self.worker_count += 1

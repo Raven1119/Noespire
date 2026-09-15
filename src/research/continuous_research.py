@@ -33,6 +33,11 @@ _WINDOW = {"anyOf": [{"type": "null"}, _object({"start_line": {"type": "integer"
 _SELECTOR_SCHEMA = _object({
     **ACTION_PROPERTIES,
     "selected_object_id": {"anyOf": [{"type": "null"}, _TEXT]},
+    "considered_objects": {"type": "array", "items": _object({
+        "object_id": _TEXT,
+        "disposition": {"type": "string", "enum": ["SELECT", "DEFER", "REJECT"]},
+        "reason": _TEXT})},
+    "no_alternative_reason": {"anyOf": [{"type": "null"}, _TEXT]},
     "study_id": _TEXT, "operation": {"type": "string", "enum": ["ADVANCE", "CONNECT", "COMPOSE", "INSPECT"]},
     "support_id": _TEXT, "material_refs": _REFS, "reason": _TEXT,
     "relation": {"type": "string", "enum": ["RELEVANT", "UNKNOWN"]}, "continuation_window": _WINDOW,
@@ -576,6 +581,7 @@ class _Research:
             token_budget=self.state['settings']['selector_context_tokens'],
             artifact_store=artifacts, checkpoint_store=checkpoints)
         return {'exposure': exposure, 'next_schedule': schedule,
+                'object_comparison_contract': 1,
                 'research_object_index': {'sources': sources, 'cards': cards}}
 
     def persist_definitions(self, revision, definitions):

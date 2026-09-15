@@ -1,4 +1,5 @@
 """Continuous research acceptance at the public run and evidence interfaces."""
+from selector_fixtures import object_choice
 import json
 import pytest
 import subprocess
@@ -10,7 +11,7 @@ def select_local(prompt):
     packet = json.loads(prompt.split("\nPACKET:\n")[1])
     support = next(iter(packet.get("ready_supports", [])), None)
     study = min(packet["cards"], key=lambda c: (c["revision"], c["study_id"]))
-    return {"study_id": support["study_id"] if support else study["study_id"],
+    return {**object_choice(), "study_id": support["study_id"] if support else study["study_id"],
             "operation": "COMPOSE" if support else "ADVANCE",
             "support_id": support["support_id"] if support else "", "material_refs": [],
             "reason": "Continue the elementary computation.", "relation": "RELEVANT", "continuation_window": None}
@@ -231,7 +232,7 @@ def test_selector_is_fresh_with_bounded_unverified_local_notes(tmp_path):
                 assert all(r['verified'] is False for r in rows)
                 assert 'accepted_facts' not in packet
                 assert "proof_graph" not in packet
-                return {"study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
+                return {**object_choice(), "study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
                         "support_id": "", "material_refs": [], "reason": "Finish the local computation.",
                         "relation": "RELEVANT", "continuation_window": None}
             return super().invoke(prompt=prompt, schema=schema, label=label)
