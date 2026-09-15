@@ -64,6 +64,17 @@ from existing work, permits a smaller proved statement, and may still leave a
 specific unverified gap. RESEARCH remains valid for unstable or unclear objects.
 Neither timeout counts nor checkpoint existence select this mode.
 
+An accepted local Fact can inform an ordinary action on an OPEN Claim: a direct
+proof, a conditional reduction with a precise remaining requirement, or a local
+consequence. Selector requests the actual material references; Worker declares
+only predecessors it uses. Continuing research, changing direction, and declining
+to use an available Fact remain valid. This adds no per-Fact call or mandatory
+Support. The normal visit records admitted results in the producer Study's
+navigation, then registers new Studies and returns to the existing scheduler.
+Importing a diagnostic stopped before that bookkeeping must record the source
+admission and derived navigation association explicitly in a new run; it must not
+pretend the source visit completed or reset its service counters.
+
 [Derived Research Object Cards](RESEARCH_OBJECT_CARDS.md) now expose literal,
 provenance-bound local objects before optional complete research notes. Selector
 also records a nullable `selected_object_id`; this does not rank objects, infer

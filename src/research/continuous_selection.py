@@ -55,6 +55,14 @@ results you will use or why not; what is new relative to them; and what resumabl
 work you expect to leave. Compare complete statements AND conditions: a larger
 bound need not supersede a different construction or assumptions. Reasonable
 nonuse, UNKNOWN relevance, new representations and deeper work are allowed.
+An accepted local result can change the task: consider using it to prove an
+existing OPEN Claim, establish a conditional reduction with a precise remaining
+requirement, or prove a local consequence. These are optional ordinary actions,
+alongside continuing unfinished research or changing direction. Request the
+actual Fact references needed; do not reprove an accepted interface merely to
+connect it. A conditional reduction must remove a specific unproved step using
+the supplied result, not just rename the OPEN Claim. Do not require a Support or
+a new subproblem when a direct proof or further research is more appropriate.
 Cards are navigation, notes are unverified. Organize the decision as follows:
 1. Choose the Study.
 2. Inspect the visible Research Objects belonging to that Study.
