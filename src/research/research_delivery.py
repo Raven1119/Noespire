@@ -2,6 +2,7 @@
 from hashlib import sha256
 import json
 from pathlib import Path
+import re
 import time
 
 from .run_storage import read_json, write_json
@@ -153,12 +154,8 @@ class DeliveryStore:
         write_json(path, record)
         return True
 
-    def latest(self, study):
-        """Materialize only this Study's latest complete, integrity-bound notes."""
-        records = self._records(study["study_id"])
-        if not records:
-            return None
-        path, record = max(records, key=lambda pair: pair[1]["sequence"])
+    def _checked_record(self, study, path, record):
+        """Share ownership and integrity checks without assigning recency."""
         if (record["run_id"] != self.run_id or record["study_id"] != study["study_id"]
                 or record["claim_id"] != study.get("claim_id") or record["scope"] != study["scope"]
                 or not _valid(record["content"], study)):
@@ -168,13 +165,50 @@ class DeliveryStore:
                 or sha256((call_dir / "request.json").read_bytes()).hexdigest() != record["request_sha256"]
                 or record["verified"] is not False):
             raise ValueError("research delivery provenance/integrity changed")
+        return {**record, "ref": path.relative_to(self.directory).as_posix()}
+
+    def _source_status(self, record):
+        call_dir = self.directory / "calls" / record["call_id"]
+        status = read_json(call_dir / "result.json")["status"] if (call_dir / "result.json").exists() else (
+            "INTERRUPTED" if (call_dir / "interrupted.json").exists() else "UNCONFIRMED")
+        return {**record, "source_status": status}
+
+    def read_material(self, study, ref):
+        """Read an exact same-Study public checkpoint, including expired history.
+
+        An inspection does not make an old version the latest continuation and
+        never gives the checkpoint accepted-predecessor authority.
+        """
+        match = re.fullmatch(r"research_deliveries/([A-Za-z0-9_-]+)/[0-9]{8,}-[0-9a-f]{16}\.json", ref)
+        if match is None or match[1] != study["study_id"]:
+            return None
+        path = self.directory / ref
+        if path.resolve() != self.directory.resolve() / ref or not path.is_file():
+            return None
+        record = self._checked_record(study, path, read_json(path))
+        if record is None:
+            return None
+        decoded = _decode(record["raw_message"])
+        if (decoded is None or decoded != (record["content"], record["parse_source"])
+                or sha256(record["raw_message"].encode()).hexdigest() != record["message_sha256"]):
+            raise ValueError("research delivery public source provenance/integrity changed")
+        return {**self._source_status(record), "kind": "UNVERIFIED_RESEARCH_CHECKPOINT",
+                "authority": "UNVERIFIED_RESEARCH"}
+
+    def latest(self, study):
+        """Materialize only this Study's latest complete, integrity-bound notes."""
+        records = self._records(study["study_id"])
+        if not records:
+            return None
+        path, original = max(records, key=lambda pair: pair[1]["sequence"])
+        record = self._checked_record(study, path, original)
+        if record is None:
+            return None
         # A later final response supersedes these notes. Timeouts retain the
         # old study.visit, so a timeout without a new delivery keeps them usable.
         if study.get("visit", -1) >= record["source_visit"]:
             return None
-        status = read_json(call_dir / "result.json")["status"] if (call_dir / "result.json").exists() else (
-            "INTERRUPTED" if (call_dir / "interrupted.json").exists() else "UNCONFIRMED")
-        return {**record, "ref": path.relative_to(self.directory).as_posix(), "source_status": status}
+        return self._source_status(record)
 
 
 

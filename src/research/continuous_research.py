@@ -32,6 +32,7 @@ _WINDOW = {"anyOf": [{"type": "null"}, _object({"start_line": {"type": "integer"
                                                 "end_line": {"type": "integer", "minimum": 1}})]}
 _SELECTOR_SCHEMA = _object({
     **ACTION_PROPERTIES,
+    "selected_object_id": {"anyOf": [{"type": "null"}, _TEXT]},
     "study_id": _TEXT, "operation": {"type": "string", "enum": ["ADVANCE", "CONNECT", "COMPOSE", "INSPECT"]},
     "support_id": _TEXT, "material_refs": _REFS, "reason": _TEXT,
     "relation": {"type": "string", "enum": ["RELEVANT", "UNKNOWN"]}, "continuation_window": _WINDOW,
@@ -488,16 +489,20 @@ class _Research:
                 frozen = read_json(input_path)
                 exposure, schedule = frozen['exposure'], frozen['next_schedule']
                 exposed = {card['study_id'] for card in exposure['cards']}
-                from .continuous_selection import choose
-                selected = choose(self, network, exposure, _SELECTOR_SCHEMA)
+                from .continuous_selection import choose, saved_object_metadata
+                selected = choose(self, network, exposure, _SELECTOR_SCHEMA,
+                                  object_index=frozen.get('research_object_index'))
                 if exposure["forced_study_id"]:
                     selected = {**selected, "study_id": exposure["forced_study_id"]}
                 if selected["study_id"] not in exposed:
                     raise ValueError("Selector chose an unexposed Study")
+                saved_object_metadata(self, selected, exposure)
             write_json(selection_path, {"selected": selected, "next_schedule": schedule, "exposure": exposure})
             self.event("selection_saved", channel=exposure["channel"], study_id=selected["study_id"])
         plan = read_json(selection_path)
         selected = plan["selected"]
+        from .continuous_selection import saved_object_metadata
+        selected_object = saved_object_metadata(self, selected, plan["exposure"])
         if selected["operation"] not in ("ADVANCE", "CONNECT", "COMPOSE"):
             raise ValueError("unknown local research operation")
         study = studies[selected["study_id"]]
@@ -530,7 +535,7 @@ class _Research:
             study = {**study, "continuation": "\n".join(lines[start:end]),
                      "window": {**window, "total_lines": len(lines), "partial_unverified_notes": True,
                                 "full_revision_ref": study.get("research_delivery_ref", self.state["studies"][study["study_id"]])}}
-        return {**action_metadata(selected), "operation": selected["operation"], "study": study,
+        return {**action_metadata(selected), **selected_object, "operation": selected["operation"], "study": study,
                 "claim": asdict(network.claim(study["claim_id"])) if study.get("claim_id") else None,
                 "accepted_facts": list(facts.values()), "unverified_materials": unverified,
                 "required_fact_ids": [f.fact_id for f in materials["facts"]] if materials else [],
@@ -557,14 +562,21 @@ class _Research:
         from .continuous_selection import add_fact_interfaces
         exposure = add_fact_interfaces(network, exposure,
             token_budget=self.state['settings']['selector_context_tokens'] // 4)
-        from .continuous_selection import add_action_evidence
+        from .continuous_selection import add_action_evidence, add_object_cards
         from .research_artifacts import ArtifactStore
         from .research_delivery import DeliveryStore
+        from .research_objects import collect_records, derive_cards, lifecycle
+        artifacts = ArtifactStore(self.directory, self.state['run_id'])
+        checkpoints = DeliveryStore(self.directory, self.state['run_id'])
+        sources = collect_records(exposure, studies, artifact_store=artifacts, checkpoint_store=checkpoints)
+        cards = [lifecycle(card, network) for card in derive_cards(sources)]
+        exposure = add_object_cards(exposure, cards, _SELECTOR_SCHEMA,
+                                   token_budget=self.state['settings']['selector_context_tokens'])
         exposure = add_action_evidence(exposure, studies, _SELECTOR_SCHEMA,
             token_budget=self.state['settings']['selector_context_tokens'],
-            artifact_store=ArtifactStore(self.directory, self.state['run_id']),
-            checkpoint_store=DeliveryStore(self.directory, self.state['run_id']))
-        return {'exposure': exposure, 'next_schedule': schedule}
+            artifact_store=artifacts, checkpoint_store=checkpoints)
+        return {'exposure': exposure, 'next_schedule': schedule,
+                'research_object_index': {'sources': sources, 'cards': cards}}
 
     def persist_definitions(self, revision, definitions):
         from .proof_graph import _identity

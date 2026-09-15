@@ -55,8 +55,14 @@ results you will use or why not; what is new relative to them; and what resumabl
 work you expect to leave. Compare complete statements AND conditions: a larger
 bound need not supersede a different construction or assumptions. Reasonable
 nonuse, UNKNOWN relevance, new representations and deeper work are allowed.
-Cards are navigation, notes are unverified. fact_interfaces show accepted source
-statements with original scope, NOT automatic target premises. Request fact:<id>
+Cards are navigation, notes are unverified. research_object_cards distinguish
+explicit local research objects within a Study. Choose the Study, an optional
+selected_object_id from the displayed cards (or null), and action_mode separately.
+RESEARCH without a specific object remains legitimate. Explain object comparisons
+in reason; UNKNOWN fields remain unknown, never inferred readiness. Cards are
+UNVERIFIED_RESEARCH, not proof text or accepted Facts. Their evidence_refs locate
+the original material. fact_interfaces show accepted source statements with
+original scope, NOT automatic target premises. Request fact:<id>
 in material_refs for ordinary exact-scope use; foreign BRIDGE_CANDIDATE inspection
 retains conditions and requires a separately verified bridge before proof use.
 Never infer correspondence or authority from lexical overlap or an ID. Request
@@ -65,10 +71,12 @@ context_requests are leads, not proof. representation_ref gives transport views,
 not truth of an open Claim. A forced_study_id must be served: choose HOW. CONNECT
 may investigate exposed regions; COMPOSE requires a listed ready Support.
 continuation_window selects zero-based unverified-note lines, never assumptions
-or proofs. If you need the next complete Fact page before deciding, return
-operation=INSPECT, material_refs=[fact_interfaces.next_ref], support_id='', and
-continuation_window=null. This reads that forward page then asks for your action;
-it is not a Worker service. Any prior inspection_request_unverified is reading
+or proofs. To inspect before deciding, return operation=INSPECT with exactly one
+material_ref: the currently advertised fact_interfaces.next_ref,
+research_object_cards.next_ref, or an evidence_ref of a displayed object card in
+the selected Study. Use support_id='' and continuation_window=null. This reads
+that forward page or complete unverified source then asks for your action; it is
+not a Worker service. Any prior inspection_request_unverified is reading
 intent, not evidence or a substitute for old conditions. Do not repeat pages. Otherwise choose ADVANCE,
 CONNECT or COMPOSE and explicitly select this visit's material_refs; nothing
 inspected is automatically added to the Worker window. bridge_candidate_pages
@@ -206,40 +214,143 @@ def add_action_evidence(exposure, studies, schema, *, token_budget, artifact_sto
     return {**exposure, 'local_action_evidence': page}
 
 
+def _fits(exposure, schema, token_budget):
+    try:
+        bounded_packet({'prompt': INSTRUCTIONS + json.dumps(exposure, ensure_ascii=False),
+                        'schema': schema}, token_budget)
+    except AttentionOverflow:
+        return False
+    return True
+
+
+def add_object_cards(exposure, cards, schema, *, token_budget, offset=0):
+    """Spend existing attention on intact object interfaces; originals stay local."""
+    from .research_objects import object_page, AUTHORITY
+    base = {**exposure, 'local_action_evidence': {'items': [], 'unexpanded': []}}
+    def fits(page):
+        return _fits({**base, 'research_object_cards': page}, schema, token_budget)
+    try:
+        page = object_page(cards, offset, token_budget=token_budget, fits=fits)
+    except AttentionOverflow:
+        page = {'authority': AUTHORITY, 'items': [], 'unexpanded': [],
+                'next_ref': f'research-objects:{offset}' if offset < len(cards) else None,
+                'total': len(cards)}
+        if not _fits({**base, 'research_object_cards': page}, schema, token_budget):
+            raise
+    return {**base, 'research_object_cards': page}
+
+
+def _object_rows(exposure, *, include_unexpanded=False):
+    page = exposure.get('research_object_cards', {})
+    return page.get('items', []) + (page.get('unexpanded', []) if include_unexpanded else [])
+
+
+def object_metadata(selected, displayed):
+    """Validate identity/scope only; this never decides whether an object can close."""
+    if 'selected_object_id' not in selected:
+        return {}  # Preserve pre-extension frozen action packets.
+    key = selected['selected_object_id']
+    if key is not None:
+        if not isinstance(key, str) or not key or key not in displayed:
+            raise ValueError('Selector chose an unexposed research object')
+        if displayed[key] != selected['study_id']:
+            raise ValueError('selected research object belongs to another Study')
+    return {'selected_object_id': key}
+
+
+def saved_object_metadata(run, selected, exposure):
+    """Recheck the confirmed selection against its immutable displayed pages."""
+    if selected.get('selected_object_id') is None:
+        return object_metadata(selected, {})
+    displayed = {r['object_id']: r['study_id'] for r in _object_rows(exposure)}
+    for path in run.step_dir.glob('selector-page-*-input.json'):
+        displayed.update((r['object_id'], r['study_id']) for r in _object_rows(read_json(path)))
+    return object_metadata(selected, displayed)
+
+
 def _displayed_refs(exposure):
     refs = {r['ref'] for r in exposure.get('local_action_evidence', {}).get('items', [])}
     refs.update(r['ref'] for r in exposure.get('fact_interfaces', {}).get('items', []))
+    refs.update(ref for row in _object_rows(exposure, include_unexpanded=True) for ref in row['evidence_refs'])
     for card in exposure['cards']:
         refs.update([card['ref'], 'study:' + card['study_id']])
     return refs
 
 
-def choose(run, network, exposure, schema):
+def _inspection_base(exposure, current, selected):
+    """Start a fresh bounded reading window, retaining forward navigation."""
+    value = {**exposure, 'bridge_candidates': [], 'bridge_candidate_pages': [],
+        'local_action_evidence': {'items': [], 'unexpanded': []},
+        'fact_interfaces': {'items': [], 'unexpanded': [],
+                            'next_ref': current.get('fact_interfaces', {}).get('next_ref')},
+        'inspection_request_unverified': {
+            'material_refs': selected['material_refs'], 'reason': selected['reason']}}
+    if 'research_object_cards' in current:
+        value['research_object_cards'] = {**current['research_object_cards'], 'items': [], 'unexpanded': []}
+    if 'selected_object_id' in selected:
+        value['inspection_request_unverified']['selected_object_id'] = selected['selected_object_id']
+    return value
+
+
+def choose(run, network, exposure, schema, *, object_index=None):
     current, page_number = exposure, 0
-    displayed = set()
+    displayed, objects, source_owners, inspected = set(), {}, {}, set()
     while True:
         displayed.update(_displayed_refs(current))
+        objects.update((r['object_id'], r['study_id']) for r in _object_rows(current))
+        for row in _object_rows(current, include_unexpanded=True):
+            for ref in row['evidence_refs']:
+                source_owners.setdefault(ref, set()).add(row['study_id'])
         role = 'selector' if page_number == 0 else f'selector-page-{page_number}'
         selected = run.invoker(role).invoke(prompt=INSTRUCTIONS+json.dumps(current,ensure_ascii=False),
                                            schema=schema,label='continuous_selector')
         metadata = action_metadata(selected)
+        object_metadata(selected, objects)
         if not set(metadata.get('evidence_refs', [])).issubset(displayed):
             raise ValueError('action references unexposed evidence')
         if selected['operation'] != 'INSPECT':
             return selected
-        ref = current['fact_interfaces']['next_ref']
-        if (not ref or selected['material_refs'] != [ref] or selected['support_id'] or
-                selected['continuation_window'] is not None or
-                selected['study_id'] not in {c['study_id'] for c in exposure['cards']}):
-            raise ValueError('INSPECT requires exactly the advertised forward Fact page')
+        refs = selected['material_refs']
+        if (not isinstance(refs, list) or len(refs) != 1 or not isinstance(refs[0], str)
+                or refs[0] in inspected or selected['support_id']
+                or selected['continuation_window'] is not None
+                or selected['study_id'] not in {c['study_id'] for c in exposure['cards']}):
+            raise ValueError('INSPECT requires one unused advertised forward page or displayed object source')
+        ref = refs[0]
+        fact_ref = current.get('fact_interfaces', {}).get('next_ref')
+        object_ref = current.get('research_object_cards', {}).get('next_ref')
+        source_allowed = selected['study_id'] in source_owners.get(ref, set())
+        if not ((fact_ref and ref == fact_ref) or (object_ref and ref == object_ref) or source_allowed):
+            raise ValueError('INSPECT requires an advertised forward page or same-Study displayed object source')
+        if ref == object_ref and object_index is None:
+            raise ValueError('research object page has no frozen source index')
+        inspected.add(ref)
         page_number += 1
         path = run.step_dir / f'selector-page-{page_number}-input.json'
         if not path.exists():
-            page = fact_page(network, exposure['cards'], int(ref.split(':')[1]),
-                             token_budget=run.state['settings']['selector_context_tokens']//4)
-            write_json(path, {**exposure, 'bridge_candidates':[], 'bridge_candidate_pages':[],
-                              'fact_interfaces':page,
-                              'inspection_request_unverified': {
-                                  'material_refs':selected['material_refs'], 'reason':selected['reason']}})
+            value = _inspection_base(exposure, current, selected)
+            limit = run.state['settings']['selector_context_tokens']
+            if ref == fact_ref:
+                value['fact_interfaces'] = fact_page(network, exposure['cards'], int(ref.split(':')[1]),
+                                                     token_budget=limit//4)
+            elif ref == object_ref:
+                value = add_object_cards(value, object_index['cards'], schema,
+                                         token_budget=limit, offset=int(ref.split(':')[1]))
+                if not value['research_object_cards']['items'] and value['research_object_cards']['next_ref'] == ref:
+                    raise AttentionOverflow({'estimated_tokens': limit+1}, limit)
+            else:
+                from .continuous_materials import load_materials
+                study = read_json(run.directory / run.state['studies'][selected['study_id']])
+                facts, materials, notices = load_materials(run.root, study, [ref], run.state['studies'], network)
+                if facts:
+                    raise ValueError('research object inspection cannot supply accepted Facts')
+                value['local_action_evidence'] = {'items': materials, 'unexpanded': notices}
+                if not _fits(value, schema, limit):
+                    value['local_action_evidence'] = {'items': [], 'unexpanded': [
+                        {'ref': ref, 'study_id': selected['study_id'],
+                         'reason': 'complete_source_exceeds_selector_context'}]}
+            if not _fits(value, schema, limit):
+                bounded_packet({'prompt': INSTRUCTIONS+json.dumps(value,ensure_ascii=False), 'schema': schema}, limit)
+            write_json(path, value)
         current = read_json(path)
         run.event('selector_page_saved', page=page_number)

@@ -126,9 +126,10 @@ def _related(directory, study_refs, object_ref, network):
 def load_materials(root, study, refs, study_refs, network):
     """Read exact local references; search/object matches are paged navigation.
 
-    ``root`` is the problem workspace. Raw paths must match the narrow Study or
-    visit allowlist; no state, global graph, call journal, or arbitrary file is
-    addressable. Distinct scopes may be compared as labelled unverified notes.
+    ``root`` is the problem workspace. Raw paths must match the narrow Study,
+    visit or same-Study checkpoint allowlist; no state, global graph, call journal
+    or arbitrary file is addressable. Distinct scopes may be compared as labelled
+    unverified notes.
     Accepted Fact reads retain the network's exact-scope and revocation guards.
     """
     directory = Path(root) / "continuous_run"
@@ -136,6 +137,14 @@ def load_materials(root, study, refs, study_refs, network):
     for ref in refs:
         if not isinstance(ref, str):
             raise ValueError("local material references must be strings")
+        if ref.startswith("research_deliveries/"):
+            from .research_delivery import DeliveryStore
+            value = DeliveryStore(directory, read_json(directory / "state.json")["run_id"]).read_material(study, ref)
+            if value is not None:
+                unverified.append(value)
+            else:
+                notices.append({"ref": ref, "error": "unknown same-Study research checkpoint"})
+            continue
         if ref.startswith(("research-artifact:", "research-artifacts:")):
             from .research_artifacts import ArtifactStore
             value = ArtifactStore(directory, read_json(directory / "state.json")["run_id"]).read_material(study, ref)

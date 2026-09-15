@@ -64,6 +64,12 @@ from existing work, permits a smaller proved statement, and may still leave a
 specific unverified gap. RESEARCH remains valid for unstable or unclear objects.
 Neither timeout counts nor checkpoint existence select this mode.
 
+[Derived Research Object Cards](RESEARCH_OBJECT_CARDS.md) now expose literal,
+provenance-bound local objects before optional complete research notes. Selector
+also records a nullable `selected_object_id`; this does not rank objects, infer
+readiness, or automatically load proof premises. Cards and exact-source reads
+use the existing bounded INSPECT path and durable selection journal.
+
 Complete notes and a bounded page of public artifacts from already exposed
 Studies can inform this decision inside the unchanged Selector context ceiling.
 Oversized records retain references, not truncated conditions. These are
