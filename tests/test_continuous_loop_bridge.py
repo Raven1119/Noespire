@@ -38,20 +38,20 @@ def test_loop_bridge_materials_and_fairness(tmp_path, case):
     receipt = read_materialization(tmp_path)
     packet = read_json(tmp_path/'continuous_run/visits/00000001/packet.json')
     assert receipt['usable']
-    assert actors.calls == ['continuous_selector', 'continuous_selector_bridge', 'fact_bridge_worker', 'closed_book_verifier']
+    assert actors.calls == ['continuous_selector', 'continuous_selector_bridge', 'fact_bridge_worker', 'statement_sanity', 'closed_book_verifier']
     assert [f['fact_id'] for f in packet['accepted_facts']] == [receipt['fact_id']]
     assert result['schedule'] == before['schedule'] and result['step'] == before['step']
     assert result['studies'][0]['revision'] == 0
     assert result['studies'][0]['known_fact_ids'] == [receipt['fact_id']]
-    assert result['model_calls'] == 4 and result['bridge_model_calls'] == 2
-    assert result['reported_tokens'] is None and result['unknown_usage_calls']==4
+    assert result['model_calls'] == 5 and result['bridge_model_calls'] == 3
+    assert result['reported_tokens'] is None and result['unknown_usage_calls']==5
     assert receipt['closure'] == [source.fact_id, receipt['fact_id']]
     with pytest.raises(ValueError, match='exact scope'):
         load_materials(tmp_path, packet['study'], ['fact:'+source.fact_id], {}, ContinuousNetwork(tmp_path))
     def stop_visit(event, details):
         if event == 'visit_completed': pause_run(tmp_path, 'one real Study service')
     resumed = resume_run(tmp_path, invoker=actors, on_event=stop_visit)
-    assert actors.calls[-1] == 'continuous_worker' and len(actors.calls) == 5
+    assert actors.calls[-1] == 'continuous_worker' and len(actors.calls) == 6
     assert resumed['step'] == 2 and resumed['schedule']['revisit_cursor'] == 1
     state = read_json(tmp_path/'continuous_run/state.json')
     exposure = _Research(tmp_path,state,actors,None).selector_exposure(ContinuousNetwork(tmp_path),
@@ -60,19 +60,19 @@ def test_loop_bridge_materials_and_fairness(tmp_path, case):
 
 
 @pytest.mark.parametrize('boundary', ['selection_saved','inspection_saved','selector_call','bridge_request_saved',
-    'worker_call','verifier_call','verification_completed','fact_admitted','claim_registered','fact_bound',
+    'worker_call','sanity_call','verifier_call','verification_completed','fact_admitted','claim_registered','fact_bound',
     'materialized','bridge_materials_bound','material_surface_ready'])
 def test_loop_crash_exact_recovery(tmp_path, case, boundary):
     actors = LoopActors()
     def crash(event, details):
         point = {'continuous_selector_bridge':'selector_call','fact_bridge_worker':'worker_call',
-            'closed_book_verifier':'verifier_call'}.get(details.get('label')) if event=='call_completed' else event
+            'statement_sanity':'sanity_call','closed_book_verifier':'verifier_call'}.get(details.get('label')) if event=='call_completed' else event
         if point == boundary: raise Crash()
     with pytest.raises(Crash): resume_run(tmp_path,invoker=actors,on_event=crash)
     confirmed = {p:p.read_bytes() for p in tmp_path.rglob('calls/*/result.json')}
     result = resume_run(tmp_path,invoker=actors,on_event=stop_materials(tmp_path))
     assert result['step']==1 and result['studies'][0]['revision']==0
-    assert len(actors.calls)==4 and read_materialization(tmp_path)['usable']
+    assert len(actors.calls)==5 and read_materialization(tmp_path)['usable']
     assert all(p.read_bytes()==value for p,value in confirmed.items())
     assert len(list((tmp_path/'facts').glob('*.md')))==2
 
@@ -110,7 +110,7 @@ def test_revoke_after_packet_freeze_fails_closed(tmp_path,case,which):
     receipt=read_materialization(tmp_path)
     FactGraph(tmp_path).revoke(source.fact_id if which=='source' else receipt['fact_id'],'withdraw')
     result=resume_run(tmp_path,invoker=actors)
-    assert result['status']=='PAUSED' and len(actors.calls)==4
+    assert result['status']=='PAUSED' and len(actors.calls)==5
     assert not read_materialization(tmp_path)['usable']
 
 
@@ -123,11 +123,11 @@ def test_same_request_across_visits_reuses_bridge_ledger(tmp_path,case):
     assert result['step']==2
     assert actors.calls.count('fact_bridge_worker')==1
     assert actors.calls.count('closed_book_verifier')==1
-    assert result['bridge_model_calls']==2
+    assert result['bridge_model_calls']==3
     assert len(list((tmp_path/'facts').glob('*.md')))==2
 
 
-@pytest.mark.parametrize('boundary',['continuous_selector_bridge','fact_bridge_worker','closed_book_verifier','fact_bound'])
+@pytest.mark.parametrize('boundary',['continuous_selector_bridge','fact_bridge_worker','statement_sanity','closed_book_verifier','fact_bound'])
 def test_cooperative_pause_keeps_same_bridge_identity(tmp_path,case,boundary):
     actors=LoopActors()
     def stop(event,details):
@@ -137,7 +137,7 @@ def test_cooperative_pause_keeps_same_bridge_identity(tmp_path,case,boundary):
     assert first['pause_reason']=='pause inside bridge' and first['retry_role'] is None
     result=resume_run(tmp_path,invoker=actors,on_event=stop_materials(tmp_path))
     assert read_materialization(tmp_path)['usable']
-    assert len(actors.calls)==4 and result['step']==1
+    assert len(actors.calls)==5 and result['step']==1
 
 
 @pytest.mark.parametrize('failure',['os_error','process_error','timeout','fingerprint'])
@@ -163,7 +163,7 @@ def test_runtime_preflight_inside_loop_fails_closed(tmp_path,case,monkeypatch,fa
     assert not (tmp_path/'continuous_run/visits/00000001/packet.json').exists()
     transient.failure=None
     result=resume_run(tmp_path,on_event=stop_materials(tmp_path))
-    assert read_materialization(tmp_path)['usable'] and len(actors.calls)==4
+    assert read_materialization(tmp_path)['usable'] and len(actors.calls)==5
     receipt=read_materialization(tmp_path)
     assert receipt['bridge']['runtime']==stable.manifest
 
@@ -242,7 +242,7 @@ def test_bridge_own_preflight_cannot_change_enclosing_runtime(tmp_path,case,monk
     assert request['runtime']==stable.manifest
     transient.failure=None
     resume_run(tmp_path,on_event=stop_materials(tmp_path))
-    assert len(actors.calls)==4 and read_materialization(tmp_path)['usable']
+    assert len(actors.calls)==5 and read_materialization(tmp_path)['usable']
 
 
 def test_worker_timeout_after_bridge_preserves_known_material_without_false_service(tmp_path,case):
@@ -292,7 +292,7 @@ def test_normal_worker_can_admit_using_bridge_binding_without_stale_graph(tmp_pa
     assert fact.predecessors==(bridge['fact_id'],)
     assert [f.fact_id for f in FactGraph(tmp_path).supporting_closure(fact.fact_id)]==[
         case[1].fact_id,bridge['fact_id'],fact.fact_id]
-    assert actors.calls.count('continuous_worker')==1 and len(actors.calls)==6
+    assert actors.calls.count('continuous_worker')==1 and len(actors.calls)==8
     assert result['target_state']=='OPEN'
 
 
@@ -310,7 +310,7 @@ def test_capacity_reselection_retains_material_and_fairness(tmp_path,case,monkey
     bridge=read_materialization(tmp_path,step=1)
     assert result['schedule']==state['schedule'] and result['step']==2
     assert result['studies'][0]['known_fact_ids']==[bridge['fact_id']]
-    assert result['studies'][0]['revision']==0 and len(actors.calls)==4
+    assert result['studies'][0]['revision']==0 and len(actors.calls)==5
     updated=read_json(tmp_path/'continuous_run/state.json')
     exposure=_Research(tmp_path,updated,actors,None).selector_exposure(ContinuousNetwork(tmp_path),
         {s['study_id']:s for s in result['studies']})

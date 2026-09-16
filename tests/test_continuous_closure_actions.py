@@ -1,4 +1,5 @@
 """CLOSE frames local work; it never schedules it or certifies its notes."""
+from truth_gate_fixtures import no_counterexample
 from copy import deepcopy
 import json
 
@@ -128,6 +129,8 @@ def test_close_can_shrink_or_leave_gap_without_extra_service(tmp_path,candidate)
     class Backend:
         def invoke(self,*,prompt,schema,label):
             calls.append(label)
+            if label == "statement_sanity":
+                return no_counterexample()
             if label=='closed_book_verifier':
                 assert '1 + 1 = 2' in prompt
                 return {'accepted':True,'external_authority_dependency':False,'violation_type':'NONE','reason':'Elementary arithmetic.'}

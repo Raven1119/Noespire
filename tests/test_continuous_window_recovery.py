@@ -1,4 +1,5 @@
 """A model-selected view never replaces confirmed work or traps recovery."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 import subprocess
@@ -20,8 +21,12 @@ class WindowResearch:
     def __init__(self, *, invalid=False, timeout=False):
         self.invalid, self.timeout = invalid, timeout
         self.workers, self.selectors = [], []
+        self.sanity_calls = []
 
     def invoke(self, *, prompt, schema, label):
+        if label == "statement_sanity":
+            self.sanity_calls.append(prompt)
+            return no_counterexample()
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "Addition is complete."}
@@ -75,7 +80,7 @@ def test_confirmed_invalid_window_gets_new_selection_without_repeating_call(tmp_
     assert len(model.selectors) == 2 and len(model.workers) == 2
     notice = model.selectors[1]["cards"][0]["attention_notice"]
     assert "39" in notice and "2" in notice
-    assert result["model_calls"] == 5
+    assert result["model_calls"] == 6
     assert result["schedule"]["channel_cursor"] == 1  # rejected view was not Worker service
     visits = tmp_path / "continuous_run/visits"
     assert read(visits / "00000001/selection.json")["selected"]["continuation_window"]["end_line"] == 39
@@ -110,6 +115,6 @@ def test_timeout_of_partial_view_preserves_full_work_then_resumes_another_window
     assert result["status"] == "SOLVED"
     assert len(model.workers) == 3 and len(model.selectors) == 2
     assert model.workers[-1]["feedback"]["status"] == "TIMEOUT"
-    assert result["model_calls"] == 6
+    assert result["model_calls"] == 7
     assert "window" not in result["studies"][0]
     assert all(p.read_bytes() == data for p, data in prior.items())

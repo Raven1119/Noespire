@@ -75,8 +75,8 @@ def test_conditional_pass_creates_only_helper_and_does_not_activate_or_discharge
     assert n.ready_supports()==()
     assert n.data.get("representations",{})=={}
     assert FactGraph(tmp_path).get_fact(row["conditional_fact_id"]).predecessors==()
-    assert model.calls==["continuous_worker","closed_book_verifier","recurrence_probe",
-                         "representation_bridge_worker","conditional_representation_verifier"]
+    assert model.calls==["continuous_worker","statement_sanity", "closed_book_verifier","recurrence_probe",
+                         "representation_bridge_worker","statement_sanity", "conditional_representation_verifier"]
     feedback=read_json(tmp_path/"continuous_run/visits/00000000/feedback.json")
     assert feedback["accepted"] is True
     assert feedback["representation_recurrence"]["alias_active"] is False
@@ -119,7 +119,7 @@ def test_conditional_recovery_preserves_one_helper_and_one_call_per_role(tmp_pat
     with pytest.raises(Crash):execute(tmp_path,model,crash)
     saved={p:p.read_bytes() for folder in ("facts","continuous_run/calls") for p in (tmp_path/folder).rglob('*') if p.is_file()}
     result=resume_run(tmp_path,invoker=model,on_event=stop(tmp_path))
-    assert len(model.calls)==5 and len(set(model.calls))==5
+    assert len(model.calls)==7 and len(set(model.calls))==6 and model.calls.count("statement_sanity")==2
     assert all(p.read_bytes()==v for p,v in saved.items())
     n,row=deferred(tmp_path)
     assert len(n.data['obligations'])==3
@@ -228,7 +228,7 @@ def test_normal_resume_activates_before_new_selection_not_inside_pending_worker(
         if name=='representation_activation_completed':raise RunStopped('activation boundary')
     result=resume_run(tmp_path,invoker=model,on_event=stop_activation)
     assert result['pause_reason']=='activation boundary'
-    assert model.calls[-1]=='representation_activation_verifier'
+    assert model.calls[-2:]==['statement_sanity', 'representation_activation_verifier']
     assert model.calls.count('continuous_worker')==1
     assert 'continuous_selector' not in model.calls
     assert ContinuousNetwork(tmp_path).alias_of(row['claim_id'])==n.target_id

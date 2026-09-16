@@ -79,7 +79,10 @@ class _CheckedVerifier(ClosedBookVerifier):
         self.run,self.directory,self.packet=run,directory,packet
         self.activation,self.network,self.support_id=activation,network,support_id
         self.checks=ACTIVATION_CHECKS if activation else CONDITIONAL_CHECKS
-        super().__init__(self)
+        from .truth_gate import StatementSanityGate
+        role = "recurrence-activation-sanity-"+support_id if activation else "recurrence-conditional-sanity"
+        super().__init__(self, statement_gate=StatementSanityGate(
+            run.invoker(role), directory, packet["ancestor"]["context"]))
 
     def invoke(self,*,prompt,schema,label):
         extended={**schema,"properties":{**schema["properties"],**{k:{"type":"boolean"} for k in self.checks}},
@@ -299,7 +302,8 @@ def activate_ready(run,network):
             request=read_json(path)
             role=request["scope"].split(":")[1]
             marker=path.parent/"interrupted.json"
-            if (role=="recurrence-activation-"+row["support_id"] and
+            if (role in {"recurrence-activation-"+row["support_id"],
+                         "recurrence-activation-sanity-"+row["support_id"]} and
                     not (path.parent/"result.json").exists() and not marker.exists()):
                 _write_once(marker,{"status":"INTERRUPTED","observed_at":time.time()})
         _write_once(directory/"result.json",result)

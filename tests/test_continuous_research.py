@@ -1,4 +1,5 @@
 """Continuous research acceptance at the public run and evidence interfaces."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 import pytest
@@ -23,6 +24,8 @@ class DirectResearch:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "continuous_selector":
             return select_local(prompt)
         if label == "continuous_worker":
@@ -56,7 +59,7 @@ def test_explicit_continuation_survives_pause_and_becomes_a_verified_fact(tmp_pa
     assert first["studies"][0]["continuation"] == "The equality has been reduced to addition."
     final = resume_run(tmp_path, invoker=model)
     assert final["status"] == "SOLVED"
-    assert final["model_calls"] == 4
+    assert final["model_calls"] == 5
     assert final["schedule"]["channel_cycle"] == first["schedule"]["channel_cycle"]
     proof = export_proof(tmp_path)
     assert [f["statement"] for f in proof["facts"]] == ["1 + 1 = 2"]
@@ -83,7 +86,7 @@ def test_resume_reuses_confirmed_results_and_finishes_admission(tmp_path, bounda
         start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model, on_event=crash)
     final = resume_run(tmp_path, invoker=model)
     assert final["status"] == "SOLVED"
-    assert model.calls == ["continuous_worker", "continuous_selector", "continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "continuous_selector", "continuous_worker", "statement_sanity", "closed_book_verifier"]
     assert final["studies"][0]["revision"] == 2
     assert len(export_proof(tmp_path)["facts"]) == 1
 
@@ -103,7 +106,7 @@ def test_unconfirmed_call_is_interrupted_not_guessed_and_resume_is_explicit(tmp_
     assert model.calls == []
     final = resume_run(tmp_path, invoker=model)
     assert final["status"] == "SOLVED"
-    assert final["model_calls"] == 5  # includes the unconfirmed reservation
+    assert final["model_calls"] == 6  # includes the unconfirmed reservation
 
 
 def test_more_than_old_lifetime_allowance_does_not_exhaust_a_study(tmp_path):
@@ -156,14 +159,18 @@ def test_timeout_keeps_last_returned_work_and_next_visit_gets_failure(tmp_path):
 
     result = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=TimeoutThenContinue())
     assert result["status"] == "SOLVED"
-    assert result["model_calls"] == 6
+    assert result["model_calls"] == 7
 
 
 class ConnectedResearch:
     def __init__(self):
         self.operations = []
+        self.calls = []
 
     def invoke(self, *, prompt, schema, label):
+        if label == "statement_sanity":
+            self.calls.append(label)
+            return no_counterexample()
         if label == "continuous_selector":
             return select_local(prompt)
         if label == "closed_book_verifier":
@@ -240,7 +247,7 @@ def test_selector_is_fresh_with_bounded_unverified_local_notes(tmp_path):
     model = Selected()
     result = start_run(tmp_path, problem_id="addition", statement="1 + 1 = 2", invoker=model)
     assert result["status"] == "SOLVED"
-    assert model.calls == ["continuous_worker", "continuous_selector", "continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "continuous_selector", "continuous_worker", "statement_sanity", "closed_book_verifier"]
 
 
 def test_revisit_really_serves_unpopular_study_after_selection_pause(tmp_path):

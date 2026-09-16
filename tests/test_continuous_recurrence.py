@@ -1,4 +1,5 @@
 """Truth and recovery tests use fixed model judgements, never similarity heuristics."""
+from truth_gate_fixtures import no_counterexample
 import json
 import subprocess
 from dataclasses import asdict
@@ -33,6 +34,8 @@ class Model:
         self.packets[label] = prompt
         if label == self.failure:
             raise subprocess.TimeoutExpired("codex",600)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "continuous_worker":
             p = json.loads(prompt.split("PACKET:\n")[1])
             return {"continuation":"A representation may permit the same research.","next_work":"Inspect the reduction.",
@@ -88,8 +91,8 @@ def test_verified_representation_has_no_independent_study_or_depth_or_truth(tmp_
     assert len(list((tmp_path/"facts").glob("*.md")))==2  # implication + equivalence only
     assert len(FactGraph(tmp_path).supporting_closure(row["equivalence_fact_id"]))==1
     assert n.ready_supports()==()
-    assert model.calls==["continuous_worker","closed_book_verifier","recurrence_probe",
-                         "representation_bridge_worker","representation_verifier"]
+    assert model.calls==["continuous_worker","statement_sanity", "closed_book_verifier","recurrence_probe",
+                         "representation_bridge_worker","statement_sanity", "representation_verifier"]
     feedback=read_json(tmp_path/"continuous_run/visits/00000000/feedback.json")
     assert feedback["accepted"] is True and feedback["representation_recurrence"]["status"]=="ALIAS"
     assert "ancestor-equivalent" in result["studies"][0]["admission_summary"]
@@ -110,7 +113,7 @@ def test_no_match_stronger_theorem_and_nontrivial_reverse_keep_study(tmp_path,ma
 def test_multi_requirement_has_no_probe_or_collapse(tmp_path):
     model=Model(multi=True)
     result=execute(tmp_path,model)
-    assert model.calls==["continuous_worker","closed_book_verifier"]
+    assert model.calls==["continuous_worker","statement_sanity", "closed_book_verifier"]
     assert len(result["studies"])==3
     assert ContinuousNetwork(tmp_path).effective_depth()==1
 
@@ -129,7 +132,7 @@ def test_resume_never_repeats_calls_or_alias_admission(tmp_path,boundary):
                for p in (tmp_path/folder).rglob("*") if p.is_file()}
     result=resume_run(tmp_path,invoker=model,on_event=stop(tmp_path))
     assert result["status"]=="PAUSED"
-    assert len(model.calls)==5 and len(set(model.calls))==5
+    assert len(model.calls)==7 and len(set(model.calls))==6 and model.calls.count("statement_sanity")==2
     assert all(p.read_bytes()==v for p,v in immutable.items())
     assert len(ContinuousNetwork(tmp_path).data["representations"])==1
     assert len(result["studies"])==1
@@ -155,7 +158,7 @@ def test_unconfirmed_probe_is_interrupted_no_resampling(tmp_path):
     with pytest.raises(Crash):
         execute(tmp_path,model,crash)
     result=resume_run(tmp_path,invoker=model,on_event=stop(tmp_path))
-    assert model.calls==["continuous_worker","closed_book_verifier"]
+    assert model.calls==["continuous_worker","statement_sanity", "closed_book_verifier"]
     assert len(result["studies"])==2
     feedback=read_json(tmp_path/"continuous_run/visits/00000000/feedback.json")
     assert feedback["representation_recurrence"]["status"]=="INTERRUPTED"
@@ -302,7 +305,7 @@ def test_revoked_equivalence_after_certificate_admission_not_resurrected(tmp_pat
     with pytest.raises(Crash):
         execute(tmp_path,model,crash)
     result=resume_run(tmp_path,invoker=model,on_event=stop(tmp_path))
-    assert len(model.calls)==5
+    assert len(model.calls)==7
     assert len(result["studies"])==2
     assert not ContinuousNetwork(tmp_path).data.get("representations")
     assert len(list((tmp_path/"facts").glob("*.md")))==1

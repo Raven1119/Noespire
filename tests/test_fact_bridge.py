@@ -1,4 +1,5 @@
 """Explicit scope transport uses real admission/storage and deterministic actors."""
+from truth_gate_fixtures import no_counterexample
 from dataclasses import asdict
 import json
 import subprocess
@@ -32,6 +33,8 @@ class Actors:
         self.calls.append((label, prompt))
         if self.failure:
             raise self.failure
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "fact_bridge_worker":
             packet = json.loads(prompt.split("\nPACKET:\n")[1])
             assert packet["accepted_facts"] == []
@@ -91,20 +94,20 @@ def test_bridge_preserves_source_conditions_lineage_and_ordinary_scope_guard(tmp
     original = (tmp_path / "facts" / (source.fact_id + ".md")).read_bytes()
     status = start(tmp_path, source, actors)
     assert_materialized(tmp_path, source, status)
-    assert status["model_calls"] == 2
+    assert status["model_calls"] == 3
     assert (tmp_path / "facts" / (source.fact_id + ".md")).read_bytes() == original
-    assert [label for label, _ in actors.calls] == ["fact_bridge_worker", "closed_book_verifier"]
+    assert [label for label, _ in actors.calls] == ["fact_bridge_worker", "statement_sanity", "closed_book_verifier"]
     assert start(tmp_path, source, Actors()) == status
     assert bridge.resume_bridge(tmp_path, status["bridge_id"]) == status
 
 
-@pytest.mark.parametrize("boundary", ["worker_call", "verifier_call", "worker_completed",
+@pytest.mark.parametrize("boundary", ["worker_call", "sanity_call", "verifier_call", "worker_completed",
     "verification_completed", "fact_admitted", "claim_registered", "fact_bound"])
 def test_resume_never_repeats_confirmed_calls_or_admission(tmp_path, source, boundary):
     actors = Actors()
 
     def interrupt(event, details):
-        point = ("worker_call" if details.get("label") == "fact_bridge_worker" else "verifier_call") if event == "call_completed" else event
+        point = {"fact_bridge_worker": "worker_call", "statement_sanity": "sanity_call", "closed_book_verifier": "verifier_call"}.get(details.get("label")) if event == "call_completed" else event
         if point == boundary:
             raise Crash()
 
@@ -114,7 +117,7 @@ def test_resume_never_repeats_confirmed_calls_or_admission(tmp_path, source, bou
     confirmed = {p: p.read_bytes() for p in directory.glob("calls/*/*.json")}
     status = bridge.resume_bridge(tmp_path, directory.name, invoker=actors)
     assert_materialized(tmp_path, source, status)
-    assert len(actors.calls) == status["model_calls"] == 2
+    assert len(actors.calls) == status["model_calls"] == 3
     assert all(p.read_bytes() == data for p, data in confirmed.items())
     assert len(list((tmp_path / "facts").glob("*.md"))) == 2
     receipt = (directory / "admission.json").read_bytes()
@@ -145,10 +148,10 @@ def test_verifier_rejection_retains_evidence_without_fact_or_retry(tmp_path, sou
     before = (tmp_path / "proof_graph.json").read_bytes()
     status = start(tmp_path, source, actors)
     assert status["status"] == "REJECTED"
-    assert status["model_calls"] == 2
+    assert status["model_calls"] == 3
     assert (tmp_path / "proof_graph.json").read_bytes() == before
     assert start(tmp_path, source, actors) == status
-    assert len(actors.calls) == 2
+    assert len(actors.calls) == 3
 
 
 @pytest.mark.parametrize("role", ["fact_bridge_worker", "closed_book_verifier"])
@@ -221,7 +224,7 @@ def test_partially_admitted_bridge_cannot_resurrect_its_revoked_fact(tmp_path, s
     directory = next((tmp_path / "fact_bridges").iterdir())
     result = bridge.resume_bridge(tmp_path, directory.name, invoker=actors)
     assert result["status"] == "ERROR" and "revoked" in result["reason"]
-    assert len(actors.calls) == 2
+    assert len(actors.calls) == 3
     assert [f.fact_id for f in graph.list_facts()] == [source.fact_id]
 
 
@@ -318,6 +321,8 @@ def test_unproved_condition_survives_worker_verifier_and_materialization(tmp_pat
         def invoke(self, *, prompt, schema, label):
             seen.append(prompt)
             assert "If H(n) holds" in prompt
+            if label == "statement_sanity":
+                return no_counterexample()
             if label == "fact_bridge_worker":
                 return {"status": "PROOF", "proof": "Under H(n), apply the source with f=g as defined.", "reason": "H stays conditional."}
             return {"accepted": True, "external_authority_dependency": False, "violation_type": "NONE", "reason": "Condition retained."}
@@ -326,7 +331,7 @@ def test_unproved_condition_survives_worker_verifier_and_materialization(tmp_pat
         target_goal=goal, correspondence="Identify f with g under the identical definitions; retain H(n).", invoker=ConditionalActors())
     fact = ContinuousNetwork(tmp_path).visible_fact(result["fact_id"], "")
     assert "If H(n) holds" in fact.statement and fact.predecessors == (conditional.fact_id,)
-    assert len(seen) == 2
+    assert len(seen) == 3
 
 
 def test_real_runtime_fingerprint_failure_can_resume_without_repeating_worker(tmp_path, source, monkeypatch):
@@ -350,4 +355,4 @@ def test_real_runtime_fingerprint_failure_can_resume_without_repeating_worker(tm
     monkeypatch.setattr(bridge, "real_runtime", lambda image: dict(runtime))
     result = bridge.resume_bridge(tmp_path, directory.name)
     assert_materialized(tmp_path, source, result)
-    assert result["model_calls"] == len(actors.calls) == 2
+    assert result["model_calls"] == len(actors.calls) == 3

@@ -23,6 +23,10 @@ class FactGraph:
         self.revocation_log = root / "revocation_log.jsonl"
 
     def add_fact(self, fact: Fact) -> Fact:
+        # A replayed verifier result must not resurrect an invalidated identity.
+        # The preserved revoked file is authoritative even if an active copy exists.
+        if (self.revoked_dir / f"{fact.fact_id}.md").is_file():
+            raise ValueError(f"fact_revoked: {fact.fact_id}")
         for predecessor_id in fact.predecessors:
             if (self.revoked_dir / f"{predecessor_id}.md").is_file():
                 raise ValueError(f"predecessor_revoked: {predecessor_id}")
@@ -56,6 +60,9 @@ class FactGraph:
 
     def get_fact(self, fact_id: str) -> Fact:
         path = self._path(fact_id)
+        if (self.facts_dir != self.revoked_dir and path.is_file()
+                and (self.revoked_dir / f"{fact_id}.md").is_file()):
+            raise ValueError(f"fact_revoked: active copy conflicts with tombstone: {fact_id}")
         if not path.is_file():
             raise KeyError(f"unknown fact: {fact_id}")
         raw = path.read_text(encoding="utf-8")

@@ -2,7 +2,7 @@
 
 Source Facts remain conditional interfaces in a dedicated bridge packet. Only
 the verified target Fact can subsequently enter an ordinary exact-scope packet.
-One immutable request gets at most one Worker and one fresh Verifier invocation.
+One immutable request gets one Worker, one statement sanity, and one proof Verifier.
 """
 import argparse
 from dataclasses import asdict, replace
@@ -157,7 +157,7 @@ def _bridge_fact_locked(root, *, source_fact_id, target_context, target_goal, co
             {"backend": "injected"} if invoker is not None else real_runtime(image))
         write_json(directory / "request.json", {"bridge_id": bridge_id, "packet": packet,
             "run_id": uuid4().hex, "code_digest": _code_digest(), "runtime": runtime,
-            "budget": {"max_model_calls": 2}, "created_at": time.time()})
+            "budget": {"max_model_calls": 3}, "created_at": time.time()})
     if expected_runtime is not None:
         frozen = read_json(directory / "request.json")
         if frozen['runtime'] != expected_runtime or frozen['code_digest'] != _code_digest():
@@ -280,6 +280,8 @@ class _Bridge:
                     _write_once(self.directory / "admission.json", receipt)
                     self.save(status="COMPLETED", reason=None, **receipt)
         except RunStopped as error:
+            if error.reason.startswith("TRUTH_EVIDENCE_CORRUPTION"):
+                raise
             self.save(status=error.reason, reason="No additional call is authorized.")
         except subprocess.TimeoutExpired as error:
             self.save(status="TIMEOUT", reason=str(error))
@@ -317,7 +319,10 @@ class _BridgeCall:
 
 class _BridgeVerifier(ClosedBookVerifier):
     def __init__(self, run):
-        super().__init__(_BridgeCall(run, "bridge-verifier"))
+        from .truth_gate import StatementSanityGate
+        super().__init__(_BridgeCall(run, "bridge-verifier"),
+            statement_gate=StatementSanityGate(_BridgeCall(run, "bridge-statement-sanity"),
+                                               run.directory, run.packet["target"]["context"]))
         self.run = run
 
     def verify(self, problem, candidate, predecessors):

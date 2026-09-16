@@ -1,4 +1,5 @@
 """A verifier PASS for another scoped Claim must not masquerade as target success."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 
@@ -17,6 +18,8 @@ class ScopeResearch:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "Addition is established under the declared context."}
@@ -58,7 +61,7 @@ def test_scoped_fact_feedback_identifies_actual_admission_and_preserves_target_i
                      for p in (tmp_path / folder).rglob("*") if p.is_file()}
         paused = resume_run(tmp_path, invoker=model, on_event=observe)
         assert all(p.read_bytes() == data for p, data in confirmed.items())
-        assert model.calls == ["continuous_worker", "closed_book_verifier"]
+        assert model.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
     else:
         paused = start_run(tmp_path, problem_id="scope", statement="1 + 1 = 2", invoker=model, on_event=observe)
     assert paused["target_state"] == "OPEN"
@@ -82,5 +85,5 @@ def test_scoped_fact_feedback_identifies_actual_admission_and_preserves_target_i
     assert original.read_bytes() == verified_bytes
     assert len(export_proof(tmp_path)["facts"]) == 1
     assert export_proof(tmp_path)["facts"][0]["fact_id"] != other_fact
-    assert model.calls == ["continuous_worker", "closed_book_verifier", "continuous_selector",
-                           "continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier", "continuous_selector",
+                           "continuous_worker", "statement_sanity", "closed_book_verifier"]

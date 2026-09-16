@@ -1,4 +1,5 @@
 """Accepted evidence becomes optional local work through the public CRPN loop."""
+from truth_gate_fixtures import no_counterexample
 import json
 import pytest
 
@@ -19,6 +20,8 @@ class EvidenceResearch:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == 'closed_book_verifier':
             return {'accepted': True, 'external_authority_dependency': False,
                     'violation_type': 'NONE', 'reason': 'The exact elementary conditional interface is valid.'}
@@ -87,6 +90,7 @@ def test_fact_to_support_child_research_and_compose_through_public_entry(tmp_pat
     assert [p['operation'] for p in model.packets]==['ADVANCE','ADVANCE','ADVANCE','COMPOSE']
     assert model.calls.count('continuous_worker')==4
     assert model.calls.count('closed_book_verifier')==4
+    assert model.calls.count('statement_sanity')==4
     assert model.calls.count('recurrence_probe')==1
     net=ContinuousNetwork(tmp_path);support=next(iter(net.data['supports'].values()))
     graph=FactGraph(tmp_path)
@@ -107,7 +111,7 @@ def test_visible_new_fact_does_not_force_use_support_or_extra_model_call(tmp_pat
     result=start_run(tmp_path,problem_id='optional',statement='1 + 1 + 1 = 3',invoker=model,on_event=observe)
     assert result['status']=='PAUSED' and result['target_state']=='OPEN'
     assert model.source_id is not None
-    assert model.calls==['continuous_worker','closed_book_verifier','continuous_selector','continuous_worker']
+    assert model.calls==['continuous_worker','statement_sanity','closed_book_verifier','continuous_selector','continuous_worker']
     assert not ContinuousNetwork(tmp_path).data['supports']
     assert len(list((tmp_path/'facts').glob('*.md')))==1
     assert read_json(tmp_path/'continuous_run/visits/00000001/worker_result.json')['candidate'] is None

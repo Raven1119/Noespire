@@ -230,13 +230,19 @@ class ClosedBookVerifier:
     schema-compatible and metrics can count violation types.
     """
 
-    def __init__(self, codex) -> None:
+    def __init__(self, codex, *, statement_gate=None) -> None:
         self.codex = codex
+        self.statement_gate = statement_gate
         self.last_prompt: Optional[str] = None
         self.last_response: Optional[Dict[str, Any]] = None
 
     def verify(self, problem, candidate, predecessors) -> VerificationResult:
         from dataclasses import asdict
+
+        if self.statement_gate is not None:
+            blocked = self.statement_gate.check(candidate, predecessors)
+            if blocked is not None:
+                return blocked
 
         prompt = f"""You are an independent fresh Codex verifier for an informal Research Fact Graph.
 The complete Problem is background context only. The candidate may be an intermediate lemma.

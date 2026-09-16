@@ -1,4 +1,5 @@
 """External evaluation pauses preserve the formal continuous research lifecycle."""
+from truth_gate_fixtures import no_counterexample
 import json
 import pytest
 
@@ -12,6 +13,8 @@ class Direct:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "continuous_worker":
             return {"continuation": "Addition is complete.", "next_work": "",
                     "candidate": {"kind": "FACT", "goal": "1 + 1 = 2", "context": "",
@@ -35,7 +38,7 @@ def test_first_return_pause_preserves_call_and_resume_verifies_without_repeating
     second = resume_run(workspace, invoker=model,
                         on_event=Observation(case, deadline=1200, restart_probe=False, clock=lambda: 20))
     assert second["status"] == "SOLVED"
-    assert model.calls == ["continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
     assert all((workspace / "continuous_run/calls" / key / "request.json").read_bytes() == value
                for key, value in requests.items())
     assert (case / "recovery_checkpoint.json").exists()
@@ -119,13 +122,13 @@ def test_case_resume_keeps_deadline_and_completed_worker_and_audits_new_fact(tmp
     assert evaluation.read(case / "start.result.json")["status"]["pause_reason"] == "evaluation recovery checkpoint"
     evaluation.run_case(tmp_path, "addition", "resume")
     assert (case / "observation.json").read_bytes() == before
-    assert model.calls == ["continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
     result = evaluation.read(case / "result.json")
     assert result["solved"] is True
     assert result["substantive_facts"] == 1
     assert result["recovery"]["confirmed_results_preserved"] is True
     evaluation.run_case(tmp_path, "addition", "resume")
-    assert model.calls == ["continuous_worker", "closed_book_verifier"]
+    assert model.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
 
 
 def test_host_retains_failed_sample_without_retry_or_extra_resume(tmp_path, monkeypatch):
@@ -184,7 +187,7 @@ evaluation.run_case(root, "addition", phase)
 ''', encoding="utf-8")
     evaluation.write_once(tmp_path / "inputs/addition/problem.json",
                           {"problem_id": "addition", "statement": "1 + 1 = 2", "context": ""})
-    env = {**os.environ, "PYTHONPATH": os.pathsep.join((str(evaluation.CHECKOUT), str(evaluation.CHECKOUT / "src"))),
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join((str(evaluation.CHECKOUT), str(evaluation.CHECKOUT / "src"), str(Path(__file__).resolve().parent))),
            "PYTHONUTF8": "1"}
     for phase in ("start", "resume"):
         subprocess.run([sys.executable, str(script), str(tmp_path), phase, str(Path(__file__).resolve())],
@@ -192,5 +195,5 @@ evaluation.run_case(root, "addition", phase)
     case = tmp_path / "cases/addition"
     assert evaluation.read(case / "start.result.json")["pid"] != evaluation.read(case / "resume.result.json")["pid"]
     calls = [json.loads(line) for line in (tmp_path / "actual_calls.jsonl").read_text().splitlines()]
-    assert [r["label"] for r in calls] == ["continuous_worker", "closed_book_verifier"]
+    assert [r["label"] for r in calls] == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
     assert evaluation.read(case / "result.json")["solved"] is True

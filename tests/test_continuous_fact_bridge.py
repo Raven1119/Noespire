@@ -1,4 +1,5 @@
 """One autonomous materialization opportunity, with no requirement Worker."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 from dataclasses import asdict
 import json
@@ -52,6 +53,8 @@ class Actors:
         assert 'UNRELATED_GLOBAL_SENTINEL' not in prompt
         if self.failure and label == self.failure[0]:
             raise self.failure[1]
+        if label == 'statement_sanity':
+            return no_counterexample()
         if label == 'closed_book_verifier':
             assert 'BRIDGE_INTERFACE:' in prompt
             return {'accepted':self.accepted, 'external_authority_dependency':False,
@@ -104,11 +107,11 @@ def test_automatic_request_bridge_admission_and_ordinary_materialization(tmp_pat
     actors = Actors()
     result = materialize_once(tmp_path, invoker=actors)
     assert_success(tmp_path, source, result)
-    assert actors.calls == ['continuous_selector','continuous_selector_bridge','fact_bridge_worker','closed_book_verifier']
-    assert result['selector_calls'] == 2 and result['bridge']['model_calls'] == 2
+    assert actors.calls == ['continuous_selector','continuous_selector_bridge','fact_bridge_worker','statement_sanity', 'closed_book_verifier']
+    assert result['selector_calls'] == 2 and result['bridge']['model_calls'] == 3
     assert (tmp_path/'continuous_run/state.json').read_bytes() == state
     assert materialize_once(tmp_path, invoker=actors) == result
-    assert len(actors.calls) == 4
+    assert len(actors.calls) == 5
 
 
 @pytest.mark.parametrize('inspect,wants_bridge', [(False,False), (True,False)])
@@ -139,13 +142,13 @@ def test_invalid_request_never_reaches_bridge(tmp_path, case, mutate):
 
 
 @pytest.mark.parametrize('boundary', ['discovery_call','inspection_saved','selector_call','bridge_request_saved',
-    'worker_call','verifier_call','verification_completed','fact_admitted','claim_registered','fact_bound','materialized'])
+    'worker_call','sanity_call','verifier_call','verification_completed','fact_admitted','claim_registered','fact_bound','materialized'])
 def test_recovery_never_repeats_confirmed_calls_or_admission(tmp_path, case, boundary):
     _, source = case
     actors = Actors()
     def observe(event, details):
         point = {'continuous_selector':'discovery_call','continuous_selector_bridge':'selector_call','fact_bridge_worker':'worker_call',
-                 'closed_book_verifier':'verifier_call'}.get(details.get('label')) if event == 'call_completed' else event
+                 'statement_sanity':'sanity_call','closed_book_verifier':'verifier_call'}.get(details.get('label')) if event == 'call_completed' else event
         if point == boundary:
             raise Crash()
     with pytest.raises(Crash):
@@ -153,12 +156,12 @@ def test_recovery_never_repeats_confirmed_calls_or_admission(tmp_path, case, bou
     confirmed = {p:p.read_bytes() for p in tmp_path.rglob('calls/*/*.json')}
     result = materialize_once(tmp_path, invoker=actors)
     assert_success(tmp_path, source, result)
-    assert len(actors.calls) == 4
+    assert len(actors.calls) == 5
     assert all(p.read_bytes() == data for p,data in confirmed.items())
     assert len(list((tmp_path/'facts').glob('*.md'))) == 2
 
 
-@pytest.mark.parametrize('role', ['continuous_selector_bridge','fact_bridge_worker','closed_book_verifier'])
+@pytest.mark.parametrize('role', ['continuous_selector_bridge','fact_bridge_worker','statement_sanity','closed_book_verifier'])
 @pytest.mark.parametrize('failure', [RuntimeError('system'),subprocess.TimeoutExpired('codex',600),Crash()])
 def test_failures_and_unconfirmed_calls_do_not_retry_or_admit(tmp_path, case, role, failure):
     actors = Actors(failure=(role,failure))
@@ -190,7 +193,7 @@ def test_revocation_after_completion_never_rematerializes_cached_fact(tmp_path, 
     status = read_materialization(tmp_path)
     assert not status['usable']
     assert not materialize_once(tmp_path, invoker=actors)['usable']
-    assert len(actors.calls) == 4
+    assert len(actors.calls) == 5
 
 
 def test_revoked_inspected_source_fails_closed_before_bridge(tmp_path, case):
@@ -275,7 +278,7 @@ def test_materialization_failure_retains_bridge_receipt(tmp_path,case,monkeypatc
     result = materialize_once(tmp_path,invoker=actors)
     assert result['status']=='MATERIALIZATION_FAILED'
     assert result['bridge']['status']=='COMPLETED' and result['bridge']['usable']
-    assert len(actors.calls)==4
+    assert len(actors.calls)==5
 
 def test_materialization_preserves_existing_exact_scope_facts(tmp_path,case):
     network,source = case
@@ -336,4 +339,4 @@ def test_later_requirement_discharge_does_not_revoke_valid_auxiliary(tmp_path,ca
     assert network.truth(network.target_id)=='DISCHARGED'
     assert read_materialization(tmp_path)['usable']
     assert materialize_once(tmp_path,invoker=actors)['usable']
-    assert len(actors.calls)==4
+    assert len(actors.calls)==5

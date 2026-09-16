@@ -1,4 +1,5 @@
 """Ordinary public research survives failures without acquiring truth authority."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 import subprocess
@@ -36,6 +37,8 @@ class Backend:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "Explicit arithmetic."}

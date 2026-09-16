@@ -137,7 +137,9 @@ def prepare_origin(network, packet, candidate):
 class _TransportVerifier(ClosedBookVerifier):
     def __init__(self, run, directory, packet):
         self.run, self.directory, self.packet = run,directory,packet
-        super().__init__(self)
+        from .truth_gate import StatementSanityGate
+        super().__init__(self, statement_gate=StatementSanityGate(
+            run.invoker("recurrence-statement-sanity"), directory, packet["ancestor"]["context"]))
 
     def invoke(self, *, prompt, schema, label):
         extended = {**schema,"properties":{**schema["properties"],**{k:{"type":"boolean"} for k in _CHECKS}},

@@ -456,9 +456,12 @@ class _Research:
             origin = prepare_origin(network, packet, candidate)
             if origin:
                 _write_once(origin_path, origin)
+        from .truth_gate import StatementSanityGate
         result = submit_candidate(graph=FactGraph(self.root), problem_id=network.problem_id,
             problem=network.claim(network.target_id).statement, author="continuous-worker",
-            candidate=fact_candidate, verifier=_StatementVerifier(self.invoker("verifier")))
+            candidate=fact_candidate, verifier=_StatementVerifier(self.invoker("verifier"),
+                statement_gate=StatementSanityGate(self.invoker("statement-sanity"),
+                                                   self.step_dir, candidate["context"])))
         if result.fact:
             self.event("fact_admitted", fact_id=result.fact.fact_id)
             admission = network.accept_verified(descriptor, result.fact.fact_id)
@@ -650,6 +653,7 @@ class _LocalInvoker:
         self.run, self.role = run, role
 
     def invoke(self, *, prompt, schema, label):
+        self.run.current_role = self.role  # Actual call owns interruption/retry identity.
         family = "selector" if (self.role.startswith("selector") or self.role == "recurrence-probe") else "worker" if self.role in ("worker", "recurrence-worker") else "verifier"
         try:
             _, measurement = bounded_packet({"prompt": prompt, "schema": schema},
@@ -711,8 +715,12 @@ class _ObserverFailure(BaseException):
 class _StatementVerifier(ClosedBookVerifier):
     def verify(self, problem, candidate, predecessors):
         # Accepted statements are usable interfaces. Ancestor proofs are not recursively exposed.
-        return super().verify(problem, candidate,
-            [replace(f, proof="Accepted proof omitted from this local interface.") for f in predecessors])
+        try:
+            return super().verify(problem, candidate,
+                [replace(f, proof="Accepted proof omitted from this local interface.") for f in predecessors])
+        except subprocess.TimeoutExpired:
+            # A finished local service without a proof verdict is not global failure.
+            return VerificationResult(False, "[PROOF_VERIFICATION:TIMEOUT] No completed proof verdict; candidate not admitted.")
 
 
 def main(argv=None):

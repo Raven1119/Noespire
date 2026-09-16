@@ -1,4 +1,5 @@
 """Explicit public research handovers are durable notes, never truth or service."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 import subprocess
@@ -28,6 +29,8 @@ class DeliveringBackend:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "The displayed addition is valid."}
@@ -137,7 +140,7 @@ def test_completion_and_resume_do_not_repeat_worker_or_admission(tmp_path, bound
                            invoker=backend, on_event=observe)
     done = research.resume_run(tmp_path, invoker=backend)
     assert done["status"] == "SOLVED"
-    assert backend.calls == ["continuous_worker", "closed_book_verifier"]
+    assert backend.calls == ["continuous_worker", "statement_sanity", "closed_book_verifier"]
     assert len(list((tmp_path / "facts").glob("*.md"))) == 1
     assert len(list((tmp_path / "continuous_run/research_deliveries").glob("*/*.json"))) == 1
 

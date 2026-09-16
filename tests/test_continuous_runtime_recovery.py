@@ -1,4 +1,5 @@
 """Runtime preflight failures preserve a resumable, already-accounted visit."""
+from truth_gate_fixtures import no_counterexample
 from selector_fixtures import object_choice
 import json
 import subprocess
@@ -18,6 +19,8 @@ class LocalBackend:
 
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
+        if label == "statement_sanity":
+            return no_counterexample()
         if label == "continuous_selector":
             packet = json.loads(prompt.split("\nPACKET:\n")[1])
             return {**object_choice(), "study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",
@@ -87,7 +90,7 @@ def test_resume_preflight_failure_preserves_accounting_and_completed_work(
     assert before["schedule"]
     assert before["retries"] == {"verifier": 1}
     assert before["retry_role"] == "verifier"
-    assert before["model_calls"] == 5
+    assert before["model_calls"] == 6
     calls_before = list(backend.calls)
     durable_files = {
         path.relative_to(tmp_path): path.read_bytes()
