@@ -109,8 +109,8 @@ Final acceptance:
   and absence of old research/application packages all passed.
 - Final historical replay: `workspaces/migration_replay_03/aggregate.json`, all checks
   passed for all three sources. Counts above remain unchanged; zero model calls.
-- Implementation SHA: the commit containing this audit (`git rev-parse HEAD`), recorded
-  explicitly in the delivery response. Work is on `feature/crpn-danus-substrate`.
+- Implementation SHA: `adce52605da500133f0d6538261ea5ad024098fb`; the subsequent
+  documentation/attributes commit is the final delivery HEAD. Work is on `feature/crpn-danus-substrate`.
 
 The full acceptance command (Docker probe opt-in) was:
 

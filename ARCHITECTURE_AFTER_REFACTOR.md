@@ -4,8 +4,8 @@
 
 Noespire baseline: `0b68c6c138364d12b4adbd6b5aa335c013171f9f`.
 DANUS baseline: `frenzymath/Danus@6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`.
-Implementation SHA: the commit containing this document (`git rev-parse HEAD`);
-the delivery message records the exact SHA. No frozen tag is moved.
+Implementation SHA: `adce52605da500133f0d6538261ea5ad024098fb`.
+A following documentation/attributes commit records the final delivery HEAD. No frozen tag is moved.
 
 ```text
 CRPN CLI -> strategy transition -> DANUS DurableRounds -> isolated Codex

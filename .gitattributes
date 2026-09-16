@@ -1,2 +1,2 @@
-# Preserve the pinned upstream bytes, including executable LF scripts.
-vendor/danus/** -text
+# Preserve upstream bytes; recognize CRLF without hiding trailing spaces.
+vendor/danus/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
