@@ -1,3 +1,12 @@
+# Current entry after substrate migration
+
+The active code is now `crpn` + `substrate` + pinned vendored DANUS.
+Read [Architecture](../ARCHITECTURE_AFTER_REFACTOR.md) and
+[Migration audit](../MIGRATION_AUDIT.md). The remainder of this document records
+the pre-migration implementation at 0b68c6c, not active entry points.
+
+---
+
 # Current research core
 
 The optional [continuous research entry](CONTINUOUS_RESEARCH.md) implements the

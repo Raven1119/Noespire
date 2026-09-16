@@ -1,0 +1,2 @@
+# Preserve the pinned upstream bytes, including executable LF scripts.
+vendor/danus/** -text

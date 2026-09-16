@@ -34,3 +34,6 @@ dynamic_run/
 /docs/n2*_report.md
 /docs/n2*_source_audit.md
 /docs/n2l_closed_book_fact_audit.md
+
+# Local Python package builds.
+/build/

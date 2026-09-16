@@ -1,0 +1,7 @@
+DANUS source: https://github.com/frenzymath/Danus
+Commit: 6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c
+License: Apache-2.0; see LICENSE and original source notices.
+Noespire adaptations (2026-09-16): durable rounds, isolated capabilities,
+transactional submission/revocation, lossless Fact framing and related tests.
+Original hashes: ../DANUS_UPSTREAM.json. Changes: ../DANUS_PATCHES.md.
+No implication of upstream endorsement or kernel verification.

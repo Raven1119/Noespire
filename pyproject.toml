@@ -1,23 +1,33 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "noespire"
-version = "0.0.1"
-requires-python = ">=3.9"
-dependencies = [
-    "fastapi",
-    "uvicorn",
-    "httpx",
-]
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4"]
+license-files = ["vendor/danus/LICENSE", "vendor/danus/NOTICE"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+observability = ["fastapi", "uvicorn"]
+gateway = ["mcp"]
 
 [project.scripts]
-noespire-research = "research.dynamic_run:main"
-noespire-continuous = "research.continuous_research:main"
+noespire-crpn = "crpn.cli:main"
+noespire-continuous = "crpn.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "vendor/danus"]
+include = ["crpn*", "substrate*", "danus*"]
+exclude = ["*.tests*"]
+
+[tool.setuptools.package-data]
+"danus.core" = ["*.json"]
+"danus.execution" = ["*.cjs"]
+"danus.observability" = ["static/*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "vendor/danus"]
+testpaths = ["tests/crpn"]
