@@ -30,7 +30,7 @@ class DeliveringBackend:
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "The displayed addition is valid."}

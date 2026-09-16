@@ -130,7 +130,7 @@ def test_close_can_shrink_or_leave_gap_without_extra_service(tmp_path,candidate)
         def invoke(self,*,prompt,schema,label):
             calls.append(label)
             if label == "statement_sanity":
-                return no_counterexample()
+                return no_counterexample(prompt)
             if label=='closed_book_verifier':
                 assert '1 + 1 = 2' in prompt
                 return {'accepted':True,'external_authority_dependency':False,'violation_type':'NONE','reason':'Elementary arithmetic.'}

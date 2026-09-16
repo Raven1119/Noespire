@@ -1,5 +1,8 @@
 # CRPN statement-first truth gate
 
+Historical V2 contract. The current clause-grounded coverage and fail-closed
+uncertainty policy is documented in [statement falsification](CRPN_STATEMENT_FALSIFICATION.md).
+
 CRPN now places a fresh closed-book statement sanity call before each Fact-producing proof verification. The gate receives only the mechanically prepared full statement, ambient scope, and exact accepted predecessor statements. Candidate proof, research notes, old acceptance and externally discovered counterexamples are excluded. Existing proof-verifier prompt/schema and domain-specific bridge/representation checks remain intact.
 
 The first call attempts concrete falsification, including relevant boundaries, degeneracy, strictness, concentrated parameters, domains and quantifiers. A structured concrete counterexample denies the candidate and skips proof verification. Uncertainty may proceed to the separate proof verifier. Neither lack of a counterexample nor sanity rejection creates truth or a Refutation. Acceptance requires both completed sanity evidence without a concrete contradiction and proof acceptance.

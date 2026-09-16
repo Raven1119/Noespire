@@ -14,7 +14,7 @@ class Direct:
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "continuous_worker":
             return {"continuation": "Addition is complete.", "next_work": "",
                     "candidate": {"kind": "FACT", "goal": "1 + 1 = 2", "context": "",

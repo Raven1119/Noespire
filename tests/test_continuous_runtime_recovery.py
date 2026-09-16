@@ -20,7 +20,7 @@ class LocalBackend:
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "continuous_selector":
             packet = json.loads(prompt.split("\nPACKET:\n")[1])
             return {**object_choice(), "study_id": packet["cards"][0]["study_id"], "operation": "ADVANCE",

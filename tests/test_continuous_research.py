@@ -25,7 +25,7 @@ class DirectResearch:
     def invoke(self, *, prompt, schema, label):
         self.calls.append(label)
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "continuous_selector":
             return select_local(prompt)
         if label == "continuous_worker":
@@ -170,7 +170,7 @@ class ConnectedResearch:
     def invoke(self, *, prompt, schema, label):
         if label == "statement_sanity":
             self.calls.append(label)
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "continuous_selector":
             return select_local(prompt)
         if label == "closed_book_verifier":

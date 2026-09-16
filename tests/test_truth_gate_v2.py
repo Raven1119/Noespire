@@ -15,14 +15,29 @@ from research.pipeline import submit_candidate
 from research.run_invocations import RecordedInvoker, RunStopped
 from research.run_storage import read_json
 from research.truth_gate import StatementSanityGate
+from truth_gate_fixtures import no_counterexample
 
 
 def sanity(status="NO_CONCRETE_CONTRADICTION"):
-    return {"status": status, "checks": [{"case": "n=0", "reason": "Check the stated nonnegative domain."}],
-            "counterexample": {"instance": "n=0", "assumptions_satisfied": "0 is nonnegative.",
-                 "violated_clause": "n>0", "contradiction": "0>0 is false."}
-                if status == "CONCRETE_COUNTEREXAMPLE" else None,
-            "reason": "A concrete boundary instance." if status == "CONCRETE_COUNTEREXAMPLE" else "No concrete contradiction established."}
+    def response(prompt):
+        result = no_counterexample(prompt)
+        result["status"] = status
+        if status == "CONCRETE_COUNTEREXAMPLE":
+            mapping = json.loads(prompt.split("ATTACK_MAP:\n", 1)[1].split("\nSTATEMENT_INTERFACE:\n", 1)[0])
+            source = next(unit for unit in mapping["source_units"] if unit["source"] == "statement")
+            quote = "nonnegative" if "nonnegative" in source["text"] else "n>=0"
+            assert quote in source["text"]
+            result["assumptions"].append({"id": "domain", "source_id": source["id"], "quote": quote})
+            result["clauses"][0]["assumption_ids"].append("domain")
+            attack = result["attacks"][0]
+            attack.update(status=status, substitutions=[{"symbol": "n", "value": "0"}],
+                instantiated_conclusion="0>0", evaluation="The legal boundary n=0 contradicts strict positivity.",
+                arithmetic={"left": "0", "relation": ">", "right": "0"})
+            attack["assumption_checks"].append({"assumption_id": "domain", "instantiated": "0>=0",
+                "justification": "The integer zero is nonnegative.", "status": "SATISFIED",
+                "arithmetic": {"left": "0", "relation": ">=", "right": "0"}})
+        return result
+    return response
 
 
 class Backend:
@@ -35,7 +50,7 @@ class Backend:
         if label == "statement_sanity":
             if self.error:
                 raise self.error
-            return self.response
+            return self.response(prompt) if callable(self.response) else self.response
         assert label == "closed_book_verifier"
         return {"accepted": self.proof_accept, "external_authority_dependency": False,
                 "violation_type": "NONE", "reason": "Independent proof examination."}
@@ -57,14 +72,17 @@ def test_concrete_counterexample_vetoes_even_a_proof_that_would_pass(tmp_path):
     assert read_json(tmp_path/"statement_sanity.json")["status"] == "CONCRETE_COUNTEREXAMPLE"
 
 
-@pytest.mark.parametrize("status", ["NO_CONCRETE_CONTRADICTION", "UNCERTAIN"])
+@pytest.mark.parametrize("status", ["NO_CONCRETE_CONTRADICTION", "SANITY_INCONCLUSIVE"])
 @pytest.mark.parametrize("proof_accept", [True, False])
 def test_sanity_never_substitutes_for_independent_proof_verification(tmp_path, status, proof_accept):
     backend = Backend(sanity(status), proof_accept=proof_accept)
     candidate = CandidateFact("1+1=2", "Addition.", ())
     result = verifier(tmp_path, backend).verify("background", candidate, [])
-    assert result.accepted is proof_accept
-    assert [c[0] for c in backend.calls] == ["statement_sanity", "closed_book_verifier"]
+    allowed = status == "NO_CONCRETE_CONTRADICTION"
+    assert result.accepted is (proof_accept and allowed)
+    assert [c[0] for c in backend.calls] == (["statement_sanity", "closed_book_verifier"] if allowed else ["statement_sanity"])
+    if not allowed:
+        assert "SANITY_INCONCLUSIVE" in result.reason
 
 
 def test_only_exact_statement_scope_and_actual_predecessor_interfaces_are_exposed(tmp_path):
@@ -82,18 +100,23 @@ def test_only_exact_statement_scope_and_actual_predecessor_interfaces_are_expose
 
 
 @pytest.mark.parametrize("mutation", [
-    lambda r: r.update(status="PASS"), lambda r: r.update(checks=[]),
-    lambda r: r.update(counterexample={"instance": "n=0"}),
+    lambda r: r.update(status="PASS"), lambda r: r.update(clauses=[]),
+    lambda r: r.update(attacks=[]),
     lambda r: r.update(reason=""), lambda r: r.update(accepted=True),
     lambda r: r.update(status="CONCRETE_COUNTEREXAMPLE"),
-    lambda r: r.update(checks=[{"case": "", "reason": ""}]),
+    lambda r: r["clauses"][0].update(assertion=""),
 ])
 def test_malformed_truth_evidence_fails_closed(tmp_path, mutation):
-    response = sanity(); mutation(response)
+    def response(prompt):
+        result = no_counterexample(prompt)
+        mutation(result)
+        return result
     backend = Backend(response)
     result = verifier(tmp_path, backend).verify("", CandidateFact("P", "proof", ()), [])
-    assert not result.accepted and "INVALID" in result.reason
+    assert not result.accepted and "SANITY_INCONCLUSIVE" in result.reason
     assert len(backend.calls) == 1
+    receipt = read_json(tmp_path/"statement_sanity.json")
+    assert receipt["diagnostics"] and receipt["status"] == "SANITY_INCONCLUSIVE"
 
 
 def test_sanity_timeout_is_not_falsity_or_admission(tmp_path):
@@ -237,7 +260,7 @@ def test_frozen_mathematical_panel_uses_only_statement_interfaces(tmp_path):
         assert {f["fact_id"] for f in packet["accepted_predecessors"]}==set(c.predecessors)
 
 
-@pytest.mark.parametrize("name", ["statement_sanity_input.json", "statement_sanity.json"])
+@pytest.mark.parametrize("name", ["statement_sanity_input.json", "statement_attack_map.json", "statement_sanity.json"])
 def test_torn_sanity_evidence_is_recovery_corruption(tmp_path,name):
     b=Backend(); gate=StatementSanityGate(b,tmp_path,"")
     c=CandidateFact("1+1=2","Addition",())
@@ -245,3 +268,23 @@ def test_torn_sanity_evidence_is_recovery_corruption(tmp_path,name):
     (tmp_path/name).write_text('{"truncated":',encoding="utf8")
     with pytest.raises(RunStopped) as stopped: gate.check(c,[])
     assert stopped.value.reason.startswith("TRUTH_EVIDENCE_CORRUPTION")
+
+
+def test_existential_normalized_weights_do_not_manufacture_assumptions(tmp_path):
+    statement = "There exist nonnegative a,b with a+b=1 (normalized weights)."
+    def response(prompt):
+        result = no_counterexample(prompt)
+        assert result["assumptions"] == []
+        attack = result["attacks"][0]
+        attack.update(substitutions=[{"symbol": "a", "value": "1"}, {"symbol": "b", "value": "0"}],
+            instantiated_conclusion="1 and 0 are nonnegative, and 1+0=1.",
+            evaluation="The explicit witness satisfies positivity and normalization; neither is an assumed premise.",
+            arithmetic={"left": "1+0", "relation": "=", "right": "1"})
+        return result
+    b = Backend(response)
+    assert StatementSanityGate(b,tmp_path,"").check(CandidateFact(statement,"A separate witness proof.",()),[]) is None
+    receipt = read_json(tmp_path/"statement_sanity.json")
+    assert receipt["status"] == "NO_CONCRETE_CONTRADICTION"
+    assert receipt["response"]["assumptions"] == []
+    assert receipt["response"]["attacks"][0]["assumption_checks"] == []
+    assert receipt["arithmetic_confirmations"][0]["holds"]

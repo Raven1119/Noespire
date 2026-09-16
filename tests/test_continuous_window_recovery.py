@@ -26,7 +26,7 @@ class WindowResearch:
     def invoke(self, *, prompt, schema, label):
         if label == "statement_sanity":
             self.sanity_calls.append(prompt)
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "closed_book_verifier":
             return {"accepted": True, "external_authority_dependency": False,
                     "violation_type": "NONE", "reason": "Addition is complete."}

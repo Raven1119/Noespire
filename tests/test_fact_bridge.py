@@ -34,7 +34,7 @@ class Actors:
         if self.failure:
             raise self.failure
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "fact_bridge_worker":
             packet = json.loads(prompt.split("\nPACKET:\n")[1])
             assert packet["accepted_facts"] == []
@@ -322,7 +322,7 @@ def test_unproved_condition_survives_worker_verifier_and_materialization(tmp_pat
             seen.append(prompt)
             assert "If H(n) holds" in prompt
             if label == "statement_sanity":
-                return no_counterexample()
+                return no_counterexample(prompt)
             if label == "fact_bridge_worker":
                 return {"status": "PROOF", "proof": "Under H(n), apply the source with f=g as defined.", "reason": "H stays conditional."}
             return {"accepted": True, "external_authority_dependency": False, "violation_type": "NONE", "reason": "Condition retained."}

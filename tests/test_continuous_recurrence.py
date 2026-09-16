@@ -35,7 +35,7 @@ class Model:
         if label == self.failure:
             raise subprocess.TimeoutExpired("codex",600)
         if label == "statement_sanity":
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == "continuous_worker":
             p = json.loads(prompt.split("PACKET:\n")[1])
             return {"continuation":"A representation may permit the same research.","next_work":"Inspect the reduction.",

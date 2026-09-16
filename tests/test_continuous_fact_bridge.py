@@ -54,7 +54,7 @@ class Actors:
         if self.failure and label == self.failure[0]:
             raise self.failure[1]
         if label == 'statement_sanity':
-            return no_counterexample()
+            return no_counterexample(prompt)
         if label == 'closed_book_verifier':
             assert 'BRIDGE_INTERFACE:' in prompt
             return {'accepted':self.accepted, 'external_authority_dependency':False,

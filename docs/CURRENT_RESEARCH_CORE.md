@@ -23,6 +23,10 @@ The [conditional recurrence extension](CONDITIONAL_RECURRENCE.md) can retain one
 unproved local helper behind a verified conditional transport. The alias remains
 inactive until the helper Fact and fresh verified activation establish it.
 
+The [clause-grounded statement falsification gate](CRPN_STATEMENT_FALSIFICATION.md)
+requires auditable statement-only attacks before each CRPN proof-verification
+path. Inadequate coverage is inconclusive, with no admission authority.
+
 ## Preserved v3 core
 
 The architecture is [Proof Core v3](Noespire_Proof_Core_v3.md): **Local Attention,
