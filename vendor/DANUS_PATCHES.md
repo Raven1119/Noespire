@@ -51,3 +51,18 @@ All 225 tracked upstream files remain present. Original hashes are in
 
 These are necessary substrate extensions, not a claim the pinned upstream already
 provided the hardened behavior. There is one live lifecycle and one FactGraph.
+
+## Live-cycle permission repair (2026-09-22)
+
+- Evidence: the first ordinary CRPN Worker could not call `gm_search`: Codex
+  required approval while the durable runner uses `approval_policy = "never"`.
+- `execution/isolation.py` now pins `enabled_tools` to the broker-bound role
+  allowlist and preapproves those exact tools with `tools.<name>.approval_mode`.
+  This includes internal memory access/persistence only where already authorized;
+  it adds no tool, external retrieval, Fact admission, or revocation capability.
+- Container read-only isolation, command-network denial, disabled web search,
+  empty verifier tool surface, model, effort, timeout and CRPN strategy are unchanged.
+- Regression covers the bound-tool list, approval modes, closed-book restrictions
+  and empty-role configuration. The pinned CLI accepts `approve` and rejects an
+  invalid approval-mode negative control. Fresh live evidence is kept outside Git.
+- Source fingerprint changes require a fresh migration; the failed run is retained.

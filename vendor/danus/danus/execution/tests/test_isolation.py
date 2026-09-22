@@ -204,3 +204,27 @@ allowlisted_memory:true,truth_tool_denied:true,sandbox_network_denied:true,sandb
     assert host_truth.read_text() == 'host authority remains private'
     assert json.loads((auth / 'auth.json').read_text()) == {'sentinel': 'not-a-real-credential'}
     assert memory.read('notes')[0]['record']['text'] == 'durable before timeout'
+
+
+def test_bound_tools_are_preapproved_without_expanding_capabilities(tmp_path):
+    runner = fake_runner(tmp_path)
+    tools = [CapabilityTool('gm_search', 'Read project memory', SCHEMA, lambda arg: []),
+             CapabilityTool('local_append', 'Save unfinished work', SCHEMA, lambda arg: {})]
+    broker = CapabilityBroker(tools)
+    try:
+        config = __import__('tomllib').loads(runner._configuration(broker))
+        bound = config['mcp_servers']['danus']
+        assert set(bound['enabled_tools']) == {'gm_search', 'local_append'}
+        assert bound['tools'] == {name: {'approval_mode': 'approve'} for name in bound['enabled_tools']}
+        assert config['approval_policy'] == 'never'
+        assert config['permissions']['danus_local']['network']['enabled'] is False
+        assert config['web_search'] == 'disabled'
+        assert 'fact_submit' not in bound['enabled_tools']
+        assert 'fact_revoke' not in bound['enabled_tools']
+    finally:
+        broker.server.server_close()
+    empty = CapabilityBroker([])
+    try:
+        assert 'mcp_servers' not in __import__('tomllib').loads(runner._configuration(empty))
+    finally:
+        empty.server.server_close()

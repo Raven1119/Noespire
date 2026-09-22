@@ -126,6 +126,10 @@ class DockerRoundRunner:
                 'command': 'node', 'args': ['/work/mcp_proxy.cjs'],
                 'env': {'DANUS_CAPABILITY_URL': f'http://host.docker.internal:{broker.port}/rpc',
                         'DANUS_CAPABILITY_TOKEN': broker.token},
+                # These are the host-bound capability allowlist, already authorized
+                # for this role. No interactive operator exists in durable rounds.
+                'enabled_tools': sorted(broker.tools),
+                'tools': {name: {'approval_mode': 'approve'} for name in sorted(broker.tools)},
                 'startup_timeout_sec': 30, 'tool_timeout_sec': 600}}
         return '\n'.join(k + '=' + _toml(v) for k, v in config.items()) + '\n'
 
