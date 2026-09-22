@@ -1,7 +1,6 @@
 """Disposable local views over live DANUS stores; no visibility journals."""
 import json
 from danus.core import GlobalMemory, LocalMemory
-from danus.gateway.roles import tools_for
 from substrate.store import lane, research_view
 from .model import make_claim
 
@@ -20,7 +19,7 @@ def selector_packet(network, exposure, inspections=()):
                  make_claim(network.problem_id, study["scope"], study["focus"]))
         cards.append({"study_id": study["study_id"], "claim": claim,
             "research": research_view(network.root, study["study_id"], claim["goal"], 2),
-            "fact_candidates": network.graph.search(claim["goal"], 4),
+            "fact_candidates": network.search(claim["goal"], 4),
             "ready_supports": [s for s in network.ready_supports() if s["conclusion_claim_id"] == claim["claim_id"]]})
     packet = {"channel": exposure["channel"], "pinned_study_id": exposure["forced_study_id"],
               "studies": [], "inspections": list(inspections)}
@@ -74,12 +73,12 @@ def capability_tools(network, wl, role):
         return CapabilityTool(name, description, schema, lambda arguments: function(**arguments))
     if role == "verifier" or role not in ("worker", "selector"):
         return []
-    # The DANUS role table remains the upper bound; closed-book removes literature search.
-    permissions = set(tools_for("worker" if role == "worker" else "main"))
+    # CRPN defines the existing closed-book capability boundary.
+    permissions = {"fact_search", "gm_search"}
     def limit(value):
         return checked_size(value, 64000)
     def fact_search(query, page=0):
-        hits = network.graph.search(query, 8 * (page + 1))
+        hits = network.search(query, 8 * (page + 1))
         return limit(hits[8 * page:8 * (page + 1)])
     def fact_inspect(fact_id):
         return limit(network.inspect_fact(fact_id))

@@ -14,7 +14,7 @@ the agent prompts, not code here. See the repo ARCHITECTURE.md.
 from __future__ import annotations
 
 from . import bm25, glossary
-from .factgraph import FactGraph, parse_frontmatter, serialize_fact, statement_of
+
 from .global_memory import GlobalMemory
 from .local_memory import DEFAULT_CHANNELS, LocalMemory
 from .schema import (
@@ -43,3 +43,11 @@ __all__ = [
     "bm25",
     "glossary",
 ]
+
+
+def __getattr__(name):
+    # Historical APIs load only when explicitly requested, never for basic memory/IO.
+    if name in ("FactGraph", "parse_frontmatter", "serialize_fact", "statement_of"):
+        from . import factgraph
+        return getattr(factgraph, name)
+    raise AttributeError(name)

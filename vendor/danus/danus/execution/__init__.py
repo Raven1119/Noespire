@@ -36,7 +36,7 @@ from .layout import (
     workers_dir,
 )
 from .loop import kickoff, main, run_round, write_status
-from .scaffold import atomic_write, do_new, spawn_loop, symlink
+
 
 __all__ = [
     # layout module + API
@@ -74,3 +74,10 @@ __all__ = [
     "atomic_write",
     "symlink",
 ]
+
+
+def __getattr__(name):
+    if name in ("atomic_write", "do_new", "spawn_loop", "symlink"):
+        from . import scaffold
+        return getattr(scaffold, name)
+    raise AttributeError(name)

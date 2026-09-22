@@ -62,10 +62,8 @@ def runtime(root, actors):
 
 def fixture_fact(net, goal, context="", predecessors=()):
     claim = net.register_claim(goal, context)
-    fid = net.graph.add(problem_id=net.problem_id, author="fixture", statement=claim["statement"],
-                        proof="Previously accepted fixture result.", predecessors=list(predecessors))
-    net.bind_fact(claim["claim_id"], fid)
-    return fid
+    from test_model import fact
+    return fact(net, claim['claim_id'], predecessors=predecessors, proof='Previously accepted fixture result.')
 
 
 def start_after_initial_direct(net):
@@ -109,7 +107,7 @@ def test_failure_continuation_support_child_compose_and_full_lineage(tmp_path):
     net = Network(tmp_path)
     assert net.data["control"]["visit"] == 4 and net.data["schedule"]["channel_cursor"] == 4
     assert net.truth(net.target_id) == "DISCHARGED"
-    closure = net.graph.supporting_closure(final["admission"]["fact_id"])
+    closure = net.supporting_closure(final["admission"]["fact_id"])
     assert len(closure) == 3 and len(closure[-1].predecessors) == 2
     assert actors.count("worker") == 4 and actors.count("verifier") == 4 and actors.count("probe") == 1
     assert [w["study"]["study_id"] for w in workers[:2]] == [root_study, root_study]
@@ -156,7 +154,7 @@ def test_automatic_inspect_bridge_materialize_without_fairness_service(tmp_path)
         net.visible_fact(source, "x>0")
     research.step()
     assert ordinary_packets[0]["accepted_facts"] == [{"fact_id": result["fact_id"], "statement": result["statement"]}]
-    assert {f.fact_id for f in net.graph.supporting_closure(result["fact_id"])} == {source, result["fact_id"]}
+    assert {f.fact_id for f in Network(tmp_path).supporting_closure(result["fact_id"])} == {source, result["fact_id"]}
     assert Network(tmp_path).data["schedule"]["channel_cursor"] == 1
 
 
@@ -207,14 +205,14 @@ def test_crash_recovers_confirmed_calls_and_admission_once(tmp_path, monkeypatch
             return result
         monkeypatch.setattr(actual, "call", crash)
     elif boundary == "admission":
-        original = Network.accept_verified
+        original = Network.save
         def crash(self, *args, **kwargs):
             result = original(self, *args, **kwargs)
-            if not fired:
+            if self.proof_ids() and not self._staging and not fired:
                 fired.append(1)
                 raise KeyboardInterrupt()
             return result
-        monkeypatch.setattr(Network, "accept_verified", crash)
+        monkeypatch.setattr(Network, "save", crash)
     else:
         original = Network.save
         def crash(self):
@@ -230,7 +228,7 @@ def test_crash_recovers_confirmed_calls_and_admission_once(tmp_path, monkeypatch
     outcome = Research(tmp_path, actual).step()
     assert outcome["admission"]["kind"] == "FACT"
     net = Network(tmp_path)
-    assert len(net.graph.list()) == 1 and net.truth(net.target_id) == "OPEN"
+    assert len(net.proof_ids()) == 1 and net.truth(net.target_id) == "OPEN"
     assert net.data["control"]["visit"] == 1
     assert actors.count("worker") == actors.count("verifier") == 1
     local = LocalMemory(lane(tmp_path, "study-" + net.target_id))
@@ -252,7 +250,7 @@ def test_strategy_metadata_is_advisory_not_truth_or_action_authority(tmp_path):
         return output(continuation="Unverified conjecture; no proof yet.")
     actors = Actors(handler)
     assert Research(tmp_path, runtime(tmp_path, actors)).step()["status"] == "COMPLETED"
-    assert Network(tmp_path).graph.list() == [] and Network(tmp_path).truth(net.target_id) == "OPEN"
+    assert Network(tmp_path).proof_ids() == [] and Network(tmp_path).truth(net.target_id) == "OPEN"
     assert actors.count("verifier") == 0
 
 
@@ -286,7 +284,7 @@ def test_timeout_notes_feed_next_ordinary_service_without_retry(tmp_path):
     research = Research(tmp_path, runtime(tmp_path, actors))
     assert research.step()["status"] == "TIMEOUT"
     assert research.step()["status"] == "COMPLETED"
-    assert actors.count("worker") == 2 and Network(tmp_path).graph.list() == []
+    assert actors.count("worker") == 2 and Network(tmp_path).proof_ids() == []
     requests = list(tmp_path.glob("workers/*/rounds/*/result.json"))
     receipts = [json.loads(p.read_text(encoding="utf-8")) for p in requests]
     timeout = next(r for r in receipts if r["status"] == "TIMEOUT")
@@ -317,11 +315,11 @@ def test_unary_recurrence_fresh_probe_bridge_verifier_and_fallback(tmp_path, tra
     if transport_verdict == "correct":
         assert net.alias_of(child) == net.target_id
         assert "study-" + child not in net.data["studies"] and net.effective_depth() == 0
-        assert len(net.graph.list()) == 2
+        assert len(net.proof_ids()) == 2
     else:
         assert net.alias_of(child) is None
         assert "study-" + child in net.data["studies"] and net.effective_depth() == 1
-        assert len(net.graph.list()) == 1
+        assert len(net.proof_ids()) == 1
 
 
 def test_multirequirement_support_does_not_run_recurrence_collapse(tmp_path):
@@ -381,8 +379,8 @@ def test_conditional_recurrence_helper_service_activation_and_lineage(tmp_path):
     alias_fact = net.data["representations"][sid]["equivalence_fact_id"]
     conditional = net.data["deferred_representations"][sid]["conditional_fact_id"]
     helper_fact = second["admission"]["fact_id"]
-    assert net.graph.get(alias_fact).predecessors == sorted([conditional, helper_fact])
-    assert {f.fact_id for f in net.graph.supporting_closure(alias_fact)} == {conditional, helper_fact, alias_fact}
+    assert net._accepted(alias_fact).predecessors == sorted([conditional, helper_fact])
+    assert {f.fact_id for f in net.supporting_closure(alias_fact)} == {conditional, helper_fact, alias_fact}
     assert all(w["claim"]["claim_id"] != child for w in workers)
     assert actors.count("probe") == actors.count("representation") == 1
     assert actors.count("verifier") == 4
@@ -438,7 +436,7 @@ def test_exploratory_study_without_bound_claim_is_a_normal_research_lane(tmp_pat
     assert result["study_id"] == exploratory["study_id"]
     net = Network(tmp_path)
     assert net.data["studies"][exploratory["study_id"]]["revision"] == 1
-    assert net.graph.list() == [] and len(net.data["claims"]) == 1
+    assert net.proof_ids() == [] and len(net.data["claims"]) == 1
 
 
 def test_exploratory_study_can_receive_scope_bridge_without_becoming_claim(tmp_path):
@@ -478,7 +476,7 @@ def test_large_unverified_memory_pages_without_dropping_accepted_conditions(tmp_
     chosen = {"study_id": study, "task": "Use the exact accepted interface.", "operation": "RESEARCH",
               "fact_ids": [fid], "research_queries": []}
     packet = worker_packet(net, chosen)
-    assert packet["accepted_facts"] == [{"fact_id": fid, "statement": net.graph.get(fid).statement}]
+    assert packet["accepted_facts"] == [{"fact_id": fid, "statement": net._accepted(fid).statement}]
     assert packet["research_context"] == [{"authority": "UNVERIFIED_RESEARCH", "page_required": True}]
     exposure, _ = expose(net.active_studies(), {})
     selection = selector_packet(net, exposure)
@@ -549,7 +547,7 @@ def test_repeated_completed_bridge_reuses_exact_auxiliary_without_model_calls(tm
     result = research._bridge("new-key", request, pending)
     assert result["fact_id"] == bridged and result["reused"]
     assert actors.calls == []
-    net.graph.revoke(source, "fixture source invalidated")
+    net.revoke(source, "fixture source invalidated")
     assert research._bridge("later-key", request, pending)["bridge_status"] == "REJECTED"
 
 
@@ -562,7 +560,7 @@ def test_worker_can_create_independent_lane_without_truth_or_duplicate_state(tmp
     n = Network(tmp_path)
     assert len(n.data["studies"]) == 2 and len(n.data["claims"]) == 1
     new = next(s for s in n.active_studies() if s["claim_id"] is None)
-    assert new["revision"] == 0 and n.graph.list() == []
+    assert new["revision"] == 0 and n.proof_ids() == []
     research._new_study("study-" + net.target_id, "recovered", proposal)
     assert len(Network(tmp_path).data["studies"]) == 2
     research._new_study("study-" + net.target_id, "bad", {"focus": 9})

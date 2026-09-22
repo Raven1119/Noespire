@@ -123,19 +123,28 @@ class FactGraph:
     """Rooted at the project directory; the only correctness source."""
 
     def __init__(self, root: Path) -> None:
+        self.root = Path(root)
+        self._assert_legacy_workspace()
         self.dir = Path(root) / "fact_graph"
         self.facts_dir = self.dir / "facts"
         self.revoked_dir = self.dir / "_revoked"
         self.glossary_path = self.dir / "glossary.json"
         self.revocation_log = self.dir / "revocation_log.jsonl"
 
+    def _assert_legacy_workspace(self):
+        state = self.root / 'crpn.json'
+        if state.exists() and read_json(state).get('schema_version') == 'crpn-authority-2':
+            raise ValueError('DANUS truth entry retired: use CRPN authority')
+
     def _path(self, fact_id: str) -> Path:
+        self._assert_legacy_workspace()
         if not isinstance(fact_id, str) or not re.fullmatch(r"[0-9a-f]{16}", fact_id):
             raise ValueError("invalid Fact identifier")
         return self.facts_dir / f"{fact_id}.md"
 
     # ------------------------------------------------------------------ write
     def add(self, **kwargs):
+        self._assert_legacy_workspace()
         with locked(self.dir / ".write.lock"):
             return self._add_locked(**kwargs)
 
@@ -328,6 +337,7 @@ class FactGraph:
     # --------------------------------------------------------------- revoke
     def revoked_ids(self):
         """Write-ahead revocation batches fail closed even halfway through moves."""
+        self._assert_legacy_workspace()
         ids = {p.stem for p in self.revoked_dir.glob("*.md")}
         for path in (self.dir / "revocations").glob("*.json"):
             ids.update(read_json(path)["fact_ids"])

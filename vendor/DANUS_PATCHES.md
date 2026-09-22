@@ -66,3 +66,18 @@ provided the hardened behavior. There is one live lifecycle and one FactGraph.
   and empty-role configuration. The pinned CLI accepts `approve` and rejects an
   invalid approval-mode negative control. Fresh live evidence is kept outside Git.
 - Source fingerprint changes require a fresh migration; the failed run is retained.
+
+## CRPN authority convergence (2026-09-22)
+
+- `core/__init__.py`: historical FactGraph exports load lazily. Importing IO or
+  memory no longer loads the alternative truth graph.
+- `core/factgraph.py`: construction and use reject `crpn-authority-2` workspaces.
+  This retires native SubmissionGate, MCP fact-submit/revoke, and native FactGraph
+  CLI/export access to new CRPN state. Historical standalone tests/readers remain.
+- `execution/__init__.py`: native scaffolder exports load lazily; the CRPN path
+  continues using the same WorkerLayout/run_round/DurableRounds implementation.
+- CRPN owns its fixed existing capability set; it no longer loads DANUS's native
+  main-role permission table or SubmissionGate. The broker only forwards calls.
+- No change to DurableRounds, run_round, Docker runner, memory, BM25, transport,
+  model configuration or verifier prompt. The earlier FactGraph/admission patches
+  remain provenance and read-only migration support, not active truth authority.

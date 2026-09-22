@@ -1,8 +1,4 @@
-"""Explicit, reentrant import of frozen CRPN mathematical state into DANUS.
-
-Never resumes an old call journal. Old bytes are read-only evidence; notes stay
-unverified. Fact IDs change with the upstream DANUS hash, with full edge maps.
-"""
+"""Lossless explicit import into the CRPN authority; old stores are read-only evidence."""
 from copy import deepcopy
 from hashlib import sha256
 import json
@@ -10,12 +6,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from danus.core.durable_io import atomic_json, atomic_text, immutable_json, read_json, locked
-from danus.core.factgraph import FactGraph, serialize_fact
-from danus.core.schema import Fact, compute_fact_id
 from danus.core.local_memory import LocalMemory
 from danus.core.global_memory import GlobalMemory
 from substrate.store import lane, append_once
-from .model import Network, make_claim, normalize, identity
+from .model import Network, make_claim, normalize, identity, proof_identity
 
 
 def source_hashes(root):
@@ -48,7 +42,7 @@ def _legacy_fact(path):
     old_id = sha256(json.dumps(values, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()).hexdigest()[:16]
     if old_id != row['fact_id'] or old_id != path.stem:
         raise ValueError('legacy Fact content hash mismatch')
-    return {**row, **values}
+    return {**row, **values, 'statement': statement, 'proof': proof.rstrip('\n'), 'id_scheme': 'crpn-legacy'}
 
 
 def _topological(facts):
@@ -177,150 +171,204 @@ def _import_notes(source, dest, run, studies, hashes):
     return archive, counts
 
 
+def _current_data(source):
+    # Historical decoder only: never construct a DANUS FactGraph or write its files.
+    from danus.core.factgraph import parse_fact
+    data = read_json(source / 'crpn.json')
+    if data['schema_version'] != 'crpn-danus-1':
+        raise ValueError('unsupported source schema')
+    if data.get('control', {}).get('pending'):
+        raise ValueError('pause and settle the source admission before migration')
+    records, revoked = {}, set()
+    for folder in ('facts', '_revoked'):
+        for path in sorted((source / 'fact_graph' / folder).glob('*.md')):
+            record = vars(parse_fact(path.read_text(encoding='utf-8'), path.stem))
+            if path.stem in records and records[path.stem] != record:
+                raise ValueError('conflicting source evidence')
+            records[path.stem] = record
+            if folder == '_revoked':
+                revoked.add(path.stem)
+    for path in (source / 'fact_graph/revocations').glob('*.json'):
+        revoked.update(read_json(path)['fact_ids'])
+    if not revoked <= records.keys():
+        raise ValueError('missing historical revocation evidence')
+    return data, records, revoked
+
+
+def _legacy_state(source, new_run):
+    graph, run, claims, facts, ordered, revoked, invalidated = _legacy_data(source)
+    data = {'schema_version': 'crpn-danus-1', 'problem_id': graph['problem_id'],
+            'target_claim_id': graph['target_obligation_id'], 'claims': claims,
+            'fact_bindings': deepcopy(graph['fact_bindings']), 'supports': deepcopy(graph['supports']),
+            'studies': {}, 'refutations': {}, 'representations': {}, 'deferred_representations': {},
+            'pending_recurrence': [], 'schedule': deepcopy(run['schedule']),
+            'control': {'run_id': new_run, 'visit': run['step'], 'pending': None}}
+    for sid, row in data['supports'].items():
+        if identity('support-', {k:v for k,v in row.items() if k != 'support_id'}) != sid:
+            raise ValueError('legacy Support identity mismatch')
+    for table in ('representations', 'deferred_representations'):
+        for sid, row in graph.get(table, {}).items():
+            evidence = _source(source, row['evidence_ref'])
+            if not evidence.is_dir():
+                raise ValueError('legacy representation evidence missing')
+            converted = {k:deepcopy(v) for k,v in row.items() if k != 'evidence_ref'}
+            if table == 'deferred_representations':
+                converted['released'] = (evidence / 'activation/result.json').exists() and sid not in graph.get('representations', {})
+            data[table][sid] = converted
+    for sid, ref in run['studies'].items():
+        row = read_json(_source(source, 'continuous_run/' + ref))
+        if row['study_id'] != sid:
+            raise ValueError('legacy current Study binding mismatch')
+        keep = ('study_id', 'claim_id', 'scope', 'focus', 'revision', 'region_ref', 'object_refs')
+        study = {key:deepcopy(row[key]) for key in keep if key in row}
+        study.setdefault('claim_id', None)
+        study['last_served_visit'] = run['schedule'].get('last_served', {}).get(sid, -1)
+        data['studies'][sid] = study
+    refutation_map = {}
+    for cid, rid in graph.get('refutations', {}).items():
+        row = read_json(_source(source, 'refutations/' + rid + '.json'))
+        values = {k:v for k,v in row.items() if k != 'refutation_id'}
+        checks = ('accepted', 'assumptions_satisfied', 'conclusion_falsified', 'closed_book_clean')
+        if (identity('ref-', values) != rid or row['obligation_id'] != cid
+                or row['context'] != claims[cid]['context'] or row['goal'] != claims[cid]['goal']
+                or not all(row['verification_evidence'].get(k) is True for k in checks)
+                or not row['provenance'].get('verifier_call')):
+            raise ValueError('legacy Refutation evidence mismatch')
+        record = {'problem_id': graph['problem_id'], 'author': 'legacy-refutation',
+                  'statement': 'The following proposition is false: ' + json.dumps(claims[cid]['statement'], ensure_ascii=False) + '.',
+                  'proof': row['counterexample'], 'predecessors': [], 'provenance': row}
+        fid = proof_identity(record)
+        record['fact_id'] = fid
+        facts[fid] = record
+        data['refutations'][cid] = fid
+        refutation_map[rid] = fid
+    return data, facts, revoked, run, refutation_map
+
+
+def _own_evidence(data, records):
+    """Move each proof into its proposition or conditional Support, not a parallel DAG."""
+    def attach(table, owner, slot, fid):
+        if fid not in records:
+            raise ValueError('missing owned evidence')
+        target = data[table][owner].setdefault(slot, {})
+        if fid in owned and fid not in target:
+            # A shared representation certificate is stored once; relations may cite it.
+            if table == 'supports' and owned[fid][0] == 'supports':
+                return
+            raise ValueError('ambiguous historical proof owner')
+        target[fid] = records[fid]
+        owned[fid] = (table, owner, slot)
+    owned = {}
+    for cid, ids in data.pop('fact_bindings').items():
+        for fid in ids:
+            attach('claims', cid, 'proofs', fid)
+    for cid, fid in data.pop('refutations').items():
+        attach('claims', cid, 'refutations', fid)
+    for sid, row in data['supports'].items():
+        attach('supports', sid, 'certificates', row['bridge_fact_id'])
+    for table, field in (('representations', 'equivalence_fact_id'), ('deferred_representations', 'conditional_fact_id')):
+        for sid, row in data[table].items():
+            attach('supports', sid, 'certificates', row[field])
+    if owned.keys() != records.keys():
+        raise ValueError('historical evidence lacks an explicit mathematical owner')
+
+
 def migrate(source, destination, *, on_event=None):
     source, dest = Path(source).resolve(), Path(destination).resolve()
     if source == dest or dest.is_relative_to(source) or source.is_relative_to(dest):
         raise ValueError('migration requires a separate destination, never the frozen source')
-    plan_path = dest/'migration/plan.json'
+    plan_path = dest / 'migration/plan.json'
     if dest.exists() and any(dest.iterdir()) and not plan_path.exists():
         raise ValueError('destination must be empty or this same incomplete import')
     hashes = source_hashes(source)
-    graph, run, claims, facts, ordered, revoked, invalidated = _legacy_data(source)
-    origin = {'source':str(source),'source_run':run['run_id'],'source_code_digest':run.get('code_digest'),
-              'source_hashes':hashes,'policy':'Imported mathematics and unverified notes; not an old run resume.'}
+    origin = {'source': str(source), 'source_hashes': hashes,
+              'policy': 'Read-only historical evidence; one CRPN authority; fresh runtime.'}
     if plan_path.exists():
         plan = read_json(plan_path)
         if plan['origin'] != origin:
             raise ValueError('frozen import source changed')
     else:
-        plan = {'origin':origin,'new_run_id':uuid4().hex}
-        immutable_json(plan_path,plan)
-    with locked(dest/'migration/import.lock'):
-        if (dest/'migration/result.json').exists():
-            report = read_json(dest/'migration/result.json')
-            Network(dest)  # Refuse corrupted authority even on an idempotent import.
-            return report
-        emit = on_event or (lambda *_args,**_kwargs:None)
-        fact_map, imported = {}, FactGraph(dest)
-        archive = [_copy_evidence(source,dest,ref) for ref in ('proof_graph.json','continuous_run/state.json')]
-        for old_id in ordered:
-            row = facts[old_id]
-            predecessors = [fact_map[p] for p in row['predecessors']]
-            new_id = compute_fact_id(problem_id=row['problem_id'],statement=row['statement'],proof=row['proof'],
-                                     predecessors=predecessors,glossary_introduces={})
-            fact_map[old_id] = new_id
-            if old_id in invalidated:
-                fact = Fact(new_id,row['problem_id'],row['author'],predecessors,row['statement'],row['proof'])
-                target = imported.revoked_dir/(new_id+'.md')
-                text = serialize_fact(fact)
-                if target.exists() and target.read_text(encoding='utf-8') != text:
-                    raise ValueError('revoked import evidence changed')
-                if imported._path(new_id).exists():
-                    raise ValueError('revoked import was activated')
-                atomic_text(target,text)
-            else:
-                actual = imported.add(problem_id=row['problem_id'],author=row['author'],statement=row['statement'],
-                    proof=row['proof'],predecessors=predecessors)
-                if actual != new_id:
-                    raise ValueError('DANUS ID mapping mismatch')
-            folder = '_revoked' if old_id in revoked else 'facts'
-            archive.append(_copy_evidence(source,dest,f'{folder}/{old_id}.md'))
-            emit('fact_imported',old_id=old_id,new_id=new_id,revoked=old_id in invalidated)
-        immutable_json(dest/'migration/fact_id_map.json',fact_map)
-        if (source/'revocation_log.jsonl').exists():
-            archive.append(_copy_evidence(source,dest,'revocation_log.jsonl'))
-            atomic_text(dest/'migration/legacy_revocation_log.jsonl', (source/'revocation_log.jsonl').read_bytes().decode('utf-8'))
-        data = {'schema_version':'crpn-danus-1','problem_id':graph['problem_id'],'target_claim_id':graph['target_obligation_id'],
-                'claims':claims,'fact_bindings':{},'supports':{},'studies':{},'refutations':{},
-                'representations':{},'deferred_representations':{},'pending_recurrence':[],
-                'schedule':deepcopy(run['schedule']),
-                'control':{'run_id':plan['new_run_id'],'visit':run['step'],'pending':None},
-                'origin':{'source_run':run['run_id'],'source_workspace':str(source),'migration':'migration/plan.json',
-                          'source_status':run['status'],'imported_call_reservations':len(list((source/'continuous_run/calls').glob('*/request.json'))),
-                          'runtime':deepcopy(run.get('runtime',{}))}}
-        for cid, ids in graph['fact_bindings'].items():
-            data['fact_bindings'][cid] = [fact_map[fid] for fid in ids]
-        support_map = {}
-        for old_id, row in graph['supports'].items():
-            values = {k:v for k,v in row.items() if k!='support_id'}
-            if identity('support-',values) != old_id:
-                raise ValueError('legacy Support identity mismatch')
-            values['bridge_fact_id'] = fact_map[values['bridge_fact_id']]
-            new_id = identity('support-',values)
-            support_map[old_id] = new_id
-            data['supports'][new_id] = {'support_id':new_id,**values}
-        for table, field in [('representations','equivalence_fact_id'),('deferred_representations','conditional_fact_id')]:
-            for old_id,row in graph.get(table,{}).items():
-                new_id = support_map[old_id]
-                converted = {k:deepcopy(v) for k,v in row.items() if k!='evidence_ref'}
-                converted.update(support_id=new_id,**{field:fact_map[row[field]]})
-                if table=='deferred_representations':
-                    result = _source(source,row['evidence_ref'])/'activation/result.json'
-                    converted['released'] = result.exists() and old_id not in graph.get('representations',{})
-                data[table][new_id] = converted
-                evidence = _source(source,row['evidence_ref'])
-                if not evidence.is_dir():
-                    raise ValueError('legacy representation evidence missing')
-                for path in sorted(evidence.rglob('*.json')):
-                    archive.append(_copy_evidence(source,dest,path.relative_to(source).as_posix()))
-        for sid, ref in run['studies'].items():
-            row = read_json(_source(source,'continuous_run/'+ref))
-            if row['study_id'] != sid:
-                raise ValueError('legacy current Study binding mismatch')
-            keep = ('study_id','claim_id','scope','focus','revision','region_ref','object_refs')
-            study = {key:deepcopy(row[key]) for key in keep if key in row}
-            study.setdefault('claim_id',None)
-            study['last_served_visit'] = run['schedule'].get('last_served', {}).get(sid, -1)
-            study['service_provenance'] = {'source_run':run['run_id'],'last_served_visit':run['schedule'].get('last_served',{}).get(sid)}
-            data['studies'][sid] = study
-        # Legacy Refutation records are verified negative Facts, not another truth store.
-        refutation_map = {}
-        for cid,rid in graph.get('refutations',{}).items():
-            ref = 'refutations/'+rid+'.json'
-            row = read_json(_source(source,ref))
-            values = {k:v for k,v in row.items() if k!='refutation_id'}
-            checks = ('accepted','assumptions_satisfied','conclusion_falsified','closed_book_clean')
-            if (identity('ref-',values)!=rid or row['obligation_id']!=cid or row['context']!=claims[cid]['context']
-                    or row['goal']!=claims[cid]['goal'] or not all(row['verification_evidence'].get(k) is True for k in checks)
-                    or not row['provenance'].get('verifier_call')):
-                raise ValueError('legacy Refutation evidence mismatch')
-            statement = 'The following proposition is false: '+json.dumps(claims[cid]['statement'],ensure_ascii=False)+'.'
-            fid = imported.add(problem_id=graph['problem_id'],author='legacy-refutation',statement=statement,proof=row['counterexample'])
-            data['refutations'][cid] = fid
-            refutation_map[rid] = fid
-            archive.append(_copy_evidence(source,dest,ref))
-        note_archive, memory_counts = _import_notes(source,dest,run,data['studies'],hashes)
-        archive.extend(note_archive)
-        immutable_json(dest/'migration/support_id_map.json',support_map)
-        immutable_json(dest/'migration/refutation_id_map.json',refutation_map)
-        immutable_json(dest/'migration/source_archive.json',sorted({r['source_ref']:r for r in archive}.values(),key=lambda r:r['source_ref']))
-        # Validate the full mathematical interface before publishing new strategy
-        # authority. Partial Fact/memory import alone is not a runnable CRPN run.
+        plan = {'origin': origin, 'new_run_id': uuid4().hex}
+        immutable_json(plan_path, plan)
+    with locked(dest / 'migration/import.lock'):
+        if (dest / 'migration/result.json').exists():
+            Network(dest)
+            return read_json(dest / 'migration/result.json')
+        emit = on_event or (lambda *_args, **_kwargs: None)
+        legacy = not (source / 'crpn.json').exists()
+        if legacy:
+            data, records, revoked, run, refutation_map = _legacy_state(source, plan['new_run_id'])
+            source_run = run['run_id']
+        else:
+            data, records, revoked = _current_data(source)
+            source_run, refutation_map = data.get('control', {}).get('run_id'), {}
+        ordered = _topological(records)
+        invalid = set(revoked)
+        for fid in ordered:
+            if invalid.intersection(records[fid]['predecessors']):
+                invalid.add(fid)
+        # Archive ALL source bytes, including acceptance/revocation receipts and raw rounds.
+        archive = [_copy_evidence(source, dest, ref) for ref in hashes]
+        immutable_json(dest / 'migration/source_archive.json', archive)
+        for fid in ordered:
+            record = records[fid]
+            record.setdefault('id_scheme', 'content-v1')
+            record['status'] = 'revoked' if fid in invalid else 'accepted'
+            record['history'] = [{'event': 'accepted', 'source_run': source_run,
+                                  'evidence_archive': 'migration/source_archive.json'}]
+            if fid in invalid:
+                record['history'].append({'event': 'revoked', 'source_run': source_run,
+                    'reason': 'historical revocation' if fid in revoked else 'revoked predecessor',
+                    'evidence_archive': 'migration/source_archive.json'})
+            record.setdefault('provenance', {})['migration'] = 'migration/plan.json'
+            emit('fact_imported', old_id=fid, new_id=fid, revoked=fid in invalid)
+        _own_evidence(data, records)
+        data['schema_version'] = 'crpn-authority-2'
+        data['control'] = {'run_id': plan['new_run_id'], 'visit': data.get('control', {}).get('visit', 0), 'pending': None}
+        data['origin'] = {'source_run': source_run, 'source_workspace': str(source), 'migration': 'migration/plan.json'}
+        if legacy:
+            _, memory_counts = _import_notes(source, dest, run, data['studies'], hashes)
+        else:
+            memory_counts = {'local_records': 0, 'shared_records': 0}
+            for relative in hashes:
+                path = Path(relative)
+                if path.parts[0] == 'global_memory' or (path.parts[0] == 'workers' and 'local_memory' in path.parts):
+                    target = dest / path
+                    content = (source / path).read_bytes()
+                    if target.exists() and target.read_bytes() != content:
+                        raise ValueError('partial memory import changed')
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(content)
+                    if path.suffix == '.jsonl':
+                        memory_counts['shared_records' if path.parts[0] == 'global_memory' else 'local_records'] += len(content.splitlines())
+        if (source / 'revocation_log.jsonl').exists():
+            (dest / 'migration/legacy_revocation_log.jsonl').write_bytes((source / 'revocation_log.jsonl').read_bytes())
+        fact_map = {fid: fid for fid in records}
+        support_map = {sid: sid for sid in data['supports']}
+        for name, mapping in (('fact', fact_map), ('support', support_map), ('refutation', refutation_map)):
+            immutable_json(dest / ('migration/' + name + '_id_map.json'), mapping)
         network = Network.__new__(Network)
-        network.root, network.path, network.data = dest, dest/'crpn.json', data
-        network.problem_id, network.target_id, network.graph = data['problem_id'], data['target_claim_id'], imported
+        network.root, network.path, network.data = dest, dest / 'crpn.json', data
+        network.problem_id, network.target_id = data['problem_id'], data['target_claim_id']
         network.validate()
         emit('before_state_commit')
-        if (dest/'crpn.json').exists() and read_json(dest/'crpn.json') != data:
+        if network.path.exists() and read_json(network.path) != data:
             raise ValueError('partial import state changed')
-        atomic_json(dest/'crpn.json',data)
-        for fid in imported.list():
-            imported.supporting_closure(fid)
         if source_hashes(source) != hashes:
             raise ValueError('source changed during migration')
-        report = {'source':str(source),'destination':str(dest),'source_run':run['run_id'],'run_id':plan['new_run_id'],
-                  'old_runtime_resumed':False,'model_calls':0,'fact_id_map':fact_map,'support_id_map':support_map,
-                  'refutation_id_map':refutation_map,'active_facts':len(imported.list()),'revoked_facts':len(imported.revoked_ids()),
-                  'source_revoked':sorted(revoked),'dependency_invalidated':sorted(invalidated-revoked),
-                  'claims':len(claims),'supports':len(data['supports']),'studies':len(data['studies']),
-                  'active_representations':sum(bool(network.alias_of(r['claim_id'])) for r in data['representations'].values()),
-                  'deferred_records':len(data['deferred_representations']), 'effective_depth':network.effective_depth(),
-                  'target_truth':network.truth(network.target_id),'schedule_preserved':data['schedule']==run['schedule'],
-                  'source_hashes_unchanged':True,'source_file_count':len(hashes),**memory_counts,
-                  'truth':{cid:network.truth(cid) for cid in claims},
-                  'limitations':['Imported accepted Facts retain their historical LLM-verification status; import is not new verification.',
-                                 'Old runtime bookkeeping is provenance only; next service is a new runtime action.',
-                                 'Original proof text may cite legacy IDs, resolved by migration/fact_id_map.json.']}
-        immutable_json(dest/'migration/result.json',report)
+        atomic_json(network.path, data)
+        report = {'source': str(source), 'destination': str(dest), 'source_run': source_run,
+                  'run_id': plan['new_run_id'], 'old_runtime_resumed': False, 'model_calls': 0,
+                  'fact_id_map': fact_map, 'support_id_map': support_map, 'refutation_id_map': refutation_map,
+                  'active_facts': len(network.proof_ids()), 'revoked_facts': len(network.revoked_ids()),
+                  'source_revoked': sorted(revoked), 'dependency_invalidated': sorted(invalid - revoked),
+                  'claims': len(data['claims']), 'supports': len(data['supports']), 'studies': len(data['studies']),
+                  'active_representations': sum(bool(network.alias_of(r['claim_id'])) for r in data['representations'].values()),
+                  'deferred_records': len(data['deferred_representations']), 'effective_depth': network.effective_depth(),
+                  'target_truth': network.truth(network.target_id), 'schedule_preserved': True,
+                  'source_hashes_unchanged': True, 'source_file_count': len(hashes), **memory_counts,
+                  'truth': {cid:network.truth(cid) for cid in data['claims']},
+                  'limitations': ['Historical LLM acceptance retained; migration is not new verification.']}
+        immutable_json(dest / 'migration/result.json', report)
         emit('migration_completed')
         return report

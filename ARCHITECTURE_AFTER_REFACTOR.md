@@ -1,154 +1,108 @@
-# CRPN on DANUS
+# CRPN authority on replaceable basic tools
 
-## Baselines and ownership
+Current baseline: locally accepted `a67ac3c44dd35d290959f7db6d31cf92b41397e8`,
+which commits the tested permission repair over `35a898bb5c3c5e59922f0cfdc9e53cc0472fe941`.
+DANUS upstream provenance remains `6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`.
+See [the architecture/migration report](CRPN_AUTHORITY_MIGRATION.md).
 
-Noespire baseline: `0b68c6c138364d12b4adbd6b5aa335c013171f9f`.
-DANUS baseline: `frenzymath/Danus@6d92e8d415933ca2ef52fd1a4da73fdfcd418f1c`.
-Implementation SHA: `adce52605da500133f0d6538261ea5ad024098fb`.
-A following documentation/attributes commit records the final delivery HEAD. No frozen tag is moved.
+## One mathematical authority
+
+`WORKSPACE/crpn.json`, schema `crpn-authority-2`, is the existing CRPN Claim/Support
+AND/OR graph extended with owned proof records. It is not a renamed FactGraph or
+an adapter over one. There is no separate Fact store, fact-binding table or negative
+truth table. Immutable Claim identity still depends only on problem, context and goal.
+
+- Claim `proofs`: alternative proofs of that exact scoped proposition.
+- Claim `refutations`: proofs of its exact negation, never an inferred timeout verdict.
+- Support `certificates`: its conditional proof and associated representation/helper
+  transport proofs. A certificate is not a proof of its conclusion.
+- Each proof retains its evidence ID, exact statement/proof, actual predecessors,
+  author, historical acceptance, provenance, status and append-only revocation history.
+- Evidence lookup and BM25 results are disposable projections of these owned records.
+
+Truth, premise eligibility, AND readiness, closure and revocation all derive from
+this graph. A Claim is discharged by a currently valid proof with an entirely valid
+actual predecessor closure. All Support requirements must have valid proofs before
+COMPOSE. The composed proof requires the exact certificate/condition lineage and a
+fresh verifier. Aliases do not discharge either endpoint; cyclic dependencies do not
+bootstrap truth. Revocation invalidates actual dependent proofs, preserving alternate
+OR proofs and historical bytes. A stale graph instance cannot authorize premises.
+
+## Single submission chain
 
 ```text
-CRPN CLI -> strategy transition -> DANUS DurableRounds -> isolated Codex
-                |                       |                    |
-         Claim/Support/Study       durable receipts     memory capabilities
-                |                                            |
-                +-> SubmissionGate -> fresh VerifierBackend   |
-                           |                                 |
-                    DANUS FactGraph               DANUS Local/GlobalMemory
+ordinary CRPN selector / Worker
+ -> CRPN candidate and exact-scope preparation
+ -> crpn.admission.Admission
+ -> VerifierBackend returns judgment via unchanged DANUS DurableRounds
+ -> one atomic CRPN publication: proof + mathematical owner + relation
+ -> immutable submission receipt (audit only)
+ -> CRPN transition / next schedule
 ```
 
-| Owner | Authoritative responsibility |
-| --- | --- |
-| DANUS FactGraph | Accepted Facts, proofs, predecessor closure, cascade revocation |
-| DANUS LocalMemory | Per-Study unfinished research; never mathematical truth |
-| DANUS GlobalMemory | Shared findings/dead ends and BM25 recall; unverified |
-| DANUS DurableRounds | Frozen request, process, timeout, logs, confirmed response, usage, recovery |
-| DANUS SubmissionGate | Frozen candidate, verifier receipt, one accepted write, replay checks |
-| CRPN `crpn.json` | Immutable Claim interfaces, Support/Fact bindings, Studies, recurrence, scheduling |
-| CRPN material views | Disposable local packets, no persistent visibility/permission replicas |
+`Admission` preserves the old gate's immutable request, verification receipt,
+predecessor validation and interrupted-publication recovery semantics. It uses DANUS
+`locked`, `immutable_json` and `atomic_json`; model calls still have only the existing
+DANUS request/result journal. A graph commit preceding a receipt is recovered without
+another verifier call or proof write. A receipt cannot resurrect revoked evidence.
+Graph save also refuses unverified new proofs or rewritten historical proof records.
 
-The new package imports no old `research` or `application` code. Both old packages
-and their tests are retired here and preserved at the baseline and frozen worktree.
-The old frontend/API is not wired to this new research CLI.
+The explicit migration entry is the only historical import exception. CLI revocation
+uses the same graph and serialized CRPN transition boundary. Status, material search,
+inspection, closure and export read this graph. The independent natural-language
+VerifierBackend and its prompts are unchanged; LLM acceptance is not Lean kernel proof.
 
-## Actual upstream reuse and necessary patches
+## DANUS remains basic infrastructure
 
-The complete pinned tracked tree and Apache-2.0 license are vendored. Every original
-file hash is in `vendor/DANUS_UPSTREAM.json`. See `vendor/DANUS_PATCHES.md` for changes.
-The active path uses actual DANUS FactGraph, Fact/schema, LocalMemory, GlobalMemory,
-BM25, WorkerLayout, Codex command helpers, `run_round`, role permissions and observability.
+DANUS provides DurableRounds, WorkerLayout, the proven process runner and Linux Docker
+isolation, authenticated capability transport, generic durable IO, LocalMemory,
+GlobalMemory and BM25. `substrate` maps lanes and freezes runtime fingerprints. No
+second invocation journal, research-artifact authority, or truth index is introduced.
 
-The audited upstream did NOT already guarantee exactly-once recovery or host isolation.
-Its old main reset round numbers/overwrote logs; submit had no durable transaction;
-host sandbox bypass and MCP role visibility did not hide private files. Generic
-recovery, admission, revocation and isolated capabilities are therefore patched into
-DANUS itself. `substrate/` only maps lanes, freezes production fingerprints, derives
-views and delegates calls. It holds no parallel call journal, truth or memory store.
+DANUS FactGraph and SubmissionGate are absent from the active import chain. Native
+main/scaffolding, research allocation, gateway fact-submit and automatic fact writes
+are not invoked. Legacy FactGraph APIs explicitly reject new CRPN workspaces. Their
+vendored implementations remain historical provenance. The migration-only decoder
+can parse old Fact bytes without constructing or writing a DANUS truth store.
+The former FactGraph dashboard is not a status/export entry for the new schema.
 
-New CRPN never invokes upstream's alternative autonomous main/orchestration or its
-legacy MCP fact-submit path. Those remain vendor provenance, not dual authorities.
-Normal admission uses `danus.gateway.submission.SubmissionGate`. Historical import is
-an explicit separate provenance operation, not a new verification.
+CRPN retains direct-first, 3:1:1 ADVANCE/EXPLORE/REVISIT, fixed REVISIT snapshots,
+Study services, bridge, recurrence/helper/alias and COMPOSE. No new strategy field or
+ranking mechanism is introduced. Gateway capabilities forward CRPN material reads
+and unverified DANUS memory actions; workers cannot admit or revoke proofs.
 
-## Truth and strategy
+## Local attention, memory and runtime
 
-Claim truth is derived from active, exact-statement bound Facts. A Support certificate
-proves a conditional implication, not its conclusion. COMPOSE needs that certificate,
-all condition Facts, a complete candidate and a fresh verifier. Verified negative
-propositions can refute Claims; failure/timeout cannot. Representation equivalence
-discharges neither endpoint. Helper-dependent aliases activate only after separately
-verified fixed modus ponens with the actual helper and conditional certificate.
+Claim and Support packet projections exclude their embedded proof storage. Workers
+receive the current Study/frontier, selected accepted statements, relevant Support
+requirements, bounded local/shared research and explicitly requested material.
+Full proofs remain available to the verifier through the established candidate and
+actual accepted predecessor interface. DANUS stores research globally; CRPN projects
+it locally. Malformed noncritical explanations and research views remain fail-soft.
 
-CRPN retains direct-first and the deterministic 3:1:1 ADVANCE/EXPLORE/REVISIT policy,
-including fixed snapshots and fair cursors. Workers may return Facts, Supports,
-refutations, independent research focuses or unfinished continuation. Same-line work
-stays in its persistent lane. Unary recurrence sees only its ancestor path;
-AND decompositions are not automatically collapsed. Scope and predecessor guards
-remain below search policy; a new local definition belongs in a self-contained goal.
+LocalMemory stores unfinished Study research; GlobalMemory stores awareness; neither
+can discharge a Claim. Persistent lanes are retained, with new isolated Codex sessions
+rather than an indefinitely growing conversation. Confirmed calls are reused, unknown
+reservations are not automatically retried, timeout research persists, missing usage
+remains UNKNOWN, and source/runtime/model drift fails closed.
 
-Selector fields are Study, operation/task, requested Facts/research queries, optional
-bridge request and advisory notes. There are no required object-comparison, coverage,
-assessment or score fields. INSPECT carries no final action-comparison obligation.
-Malformed advisory notes/independent-focus proposals produce diagnostics, not truth or
-a global veto. Missing executable action, corrupt state or unauthorized premise fails
-closed. Derived view failure cannot manufacture an accepted premise.
+Windows runs the public CLI; Codex workers run in the existing Linux Docker image.
+Use `python -m crpn init|migrate|run|pause|resume|status|revoke|export`. Normal execution
+remains Sol/xhigh/600 seconds with no host fallback. Pause finishes the in-flight
+transition. Fresh schema/source migration uses a new runtime workspace and run ID;
+old runtime fingerprints are never forged or resumed under changed code.
 
-Cross-scope facts can be discovered and inspected with their full original conditions.
-Ordinary reads retain exact ambient scope. An inspected explicit bridge freezes a
-target auxiliary interface; Worker and fresh verifier check applicability/conditions.
-Only the resulting target-scope Fact becomes a local premise. Exact already-completed
-bridges with valid source lineage are reused; no semantic similarity rebinding occurs.
+## Lossless migration
 
-## Runtime and memory
+`python -m crpn migrate SOURCE FRESH_DESTINATION` reads either original `crpn-1` or
+locally accepted `crpn-danus-1`. Each existing proof is placed in its mathematical
+owner; ambiguous or missing ownership fails closed. Evidence, proposition, Support
+and Study IDs are retained; exceptional negative-record conversion has an explicit
+map. Original statement/proof formatting and predecessor IDs remain intact.
 
-A Study maps to a persistent DANUS worker lane, not an indefinitely growing conversation.
-CRPN supplies a stable transition key. DANUS freezes the exact packet/schema, records
-the reservation, runs the process and confirms the response with hashes. Confirmed
-calls are reused; unknown unfinished reservations become INTERRUPTED, never guessed
-successful or automatically retried. Later ordinary service uses a new key and the
-same lane's complete memory. Unknown usage remains unknown.
-
-CRPN persists the pending selection/proposed cursor before calls and atomically commits
-service/revision/cursors after an actual Worker slice. Bridge/inspection is not Study
-service. Admission and alias transitions are idempotent; runtime source/image/CLI/
-config/model/effort/timeout drift fails closed. This is single-host recovery with OS
-locks and atomic files, not distributed consensus.
-
-Workers save unfinished work DURING calls through DANUS local_append/gm_add. There is
-no new checkpoint envelope parser or duplicate artifact authority. Partial JSONL tails
-cannot replace complete notes. Historical/public output remains evidence. Whole
-oversized research records require paging; mathematical conditions are never silently
-truncated. No cumulative attempt/timeout/no-progress stopping budget is added.
-
-## Isolation and verification seam
-
-Live calls use Docker only: staging mount plus read-only auth/config, no project truth
-store, other lane, or Docker socket. Codex is read-only with command-network denial.
-An authenticated broker exposes allowlisted role-scoped material/memory capabilities.
-Workers cannot admit/revoke Facts. Verifier and recurrence roles have no retrieval or
-memory tools. Confirmed inputs and public RPC/runtime evidence belong to DANUS.
-
-`crpn.verification.VerifierBackend` receives exactly the candidate and actual accepted
-predecessor statements in a fresh session. The initial closed-book backend remains
-LLM verification, **not a kernel**. This migration neither repairs past false acceptance
-nor resumes Truth Gate prompt experiments. Imported acceptance retains its historical
-status; revoked closures stay invalid. A future mechanical backend can replace this
-seam without changing CRPN scheduling.
-
-## Entry and observability
-
-```powershell
-python -m pip install -e .
-python -m crpn init workspaces/demo --problem-id demo --statement-file problem.txt
-python -m crpn run workspaces/demo
-python -m crpn status workspaces/demo
-python -m crpn pause workspaces/demo
-python -m crpn resume workspaces/demo
-python -m crpn export workspaces/demo
-python -m crpn migrate FROZEN_SOURCE FRESH_DESTINATION
-```
-
-Real calls remain Sol/xhigh/600s and require the existing isolated Codex image.
-No mathematical model was called in this migration. For the read-only upstream
-Fact/memory dashboard install `.[observability]`, then run
-`python -m danus.observability --project WORKSPACE` (loopback default). It is a view,
-not authority; CRPN state is additionally projected by `crpn status`.
-
-## Acceptance and limits
-
-See `MIGRATION_AUDIT.md` for actual checks and counts. The integrated deterministic
-trajectory covers failure -> Support -> child -> COMPOSE, scope bridge, continuing
-timeout notes, recurrence/helper/activation, revocation and interruptions. Actual
-Docker permissions are checked without real credentials or model calls.
-
-Limitations: single host/local filesystem; no old frontend migration; no provider-funded
-long run in this task; individual oversized objects require explicit smaller pages or
-interfaces; mathematical relevance remains model policy. Imported proof text may cite
-legacy IDs, resolved by migration mappings rather than silent rewriting. Old journals
-are provenance, not resumed reservations. Upstream's POSIX standalone scaffolder is not
-a supported Windows entry. These checks establish infrastructure/semantic continuity,
-not improved solved rate or mathematical reliability.
-
-Next: review this architecture baseline, then separately authorize a bounded real
-continuation through the new ordinary entry. No #67 resume, mathematics tuning or push
-belongs to this migration.
+Every source file is archived by content hash, including old calls, verification,
+revocation and research history. Source bytes remain untouched. Source call journals
+are archive evidence, not executable reservations. Old memory is retained in the
+existing DANUS stores. No destination `fact_graph` is created. Publication is atomic
+and migration retries are byte-idempotent. A source with pending current-schema
+admission must first settle normally; migration does not guess its outcome.

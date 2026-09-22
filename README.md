@@ -1,15 +1,15 @@
 # Noespire
 
 CRPN research strategy on the pinned DANUS substrate. Read
-[Architecture](ARCHITECTURE_AFTER_REFACTOR.md) and [Migration audit](MIGRATION_AUDIT.md).
+[Architecture](ARCHITECTURE_AFTER_REFACTOR.md) and [Authority migration report](CRPN_AUTHORITY_MIGRATION.md).
 
 ```text
 Claim / Study -> CRPN 3:1:1 selection -> DANUS persistent worker lane
- -> fresh VerifierBackend -> DANUS FactGraph
+ -> fresh VerifierBackend -> CRPN admission -> Claim proofs / Support certificates
  -> Support / frontier / representation strategy -> further research
 ```
 
-There is one verified truth store, one three-tier memory model, and one invocation
+The sole truth authority is the CRPN AND/OR graph in `crpn.json`. There is one invocation
 lifecycle. Local and global memory are unverified. A Support certificate establishes
 an implication, not its conclusion. Aliases do not discharge Claims. LLM-verified
 Facts are not kernel-checked theorems.
@@ -37,8 +37,8 @@ Pause is cooperative. Model-generated metadata cannot acquire truth authority.
 python -m crpn migrate FROZEN_OLD_WORKSPACE FRESH_DESTINATION
 ```
 
-The importer checks hashes, changes Fact IDs to the DANUS scheme, preserves source
-bytes and explicit mappings, keeps revoked closures invalid, and imports research
+The importer checks hashes, retains evidence/Claim/Support IDs, preserves source
+bytes and explicit maps, keeps revoked closures invalid, and imports research
 into DANUS memory. It creates a new run; historical invocation bookkeeping is
 provenance, never a resumed old runtime fingerprint. Never import into the source.
 

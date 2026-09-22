@@ -28,14 +28,14 @@ def replay_case(source,destination):
     for old_id in order:
         new_id=id_map[old_id]
         if old_id in invalidated:
-            assert new_id in net.graph.revoked_ids()
-            assert not net.graph.exists(new_id)
+            assert new_id in net.revoked_ids()
+            assert new_id not in net.proof_ids()
             continue
-        fact=net.graph.get(new_id)
+        fact=net._accepted(new_id)
         assert fact.statement==facts[old_id]['statement']
         assert fact.proof==facts[old_id]['proof']
         assert set(fact.predecessors)=={id_map[f] for f in facts[old_id]['predecessors']}
-        assert all(f.fact_id not in net.graph.revoked_ids() for f in net.graph.supporting_closure(new_id))
+        assert all(f.fact_id not in net.revoked_ids() for f in net.supporting_closure(new_id))
     ready_before={sid for sid,row in old['supports'].items() if row['bridge_fact_id'] not in invalidated
                   and expected_truth[row['conclusion_claim_id']]=='OPEN'
                   and all(expected_truth[c]=='DISCHARGED' for c in row['requirement_claim_ids'])}

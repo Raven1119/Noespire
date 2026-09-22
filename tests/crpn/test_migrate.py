@@ -63,9 +63,9 @@ def test_full_import_lineage_scope_memories_and_schedule(tmp_path):
     dest=tmp_path/'new'
     report=migrate(root,dest)
     net=Network(dest);mapped=report['fact_id_map']
-    assert mapped[ids[0]]!=ids[0]
-    assert net.graph.get(mapped[ids[1]]).predecessors==[mapped[ids[0]]]
-    assert ids[0] in net.graph.get(mapped[ids[1]]).proof  # original text, explicit provenance map
+    assert mapped[ids[0]]==ids[0]
+    assert net._accepted(mapped[ids[1]]).predecessors==[mapped[ids[0]]]
+    assert ids[0] in net._accepted(mapped[ids[1]]).proof  # original text, explicit provenance map
     assert net.data['schedule']==run['schedule']
     assert net.data['control']['run_id']!='old-run'
     assert not (dest/'continuous_run').exists()
@@ -90,9 +90,9 @@ def test_revoked_source_and_active_descendant_import_fail_closed(tmp_path):
     net=Network(tmp_path/'new')
     assert report['dependency_invalidated']==[ids[1]]
     for fid in ids[:2]:
-        assert report['fact_id_map'][fid] in net.graph.revoked_ids()
+        assert report['fact_id_map'][fid] in net.revoked_ids()
         with pytest.raises((ValueError,KeyError)):
-            net.graph.get(report['fact_id_map'][fid])
+            net._accepted(report['fact_id_map'][fid])
     assert net.truth(g['supports'][next(iter(g['supports']))]['requirement_claim_ids'][0])=='OPEN'
     assert not net.ready_supports()
     assert (tmp_path/'new/migration/legacy_revocation_log.jsonl').read_bytes()==(root/'revocation_log.jsonl').read_bytes()

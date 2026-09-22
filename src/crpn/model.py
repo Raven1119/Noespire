@@ -1,16 +1,16 @@
-"""CRPN mathematical/search relations. DANUS alone stores verified truth.
+"""The sole CRPN AND/OR authority: Claims own proofs, Supports own certificates.
 
-No process, invocation, memory or permission journal lives here. Claims and
-Supports are immutable interfaces; accepted Fact bindings are checked against
-DANUS on every use. Alias certificates transport representations, never truth.
+Runtime receipts and research memory have no mathematical authority.
 """
 from copy import deepcopy
 from hashlib import sha256
 import json
 from pathlib import Path
+from types import SimpleNamespace
+from contextlib import contextmanager
 
-from danus.core.durable_io import atomic_json, read_json
-from danus.core.factgraph import FactGraph, parse_fact
+from danus.core.durable_io import atomic_json, read_json, locked
+from danus.core import bm25
 
 
 def normalize(text):
@@ -33,6 +33,18 @@ def make_claim(problem_id, context, goal):
     return {'claim_id': identity('ob-', values), **values, 'statement': statement}
 
 
+def proof_identity(record):
+    values = {k: record[k] for k in ('problem_id', 'statement', 'proof', 'predecessors')}
+    values.update(statement=normalize(values['statement']), proof=normalize(values['proof']),
+                  predecessors=sorted(values['predecessors']))
+    if record.get('id_scheme') == 'crpn-legacy':
+        canonical = json.dumps(values, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+    else:
+        values['glossary_introduces'] = record.get('glossary_introduces', {})
+        canonical = json.dumps(values, ensure_ascii=False, sort_keys=True)
+    return sha256(canonical.encode()).hexdigest()[:16]
+
+
 class Network:
     def __init__(self, root):
         self.root = Path(root)
@@ -40,7 +52,8 @@ class Network:
         self.data = read_json(self.path)
         self.problem_id = self.data['problem_id']
         self.target_id = self.data['target_claim_id']
-        self.graph = FactGraph(self.root)
+        self._snapshot = deepcopy(self.data)
+        self._staging = False
         self.validate()
 
     @classmethod
@@ -48,10 +61,12 @@ class Network:
         path = Path(root) / 'crpn.json'
         if path.exists():
             raise ValueError('CRPN state exists')
+        if (Path(root) / 'fact_graph').exists() or (Path(root) / 'proof_graph.json').exists():
+            raise ValueError('legacy truth store exists; migrate into a fresh workspace')
         claim = make_claim(problem_id, context, goal)
-        atomic_json(path, {'schema_version': 'crpn-danus-1', 'problem_id': claim['problem_id'],
+        atomic_json(path, {'schema_version': 'crpn-authority-2', 'problem_id': claim['problem_id'],
             'target_claim_id': claim['claim_id'], 'claims': {claim['claim_id']: claim},
-            'fact_bindings': {}, 'supports': {}, 'studies': {}, 'refutations': {},
+            'supports': {}, 'studies': {},
             'representations': {}, 'deferred_representations': {}, 'pending_recurrence': []})
         result = cls(root)
         result.ensure_studies()
@@ -59,7 +74,8 @@ class Network:
 
     def claim(self, claim_id):
         try:
-            return deepcopy(self.data['claims'][claim_id])
+            row = self.data['claims'][claim_id]
+            return make_claim(self.problem_id, row['context'], row['goal'])
         except KeyError as error:
             raise ValueError('unknown Claim') from error
 
@@ -71,90 +87,173 @@ class Network:
         return deepcopy(claim)
 
     def save(self):
+        if self._staging:
+            return
         self.validate()
-        atomic_json(self.path, self.data)
+        self._check_proof_transition()
+        with locked(self.root / '.graph.lock'):
+            if read_json(self.path) != self._snapshot:
+                raise ValueError('concurrent CRPN state change; reload before writing')
+            if self.data == self._snapshot:
+                return
+            atomic_json(self.path, self.data)
+            self._snapshot = deepcopy(self.data)
+
+    def _check_proof_transition(self):
+        old = Network.__new__(Network)
+        old.data = self._snapshot
+        before, after = old._records(), self._records()
+        for fid, (table, owner, slot, record) in before.items():
+            if fid not in after or after[fid][:3] != (table, owner, slot):
+                raise ValueError('cannot discard or transfer historical proof ownership')
+            current = after[fid][3]
+            if ({k:v for k,v in record.items() if k not in ('status', 'history')} !=
+                    {k:v for k,v in current.items() if k not in ('status', 'history')}
+                    or current['history'][:len(record['history'])] != record['history']
+                    or record['status'] == 'revoked' and current['status'] != 'revoked'):
+                raise ValueError('historical proof is immutable; revocation cannot be undone')
+        for fid in after.keys() - before.keys():
+            acceptance = after[fid][3]['history'][0]
+            verification = acceptance.get('verification')
+            submission = acceptance.get('submission', '')
+            if (not isinstance(verification, dict) or verification.get('verdict') != 'correct'
+                    or len(submission) != 64 or any(c not in '0123456789abcdef' for c in submission)):
+                raise ValueError('new proof requires CRPN verified submission')
+            directory = self.root / 'submissions' / submission
+            if read_json(directory / 'verification.json') != verification:
+                raise ValueError('proof verification receipt mismatch')
+            request = read_json(directory / 'request.json')
+            if any(after[fid][3][k] != request[k] for k in ('problem_id', 'statement', 'proof', 'predecessors')):
+                raise ValueError('proof submission content mismatch')
+
+    def _assert_current(self):
+        if (hasattr(self, '_snapshot') and not self._staging
+                and read_json(self.path) != self._snapshot):
+            raise ValueError('CRPN authority changed; reload before reading premises')
+
+    @contextmanager
+    def _transaction(self):
+        """One graph publication, including evidence and its mathematical owner."""
+        before = deepcopy(self.data)
+        if self._staging:
+            raise ValueError('nested graph admission')
+        self._staging = True
+        try:
+            yield
+            self._staging = False
+            self.save()
+        except BaseException:
+            self.data = before
+            raise
+        finally:
+            self._staging = False
+
+    def _records(self):
+        records = {}
+        for table, slots in (('claims', ('proofs', 'refutations')), ('supports', ('certificates',))):
+            for owner, node in self.data[table].items():
+                for slot in slots:
+                    for fid, record in node.get(slot, {}).items():
+                        if fid in records:
+                            raise ValueError('proof has multiple authority owners')
+                        records[fid] = (table, owner, slot, record)
+        return records
 
     def _stored(self, fact_id):
-        # Revoked certificates are retained as history, never returned by _accepted.
-        self.graph._path(fact_id)
-        if fact_id in self.graph.revoked_ids():
-            path = self.graph.revoked_dir / (fact_id + '.md')
-            active_path = self.graph._path(fact_id)
-            if path.exists() and active_path.exists() and path.read_bytes() != active_path.read_bytes():
-                raise ValueError('conflicting revoked Fact evidence')
-            # A durable DANUS revocation batch already invalidates the Fact,
-            # even if a crash precedes its move to the archive. Read its old
-            # bytes only for historical interface validation, never acceptance.
-            if not path.exists():
-                path = active_path
-            if not path.exists():
-                raise ValueError('missing revoked Fact evidence')
-            fact = parse_fact(path.read_text(encoding='utf-8'), fact_id)
-        else:
-            fact = self.graph.get(fact_id)
-        if fact.problem_id != self.problem_id:
-            raise ValueError('cross-problem Fact')
-        return fact
+        try:
+            record = self._records()[fact_id][3]
+        except KeyError as error:
+            raise ValueError('unknown proof evidence') from error
+        return SimpleNamespace(**deepcopy(record))
 
     def _accepted(self, fact_id):
-        fact = self.graph.get(fact_id)
-        closure = self.graph.supporting_closure(fact_id)
-        if any(item.problem_id != self.problem_id for item in closure):
-            raise ValueError('cross-problem Fact closure')
-        return fact
+        self._assert_current()
+        self.supporting_closure(fact_id)
+        return self._stored(fact_id)
 
     def _active(self, fact_id):
-        # Revocation is a lawful transition; missing/corrupt files remain errors.
-        if fact_id in self.graph.revoked_ids():
+        if self._stored(fact_id).status == 'revoked':
             return False
         self._accepted(fact_id)
         return True
 
+    def proof_ids(self):
+        return sorted(fid for fid in self._records() if self._active(fid))
+
+    def revoked_ids(self):
+        self._assert_current()
+        return {fid for fid, (_, _, _, r) in self._records().items() if r['status'] == 'revoked'}
+
+    def supporting_closure(self, fact_id):
+        self._assert_current()
+        records = self._records()
+        seen, visiting, ordered = set(), set(), []
+        def visit(fid):
+            if fid in visiting:
+                raise ValueError('proof dependency cycle')
+            if fid in seen:
+                return
+            if fid not in records or records[fid][3]['status'] != 'accepted':
+                raise ValueError('missing or revoked proof in closure')
+            record = records[fid][3]
+            visiting.add(fid)
+            for predecessor in record['predecessors']:
+                visit(predecessor)
+            visiting.remove(fid)
+            seen.add(fid)
+            ordered.append(SimpleNamespace(**deepcopy(record)))
+        visit(fact_id)
+        return ordered
+
+    def search(self, query, limit=10):
+        ids = self.proof_ids()
+        records = [self._stored(fid) for fid in ids]
+        documents = [bm25.tokenize(' '.join((r.statement, r.proof, getattr(r, 'intuition', '')))) for r in records]
+        scores = bm25.bm25_scores(query, documents)
+        return [{'fact_id': r.fact_id, 'score': score, 'statement': normalize(r.statement)}
+                for r, score in sorted(zip(records, scores), key=lambda pair: -pair[1]) if score > 0][:limit]
+
+    def revoke(self, fact_id, reason):
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError('revocation requires reason')
+        records = self._records()
+        if fact_id not in records:
+            raise ValueError('unknown proof evidence')
+        invalid = {fact_id}
+        while True:
+            expanded = invalid | {fid for fid, (_, _, _, r) in records.items()
+                                  if invalid.intersection(r['predecessors'])}
+            if expanded == invalid:
+                break
+            invalid = expanded
+        with self._transaction():
+            for fid in sorted(invalid):
+                r = records[fid][3]
+                if r['status'] != 'revoked':
+                    r['status'] = 'revoked'
+                    r.setdefault('history', []).append({'event': 'revoked', 'root': fact_id, 'reason': reason})
+        return sorted(invalid)
+
     def facts_for(self, claim_id):
         claim = self.claim(claim_id)
-        return tuple(self._accepted(fid) for fid in self.data['fact_bindings'].get(claim_id, [])
+        return tuple(self._accepted(fid) for fid in self.data['claims'][claim_id].get('proofs', {})
                      if self._active(fid) and normalize(self._stored(fid).statement) == claim['statement'])
 
     def truth(self, claim_id):
         self.claim(claim_id)
         if self.facts_for(claim_id):
             return 'DISCHARGED'
-        fid = self.data['refutations'].get(claim_id)
-        return 'REFUTED' if fid and self._active(fid) else 'OPEN'
-
-    def bind_fact(self, claim_id, fact_id):
-        fact, claim = self._accepted(fact_id), self.claim(claim_id)
-        if normalize(fact.statement) != claim['statement'] or self.truth(claim_id) == 'REFUTED':
-            raise ValueError('Fact does not establish this exact scoped Claim')
-        bindings = self.data['fact_bindings'].setdefault(claim_id, [])
-        if fact_id not in bindings:
-            bindings.append(fact_id)
-            self.save()
+        return ('REFUTED' if any(self._active(fid) for fid in
+                self.data['claims'][claim_id].get('refutations', {})) else 'OPEN')
 
     def refutation_statement(self, claim_id):
         claim = self.claim(claim_id)
         return 'The following proposition is false: ' + json.dumps(claim['statement'], ensure_ascii=False) + '.'
 
-    def bind_refutation(self, claim_id, fact_id):
-        fact = self._accepted(fact_id)
-        if normalize(fact.statement) != self.refutation_statement(claim_id) or self.facts_for(claim_id):
-            raise ValueError('Refutation must contradict exactly this unresolved Claim')
-        old = self.data['refutations'].get(claim_id)
-        if old and old != fact_id:
-            raise ValueError('cannot replace Refutation evidence')
-        self.data['refutations'][claim_id] = fact_id
-        self.save()
-
     def _contexts(self, fact_id):
-        contexts = {self.claim(cid)['context'] for cid, ids in self.data['fact_bindings'].items() if fact_id in ids}
-        contexts.update(self.claim(row['conclusion_claim_id'])['context'] for row in self.data['supports'].values()
-                        if row['bridge_fact_id'] == fact_id)
-        for table, key in (('representations', 'equivalence_fact_id'),
-                           ('deferred_representations', 'conditional_fact_id')):
-            contexts.update(self.claim(row['ancestor_claim_id'])['context'] for row in self.data[table].values()
-                            if row[key] == fact_id)
-        contexts.update(self.claim(cid)['context'] for cid, fid in self.data['refutations'].items() if fid == fact_id)
-        return contexts
+        table, owner, _, _ = self._records()[fact_id]
+        cid = owner if table == 'claims' else self.data['supports'][owner]['conclusion_claim_id']
+        return {self.claim(cid)['context']}
 
     def visible_fact(self, fact_id, context):
         if self._contexts(fact_id) != {normalize(context)}:
@@ -211,43 +310,54 @@ class Network:
                       'predecessors': predecessors, 'visible_fact_ids': visible}
         return prepared, descriptor
 
-    def accept_verified(self, descriptor, fact_id):
+    def _admit_candidate(self, descriptor, record):
         prepared, checked = self.prepare_candidate(descriptor, descriptor['visible_fact_ids'])
-        fact = self._accepted(fact_id)
-        if (normalize(fact.statement) != prepared['statement'] or normalize(fact.proof) != normalize(prepared['proof'])
-                or fact.predecessors != prepared['predecessors']):
-            raise ValueError('accepted Fact does not match candidate')
+        if any(record[k] != prepared[k] for k in ('statement', 'proof', 'predecessors')):
+            raise ValueError('verified proof does not match candidate')
         claim = make_claim(self.problem_id, checked['context'], checked['goal'])
-        self.data['claims'].setdefault(claim['claim_id'], claim)
-        if checked['kind'] == 'FACT':
-            bindings = self.data['fact_bindings'].setdefault(claim['claim_id'], [])
-            if fact_id not in bindings:
-                bindings.append(fact_id)
-            self.save()  # Claim registration and its binding publish together.
-            return {'kind': 'FACT', 'claim_id': claim['claim_id'], 'fact_id': fact_id}
-        if checked['kind'] == 'REFUTATION':
-            self.bind_refutation(claim['claim_id'], fact_id)
-            return {'kind': 'REFUTATION', 'claim_id': claim['claim_id'], 'fact_id': fact_id}
+        node = self.data['claims'].setdefault(claim['claim_id'], claim)
+        fid = record['fact_id']
+        if checked['kind'] != 'SUPPORT':
+            slot = 'proofs' if checked['kind'] == 'FACT' else 'refutations'
+            self._attach('claims', claim['claim_id'], slot, record)
+            return {'kind': checked['kind'], 'claim_id': claim['claim_id'], 'fact_id': fid}
         old_claims = set(self.data['claims'])
         requirements = [make_claim(self.problem_id, r['context'], r['goal']) for r in checked['requirements']]
         path = self.ancestor_path(claim['claim_id'])
         values = {'conclusion_claim_id': claim['claim_id'], 'requirement_claim_ids': [r['claim_id'] for r in requirements],
                   'scope_ref': identity('scope-', {'problem_id': self.problem_id, 'context': claim['context']}),
-                  'bridge_fact_id': fact_id}
+                  'bridge_fact_id': fid}
         support = {'support_id': identity('support-', values), **values}
         sid = support['support_id']
         if sid not in self.data['supports']:
-            self.data['claims'].update((r['claim_id'], r) for r in requirements)
+            for r in requirements:
+                self.data['claims'].setdefault(r['claim_id'], r)
             self.data['supports'][sid] = support
             child = requirements[0]['claim_id']
             if len(requirements) == 1 and (child not in old_claims or child in path):
                 self.data['pending_recurrence'].append(sid)
-            self.ensure_studies(save=False)
-            self.save()
-        return {'kind': 'SUPPORT', **deepcopy(support), 'fact_id': fact_id}
+        self._attach('supports', sid, 'certificates', record)
+        self.ensure_studies(save=False)
+        return {'kind': 'SUPPORT', **self.support(sid), 'fact_id': fid}
+
+    def _attach(self, table, owner, slot, record):
+        """Private to CRPN admission/import; no independent proof-store write."""
+        fid = record['fact_id']
+        old = self._records().get(fid)
+        if old:
+            if old[3]['status'] == 'revoked':
+                raise ValueError('revoked evidence cannot be readmitted')
+            if old[:3] != (table, owner, slot) or any(old[3][k] != record[k] for k in
+                    ('problem_id', 'statement', 'proof', 'predecessors')):
+                raise ValueError('proof identity/ownership conflict')
+            return
+        self.data[table][owner].setdefault(slot, {})[fid] = deepcopy(record)
+
+    def support(self, sid):
+        return {k: deepcopy(v) for k, v in self.data['supports'][sid].items() if k != 'certificates'}
 
     def ready_supports(self):
-        return tuple(deepcopy(row) for _, row in sorted(self.data['supports'].items())
+        return tuple(self.support(sid) for sid, row in sorted(self.data['supports'].items())
                      if self.truth(row['conclusion_claim_id']) == 'OPEN' and self._active(row['bridge_fact_id'])
                      and all(self.facts_for(cid) for cid in row['requirement_claim_ids']))
 
@@ -481,29 +591,61 @@ class Network:
         if not facts:
             raise ValueError('target remains unresolved')
         return {'target_fact_id': facts[0].fact_id, 'verification': 'LLM-verified',
-                'facts': [vars(f) for f in self.graph.supporting_closure(facts[0].fact_id)]}
+                'facts': [vars(f) for f in self.supporting_closure(facts[0].fact_id)]}
 
     def validate(self):
-        if self.data.get('schema_version') != 'crpn-danus-1' or self.target_id not in self.data['claims']:
+        if self.data.get('schema_version') != 'crpn-authority-2' or self.target_id not in self.data['claims']:
             raise ValueError('invalid CRPN state')
         for cid, claim in self.data['claims'].items():
-            if claim != make_claim(self.problem_id, claim['context'], claim['goal']) or cid != claim['claim_id']:
+            if {k:v for k,v in claim.items() if k not in ('proofs', 'refutations')} != make_claim(self.problem_id, claim['context'], claim['goal']) or cid != claim['claim_id']:
                 raise ValueError('Claim identity changed')
-        for cid, ids in self.data['fact_bindings'].items():
-            if len(ids) != len(set(ids)):
-                raise ValueError('duplicate Fact binding')
-            for fid in ids:
-                if normalize(self._stored(fid).statement) != self.claim(cid)['statement']:
-                    raise ValueError('Fact binding mismatch')
-                if self._active(fid):
-                    self._accepted(fid)
-        for cid, fid in self.data['refutations'].items():
-            if normalize(self._stored(fid).statement) != self.refutation_statement(cid):
-                raise ValueError('Refutation binding mismatch')
-            if self._active(fid) and self.facts_for(cid):
+        if 'fact_bindings' in self.data or 'refutations' in self.data:
+            raise ValueError('parallel truth bindings are retired')
+        records = self._records()
+        for fid, (table, owner, slot, record) in records.items():
+            if (fid != record['fact_id'] or record['problem_id'] != self.problem_id
+                    or record.get('id_scheme') not in ('content-v1', 'crpn-legacy')
+                    or record['status'] not in ('accepted', 'revoked')
+                    or proof_identity(record) != fid):
+                raise ValueError('proof identity/status corruption')
+            if not record.get('history') or record['history'][0].get('event') != 'accepted':
+                raise ValueError('missing historical acceptance')
+            if any(e.get('event') == 'revoked' for e in record['history']) != (record['status'] == 'revoked'):
+                raise ValueError('revoked evidence cannot be resurrected')
+            if table == 'claims':
+                expected = self.claim(owner)['statement'] if slot == 'proofs' else self.refutation_statement(owner)
+                if normalize(record['statement']) != expected:
+                    raise ValueError('proof owner interface mismatch')
+            else:
+                allowed = {self.data['supports'][owner]['bridge_fact_id']}
+                for relations, field in (('representations', 'equivalence_fact_id'),
+                                         ('deferred_representations', 'conditional_fact_id')):
+                    relation = self.data[relations].get(owner)
+                    if relation:
+                        allowed.add(relation[field])
+                if fid not in allowed:
+                    raise ValueError('certificate lacks its exact Support relation')
+            if self._active(fid):
+                self._accepted(fid)
+        # Historical revoked closures must still be complete and acyclic.
+        seen, visiting = set(), set()
+        def history(fid):
+            if fid in visiting or fid not in records:
+                raise ValueError('missing/cyclic historical proof dependency')
+            if fid in seen:
+                return
+            visiting.add(fid)
+            for pred in records[fid][3]['predecessors']:
+                history(pred)
+            visiting.remove(fid)
+            seen.add(fid)
+        for fid in records:
+            history(fid)
+        for cid, claim in self.data['claims'].items():
+            if self.facts_for(cid) and any(self._active(fid) for fid in claim.get('refutations', {})):
                 raise ValueError('contradictory truth bindings')
         for sid, row in self.data['supports'].items():
-            values = {k: v for k, v in row.items() if k != 'support_id'}
+            values = {k: v for k, v in row.items() if k not in ('support_id', 'certificates')}
             claim = self.claim(row['conclusion_claim_id'])
             requirements = [self.claim(k) for k in row['requirement_claim_ids']]
             if (not requirements or sid != row['support_id'] or sid != identity('support-', values)
@@ -540,7 +682,7 @@ class Network:
                     deferred = self.data['deferred_representations'].get(sid)
                     if deferred:
                         pred = self._stored(fid).predecessors
-                        helpers = self.data['fact_bindings'].get(deferred['helper_claim_id'], [])
+                        helpers = self.data['claims'][deferred['helper_claim_id']].get('proofs', {})
                         if len(pred) != 2 or deferred['conditional_fact_id'] not in pred or not set(pred).intersection(helpers):
                             raise ValueError('activation lost helper/certificate lineage')
                 else:

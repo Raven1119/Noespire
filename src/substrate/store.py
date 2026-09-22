@@ -1,6 +1,6 @@
-"""Thin scoped views over DANUS truth and memory, never shadow stores."""
+"""Scoped views over DANUS memory, never truth stores."""
 from pathlib import Path
-from danus.core import FactGraph, GlobalMemory, LocalMemory
+from danus.core import GlobalMemory, LocalMemory
 from danus.core.schema import GLOBAL_KINDS
 
 
@@ -28,7 +28,3 @@ def research_view(root, study_id, query, limit=4):
         return {"authority": "UNVERIFIED_RESEARCH", "local": own, "shared": related}
     except (ValueError, TypeError, KeyError):
         return {"authority": "UNVERIFIED_RESEARCH", "diagnostic": "view unavailable"}
-
-
-def search_facts(root, query, limit=8):
-    return FactGraph(root).search(query, limit)

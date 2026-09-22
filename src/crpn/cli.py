@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sys
 from uuid import uuid4
-from danus.core.durable_io import atomic_text
+from danus.core.durable_io import atomic_text, locked
 from .model import Network
 
 
@@ -14,8 +14,8 @@ def status(root):
     return {'run_id': control.get('run_id'), 'problem_id': n.problem_id,
             'target': n.target_id, 'target_truth': n.truth(n.target_id),
             'claims': len(n.data['claims']), 'supports': len(n.data['supports']),
-            'active_studies': len(n.active_studies()), 'accepted_facts': len(n.graph.list()),
-            'revoked_facts': len(n.graph.revoked_ids()), 'effective_depth': n.effective_depth(),
+            'active_studies': len(n.active_studies()), 'accepted_facts': len(n.proof_ids()),
+            'revoked_facts': len(n.revoked_ids()), 'effective_depth': n.effective_depth(),
             'service_index': control.get('visit', 0), 'schedule': n.data.get('schedule', {}),
             'pending': bool(control.get('pending')), 'paused': (Path(root) / '.pause').exists()}
 
@@ -69,8 +69,9 @@ def main(argv=None):
         result = {'status': 'PAUSE_REQUESTED'}
     elif args.command == 'export': result = Network(args.root).export()
     elif args.command == 'revoke':
-        n = Network(args.root)
-        result = {'revoked': n.graph.revoke(args.fact_id, args.reason)}
+        with locked(Path(args.root) / '.crpn.lock'):
+            n = Network(args.root)
+            result = {'revoked': n.revoke(args.fact_id, args.reason)}
     else: result = run(args.root, resume=args.command == 'resume', image=args.image)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0

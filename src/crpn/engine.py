@@ -1,14 +1,14 @@
 """CRPN policy transitions on DANUS lanes, memory and verified submissions.
 
-crpn.json stores search choices/cursors only. DANUS owns every model reservation,
-process, response, submission receipt, note and Fact. No reconstructed call journal.
+crpn.json owns mathematical state and strategy. DANUS owns model reservations,
+processes, responses and memory. No reconstructed call journal.
 """
 from copy import deepcopy
 from uuid import uuid4
 import json
 from danus.core import LocalMemory, GlobalMemory
 from danus.core.durable_io import locked
-from danus.gateway.submission import SubmissionGate
+from .admission import Admission
 from .verification import VerifierBackend
 from substrate.store import append_once, lane
 from . import contracts as C
@@ -24,7 +24,7 @@ class BlockingError(RuntimeError):
 class Research:
     def __init__(self, root, runtime):
         self.network, self.runtime = Network(root), runtime
-        self.gate = SubmissionGate(root, VerifierBackend(runtime))
+        self.gate = Admission(VerifierBackend(runtime))
 
     def _call(self, role, study, key, instructions, packet, schema):
         result = self.runtime.call(role, study, key, instructions, packet, schema)
@@ -32,9 +32,9 @@ class Research:
             raise BlockingError(result.get('error') or 'runtime error')
         return result
 
-    def _submit(self, key, prepared, purpose, author):
-        return self.gate.submit(key, problem_id=self.network.problem_id, author=author,
-                               **prepared, provenance={'purpose': purpose})
+    def _submit(self, key, prepared, purpose, author, descriptor):
+        return self.gate.submit(self.network, key, prepared=prepared, descriptor=descriptor,
+                                author=author, purpose=purpose)
 
     def step(self):
         with locked(self.network.root / '.crpn.lock'):
@@ -121,10 +121,10 @@ class Research:
                     except (ValueError, KeyError, TypeError) as error:
                         outcome.update(status='CANDIDATE_REJECTED', reason=str(error))
                     else:
-                        verdict = self._submit(key + ':candidate', prepared, 'local ' + descriptor['kind'], study)
+                        verdict = self._submit(key + ':candidate', prepared, 'local ' + descriptor['kind'], study, descriptor)
                         outcome['verification'] = verdict['verdict']
                         if verdict['accepted']:
-                            outcome['admission'] = n.accept_verified(descriptor, verdict['fact_id'])
+                            outcome['admission'] = verdict['admission']
                         else:
                             outcome['status'] = 'VERIFIER_REJECTED'
                 self._new_study(study, key, output.get('new_study'))
@@ -214,7 +214,7 @@ class Research:
         # No semantic matching and no scope rebinding. A revoked closure never qualifies.
         if auxiliary['claim_id'] in n.data['claims']:
             for fact in n.facts_for(auxiliary['claim_id']):
-                if source['fact_id'] in {f.fact_id for f in n.graph.supporting_closure(fact.fact_id)}:
+                if source['fact_id'] in {f.fact_id for f in n.supporting_closure(fact.fact_id)}:
                     return {'bridge_status': 'PASS', 'fact_id': fact.fact_id,
                             'scope': auxiliary['context'], 'statement': fact.statement,
                             'accepted_for_scope': True, 'reused': True}
@@ -236,10 +236,10 @@ class Research:
                 candidate.get('predecessors') != [source['fact_id']]):
             return {'bridge_status': 'REJECTED', 'reason': 'bridge changed interface or lineage'}
         prepared = {'statement': auxiliary['statement'], 'proof': candidate['proof'], 'predecessors': [source['fact_id']]}
-        verdict = self._submit(key + ':candidate', prepared, 'explicit scope bridge', action['study_id'])
+        verdict = self._submit(key + ':candidate', prepared, 'explicit scope bridge', action['study_id'],
+            {'kind': 'BRIDGE', 'context': auxiliary['context'], 'goal': auxiliary['goal'],
+             'source_fact_id': source['fact_id']})
         if verdict['accepted']:
-            claim = n.register_claim(auxiliary['goal'], auxiliary['context'])
-            n.bind_fact(claim['claim_id'], verdict['fact_id'])
             return {'bridge_status': 'PASS', 'fact_id': verdict['fact_id'], 'scope': auxiliary['context'],
                     'statement': auxiliary['statement'], 'accepted_for_scope': True}
         return {'bridge_status': verdict['verdict']}
@@ -288,13 +288,10 @@ class Research:
             prepared = {'statement': statement, 'proof': response.get('proof',''), 'predecessors': []}
             if not prepared['proof'].strip():
                 n.finish_recurrence(sid); continue
-            verdict = self._submit(key + ':certificate', prepared, 'representation transport; no new substantive theorem', 'representation')
+            verdict = self._submit(key + ':certificate', prepared, 'representation transport; no new substantive theorem', 'representation',
+                {'kind': 'REPRESENTATION', 'support_id': sid, 'ancestor_claim_id': ancestor,
+                 'ancestor_path': path, 'helper': helper})
             if verdict['accepted']:
-                if helper:
-                    registered = n.register_claim(helper['goal'], helper['context'])
-                    n.defer_alias(sid, ancestor, registered['claim_id'], verdict['fact_id'], path)
-                else:
-                    n.record_alias(sid, ancestor, verdict['fact_id'], path)
                 self._note('study-' + support['conclusion_claim_id'], key + ':recurrence-feedback',
                     {'research_feedback': 'This route returns to an ancestor-equivalent representation. It has not discharged the ancestor.',
                      'ancestor_claim_id': ancestor, 'conditional_helper': helper['claim_id'] if helper else None})
@@ -311,8 +308,7 @@ class Research:
             except ValueError:
                 continue
             verdict = self._submit(control['run_id'] + ':activation:' + sid, candidate,
-                                   'fixed modus ponens; no additional mathematics', 'activation')
-            if verdict['accepted']:
-                n.activate_alias(sid, verdict['fact_id'])
-            else:
+                                   'fixed modus ponens; no additional mathematics', 'activation',
+                                   {'kind': 'ACTIVATION', 'support_id': sid})
+            if not verdict['accepted']:
                 n.release_deferred(sid)

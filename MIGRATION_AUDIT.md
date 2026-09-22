@@ -1,3 +1,7 @@
+> Historical substrate migration audit. Its FactGraph/SubmissionGate ownership was
+> superseded by [CRPN authority convergence](CRPN_AUTHORITY_MIGRATION.md). Original
+> counts and decisions below are retained as dated evidence, not current rules.
+
 # CRPN infrastructure migration audit
 
 ## Scope and frozen references

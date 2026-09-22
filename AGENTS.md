@@ -2,14 +2,18 @@
 
 Read ARCHITECTURE_AFTER_REFACTOR.md and MIGRATION_AUDIT.md for the active boundary.
 Current execution: `python -m crpn`. CRPN owns Claims/Supports/Studies and strategy;
-vendored DANUS owns Facts, three-tier memory, retrieval, invocation and processes.
+CRPN also owns every proof and mathematical transition. DANUS owns only generic
+memory, BM25, IO, capability transport, invocation and processes.
 
 - Preserve the upstream commit/license and document every vendor patch.
 - Do not import the retired `research` / `application` runtime into the new path.
-- Only DANUS FactGraph is verified truth. All action notes/cards/summaries are derived
-  or unverified. Never infer truth from memory, alias, Support readiness or graph depth.
-- All fact writes go through SubmissionGate + a fresh VerifierBackend, except the
-  explicit provenance-checked legacy importer. Never silently revive revoked Facts.
+- Only CRPN crpn.json is mathematical authority: Claims own proofs/refutations and
+  Supports own conditional/representation certificates. Memory/cards are unverified.
+  Never infer truth from alias, Support readiness, depth or a submission receipt.
+- All new proof writes go through crpn.admission.Admission + a fresh VerifierBackend;
+  explicit provenance-checked migration imports history without reverification.
+  DANUS FactGraph/SubmissionGate/native main must never run on CRPN workspaces.
+  Never discard proof history, transfer ownership, or revive revoked evidence.
 - Exact ambient scope and actual accepted predecessor closure remain mandatory.
 - Keep 3:1:1 and fixed REVISIT semantics. Notes/inspection/bridge do not count as Study service.
 - Runtime/model drift fails closed; reuse confirmed DANUS round results; never guess
