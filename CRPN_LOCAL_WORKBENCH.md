@@ -5,7 +5,7 @@
 实际本地基线为 `fb5c42ad8cb31f075957243d491f3eb90528af77`，分支
 `feature/crpn-danus-substrate`，开始时工作树干净，无后续提交需要回退。
 本轮不 push，不做策略优劣对照，不改变自然语言 Verifier 的接受标准。
-真实模型验收尚未开始；最终结果和实现 SHA 将在冻结源码后补入。
+初始实现为 `a43dad6e7282bc81e73b4ab84c73900f6bf37388`。首次真实短验收的基础设施故障已冻结；修复后重新冻结源码，最终结果另行补入。
 
 唯一数学权威仍是 `WORKSPACE/crpn.json` 内原有 Claim/Support AND/OR 图。
 Selector、direct-first、3:1:1、Study、bridge、recurrence/helper/alias 和 COMPOSE
@@ -60,3 +60,18 @@ DANUS 数学工作说明仅参考引用、证明组织、顺序审阅、定位�
 自然未使用的工具按未实测报告。真值或状态完整性故障冻结证据。
 
 最终将分别报告工具可用性、数学收益和验证可靠性，以及真实工具轨迹、成本和剩余限制。
+
+## 已冻结的真实故障及修复
+
+首次短验收 `6a97d56acd184c1991230a8492a9277e` 于 2026-09-22 12:11:52 UTC
+停止，完成 0 个服务、0 次新证明准入。Windows `os.replace` 在 Docker 正读取 heartbeat
+文件时返回 WinError 5，导致 Worker ERROR。这是本轮新增的心跳封装故障，不是数学失败。
+
+保留 `C:\n\wb1` 和 `C:\n\wbo` 原始证据。共 2 次模型调用：Selector 已确认，Worker
+未确认；已知 input 47,396 / output 1,381，Worker 用量 UNKNOWN。进程总墙钟 320.28 秒。
+没有将 UNKNOWN 填零，也没有重放这次调用或把失败 workspace 改成新源码继续运行。
+
+修复保持同一心跳文件，仅刷新 mtime，容器读取 stat；偶发刷新共享冲突计数并继续，连续
+失去心跳仍受 30 秒孤儿 watchdog 约束。新增共享冲突回归验证文件身份不变且不杀死 Worker。
+修复后完整回归 **128 passed，1 skipped**。所有失败和后续重新执行成本均计入最终报告。
+这是明确基础设施修复后的重跑，不因工具未自然触发而重复采样。

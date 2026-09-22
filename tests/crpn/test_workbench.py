@@ -283,3 +283,39 @@ def test_target_admitted_in_session_then_interrupt_still_commits_service_once(tm
     assert n.data['control']['visit'] == 1 and n.truth(n.target_id) == 'DISCHARGED'
     assert Research(tmp_path, actor.runtime).step()['status'] == 'TARGET_SOLVED'
     assert actor.calls == ['worker', 'verifier']
+
+
+def test_heartbeat_uses_stable_metadata_and_sharing_conflict_is_nonfatal(tmp_path, monkeypatch):
+    from danus.execution.isolation import DockerRoundRunner
+    from danus.execution.layout import WorkerLayout
+    from danus.execution.capabilities import CapabilityTool
+    from danus.execution import isolation
+    monkeypatch.setattr(DockerRoundRunner, '_check', lambda self,args: 'sha256:fixture' if args[0]=='image' else 'codex-fixture')
+    auth=tmp_path/'auth';auth.mkdir();(auth/'auth.json').write_text('{}')
+    tool=CapabilityTool('verify', 'fixture', {'type':'object'}, lambda a: {}, waits_for_model=True)
+    runner=DockerRoundRunner(tools=lambda *a:[tool],auth_dir=auth,docker='docker')
+    monkeypatch.setattr(runner, '_remove', lambda name:None)
+    wl=WorkerLayout(tmp_path/'project'/'workers'/'lane');wl.dir.mkdir(parents=True)
+    schema=wl.dir/'schema.json';schema.write_text('{}')
+    seen=[]
+    def fake_round(wl,role,prompt,log,timeout,**kwargs):
+        process=kwargs['command_factory'](); heartbeat=process.cwd/'heartbeat'
+        assert heartbeat.exists() and heartbeat.read_bytes()==b''
+        inode=heartbeat.stat().st_ino
+        real_utime=isolation.os.utime
+        def conflict(path,times):
+            if not seen:
+                seen.append(True);raise PermissionError('simulated Windows sharing conflict')
+            return real_utime(path,times)
+        with monkeypatch.context() as patch:
+            patch.setattr(isolation.os,'utime',conflict)
+            process.heartbeat();process.heartbeat()
+        assert heartbeat.stat().st_ino==inode and heartbeat.read_bytes()==b''
+        (process.cwd/'response.json').write_text('{}')
+        log.write_text('')
+        return 0
+    monkeypatch.setattr(isolation,'run_round',fake_round)
+    assert runner(wl,{'ROLE':'worker','MODEL':'gpt-5.6-sol','REASONING_EFFORT':'xhigh'},'',wl.dir/'public.jsonl',600,
+                  schema_path=schema,output_path=wl.dir/'response.json')==0
+    timing=json.loads((wl.dir/'timing.json').read_text())
+    assert timing['heartbeat_refresh_failures']==1

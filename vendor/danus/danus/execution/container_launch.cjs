@@ -15,7 +15,7 @@ const expire = () => {
 const began = Date.now();
 const timer = request.host_heartbeat ? setInterval(() => {
   let heartbeat = began;
-  try { heartbeat = Number(fs.readFileSync('/work/heartbeat', 'utf8')) * 1000; } catch (_) {}
+  try { heartbeat = fs.statSync('/work/heartbeat').mtimeMs; } catch (_) {}
   // While the host is alive it accounts for active time and verification waits.
   // An orphan loses its heartbeat and cannot run indefinitely.
   if (!Number.isFinite(heartbeat) || Date.now() - heartbeat > 30000) expire();

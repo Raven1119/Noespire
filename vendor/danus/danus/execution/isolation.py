@@ -23,7 +23,7 @@ except ImportError:  # Python 3.10, supported by upstream DANUS.
 
 from .capabilities import CapabilityBroker, CapabilityTool
 from .loop import ProcessCommand, run_round
-from danus.core.durable_io import immutable_json, atomic_text
+from danus.core.durable_io import immutable_json
 
 
 class IsolationUnavailable(RuntimeError):
@@ -187,6 +187,20 @@ class DockerRoundRunner:
                     '--output-schema', '/work/schema.json',
                     '--output-last-message', '/work/response.json', '-C', '/work', '-']
             waits = any(t.waits_for_model for t in bound_tools)
+            heartbeat_misses = []
+            heartbeat_path = stage / 'heartbeat'
+            if waits:
+                heartbeat_path.touch()
+            def heartbeat():
+                # Ephemeral liveness metadata, never a durable authority file.
+                # Replacing an open Windows bind-mounted file can fail with
+                # WinError 5. Keep its identity and refresh only its timestamp.
+                try:
+                    os.utime(heartbeat_path, None)
+                except OSError:
+                    # A transient sharing conflict is not a model failure. The
+                    # orphan watchdog still expires if liveness stays stale.
+                    heartbeat_misses.append(time.monotonic())
             (stage / 'launch.json').write_text(json.dumps({'argv': args, 'prompt': prompt,
                 'timeout': hard_timeout, 'host_heartbeat': waits}), encoding='utf8')
             command = self._command(name, stage, ['node', '/work/container_launch.cjs'])
@@ -196,7 +210,7 @@ class DockerRoundRunner:
                     command_factory=lambda: ProcessCommand(command, stage, os.environ.copy(),
                         lambda: self._remove(name),
                         (lambda: broker.wait_seconds) if waits else None,
-                        (lambda: atomic_text(stage / 'heartbeat', str(time.time()))) if waits else None))
+                        heartbeat if waits else None))
             finally:
                 self._remove(name)
                 # Even timeout/error outputs are retained as unconfirmed evidence;
@@ -212,5 +226,6 @@ class DockerRoundRunner:
             'tool_wait_seconds': broker.wait_seconds,
             'non_wait_seconds': max(0.0, wall - broker.wait_seconds),
             'active_timeout_seconds': hard_timeout,
+            'heartbeat_refresh_failures': len(heartbeat_misses),
             'tool_timeout_seconds': role.get('TOOL_TIMEOUT', 600)})
         return code
