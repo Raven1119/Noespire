@@ -76,8 +76,8 @@ and unverified DANUS memory actions; workers cannot admit or revoke proofs.
 Claim and Support packet projections exclude their embedded proof storage. Workers
 receive the current Study/frontier, selected accepted statements, relevant Support
 requirements, bounded local/shared research and explicitly requested material.
-Full proofs remain available to the verifier through the established candidate and
-actual accepted predecessor interface. DANUS stores research globally; CRPN projects
+The verifier receives the complete candidate proof and actual accepted predecessor
+statements through the established interface. DANUS stores research globally; CRPN projects
 it locally. Malformed noncritical explanations and research views remain fail-soft.
 
 LocalMemory stores unfinished Study research; GlobalMemory stores awareness; neither
