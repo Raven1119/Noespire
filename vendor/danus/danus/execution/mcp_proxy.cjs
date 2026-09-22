@@ -24,7 +24,7 @@ function rpc(body) {
         try {
           if (response.statusCode !== 200) throw new Error(`capability HTTP ${response.statusCode}`);
           const value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-          if (value.error) throw new Error(value.error);
+          if (value.error) throw new Error(typeof value.error === 'string' ? value.error : JSON.stringify(value.error));
           resolve(value);
         } catch (error) { reject(error); }
       });

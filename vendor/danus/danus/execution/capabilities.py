@@ -17,10 +17,18 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Callable, Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, ValidationError
 from danus.core._util import append_jsonl
 
 LIMIT = 2 * 1024 * 1024
+
+
+class _ArgumentValidationError(ValueError):
+    def __init__(self, error):
+        super().__init__("invalid capability arguments")
+        # Only the bound public input schema, never callback exception details.
+        self.details = {"type": "INVALID_ARGUMENTS", "path": list(error.absolute_path),
+                        "rule": error.validator, "expected": error.validator_value}
 
 
 @dataclass(frozen=True)
@@ -102,6 +110,9 @@ class CapabilityBroker:
                     result = owner.dispatch(request, deliver=deliver)
                     if not sent:
                         deliver(result)
+                except _ArgumentValidationError as exc:
+                    if not sent:
+                        deliver({"error": exc.details})
                 except Exception as exc:
                     # Error type only: arbitrary callback exceptions may contain
                     # host paths, credentials, or inaccessible material.
@@ -137,11 +148,18 @@ class CapabilityBroker:
         if not isinstance(name, str) or name not in self.tools:
             raise PermissionError("unavailable capability")
         arguments = request["arguments"]
-        self.validators[name].validate(arguments)
         started = time.monotonic()
         call_id = secrets.token_hex(16)
         self._record({"phase": "request", "call_id": call_id, "name": name,
                       "arguments": arguments, "time": time.time()})
+        try:
+            self.validators[name].validate(arguments)
+        except ValidationError as error:
+            rejected = _ArgumentValidationError(error)
+            self._record({"phase": "error", "call_id": call_id, "name": name,
+                          "arguments": arguments, "error": rejected.details,
+                          "time": time.time()})
+            raise rejected from None
         if self.tools[name].waits_for_model:
             with self._wait_lock:
                 self._wait_started = started

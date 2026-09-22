@@ -195,6 +195,48 @@ def test_dynamic_premise_revocation_is_rechecked_at_actual_use(tmp_path):
     assert Network(tmp_path).revoked_ids() == {prior}
 
 
+def test_oversized_record_request_returns_repairable_feedback_and_persists_rejection(tmp_path):
+    from danus.core import GlobalMemory
+    Network.create(tmp_path, 'p', 'Target')
+    record_id = GlobalMemory(tmp_path).append('conclusion', 'Old research',
+        'Earlier derivation. ' * 1000, 'prior-worker')
+    def worker(call, packet, role):
+        bad = call('gm_read', kind='conclusion', record_id=record_id, start=0, length=12000)
+        assert bad == {'error': {'type': 'INVALID_ARGUMENTS', 'path': ['length'],
+                                 'rule': 'maximum', 'expected': 8000}}
+        first = call('gm_read', kind='conclusion', record_id=record_id, start=0,
+                     length=bad['error']['expected'])
+        second = call('gm_read', kind='conclusion', record_id=record_id,
+                      start=first['record']['next_start'], length=8000)
+        assert first['authority'] == second['authority'] == 'UNVERIFIED_RESEARCH'
+        assert first['record']['end'] == second['record']['start'] == 8000
+        assert first['record']['sha256'] == second['record']['sha256']
+        return output()
+    actor = SessionActors(tmp_path, worker)
+    Research(tmp_path, actor.runtime).step()
+    assert actor.calls == ['worker'] and Network(tmp_path).proof_ids() == []
+    events = [json.loads(row) for path in tmp_path.glob('workers/*/rounds/*/capabilities.jsonl')
+              for row in path.read_text().splitlines()]
+    assert [e['phase'] for e in events] == ['request', 'error', 'request', 'response', 'request', 'response']
+    assert events[1]['error']['expected'] == 8000
+
+
+def test_callback_schema_errors_do_not_expose_private_validation_details(tmp_path):
+    from jsonschema import ValidationError
+    from danus.execution.capabilities import CapabilityTool
+    def private_failure(arguments):
+        raise ValidationError('private callback state', validator='const',
+                              validator_value='PRIVATE_VALUE')
+    tool = CapabilityTool('read', 'fixture', {'type': 'object'}, private_failure)
+    with CapabilityBroker([tool], bind='127.0.0.1', evidence_path=tmp_path/'calls.jsonl') as broker:
+        req = Request('http://127.0.0.1:%s/rpc' % broker.port,
+            data=json.dumps({'method': 'call', 'name': 'read', 'arguments': {}}).encode(),
+            headers={'Authorization': 'Bearer ' + broker.token})
+        with urlopen(req, timeout=5) as response:
+            assert json.load(response) == {'error': 'ValidationError'}
+    assert 'PRIVATE_VALUE' not in (tmp_path/'calls.jsonl').read_text()
+
+
 def test_nested_process_wait_excludes_verification_and_keeps_own_handle(tmp_path):
     import os, sys, threading, time
     from danus.execution import loop
