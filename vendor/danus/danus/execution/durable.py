@@ -130,7 +130,8 @@ class DurableRounds:
                 raise RecoveryError("invalid round receipt")
             hashes = result["evidence_hashes"]
             if (not isinstance(hashes, dict) or "request.json" not in hashes or
-                    set(hashes) - {"request.json", "schema.json", "public.jsonl", "response.json"} or
+                    set(hashes) - {"request.json", "schema.json", "public.jsonl", "response.json",
+                                   "capabilities.json", "capabilities.jsonl", "timing.json"} or
                     result["evidence"] != evidence or
                     (result["status"] == "COMPLETED" and
                      (not isinstance(result["output"], dict) or "response.json" not in hashes))):
@@ -163,7 +164,9 @@ class DurableRounds:
         code, output, error = None, None, None
         try:
             code = self.runner(self.worker,
-                               {"MODEL": model, "REASONING_EFFORT": effort, "ROLE": role},
+                               {"MODEL": model, "REASONING_EFFORT": effort, "ROLE": role,
+                                "REQUEST_PATH": str(request_file), "ROUND_KEY": key,
+                                "TOOL_TIMEOUT": self.fingerprint.get("mcp_tool_timeout", 600)},
                                prompt, log_file, timeout, schema_path=schema_file,
                                output_path=output_file, safe_read_only=True)
             if code == 124:
@@ -187,7 +190,9 @@ class DurableRounds:
                   "unknown_usage": usage is None,
                   "wall_seconds": time.monotonic() - started, "evidence": evidence,
                   "evidence_hashes": {p.name: _digest(p) for p in
-                                      (request_file, schema_file, log_file, output_file)
+                                      (request_file, schema_file, log_file, output_file,
+                                       folder / "capabilities.json", folder / "capabilities.jsonl",
+                                       folder / "timing.json")
                                       if p.exists()}}
         immutable_json(result_file, result)
         return result

@@ -46,8 +46,9 @@ No object ranking, required comparison prose, or assessment schema is needed.
 """
 WORKER = """Do the supplied local research task. Try direct proof when appropriate;
 otherwise research, form a precise conditional reduction, or report concrete unfinished
-work. Do not treat research memory as accepted truth. Only accepted_facts may be actual
-predecessors, and only if used. A candidate proves exactly its complete local statement,
+work. Do not treat research memory as accepted truth. Actual predecessors must be
+initial accepted_facts or results explicitly delivered by premise_request or accepted
+candidate_submit in this session, and only if used. A candidate proves exactly its complete local statement,
 not necessarily the root. A Support proves the conjunction of explicit requirements
 implies the conclusion; it does not prove the requirements. Child contexts must match
 conclusion context exactly. Put definitions, variable domains and conditional assumptions
@@ -95,4 +96,43 @@ requirement, invent missing assumptions, or change the frozen auxiliary statemen
 Return a complete FACT candidate for the auxiliary interface, or null with precise
 unfinished work. Persist useful unfinished work through local_append. Research memory
 has no mathematical authority. Do not retrieve external theorems.
+"""
+
+# Adapted only from DANUS worker verification/citation and verifier sequential-review
+# instructions. No native allocation, decomposition, branch elimination or retry policy.
+LOCAL_MATH_WORK = """
+Local research workbench (closed book): use local_search for your own past derivations,
+local_record for an exact record, and gm_search/gm_read for relevant shared awareness.
+Search results are excerpts; recover the needed text before relying on its details.
+Use fact_search and fact_inspect to locate existing results; proof_read returns exact
+character ranges with a stable digest, line positions, original scope and definitions.
+Follow next_start when more proof is needed. Do not load the entire project.
+To use a discovered accepted result, call premise_request and wait for its explicit
+acceptance. Foreign scope still needs CRPN's existing bridge; record that need in
+continuation rather than changing assumptions. Reading a proof does not turn its
+internal assertions into independent Facts.
+Organize a complete local proof into identifiable paragraphs or named claims. State
+all variable domains, definitions and conditions; cite exact accepted evidence IDs
+where used and check that the cited statement matches the step. Keep routine algebra
+inside the proof; there is no requirement to submit each small step.
+When a complete local candidate is ready, candidate_submit can return independent
+verification during this session. Read its location/problem/repair feedback. A returned
+accepted evidence ID can be used in further local reasoning immediately. Rejection or
+unknown completion is not acceptance. An unchanged request reuses its recorded outcome;
+a corrected proof is a different candidate. Continue within the supplied local task and
+preserve unfinished work; no manual handover or new Selector is needed for these tools.
+The final candidate may be null after tool submissions; do not describe an unconfirmed
+submission as successful. Use text reasoning only, with no external retrieval, CAS,
+code-based mathematical experiments, extra agents or computational proof checks.
+"""
+WORKER += LOCAL_MATH_WORK
+VERIFIER += """
+Read the candidate proof in its written order. In reason, identify each material error
+or gap by named claim, paragraph or quoted short location, explain the issue and give
+concrete repair feedback. Check exact cited interfaces and their applicability. You may
+use proof_read only for the explicitly listed accepted predecessors; their own proof
+text and definitions do not authorize unrelated assumptions. No memory, search, author
+session or confidence is available. Use text reasoning only, without executing code,
+CAS, external retrieval or additional agents. This adds feedback and material access,
+not a different acceptance rule.
 """

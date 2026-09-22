@@ -173,12 +173,15 @@ def _import_notes(source, dest, run, studies, hashes):
 
 def _current_data(source):
     # Historical decoder only: never construct a DANUS FactGraph or write its files.
-    from danus.core.factgraph import parse_fact
     data = read_json(source / 'crpn.json')
-    if data['schema_version'] != 'crpn-danus-1':
-        raise ValueError('unsupported source schema')
     if data.get('control', {}).get('pending'):
         raise ValueError('pause and settle the source admission before migration')
+    if data['schema_version'] == 'crpn-authority-2':
+        network = Network(source)
+        return data, {fid: row[3] for fid, row in network._records().items()}, network.revoked_ids()
+    if data['schema_version'] != 'crpn-danus-1':
+        raise ValueError('unsupported source schema')
+    from danus.core.factgraph import parse_fact
     records, revoked = {}, set()
     for folder in ('facts', '_revoked'):
         for path in sorted((source / 'fact_graph' / folder).glob('*.md')):
@@ -310,8 +313,14 @@ def migrate(source, destination, *, on_event=None):
         # Archive ALL source bytes, including acceptance/revocation receipts and raw rounds.
         archive = [_copy_evidence(source, dest, ref) for ref in hashes]
         immutable_json(dest / 'migration/source_archive.json', archive)
+        already_owned = data.get('schema_version') == 'crpn-authority-2'
         for fid in ordered:
             record = records[fid]
+            if already_owned:
+                # Current authority history is already complete. Fresh execution
+                # must not rewrite its original acceptance/revocation provenance.
+                emit('fact_imported', old_id=fid, new_id=fid, revoked=fid in invalid)
+                continue
             record.setdefault('id_scheme', 'content-v1')
             record['status'] = 'revoked' if fid in invalid else 'accepted'
             record['history'] = [{'event': 'accepted', 'source_run': source_run,
@@ -322,7 +331,8 @@ def migrate(source, destination, *, on_event=None):
                     'evidence_archive': 'migration/source_archive.json'})
             record.setdefault('provenance', {})['migration'] = 'migration/plan.json'
             emit('fact_imported', old_id=fid, new_id=fid, revoked=fid in invalid)
-        _own_evidence(data, records)
+        if not already_owned:
+            _own_evidence(data, records)
         data['schema_version'] = 'crpn-authority-2'
         data['control'] = {'run_id': plan['new_run_id'], 'visit': data.get('control', {}).get('visit', 0), 'pending': None}
         data['origin'] = {'source_run': source_run, 'source_workspace': str(source), 'migration': 'migration/plan.json'}

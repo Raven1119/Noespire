@@ -69,7 +69,9 @@ The former FactGraph dashboard is not a status/export entry for the new schema.
 CRPN retains direct-first, 3:1:1 ADVANCE/EXPLORE/REVISIT, fixed REVISIT snapshots,
 Study services, bridge, recurrence/helper/alias and COMPOSE. No new strategy field or
 ranking mechanism is introduced. Gateway capabilities forward CRPN material reads
-and unverified DANUS memory actions; workers cannot admit or revoke proofs.
+and unverified DANUS memory actions. Workers can request premises and submit complete
+local candidates through CRPN Admission; they cannot write or revoke proofs directly.
+See [the local workbench report](CRPN_LOCAL_WORKBENCH.md).
 
 ## Local attention, memory and runtime
 
@@ -77,7 +79,8 @@ Claim and Support packet projections exclude their embedded proof storage. Worke
 receive the current Study/frontier, selected accepted statements, relevant Support
 requirements, bounded local/shared research and explicitly requested material.
 The verifier receives the complete candidate proof and actual accepted predecessor
-statements through the established interface. DANUS stores research globally; CRPN projects
+statements through the established interface. It can page only those declared
+predecessors, without research memory or discovery capabilities. DANUS stores research globally; CRPN projects
 it locally. Malformed noncritical explanations and research views remain fail-soft.
 
 LocalMemory stores unfinished Study research; GlobalMemory stores awareness; neither
@@ -106,3 +109,36 @@ are archive evidence, not executable reservations. Old memory is retained in the
 existing DANUS stores. No destination `fact_graph` is created. Publication is atomic
 and migration retries are byte-idempotent. A source with pending current-schema
 admission must first settle normally; migration does not guess its outcome.
+
+## Local research workbench
+
+Worker tools search the existing lane LocalMemory with its BM25 implementation,
+read exact memory records, page accepted proof text by character range with source
+scope/definitions/digest, and request currently valid exact-scope premises. Dynamic
+premise authority is reconstructed from the frozen Worker packet and its completed
+DANUS capability responses; no visible/known/displayed registry exists. Inspection
+alone grants nothing, internal proof assertions do not become Facts, and cross-scope
+use retains the Selector's existing bridge path.
+
+Complete in-session candidates use CRPN Admission and a fresh verifier. The stable
+submission key binds the service and complete candidate; repeats, including a final
+response repeating a tool submission, reuse the same verification and graph write.
+Feedback returns directly to the still-running Worker. A condition certificate still
+belongs to a Support and cannot discharge its conclusion without AND/COMPOSE.
+
+A service ownership lock serializes scheduling, without excluding graph transactions
+from the broker thread. No graph lock spans a model call. Admission re-reads current
+authority after verification; Research refreshes before its one final cursor commit.
+Already reserved tool admissions are settled from original durable evidence even if
+the outer Worker times out or is interrupted. Unconfirmed verifier calls are never
+reinvoked or guessed successful. Revoked premises stay unusable.
+
+All roles retain a 600-second default active deadline. `--worker-timeout`,
+`--selector-timeout`, and `--verifier-timeout` freeze optional overrides into the runtime
+fingerprint. Worker active time excludes synchronous candidate-tool verification
+wait; its independent verifier retains its own deadline. MCP has a verifier-deadline
+plus 60-second transport allowance. Waiting increases wall/call cost explicitly and
+is not hidden model time. Existing DurableRounds records the bound tool manifest,
+capability IO and timing alongside its request/result evidence. Container heartbeat
+watchdogs bound orphan processes while allowing the host to account for nested waits.
+No new invocation journal, agent, strategy, global scheduling or computation tool exists.

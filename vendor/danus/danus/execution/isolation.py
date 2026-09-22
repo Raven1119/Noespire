@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from uuid import uuid4
 try:
@@ -22,6 +23,7 @@ except ImportError:  # Python 3.10, supported by upstream DANUS.
 
 from .capabilities import CapabilityBroker, CapabilityTool
 from .loop import ProcessCommand, run_round
+from danus.core.durable_io import immutable_json, atomic_text
 
 
 class IsolationUnavailable(RuntimeError):
@@ -119,18 +121,18 @@ class DockerRoundRunner:
                 'proxy_sha256': hashlib.sha256(Path(__file__).with_name('mcp_proxy.cjs').read_bytes()).hexdigest(),
                 'launcher_sha256': hashlib.sha256(Path(__file__).with_name('container_launch.cjs').read_bytes()).hexdigest()}
 
-    def _configuration(self, broker):
+    def _configuration(self, broker, tool_timeout=600):
         config = dict(self.config, **sandbox_config())
         if broker.tools:
             config['mcp_servers'] = {'danus': {
                 'command': 'node', 'args': ['/work/mcp_proxy.cjs'],
                 'env': {'DANUS_CAPABILITY_URL': f'http://host.docker.internal:{broker.port}/rpc',
-                        'DANUS_CAPABILITY_TOKEN': broker.token},
+                        'DANUS_CAPABILITY_TOKEN': broker.token, 'DANUS_TOOL_TIMEOUT': str(tool_timeout)},
                 # These are the host-bound capability allowlist, already authorized
                 # for this role. No interactive operator exists in durable rounds.
                 'enabled_tools': sorted(broker.tools),
                 'tools': {name: {'approval_mode': 'approve'} for name in sorted(broker.tools)},
-                'startup_timeout_sec': 30, 'tool_timeout_sec': 600}}
+                'startup_timeout_sec': 30, 'tool_timeout_sec': tool_timeout}}
         return '\n'.join(k + '=' + _toml(v) for k, v in config.items()) + '\n'
 
     def _command(self, name, stage, command):
@@ -166,11 +168,16 @@ class DockerRoundRunner:
         if output_path.exists() or log_path.exists():
             raise FileExistsError('refusing to overwrite round evidence')
         bound_tools = list(self.tools(wl, role))
+        folder = Path(log_path).parent
+        immutable_json(folder / 'capabilities.json', {
+            'role': role.get('ROLE', 'worker'), 'tools': [{'name': t.name, 'description': t.description,
+                'input_schema': t.input_schema, 'waits_for_model': t.waits_for_model} for t in bound_tools]})
+        started = time.monotonic()
         name = 'danus-' + uuid4().hex
-        with CapabilityBroker(bound_tools) as broker, tempfile.TemporaryDirectory(prefix='danus-') as tmp:
+        with CapabilityBroker(bound_tools, evidence_path=folder / 'capabilities.jsonl') as broker, tempfile.TemporaryDirectory(prefix='danus-') as tmp:
             stage = Path(tmp).resolve()
             (stage / 'schema.json').write_bytes(Path(schema_path).read_bytes())
-            (stage / 'config.toml').write_text(self._configuration(broker), encoding='utf8')
+            (stage / 'config.toml').write_text(self._configuration(broker, role.get('TOOL_TIMEOUT', 600)), encoding='utf8')
             for name_file in ('mcp_proxy.cjs', 'container_launch.cjs'):
                 shutil.copyfile(Path(__file__).with_name(name_file), stage / name_file)
             args = ['exec', '--ephemeral', '--ignore-rules', '--skip-git-repo-check',
@@ -179,13 +186,17 @@ class DockerRoundRunner:
                     '--sandbox', 'read-only', '--json', '--color', 'never',
                     '--output-schema', '/work/schema.json',
                     '--output-last-message', '/work/response.json', '-C', '/work', '-']
-            (stage / 'launch.json').write_text(json.dumps({'argv': args, 'prompt': prompt, 'timeout': hard_timeout}), encoding='utf8')
+            waits = any(t.waits_for_model for t in bound_tools)
+            (stage / 'launch.json').write_text(json.dumps({'argv': args, 'prompt': prompt,
+                'timeout': hard_timeout, 'host_heartbeat': waits}), encoding='utf8')
             command = self._command(name, stage, ['node', '/work/container_launch.cjs'])
             try:
-                return run_round(wl, role, prompt, log_path, hard_timeout,
+                code = run_round(wl, role, prompt, log_path, hard_timeout,
                     schema_path=schema_path, output_path=output_path, safe_read_only=True,
                     command_factory=lambda: ProcessCommand(command, stage, os.environ.copy(),
-                                                            lambda: self._remove(name)))
+                        lambda: self._remove(name),
+                        (lambda: broker.wait_seconds) if waits else None,
+                        (lambda: atomic_text(stage / 'heartbeat', str(time.time()))) if waits else None))
             finally:
                 self._remove(name)
                 # Even timeout/error outputs are retained as unconfirmed evidence;
@@ -196,3 +207,10 @@ class DockerRoundRunner:
                         raise IsolationUnavailable('invalid response artifact')
                     with open(output_path, 'xb') as out:
                         out.write(response.read_bytes())
+        wall = time.monotonic() - started
+        immutable_json(folder / 'timing.json', {'wall_seconds': wall,
+            'tool_wait_seconds': broker.wait_seconds,
+            'non_wait_seconds': max(0.0, wall - broker.wait_seconds),
+            'active_timeout_seconds': hard_timeout,
+            'tool_timeout_seconds': role.get('TOOL_TIMEOUT', 600)})
+        return code

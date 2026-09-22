@@ -1,20 +1,40 @@
-﻿// Generic JSON-RPC stdio MCP bridge. It exposes only the host's bound allowlist.
+// Generic JSON-RPC stdio MCP bridge. It exposes only the host's bound allowlist.
 // No shell, arbitrary URL, filesystem, or graph operations are implemented here.
 'use strict';
 const readline = require('node:readline');
 const url = process.env.DANUS_CAPABILITY_URL;
 const token = process.env.DANUS_CAPABILITY_TOKEN;
 const limit = 2 * 1024 * 1024;
-async function rpc(body) {
-  const r = await fetch(url, {method: 'POST', headers: {
-    Authorization: `Bearer ${token}`, 'Content-Type': 'application/json'
-  }, body: JSON.stringify(body)});
-  if (!r.ok) throw new Error(`capability HTTP ${r.status}`);
-  const text = await r.text();
-  if (Buffer.byteLength(text) > limit) throw new Error('capability response too large');
-  const value = JSON.parse(text);
-  if (value.error) throw new Error(value.error);
-  return value;
+function rpc(body) {
+  // Node fetch has a shorter implicit headers deadline than a full verifier.
+  // Use the host-configured bound explicitly for this single fixed endpoint.
+  const http = require('node:http');
+  return new Promise((resolve, reject) => {
+    const req = http.request(url, {method: 'POST', headers: {
+      Authorization: `Bearer ${token}`, 'Content-Type': 'application/json'
+    }}, response => {
+      let chunks = [], size = 0;
+      response.on('data', data => {
+        size += data.length;
+        if (size > limit) { req.destroy(new Error('capability response too large')); return; }
+        chunks.push(data);
+      });
+      response.on('error', reject);
+      response.on('end', () => {
+        try {
+          if (response.statusCode !== 200) throw new Error(`capability HTTP ${response.statusCode}`);
+          const value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+          if (value.error) throw new Error(value.error);
+          resolve(value);
+        } catch (error) { reject(error); }
+      });
+    });
+    const timer = setTimeout(() => req.destroy(new Error('capability wait timeout')),
+                             Number(process.env.DANUS_TOOL_TIMEOUT || 600) * 1000);
+    req.on('close', () => clearTimeout(timer));
+    req.on('error', reject);
+    req.end(JSON.stringify(body));
+  });
 }
 async function handle(m) {
   if (m.method === 'initialize') return {protocolVersion: '2024-11-05',

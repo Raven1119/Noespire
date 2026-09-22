@@ -11,11 +11,14 @@ import json
 import re
 import secrets
 import threading
+import time
+from pathlib import Path
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Callable, Any
 
 from jsonschema import Draft202012Validator
+from danus.core._util import append_jsonl
 
 LIMIT = 2 * 1024 * 1024
 
@@ -26,15 +29,20 @@ class CapabilityTool:
     description: str
     input_schema: dict
     call: Callable[[dict], Any]
+    waits_for_model: bool = False
 
 
 class CapabilityBroker:
     """Ephemeral authenticated HTTP endpoint for the container's stdio MCP proxy."""
-    def __init__(self, tools: list[CapabilityTool], *, bind: str = "0.0.0.0"):
+    def __init__(self, tools: list[CapabilityTool], *, bind: str = "0.0.0.0", evidence_path=None):
         self.token = secrets.token_urlsafe(32)
         self.tools = {}
         self.validators = {}
         self.events = []
+        self.evidence_path = Path(evidence_path) if evidence_path else None
+        self._wait_started = None
+        self._wait_total = 0.0
+        self._wait_lock = threading.Lock()
         for tool in tools:
             if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", tool.name):
                 raise ValueError("invalid capability name")
@@ -70,6 +78,19 @@ class CapabilityBroker:
                         pass
                     self.send_error(403)
                     return
+                sent = False
+                def deliver(result):
+                    nonlocal sent
+                    wire = json.dumps(result, ensure_ascii=False).encode('utf8')
+                    if len(wire) > LIMIT:
+                        raise ValueError('capability response exceeds material ceiling')
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(wire)))
+                    self.end_headers()
+                    self.wfile.write(wire)
+                    self.wfile.flush()
+                    sent = True
                 try:
                     size = int(self.headers.get("Content-Length", "0"))
                     if size < 1 or size > LIMIT or self.headers.get("Transfer-Encoding"):
@@ -78,19 +99,14 @@ class CapabilityBroker:
                     if len(body) != size:
                         raise ValueError("incomplete request")
                     request = json.loads(body)
-                    result = owner.dispatch(request)
-                    wire = json.dumps(result, ensure_ascii=False).encode("utf8")
-                    if len(wire) > LIMIT:
-                        raise ValueError("capability response exceeds material ceiling")
+                    result = owner.dispatch(request, deliver=deliver)
+                    if not sent:
+                        deliver(result)
                 except Exception as exc:
                     # Error type only: arbitrary callback exceptions may contain
                     # host paths, credentials, or inaccessible material.
-                    wire = json.dumps({"error": type(exc).__name__}).encode()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", str(len(wire)))
-                self.end_headers()
-                self.wfile.write(wire)
+                    if not sent:
+                        deliver({"error": type(exc).__name__})
 
         self.server = HTTPServer((bind, 0), Handler)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -99,7 +115,17 @@ class CapabilityBroker:
     def port(self):
         return self.server.server_port
 
-    def dispatch(self, request):
+    @property
+    def wait_seconds(self):
+        with self._wait_lock:
+            started = self._wait_started
+            return self._wait_total + (time.monotonic() - started if started is not None else 0.0)
+
+    def _record(self, event):
+        if self.evidence_path:
+            append_jsonl(self.evidence_path, event)
+
+    def dispatch(self, request, *, deliver=None):
         if not isinstance(request, dict) or set(request) - {"method", "name", "arguments"}:
             raise ValueError("invalid capability request")
         if request.get("method") == "list" and set(request) == {"method"}:
@@ -112,7 +138,31 @@ class CapabilityBroker:
             raise PermissionError("unavailable capability")
         arguments = request["arguments"]
         self.validators[name].validate(arguments)
-        result = self.tools[name].call(arguments)
+        started = time.monotonic()
+        call_id = secrets.token_hex(16)
+        self._record({"phase": "request", "call_id": call_id, "name": name,
+                      "arguments": arguments, "time": time.time()})
+        if self.tools[name].waits_for_model:
+            with self._wait_lock:
+                self._wait_started = started
+        try:
+            result = self.tools[name].call(arguments)
+            if deliver:
+                deliver({"result": result})
+            # A delivered host response is durable invocation evidence. It is not
+            # a truth record; adapters must recheck current authority on every use.
+            self._record({"phase": "response", "call_id": call_id, "name": name,
+                          "arguments": arguments, "result": result, "time": time.time(),
+                          "wall_seconds": time.monotonic() - started})
+        except BaseException as error:
+            self._record({"phase": "error", "call_id": call_id, "name": name,
+                          "error": type(error).__name__, "time": time.time()})
+            raise
+        finally:
+            with self._wait_lock:
+                if self._wait_started is not None:
+                    self._wait_total += time.monotonic() - self._wait_started
+                    self._wait_started = None
         self.events.append({"name": name, "completed": True})
         return {"result": result}
 

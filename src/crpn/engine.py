@@ -37,17 +37,18 @@ class Research:
                                 author=author, purpose=purpose)
 
     def step(self):
-        with locked(self.network.root / '.crpn.lock'):
+        with locked(self.network.root / '.service.lock'):
             self.network = Network(self.network.root)
             n = self.network
             if 'control' not in n.data:
                 n.data['control'] = {'run_id': uuid4().hex, 'visit': 0, 'pending': None}
                 n.save()
             control = n.data['control']
-            if n.truth(n.target_id) == 'DISCHARGED':
+            if n.truth(n.target_id) == 'DISCHARGED' and control['pending'] is None:
                 return {'status': 'TARGET_SOLVED'}
             self._activations(control)
             self._recurrences(control)
+            control = n.data['control']
             n.ensure_studies()
             if control['pending'] is None:
                 studies = list(n.active_studies())
@@ -83,26 +84,41 @@ class Research:
             action = pending['action']
             if action['operation'] == 'REQUEST_BRIDGE':
                 outcome = self._bridge(key + ':bridge:' + str(pending['selection_round']), action, pending)
+                control = n.data['control']
+                pending = control['pending']
                 self._note(action['study_id'], key + ':bridge:' + str(pending['selection_round']), outcome)
                 pending['action'] = None
                 pending['selection_round'] += 1
                 pending['inspections'] = [outcome]
                 n.save()
                 return {'status': 'BRIDGE', **outcome}
-            packet = worker_packet(n, action)
-            support_id = None
-            if action['operation'] == 'COMPOSE':
-                ready = [row for row in n.ready_supports() if row['conclusion_claim_id'] == packet['claim']['claim_id']]
-                if not ready:
-                    raise BlockingError('COMPOSE action lacks a ready Support')
-                # Stable first ready Support; no mathematical ranking.
-                support_id = ready[0]['support_id']
-                materials = n.support_materials(support_id)
-                packet['compose'] = {k: v for k, v in materials.items() if k != 'facts'}
-                packet['accepted_facts'] = [{'fact_id': f.fact_id, 'statement': f.statement} for f in materials['facts']]
             study = action['study_id']
+            # Reconstruct a pending service from its actual frozen delivery. New
+            # in-session proofs may already discharge its Claim or its Support.
+            request_path = self.runtime.request_path('worker', study, key + ':worker')
+            if request_path.exists():
+                from .workbench import packet_for
+                _, packet = packet_for(request_path)
+            else:
+                packet = worker_packet(n, action)
+                if action['operation'] == 'COMPOSE':
+                    ready = [row for row in n.ready_supports() if row['conclusion_claim_id'] == packet['claim']['claim_id']]
+                    if not ready:
+                        raise BlockingError('COMPOSE action lacks a ready Support')
+                    materials = n.support_materials(ready[0]['support_id'])
+                    packet['compose'] = {k: v for k, v in materials.items() if k != 'facts'}
+                    packet['accepted_facts'] = [{'fact_id': f.fact_id, 'statement': f.statement} for f in materials['facts']]
             result = self._call('worker', study, key + ':worker', C.WORKER, packet, C.WORKER_SCHEMA)
+            n.refresh()
+            control = n.data['control']
+            pending = control['pending']
             outcome = {'status': result['status'], 'study_id': study, 'channel': pending['exposure']['channel']}
+            from .workbench import recover_submissions
+            tool_submissions = recover_submissions(n, self.runtime, result['evidence']['request'])
+            control = n.data['control']
+            pending = control['pending']
+            if tool_submissions:
+                outcome['tool_submissions'] = tool_submissions
             local = LocalMemory(lane(n.root, study))
             if result['status'] == 'COMPLETED':
                 output = result['output']
@@ -111,17 +127,13 @@ class Research:
                     'next_work': output.get('next_work', ''), 'source_status': result['status']})
                 candidate = output.get('candidate')
                 if candidate:
+                    from .workbench import submit_candidate
                     try:
-                        if candidate.get('context') != packet['claim']['context']:
-                            raise ValueError('Worker candidate must retain current ambient scope')
-                        if support_id:
-                            prepared, descriptor = n.prepare_compose(support_id, candidate)
-                        else:
-                            prepared, descriptor = n.prepare_candidate(candidate, [f['fact_id'] for f in packet['accepted_facts']])
+                        verdict = submit_candidate(n, self.runtime, result['evidence']['request'],
+                                                   candidate, gate=self.gate)
                     except (ValueError, KeyError, TypeError) as error:
                         outcome.update(status='CANDIDATE_REJECTED', reason=str(error))
                     else:
-                        verdict = self._submit(key + ':candidate', prepared, 'local ' + descriptor['kind'], study, descriptor)
                         outcome['verification'] = verdict['verdict']
                         if verdict['accepted']:
                             outcome['admission'] = verdict['admission']
@@ -129,6 +141,8 @@ class Research:
                             outcome['status'] = 'VERIFIER_REJECTED'
                 self._new_study(study, key, output.get('new_study'))
             self._recurrences(control)
+            control = n.data['control']
+            pending = control['pending']
             append_once(local, 'events', key + ':service', outcome)
             # The entire policy update is one atomic CRPN transition. Bridge never reaches it.
             current = n.data['studies'][study]

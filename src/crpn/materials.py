@@ -65,56 +65,7 @@ def worker_packet(network, action):
     return checked_size(packet)
 
 
-def capability_tools(network, wl, role):
-    """Bound store capabilities. No paths, alternate projects, truth writes or refs cache."""
-    from danus.execution.isolation import CapabilityTool
-    from .contracts import obj, STR
-    def tool(name, description, schema, function):
-        return CapabilityTool(name, description, schema, lambda arguments: function(**arguments))
-    if role == "verifier" or role not in ("worker", "selector"):
-        return []
-    # CRPN defines the existing closed-book capability boundary.
-    permissions = {"fact_search", "gm_search"}
-    def limit(value):
-        return checked_size(value, 64000)
-    def fact_search(query, page=0):
-        hits = network.search(query, 8 * (page + 1))
-        return limit(hits[8 * page:8 * (page + 1)])
-    def fact_inspect(fact_id):
-        return limit(network.inspect_fact(fact_id))
-    def memory_search(query, page=0):
-        result = GlobalMemory(network.root).search(query, limit_per_kind=4 * (page + 1))
-        for value in result["results_by_kind"].values():
-            value["results"] = value["results"][4 * page:4 * (page + 1)]
-            value["count"] = len(value["results"])
-        return limit({"authority": "UNVERIFIED_RESEARCH", "result": result})
-    def local_read(page=0):
-        items = LocalMemory(wl.dir).read("notes")
-        return limit({"authority": "UNVERIFIED_RESEARCH", "records": items[page * 4:(page + 1) * 4]})
-    page = {"type": "integer", "minimum": 0, "maximum": 10000}
-    search_schema = obj({"query": STR, "page": page})
-    tools = []
-    if "fact_search" in permissions:
-        tools += [tool("fact_search", "Search verified statements; navigation grants no premise authority.", search_schema, fact_search),
-                  tool("fact_inspect", "Read a full source Fact interface; cross-scope use still needs bridge.", obj({"fact_id": STR}), fact_inspect)]
-    if "gm_search" in permissions:
-        tools.append(tool("gm_search", "Read shared UNVERIFIED research.", search_schema, memory_search))
-    if role == "selector":
-        def study_research(study_id, page=0):
-            if study_id not in network.data["studies"]:
-                raise ValueError("unknown Study")
-            records = LocalMemory(lane(network.root, study_id)).read("notes")
-            return limit({"authority": "UNVERIFIED_RESEARCH", "records": records[page * 2:(page + 1) * 2]})
-        tools.append(tool("study_research", "Page complete Study research; no truth authority.",
-                          obj({"study_id": STR, "page": page}), study_research))
-    if role == "worker":
-        def local_append(note):
-            return LocalMemory(wl.dir).append("notes", {"content": note, "authority": "UNVERIFIED_RESEARCH"})
-        def gm_add(kind, claim, evidence):
-            if kind not in ("conclusion", "example", "counterexample", "proof_attempt", "plan", "dead_end", "direction", "obstacle"):
-                raise ValueError("worker research channel not allowed")
-            return {"id": GlobalMemory(network.root).append(kind, claim, evidence, wl.name)}
-        tools += [tool("local_append", "Persist complete unfinished research immediately; never a Fact.", obj({"note": STR}), local_append),
-                  tool("local_read", "Page your lane's unverified research.", obj({"page": page}), local_read),
-                  tool("gm_add", "Share unverified findings or obstacles.", obj({"kind": STR, "claim": STR, "evidence": STR}), gm_add)]
-    return tools
+def capability_tools(network, wl, role, *, runtime=None, request_path=None):
+    """Scope-aware adapter; the broker only forwards these bound capabilities."""
+    from .workbench import tools
+    return tools(network, wl, role, runtime=runtime, request_path=request_path)

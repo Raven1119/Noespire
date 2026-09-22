@@ -68,6 +68,7 @@ class Admission:
             if not isinstance(request['proof'], str) or not request['proof'].strip():
                 raise ValueError('complete proof required')
             immutable_json(directory / 'request.json', request)
+            network.refresh()
             prior = [{'fact_id': fid, 'statement': network._accepted(fid).statement}
                      for fid in request['predecessors']]
             record = {k: deepcopy(request[k]) for k in ('problem_id', 'author', 'statement', 'proof',
@@ -102,8 +103,13 @@ class Admission:
                 return result
             if accepted:
                 record['history'][0]['verification'] = deepcopy(verdict)
-                with network._transaction():
-                    _apply(network, descriptor, record)
+                # Never hold the graph/control lock while the independent model runs.
+                # Re-read after verification: revocation or another accepted proof
+                # may have changed the graph while the caller was waiting.
+                with locked(network.root / '.crpn.lock'):
+                    network.refresh()
+                    with network._transaction():
+                        _apply(network, descriptor, record)
             # Crash after graph commit resumes here without a second call or publication.
             immutable_json(receipt, result)
             try:

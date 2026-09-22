@@ -101,7 +101,7 @@ def test_admission_rechecks_predecessor_after_verifier(tmp_path):
         def verify(self, *args):
             Network(tmp_path).revoke(prior, 'revoked concurrently')
             return {'verdict':'correct'}
-    with pytest.raises(ValueError, match='concurrent|changed'):
+    with pytest.raises(ValueError, match='concurrent|changed|revoked'):
         Admission(Backend()).submit(n, 'concurrent', prepared=prepared, descriptor=desc, author='f', purpose='f')
     assert Network(tmp_path).truth(n.target_id) == 'OPEN'
 

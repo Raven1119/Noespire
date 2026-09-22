@@ -135,6 +135,8 @@ class ProcessCommand:
     cwd: Path
     env: dict[str, str]
     stop: Optional[Callable[[], None]] = None
+    timeout_extension: Optional[Callable[[], float]] = None
+    heartbeat: Optional[Callable[[], None]] = None
 
 
 def run_round(wl: L.WorkerLayout, role: dict, prompt: str, log_path: Path,
@@ -177,7 +179,7 @@ def run_round(wl: L.WorkerLayout, role: dict, prompt: str, log_path: Path,
     # Durable callers allocate a fresh log; refusing overwrite preserves evidence.
     with open(log_path, "x" if safe_read_only else "w", encoding="utf-8") as logf:
         try:
-            _Child.proc = subprocess.Popen(
+            child = subprocess.Popen(
                 cmd, stdout=logf, stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL, cwd=str(process.cwd),
                 env=process.env,
@@ -186,32 +188,49 @@ def run_round(wl: L.WorkerLayout, role: dict, prompt: str, log_path: Path,
         except FileNotFoundError:
             logf.write(f"[worker_loop] codex binary not found: {cmd[0]}\n")
             return 127
+        # Native legacy loop retains its signal hook. Isolated durable calls can
+        # nest in broker threads and must never share a process handle.
+        if not safe_read_only:
+            _Child.proc = child
         try:
-            return _Child.proc.wait(timeout=hard_timeout if hard_timeout > 0 else None)
+            if process.timeout_extension is None:
+                return child.wait(timeout=hard_timeout if hard_timeout > 0 else None)
+            started = time.monotonic()
+            while True:
+                if process.heartbeat:
+                    process.heartbeat()
+                remaining = hard_timeout - (time.monotonic() - started - process.timeout_extension())
+                if hard_timeout > 0 and remaining <= 0:
+                    raise subprocess.TimeoutExpired(cmd, hard_timeout)
+                try:
+                    return child.wait(timeout=min(0.25, remaining) if hard_timeout > 0 else 0.25)
+                except subprocess.TimeoutExpired:
+                    continue
         except subprocess.TimeoutExpired:
             if process.stop is not None:
                 process.stop()
             try:
                 if process_group:
-                    os.killpg(_Child.proc.pid, signal.SIGTERM)
+                    os.killpg(child.pid, signal.SIGTERM)
                 else:
-                    _Child.proc.terminate()
+                    child.terminate()
             except ProcessLookupError:
                 pass
             try:
-                _Child.proc.wait(timeout=10)
+                child.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 try:
                     if process_group:
-                        os.killpg(_Child.proc.pid, signal.SIGKILL)
+                        os.killpg(child.pid, signal.SIGKILL)
                     else:
-                        _Child.proc.kill()
+                        child.kill()
                 except ProcessLookupError:
                     pass
             logf.write(f"\n[worker_loop] round hard-timeout after {hard_timeout}s\n")
             return 124
         finally:
-            _Child.proc = None
+            if not safe_read_only and _Child.proc is child:
+                _Child.proc = None
 
 
 # --- the loop -------------------------------------------------------------- #

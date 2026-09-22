@@ -20,7 +20,7 @@ def status(root):
             'pending': bool(control.get('pending')), 'paused': (Path(root) / '.pause').exists()}
 
 
-def run(root, *, resume=False, image='noespire-codex-isolated:local'):
+def run(root, *, resume=False, image='noespire-codex-isolated:local', role_timeouts=None):
     from danus.execution.isolation import DockerRoundRunner
     from substrate.runtime import Runtime
     from .engine import Research
@@ -29,8 +29,8 @@ def run(root, *, resume=False, image='noespire-codex-isolated:local'):
     if resume:
         (root / '.pause').unlink(missing_ok=True)
     runner = DockerRoundRunner(image=image, tools=lambda wl, role:
-        capability_tools(Network(root), wl, role['ROLE']))
-    runtime = Runtime(root, runner=runner, fingerprint=runner.fingerprint())
+        capability_tools(Network(root), wl, role['ROLE'], runtime=runtime, request_path=role['REQUEST_PATH']))
+    runtime = Runtime(root, runner=runner, fingerprint=runner.fingerprint(), role_timeouts=role_timeouts)
     research = Research(root, runtime)
     try:
         while not (root / '.pause').exists():
@@ -53,7 +53,10 @@ def main(argv=None):
     p.add_argument('--statement-file', required=True); p.add_argument('--context', default='')
     for command in ('status','run','resume','pause','export'):
         p = sub.add_parser(command); p.add_argument('root')
-        if command in ('run','resume'): p.add_argument('--image', default='noespire-codex-isolated:local')
+        if command in ('run','resume'):
+            p.add_argument('--image', default='noespire-codex-isolated:local')
+            for role in ('worker', 'selector', 'verifier'):
+                p.add_argument('--' + role + '-timeout', type=int)
     p = sub.add_parser('migrate'); p.add_argument('source'); p.add_argument('destination')
     p = sub.add_parser('revoke'); p.add_argument('root'); p.add_argument('fact_id'); p.add_argument('--reason', required=True)
     args = parser.parse_args(argv)
@@ -72,7 +75,10 @@ def main(argv=None):
         with locked(Path(args.root) / '.crpn.lock'):
             n = Network(args.root)
             result = {'revoked': n.revoke(args.fact_id, args.reason)}
-    else: result = run(args.root, resume=args.command == 'resume', image=args.image)
+    else:
+        timeouts = {role: getattr(args, role + '_timeout') for role in ('worker', 'selector', 'verifier')
+                    if getattr(args, role + '_timeout') is not None}
+        result = run(args.root, resume=args.command == 'resume', image=args.image, role_timeouts=timeouts or None)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

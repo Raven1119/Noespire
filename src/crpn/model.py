@@ -72,6 +72,14 @@ class Network:
         result.ensure_studies()
         return result
 
+    def refresh(self):
+        """Replace a clean snapshot after an independent transaction/call."""
+        if self.data != self._snapshot:
+            raise ValueError("cannot refresh unsaved CRPN changes")
+        fresh = Network(self.root)
+        self.__dict__.update(fresh.__dict__)
+        return self
+
     def claim(self, claim_id):
         try:
             row = self.data['claims'][claim_id]
