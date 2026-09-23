@@ -23,9 +23,14 @@ def test_same_cut_is_bounded_with_one_thousand_and_ten_thousand_unrelated_claims
         for i in range(len(net.data['claims']) - 1, count):
             unrelated = make_claim(net.problem_id, '', f'Unrelated proposition {i}')
             net.data['claims'][unrelated['claim_id']] = unrelated
+        net.ensure_studies(save=False)
+        for sid, study in net.data['studies'].items():
+            if sid != 'study-' + net.target_id:
+                study['last_served_visit'] = 0
         net.save()
         net = Network(tmp_path)
         exposure, _, cut, options, _ = cut_for(net)
+        assert len(net.active_studies()) == count + 1
         assert exposure['focus_study_id'] == 'study-' + net.target_id
         assert len(exposure['cards']) == 1 and len(options) <= 4
         selection = selector_packet(net, exposure, cut=cut, options=options)
@@ -142,6 +147,26 @@ def test_dependency_wake_uses_only_one_of_three_advance_slots():
     assert first['focus_study_id'] == 'awakened' and first['focus_reason'] == 'DEPENDENCY_WAKE'
     second, schedule = focus(studies, schedule, priority_ids={'awakened'})
     assert second['focus_study_id'] == 'old' and second['focus_reason'] == 'FAIR_ADVANCE'
+
+
+def test_region_meeting_delivers_a_navigation_lead_without_proving_a_relation(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Target')
+    net.register_claim('Independent question')
+    net.ensure_studies(save=False)
+    net.save()
+    before = (tmp_path / 'crpn.json').read_bytes()
+    ids = sorted(study['study_id'] for study in net.active_studies())
+    exposure, _ = focus(net.active_studies(),
+                        {'channel_cursor': 3, 'explore_cursor': 1, 'explore_snapshot': ids})
+    cut, options, _ = derive(net, exposure)
+    assert exposure['channel'] == 'EXPLORE' and exposure['explore_mode'] == 'REGION_MEET'
+    assert exposure['focus_study_id'] != exposure['external_study_id']
+    assert cut['external']['study_id'] == exposure['external_study_id']
+    assert cut['external']['navigation_only'] is True
+    assert any(row['notes'] == 'cross-region navigation' and not row['fact_ids'] for row in options)
+    assert not net.data['supports']
+    assert all(net.truth(study['claim_id']) == 'OPEN' for study in net.active_studies())
+    assert (tmp_path / 'crpn.json').read_bytes() == before
 
 
 def test_relevant_graph_change_during_local_selector_rebuilds_work_with_new_round_key(tmp_path):
