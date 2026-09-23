@@ -32,9 +32,12 @@ REPRESENTATION_SCHEMA = obj({"mode": {"enum": ["DIRECT", "CONDITIONAL", "DECLINE
     "helper": {"anyOf": [CLAIM, {"type": "null"}]}, "proof": STR,
     "predecessors": STRS})
 
-SELECTOR = """Select useful local research within the exposed Studies. Research judgments
-are advisory, never mathematical truth. Decide the concrete task, what verified
-results it uses, and what remains unknown. Existing research notes are unverified.
+SELECTOR = """The external graph scheduler has already fixed one Study. Compare only
+the at most four actions in this temporary local cut; never rank or replan the project.
+The selected study_id must equal pinned_study_id, and the operation must be one of
+the offered options. Research judgments are advisory, never mathematical truth.
+Decide the concrete local task, what verified results it uses, and what remains unknown.
+Existing research notes are unverified; an external region is navigation only.
 A method limitation can inform or change work; explain exceptions in notes. Continuing
 a finite series is legitimate when addressing a specific remaining question.
 RESEARCH may prove directly, derive a conditional Support, use a new Fact to connect an
@@ -44,7 +47,7 @@ COMPOSE uses a ready Support; do not claim automatic discharge. INSPECT requests
 full Fact interfaces or research memory before deciding. Cross-scope inspected Facts
 may justify REQUEST_BRIDGE with an exact auxiliary statement and explicit definition/
 variable correspondence. Inspection is not acceptance; preserve all source conditions.
-Choose only exposed Study IDs (respect a pinned REVISIT Study). Request only existing
+Choose only the pinned Study. Request only offered existing
 project Fact IDs; ordinary predecessors must have the exact current ambient scope.
 No object ranking, required comparison prose, or assessment schema is needed.
 """

@@ -8,7 +8,8 @@ import pytest
 from crpn.model import Network
 from crpn.admission import Admission
 from crpn.materials import worker_packet, selector_packet
-from crpn.scheduler import expose
+from crpn.scheduler import focus
+from crpn.work import derive
 from test_model import fact, support, submit, Correct
 
 
@@ -111,8 +112,9 @@ def test_views_do_not_expose_embedded_proof_storage(tmp_path):
     route = support(n, 'T', ['A', 'B'])
     for cid in route['requirement_claim_ids']:
         fact(n, cid, proof='SECRET_PROOF_BODY_' + cid)
-    exposure, _ = expose(n.active_studies(), {})
-    selection = selector_packet(n, exposure)
+    exposure, _ = focus(n.active_studies(), {})
+    cut, options, _ = derive(n, exposure)
+    selection = selector_packet(n, exposure, cut=cut, options=options)
     worker = worker_packet(n, dict(study_id='study-' + n.target_id, operation='RESEARCH', task='Continue', fact_ids=[], research_queries=[]))
     for packet in (selection, worker):
         text = json.dumps(packet)

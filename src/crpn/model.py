@@ -366,13 +366,17 @@ class Network:
 
     def ready_supports(self):
         return tuple(self.support(sid) for sid, row in sorted(self.data['supports'].items())
-                     if self.truth(row['conclusion_claim_id']) == 'OPEN' and self._active(row['bridge_fact_id'])
-                     and all(self.facts_for(cid) for cid in row['requirement_claim_ids']))
+                     if self.support_ready(sid))
+
+    def support_ready(self, support_id):
+        row = self.data['supports'][support_id]
+        return (self.truth(row['conclusion_claim_id']) == 'OPEN' and self._active(row['bridge_fact_id'])
+                and all(self.facts_for(cid) for cid in row['requirement_claim_ids']))
 
     def support_materials(self, support_id):
-        support = next((s for s in self.ready_supports() if s['support_id'] == support_id), None)
-        if support is None:
+        if not self.support_ready(support_id):
             raise ValueError('Support is not ready to compose')
+        support = self.support(support_id)
         ids = [support['bridge_fact_id']] + [self.facts_for(cid)[0].fact_id for cid in support['requirement_claim_ids']]
         return {'support': support, 'conclusion': self.claim(support['conclusion_claim_id']),
                 'requirements': [self.claim(cid) for cid in support['requirement_claim_ids']],

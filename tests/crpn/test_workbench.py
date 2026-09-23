@@ -428,6 +428,60 @@ def test_local_research_hits_deduplicate_by_original_record_and_keep_queries(tmp
     assert packet['accepted_facts'] == [] and packet['related_results'] == []
 
 
+def test_overwide_support_pages_exact_conditions_only_inside_current_cut(tmp_path):
+    from test_model import support
+    from crpn.scheduler import focus
+    from crpn.work import derive
+    net = Network.create(tmp_path, 'p', 'Target')
+    requirements = [f'Condition {i}: exact domain and boundary assumptions remain in force'
+                    for i in range(240)]
+    row = support(net, 'Target', requirements)
+    for sid, study in net.data['studies'].items():
+        if sid != 'study-' + net.target_id:
+            study['last_served_visit'] = 0
+    exposure, schedule_after = focus(net.active_studies(), {})
+    cut, options, observed = derive(net, exposure)
+    net.data['control'] = {'run_id': 'wide-interface-test', 'visit': 1, 'pending': {
+        'exposure': exposure, 'schedule_after': schedule_after, 'selection_round': 0,
+        'inspections': [], 'action': options[0], 'cut': cut, 'options': options,
+        'observation': observed, 'work_cursor_after': 1}}
+    net.save()
+    def worker(call, packet, role):
+        assert packet['local_cut']['routes'][0]['interface_page_required']
+        page = call('support_read', support_id=row['support_id'], page=0)
+        assert page['total_requirements'] == 240 and page['next_page'] == 1
+        assert [r['goal'] for r in page['requirements']] == requirements[:8]
+        second = call('support_read', support_id=row['support_id'], page=1)
+        assert [r['goal'] for r in second['requirements']] == requirements[8:16]
+        assert call('support_read', support_id='unexposed-support', page=0)['accepted'] is False
+        assert packet['accepted_facts'] == []
+        return output()
+    actor = SessionActors(tmp_path, worker)
+    assert Research(tmp_path, actor.runtime).step()['status'] == 'COMPLETED'
+    assert actor.calls == ['worker']
+
+
+def test_session_material_reads_have_cumulative_bound_without_affecting_submission(tmp_path):
+    from test_model import fact
+    net = Network.create(tmp_path, 'p', 'Target')
+    prior = fact(net, net.register_claim('Auxiliary Target result')['claim_id'],
+                 proof='Named proof section\n' + 'Detailed argument. ' * 18000)
+    def worker(call, packet, role):
+        successes = 0
+        for _ in range(40):
+            response = call('proof_read', fact_id=prior, start=0, length=8000)
+            if response.get('error') == 'ATTENTION_BUDGET_EXHAUSTED':
+                break
+            assert response['authority'] == 'INSPECTION_ONLY'
+            successes += 1
+        assert 0 < successes < 40
+        assert call('proof_read', fact_id=prior, start=0, length=8000)['error'] == 'ATTENTION_BUDGET_EXHAUSTED'
+        return output()
+    actor = SessionActors(tmp_path, worker)
+    assert Research(tmp_path, actor.runtime).step()['status'] == 'COMPLETED'
+    assert actor.calls == ['worker']
+
+
 def test_existing_task_result_is_exposed_for_inspection_without_premise_authority(tmp_path):
     net = Network.create(tmp_path, 'p', 'Open target')
     prior = fixture_fact(net, 'Exact 836 boundary for a finite witness')

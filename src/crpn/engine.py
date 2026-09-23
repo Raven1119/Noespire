@@ -13,8 +13,9 @@ from .verification import VerifierBackend
 from substrate.store import append_once, lane
 from . import contracts as C
 from .model import Network, make_claim, normalize
-from .scheduler import expose
+from .scheduler import focus
 from .materials import selector_packet, worker_packet, inspect
+from .work import derive, after_inspection, awakened
 
 
 class BlockingError(RuntimeError):
@@ -54,27 +55,45 @@ class Research:
                 studies = list(n.active_studies())
                 if not studies:
                     return {'status': 'NO_ACTIVE_STUDY'}
-                exposure, proposed = expose(studies, n.data.get('schedule', {}))
+                exposure, proposed = focus(studies, n.data.get('schedule', {}),
+                                           priority_ids=awakened(n, studies))
+                cut, options, observed = derive(n, exposure)
                 control['pending'] = {'exposure': exposure, 'schedule_after': proposed,
-                                      'selection_round': 0, 'inspections': [], 'action': None}
+                                      'selection_round': 0, 'inspections': [], 'action': None,
+                                      'cut': cut, 'options': options, 'observation': observed,
+                                      'work_cursor_after': n.data['studies'][exposure['focus_study_id']].get('work_cursor', 0)
+                                                           + (4 if cut['candidate_count'] > 4 else 1)}
                 # Direct-first is the existing initialization policy, never imposed later.
                 if control['visit'] == 0 and len(studies) == 1 and studies[0].get('revision', 0) == 0:
                     control['pending']['action'] = {'study_id': studies[0]['study_id'],
                         'operation': 'RESEARCH', 'task': 'Try to prove the original Claim directly; preserve unfinished research.',
                         'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}
+                elif len(options) == 1:
+                    control['pending']['action'] = options[0]
                 n.save()
             pending = control['pending']
-            key = control['run_id'] + ':' + str(control['visit'])
+            key = control['run_id'] + ':' + str(control['visit']) + ':' + str(control.get('generation', 0))
             while pending['action'] is None:
                 result = self._call('selector', 'selector', key + ':select:' + str(pending['selection_round']),
-                    C.SELECTOR, selector_packet(n, pending['exposure'], pending['inspections']), C.SELECTOR_SCHEMA)
+                    C.SELECTOR, selector_packet(n, pending['exposure'], pending['inspections'],
+                                                cut=pending['cut'], options=pending['options']), C.SELECTOR_SCHEMA)
                 if result['status'] != 'COMPLETED':
                     # No Worker service, therefore no fairness advancement.
                     pending['selection_round'] += 1; n.save()
                     return {'status': result['status'], 'role': 'selector'}
-                action = self._action(result['output'], pending['exposure'])
+                n.refresh()
+                control = n.data['control']
+                pending = control['pending']
+                if derive(n, pending['exposure'])[2] != pending['observation']:
+                    control['generation'] = control.get('generation', 0) + 1
+                    control['pending'] = None
+                    n.save()
+                    return {'status': 'STALE_WORK', 'role': 'selector'}
+                action = self._action(result['output'], pending['exposure'], pending['options'])
                 if action['operation'] == 'INSPECT':
                     pending['inspections'] = inspect(n, action['fact_ids'])
+                    pending['options'] = after_inspection(pending['options'], pending['inspections'],
+                                                          pending['exposure']['focus_study_id'])
                     pending['selection_round'] += 1; n.save()
                     continue
                 pending['action'] = action
@@ -90,29 +109,50 @@ class Research:
                 pending['action'] = None
                 pending['selection_round'] += 1
                 pending['inspections'] = [outcome]
+                pending['cut'], pending['options'], pending['observation'] = derive(n, pending['exposure'])
+                if outcome.get('bridge_status') == 'PASS' and outcome.get('accepted_for_scope'):
+                    pending['options'] = [{'study_id': action['study_id'], 'operation': 'RESEARCH',
+                        'task': 'Use the verified target-scope auxiliary interface in the current local task.',
+                        'fact_ids': [outcome['fact_id']], 'research_queries': [], 'bridge': None, 'notes': ''}
+                        ] + pending['options'][:3]
+                if len(pending['options']) == 1:
+                    pending['action'] = pending['options'][0]
                 n.save()
                 return {'status': 'BRIDGE', **outcome}
             study = action['study_id']
             # Reconstruct a pending service from its actual frozen delivery. New
             # in-session proofs may already discharge its Claim or its Support.
             request_path = self.runtime.request_path('worker', study, key + ':worker')
+            n.refresh()
+            control = n.data['control']
+            pending = control['pending']
+            if not request_path.exists() and derive(n, pending['exposure'])[2] != pending['observation']:
+                control['generation'] = control.get('generation', 0) + 1
+                control['pending'] = None
+                n.save()
+                return {'status': 'STALE_WORK', 'study_id': study}
             if request_path.exists():
                 from .workbench import packet_for
                 _, packet = packet_for(request_path)
             else:
-                packet = worker_packet(n, action)
+                if study not in {s['study_id'] for s in n.active_studies()}:
+                    control['pending'] = None; n.save()
+                    return {'status': 'STALE_WORK', 'study_id': study}
+                if action['operation'] == 'COMPOSE' and not n.support_ready(action['support_id']):
+                    control['pending'] = None; n.save()
+                    return {'status': 'STALE_WORK', 'study_id': study}
+                packet = worker_packet(n, action, cut=pending['cut'])
                 if action['operation'] == 'COMPOSE':
-                    ready = [row for row in n.ready_supports() if row['conclusion_claim_id'] == packet['claim']['claim_id']]
-                    if not ready:
-                        raise BlockingError('COMPOSE action lacks a ready Support')
-                    materials = n.support_materials(ready[0]['support_id'])
+                    materials = n.support_materials(action['support_id'])
                     packet['compose'] = {k: v for k, v in materials.items() if k != 'facts'}
                     packet['accepted_facts'] = [{'fact_id': f.fact_id, 'statement': f.statement} for f in materials['facts']]
             result = self._call('worker', study, key + ':worker', C.WORKER, packet, C.WORKER_SCHEMA)
             n.refresh()
             control = n.data['control']
             pending = control['pending']
-            outcome = {'status': result['status'], 'study_id': study, 'channel': pending['exposure']['channel']}
+            outcome = {'status': result['status'], 'study_id': study, 'channel': pending['exposure']['channel'],
+                       'focus_reason': pending['exposure'].get('focus_reason'),
+                       'task': action['task'], 'operation': action['operation']}
             from .workbench import recover_submissions
             tool_submissions = recover_submissions(n, self.runtime, result['evidence']['request'])
             control = n.data['control']
@@ -139,6 +179,8 @@ class Research:
             current = n.data['studies'][study]
             current['revision'] = current.get('revision', 0) + 1
             current['last_served_visit'] = control['visit']
+            current['observed_versions'] = pending.get('observation', {})
+            current['work_cursor'] = pending.get('work_cursor_after', current.get('work_cursor', 0) + 1)
             n.data['schedule'] = pending['schedule_after']
             control['visit'] += 1
             control['pending'] = None
@@ -172,16 +214,17 @@ class Research:
             # Confirmed raw actor output remains in DANUS; advisory view may be rebuilt.
             pass
 
-    def _action(self, raw, exposure):
+    def _action(self, raw, exposure, options):
         n = self.network
         if not isinstance(raw, dict):
             raise BlockingError('no executable Selector action')
         study = raw.get('study_id')
-        visible = {card['study_id'] for card in exposure['cards']}
-        if study not in visible or (exposure['forced_study_id'] and study != exposure['forced_study_id']):
-            raise BlockingError('Selector action violates exposed/pinned Study')
+        if study != exposure['focus_study_id']:
+            raise BlockingError('local Selector cannot change the scheduled focus')
         if raw.get('operation') not in ('RESEARCH','CLOSE','COMPOSE','INSPECT','REQUEST_BRIDGE'):
             raise BlockingError('unknown executable operation')
+        if raw['operation'] not in {item['operation'] for item in options}:
+            raise BlockingError('local Selector chose an action outside the bounded cut')
         if not isinstance(raw.get('task'), str) or not raw['task'].strip():
             raise BlockingError('missing executable research task')
         facts = raw.get('fact_ids', [])
@@ -189,13 +232,19 @@ class Research:
             raise BlockingError('invalid requested Fact IDs')
         for fid in facts:
             n._accepted(fid)
+        offered = {fid for option in options for fid in option.get('fact_ids', [])}
+        if not set(facts) <= offered:
+            raise BlockingError('local Selector requested an unexposed initial premise')
         # Only execution fields survive. Explanation/old assessments may be any JSON.
         queries = raw.get('research_queries')
         if not isinstance(queries, list) or any(not isinstance(x,str) for x in queries):
             queries = []
+        selected = next((row for row in options if row['operation'] == raw['operation']
+                         and (not facts or set(facts) <= set(row.get('fact_ids', [])))), None)
         return {k: raw.get(k) for k in ('study_id','operation','task','bridge')} | {
             'fact_ids': facts, 'research_queries': queries,
-            'notes': raw.get('notes', '') if isinstance(raw.get('notes'),str) else ''}
+            'notes': raw.get('notes', '') if isinstance(raw.get('notes'),str) else '',
+            'support_id': selected.get('support_id') if selected else None}
 
     def _bridge(self, key, action, pending):
         n = self.network

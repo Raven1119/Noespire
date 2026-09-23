@@ -11,7 +11,7 @@ from danus.core.durable_io import atomic_json, immutable_json, read_json
 from danus.core.local_memory import LocalMemory
 from crpn.migrate import migrate, source_hashes, _legacy_data
 from crpn.model import Network
-from crpn.scheduler import expose
+from crpn.scheduler import focus
 from substrate.store import lane
 
 
@@ -52,7 +52,7 @@ def replay_case(source,destination):
         assert not {'known_fact_ids','evidence_refs','material_refs','displayed_refs'} & study.keys()
     active=net.active_studies()
     if active:
-        exposure,next_schedule=expose(active,net.data['schedule'])
+        exposure,next_schedule=focus(active,net.data['schedule'])
         assert net.data['schedule']==run['schedule']  # exposure is not service
         assert next_schedule['channel_cursor']==run['schedule'].get('channel_cursor',0)+1
     else:

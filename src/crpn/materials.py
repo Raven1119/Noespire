@@ -12,38 +12,27 @@ def checked_size(value, maximum=256000):
     return value
 
 
-def selector_packet(network, exposure, inspections=()):
-    cards = []
-    for card in exposure["cards"]:
-        study = network.data["studies"][card["study_id"]]
-        claim = (network.claim(study["claim_id"]) if study.get("claim_id") else
-                 make_claim(network.problem_id, study["scope"], study["focus"]))
-        cards.append({"study_id": study["study_id"], "claim": claim,
-            "research": research_view(network.root, study["study_id"], claim["goal"], 2),
-            "fact_candidates": network.search(claim["goal"], 4),
-            "ready_supports": [s for s in network.ready_supports() if s["conclusion_claim_id"] == claim["claim_id"]]})
-    packet = {"channel": exposure["channel"], "pinned_study_id": exposure["forced_study_id"],
-              "studies": [], "inspections": list(inspections)}
-    for card in cards:
-        try:
-            checked_size({**packet, "studies": packet["studies"] + [card]})
-        except ValueError:
-            card["research"] = {"authority": "UNVERIFIED_RESEARCH", "page_required": True}
-            card["fact_candidates"] = []
-        try:
-            checked_size({**packet, "studies": packet["studies"] + [card]})
-        except ValueError:
-            if packet["studies"]: break
-            raise
-        packet["studies"].append(card)
-    return checked_size(packet)
+def selector_packet(network, exposure, inspections=(), *, cut, options):
+    study = network.data['studies'][exposure['focus_study_id']]
+    claim = (network.claim(study['claim_id']) if study.get('claim_id') else
+             make_claim(network.problem_id, study['scope'], study['focus']))
+    packet = {'channel': exposure['channel'], 'pinned_study_id': study['study_id'],
+        'cut': cut, 'options': options, 'inspections': list(inspections),
+        'studies': [{'study_id': study['study_id'], 'claim': claim,
+                     'ready_supports': [r for r in cut['routes'] if r['compose_ready']],
+                     'research': research_view(network.root, study['study_id'], claim['goal'], 2)}]}
+    try:
+        return checked_size(packet)
+    except ValueError:
+        packet['studies'][0]['research'] = {'authority': 'UNVERIFIED_RESEARCH', 'page_required': True}
+        return checked_size(packet)
 
 
 def inspect(network, fact_ids):
     return checked_size([{"authority": "INSPECTION_ONLY", **network.inspect_fact(fid)} for fid in fact_ids])
 
 
-def worker_packet(network, action):
+def worker_packet(network, action, *, cut=None):
     study = network.data["studies"][action["study_id"]]
     claim = (network.claim(study["claim_id"]) if study.get("claim_id") else
                  make_claim(network.problem_id, study["scope"], study["focus"]))
@@ -51,21 +40,17 @@ def worker_packet(network, action):
     for fid in sorted(set(action.get("fact_ids", []))):
         fact = network.visible_fact(fid, claim["context"])
         accepted.append({"fact_id": fid, "statement": fact.statement})
-    supports = []
-    ready = {row["support_id"] for row in network.ready_supports()}
-    for sid, row in sorted(network.data["supports"].items()):
-        if claim["claim_id"] not in [row["conclusion_claim_id"], *row["requirement_claim_ids"]]:
-            continue
-        supports.append({"support_id": sid,
-                         "conclusion": network.claim(row["conclusion_claim_id"]),
-                         "requirements": [{**network.claim(cid), "truth": network.truth(cid)}
-                                          for cid in row["requirement_claim_ids"]],
-                         "certificate_fact_id": row["bridge_fact_id"] if network._active(row["bridge_fact_id"]) else None,
-                         "compose_ready": sid in ready})
-    packet = checked_size({"study": study, "claim": claim, "task": action["task"],
+    if cut is None:
+        from .work import derive
+        cut, _, _ = derive(network, {'focus_study_id': study['study_id'],
+                                    'external_study_id': None, 'explore_mode': None})
+    supports = cut['routes']
+    packet = checked_size({"study": {k: study[k] for k in ('study_id', 'claim_id', 'scope', 'focus', 'revision')
+                                     if k in study}, "claim": claim, "task": action["task"],
                            "operation": action["operation"], "accepted_facts": accepted,
                            "support_requirements": supports, "related_results": [],
-                           "research_context": [], "verification_feedback": []})
+                           "research_context": [], "verification_feedback": [],
+                           "local_cut": cut})
     for hit in network.search(action["task"], 4):
         if hit["fact_id"] in {item["fact_id"] for item in accepted}:
             continue
@@ -84,6 +69,7 @@ def worker_packet(network, action):
             outcome = event.get("record", {})
             for receipt in reversed(outcome.get("tool_submissions", [])):
                 feedback = {k: receipt.get(k) for k in ("fact_id", "verdict", "feedback")}
+                feedback['original_task'] = outcome.get('task', 'UNKNOWN')
                 if feedback not in packet["verification_feedback"]:
                     candidate = packet["verification_feedback"] + [feedback]
                     if len(candidate) <= 3:

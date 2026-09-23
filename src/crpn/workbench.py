@@ -6,6 +6,7 @@ and completed capability responses, then checked against the live CRPN graph.
 from hashlib import sha256
 import json
 from pathlib import Path
+from threading import Lock
 from danus.core import LocalMemory, GlobalMemory
 from danus.core._util import read_jsonl
 from danus.core.durable_io import read_json
@@ -127,6 +128,13 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
         raise ValueError('capability binding differs from durable invocation')
     if role == 'worker' and 'study' in packet and packet['study']['study_id'] != wl.name:
         raise ValueError('Worker capability bound to a different Study')
+    read_names = {'proof_read', 'support_read', 'fact_search', 'fact_inspect', 'gm_search', 'gm_read',
+                  'study_research', 'local_search', 'local_record', 'local_read', 'premise_request'}
+    journal = Path(request_path).with_name('capabilities.jsonl') if request_path else None
+    delivered_bytes = sum(len(json.dumps(event.get('result'), ensure_ascii=False).encode())
+                          for event in read_jsonl(journal) if event.get('phase') == 'response'
+                          and event.get('name') in read_names) if journal else 0
+    read_lock = Lock()
     def current():
         return Network(root)
     def tool(name, description, schema, callback, waits=False):
@@ -134,6 +142,19 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
             # Only mathematical validation messages are returned. Unhandled IO or
             # runtime faults stay exceptions and are redacted by the broker.
             try:
+                if name in read_names:
+                    with read_lock:
+                        nonlocal delivered_bytes
+                        if delivered_bytes >= 256000:
+                            return {'accepted': False, 'error': 'ATTENTION_BUDGET_EXHAUSTED',
+                                    'reason': 'Continue this bounded local read in a later Study service.'}
+                        response = checked_size(callback(**arguments), 64000)
+                        size = len(json.dumps(response, ensure_ascii=False).encode())
+                        if delivered_bytes + size > 256000:
+                            return {'accepted': False, 'error': 'ATTENTION_BUDGET_EXHAUSTED',
+                                    'reason': 'This read would exceed the current session material budget.'}
+                        delivered_bytes += size
+                        return response
                 return checked_size(callback(**arguments), 64000)
             except (ValueError, KeyError) as error:
                 return {'accepted': False, 'error': 'INVALID_REQUEST', 'reason': str(error)}
@@ -160,6 +181,23 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
         return [proof_tool] if request_path else []
     if role not in ('worker', 'selector'):
         return []
+    def support_read(support_id, page=0):
+        cut = packet.get('local_cut') or packet.get('cut') or {}
+        if support_id not in {r['support_id'] for r in cut.get('routes', [])}:
+            raise ValueError('Support is outside the current local cut')
+        n = current()
+        row = n.data['supports'][support_id]
+        requirements = row['requirement_claim_ids']
+        if page * 8 > len(requirements):
+            raise ValueError('Support requirement page is out of range')
+        return {'authority': 'INSPECTION_ONLY', 'support_id': support_id,
+                'conclusion': n.claim(row['conclusion_claim_id']),
+                'certificate_fact_id': row['bridge_fact_id'] if n._active(row['bridge_fact_id']) else None,
+                'requirements': [{**n.claim(cid), 'truth': n.truth(cid)}
+                                 for cid in requirements[page * 8:(page + 1) * 8]],
+                'page': page, 'total_requirements': len(requirements),
+                'next_page': page + 1 if (page + 1) * 8 < len(requirements) else None,
+                'notice': 'All conditions remain required; this page grants no premise.'}
     def fact_search(query, page=0):
         hits = current().search(query, 8 * (page + 1))[8 * page:8 * (page + 1)]
         return [{'fact_id': h['fact_id'], 'score': h['score'], 'statement_excerpt': h['statement'][:1200],
@@ -186,6 +224,9 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
               tool('fact_inspect', 'Read the complete accepted statement and scope, without authorizing its use.', obj({'fact_id': STR}), fact_inspect), proof_tool,
               tool('gm_search', 'Search bounded shared research; awareness is unverified.', obj({'query': STR, 'page': page}), memory_search),
               tool('gm_read', 'Read an exact shared research record by returned kind and ID, in character ranges.', obj({'kind': STR, 'record_id': STR, 'start': offset, 'length': length}), gm_read)]
+    cut = packet.get('local_cut') or packet.get('cut') or {}
+    if any(row.get('interface_page_required') for row in cut.get('routes', [])):
+        result.append(tool('support_read', 'Read exact requirements of a broad Support in this cut, eight per page. Inspection only; every condition remains required.', obj({'support_id': STR, 'page': page}), support_read))
     if role == 'selector':
         from substrate.store import lane
         def study_research(study_id, page=0):

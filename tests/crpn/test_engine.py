@@ -101,6 +101,8 @@ def test_failure_continuation_support_child_compose_and_full_lineage(tmp_path):
     workers = []
     def handler(role, packet):
         if role == "selector":
+            assert len(packet['studies']) == 1 and len(packet['options']) <= 4
+            assert packet['pinned_study_id'] == packet['studies'][0]['study_id']
             cards = packet["studies"]
             chosen = next((c for c in cards if c["claim"]["goal"] == "Auxiliary"), cards[0])
             return action(chosen, operation="COMPOSE" if chosen["ready_supports"] else "RESEARCH")
@@ -118,6 +120,7 @@ def test_failure_continuation_support_child_compose_and_full_lineage(tmp_path):
         if packet["claim"]["goal"] == "Auxiliary":
             return output(candidate("Auxiliary"))
         assert packet["operation"] == "COMPOSE"
+        assert any(change.startswith('claim:') for change in packet['local_cut']['changes'])
         return output(candidate("Target", predecessors=[f["fact_id"] for f in packet["accepted_facts"]]))
     actors = Actors(handler)
     research = Research(tmp_path, runtime(tmp_path, actors))
@@ -144,6 +147,8 @@ def test_automatic_inspect_bridge_materialize_without_fairness_service(tmp_path)
     net = Network.create(tmp_path, "p", "Target", "x>0")
     source = fixture_fact(net, "x*x>=0", "x is real")
     start_after_initial_direct(net)
+    net.data['schedule'] = {'channel_cursor': 3}
+    net.save()
     selections = []
     ordinary_packets = []
     def handler(role, packet):
@@ -170,7 +175,7 @@ def test_automatic_inspect_bridge_materialize_without_fairness_service(tmp_path)
     result = research.step()
     assert result["bridge_status"] == "PASS"
     net = Network(tmp_path)
-    assert net.data["control"]["visit"] == 1 and net.data.get("schedule", {}) == {}
+    assert net.data["control"]["visit"] == 1 and net.data.get("schedule", {}) == {'channel_cursor': 3}
     assert net.data["studies"]["study-" + net.target_id]["revision"] == 0
     assert all(e.get("event_type") == "local_append" for e in
                LocalMemory(lane(tmp_path, "study-" + net.target_id)).read("events"))
@@ -179,13 +184,15 @@ def test_automatic_inspect_bridge_materialize_without_fairness_service(tmp_path)
     research.step()
     assert ordinary_packets[0]["accepted_facts"] == [{"fact_id": result["fact_id"], "statement": result["statement"]}]
     assert {f.fact_id for f in Network(tmp_path).supporting_closure(result["fact_id"])} == {source, result["fact_id"]}
-    assert Network(tmp_path).data["schedule"]["channel_cursor"] == 1
+    assert Network(tmp_path).data["schedule"]["channel_cursor"] == 4
 
 
 def test_bridge_decline_retains_open_study_and_scheduler_can_continue(tmp_path):
     net = Network.create(tmp_path, "p", "Target", "x>0")
     source = fixture_fact(net, "A", "x is real")
     start_after_initial_direct(net)
+    net.data['schedule'] = {'channel_cursor': 3}
+    net.save()
     selector_count = []
     def handler(role, packet):
         if role == "selector":
@@ -282,6 +289,8 @@ def test_illegal_fact_permission_is_not_fail_soft_metadata(tmp_path):
     net = Network.create(tmp_path, "p", "Target", "x>0")
     source = fixture_fact(net, "A", "x is real")
     start_after_initial_direct(net)
+    net.data['schedule'] = {'channel_cursor': 3}
+    net.save()
     def handler(role, packet):
         assert role == "selector"
         return action(packet["studies"][0], facts=[source])
@@ -289,7 +298,7 @@ def test_illegal_fact_permission_is_not_fail_soft_metadata(tmp_path):
     with pytest.raises(ValueError, match="exact scope"):
         Research(tmp_path, runtime(tmp_path, actors)).step()
     assert actors.count("worker") == 0
-    assert Network(tmp_path).data.get("schedule", {}) == {}
+    assert Network(tmp_path).data.get("schedule", {}) == {'channel_cursor': 3}
 
 
 def test_timeout_notes_feed_next_ordinary_service_without_retry(tmp_path):
@@ -467,6 +476,9 @@ def test_exploratory_study_can_receive_scope_bridge_without_becoming_claim(tmp_p
     net = Network.create(tmp_path, "p", "Target")
     exploratory = net.register_study("Explore a local relation", "x>0")
     source = fixture_fact(net, "x*x>=0", "x is real")
+    net.data['control'] = {'run_id': 'explore-bridge', 'visit': 1, 'pending': None}
+    net.data['schedule'] = {'channel_cursor': 3, 'explore_snapshot': [exploratory['study_id']]}
+    net.save()
     selections = []
     def handler(role, packet):
         if role == "selector":
@@ -491,7 +503,8 @@ def test_exploratory_study_can_receive_scope_bridge_without_becoming_claim(tmp_p
 
 def test_large_unverified_memory_pages_without_dropping_accepted_conditions(tmp_path):
     from crpn.materials import selector_packet
-    from crpn.scheduler import expose
+    from crpn.scheduler import focus
+    from crpn.work import derive
     net = Network.create(tmp_path, "p", "Target", "For every real x with x>0")
     fid = fixture_fact(net, "For real x, x*x>=0", "For every real x with x>0")
     study = "study-" + net.target_id
@@ -502,8 +515,9 @@ def test_large_unverified_memory_pages_without_dropping_accepted_conditions(tmp_
     packet = worker_packet(net, chosen)
     assert packet["accepted_facts"] == [{"fact_id": fid, "statement": net._accepted(fid).statement}]
     assert packet["research_context"] == [{"authority": "UNVERIFIED_RESEARCH", "query": "Target", "page_required": True}]
-    exposure, _ = expose(net.active_studies(), {})
-    selection = selector_packet(net, exposure)
+    exposure, _ = focus(net.active_studies(), {})
+    cut, options, _ = derive(net, exposure)
+    selection = selector_packet(net, exposure, cut=cut, options=options)
     assert selection["studies"][0]["claim"]["context"] == "For every real x with x>0"
     assert selection["studies"][0]["research"]["page_required"] is True
 
