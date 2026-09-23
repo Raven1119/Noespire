@@ -120,11 +120,14 @@ DANUS capability responses; no visible/known/displayed registry exists. Inspecti
 alone grants nothing, internal proof assertions do not become Facts, and cross-scope
 use retains the Selector's existing bridge path.
 
-Complete in-session candidates use CRPN Admission and a fresh verifier. The stable
-submission key binds the service and complete candidate; repeats, including a final
-response repeating a tool submission, reuse the same verification and graph write.
+Complete ordinary Worker candidates use only `candidate_submit` through CRPN
+Admission and a fresh verifier. The stable submission key binds the service and
+complete candidate, so repeated tool requests reuse the same verdict and graph write;
+a genuinely different proof can be submitted again. The final ordinary Worker reply
+only hands over received evidence IDs and unfinished work, and cannot admit mathematics.
 Feedback returns directly to the still-running Worker. A condition certificate still
-belongs to a Support and cannot discharge its conclusion without AND/COMPOSE.
+belongs to a Support and cannot discharge its conclusion without AND/COMPOSE. Bridge,
+recurrence and COMPOSE retain their separate internal admission semantics.
 
 A service ownership lock serializes scheduling, without excluding graph transactions
 from the broker thread. No graph lock spans a model call. Admission re-reads current
