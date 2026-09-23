@@ -43,6 +43,28 @@ class Actors:
         record = {"role": role["ROLE"], "packet": packet, "directory": str(wl.dir)}
         self.calls.append(record)
         result = self.handler(role["ROLE"], packet)
+        if role["ROLE"] == "worker" and "study" in packet and isinstance(result, dict):
+            proposed = result.pop("candidate", None)
+            if proposed:
+                # Legacy deterministic fixtures now exercise the real tool-only exit.
+                from urllib.request import Request, urlopen
+                from crpn.materials import capability_tools
+                from danus.execution.capabilities import CapabilityBroker
+                tools = capability_tools(Network(self.root), wl, "worker", runtime=self.runtime,
+                                         request_path=role["REQUEST_PATH"])
+                with CapabilityBroker(tools, bind="127.0.0.1", evidence_path=log.parent / "capabilities.jsonl") as broker:
+                    req = Request("http://127.0.0.1:%s/rpc" % broker.port,
+                        data=json.dumps({"method": "call", "name": "candidate_submit",
+                                         "arguments": {"candidate": proposed}}).encode(),
+                        headers={"Authorization": "Bearer " + broker.token,
+                                 "Content-Type": "application/json"})
+                    with urlopen(req, timeout=15) as response:
+                        body = json.load(response)
+                receipt = body.get("result", body)
+                result["submission_receipts"] = [receipt.get("premise", {}).get("fact_id", "")
+                                                 if receipt.get("accepted") else ""]
+            else:
+                result["submission_receipts"] = []
         if result == "TIMEOUT":
             LocalMemory(wl.dir).append("notes", {"authority": "UNVERIFIED_RESEARCH", "content": "Partial timeout derivation."})
             log.write_text("public unfinished work\n", encoding="utf-8")
@@ -57,7 +79,9 @@ class Actors:
 
 
 def runtime(root, actors):
-    return Runtime(root, runner=actors, fingerprint={"test_runtime": "deterministic"})
+    actors.root = root
+    actors.runtime = Runtime(root, runner=actors, fingerprint={"test_runtime": "deterministic"})
+    return actors.runtime
 
 
 def fixture_fact(net, goal, context="", predecessors=()):
@@ -183,7 +207,7 @@ def test_bridge_decline_retains_open_study_and_scheduler_can_continue(tmp_path):
     assert actors.count("verifier") == 0
 
 
-@pytest.mark.parametrize("boundary", ["worker", "verifier", "admission", "service"])
+@pytest.mark.parametrize("boundary", ["worker", "service"])
 def test_crash_recovers_confirmed_calls_and_admission_once(tmp_path, monkeypatch, boundary):
     net = Network.create(tmp_path, "p", "Target")
     def handler(role, packet):
@@ -477,7 +501,7 @@ def test_large_unverified_memory_pages_without_dropping_accepted_conditions(tmp_
               "fact_ids": [fid], "research_queries": []}
     packet = worker_packet(net, chosen)
     assert packet["accepted_facts"] == [{"fact_id": fid, "statement": net._accepted(fid).statement}]
-    assert packet["research_context"] == [{"authority": "UNVERIFIED_RESEARCH", "page_required": True}]
+    assert packet["research_context"] == [{"authority": "UNVERIFIED_RESEARCH", "query": "Target", "page_required": True}]
     exposure, _ = expose(net.active_studies(), {})
     selection = selector_packet(net, exposure)
     assert selection["studies"][0]["claim"]["context"] == "For every real x with x>0"

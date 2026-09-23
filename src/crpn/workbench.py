@@ -64,8 +64,8 @@ def submit_candidate(network, runtime, request_path, candidate, *, gate=None):
     if normalize(candidate['context']) != packet['claim']['context']:
         raise ValueError('Worker candidate must retain current ambient scope')
     allowed = authorized_predecessors(network, request_path, candidate['predecessors'])
-    # Content identity coalesces duplicate requests within a service, including a
-    # final response that repeats an in-session submission. A revised proof is new.
+    # Content identity coalesces repeated tool requests within a service.
+    # A revised or genuinely alternative proof is a different candidate.
     key = request['key'] + ':candidate:' + memory_id(candidate)
     directory = network.root / 'submissions' / sha256(key.encode()).hexdigest()
     frozen = directory / 'request.json'
@@ -110,7 +110,10 @@ def recover_submissions(network, runtime, request_path):
         current = Network(network.root)
         valid = bool(fid and fid in current.proof_ids())
         recovered.append({'submission': directory.name, 'verdict': result['verdict'],
-                          'accepted': valid, 'fact_id': fid if valid else None})
+                          'accepted': valid, 'fact_id': fid if valid else None,
+                          'admission': result.get('admission') if valid else None,
+                          'feedback': {k: v for k, v in result.get('verification', {}).items()
+                                       if k in ('verdict', 'reason')}})
     network.refresh()
     return recovered
 

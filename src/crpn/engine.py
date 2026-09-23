@@ -119,26 +119,17 @@ class Research:
             pending = control['pending']
             if tool_submissions:
                 outcome['tool_submissions'] = tool_submissions
+                accepted = [row for row in tool_submissions if row['accepted']]
+                if accepted:
+                    outcome['admission'] = accepted[-1]['admission']
+                elif result['status'] == 'COMPLETED' and any(row['verdict'] in ('wrong', 'inconclusive') for row in tool_submissions):
+                    outcome['status'] = 'VERIFIER_REJECTED'
             local = LocalMemory(lane(n.root, study))
             if result['status'] == 'COMPLETED':
                 output = result['output']
                 append_once(local, 'notes', key + ':worker-return', {
                     'authority': 'UNVERIFIED_RESEARCH', 'continuation': output.get('continuation', ''),
                     'next_work': output.get('next_work', ''), 'source_status': result['status']})
-                candidate = output.get('candidate')
-                if candidate:
-                    from .workbench import submit_candidate
-                    try:
-                        verdict = submit_candidate(n, self.runtime, result['evidence']['request'],
-                                                   candidate, gate=self.gate)
-                    except (ValueError, KeyError, TypeError) as error:
-                        outcome.update(status='CANDIDATE_REJECTED', reason=str(error))
-                    else:
-                        outcome['verification'] = verdict['verdict']
-                        if verdict['accepted']:
-                            outcome['admission'] = verdict['admission']
-                        else:
-                            outcome['status'] = 'VERIFIER_REJECTED'
                 self._new_study(study, key, output.get('new_study'))
             self._recurrences(control)
             control = n.data['control']
@@ -235,7 +226,7 @@ class Research:
         packet = {'source_interface': source, 'target_auxiliary': auxiliary,
                   'correspondence': request['correspondence'], 'accepted_facts': [],
                   'task': 'Prove the exact auxiliary interface from the source Fact, preserving every source condition. Source is authorized ONLY for this explicit bridge.'}
-        result = self._call('worker', action['study_id'], key + ':worker', C.BRIDGE_WORKER, packet, C.WORKER_SCHEMA)
+        result = self._call('worker', action['study_id'], key + ':worker', C.BRIDGE_WORKER, packet, C.BRIDGE_WORKER_SCHEMA)
         if result['status'] != 'COMPLETED':
             return {'bridge_status': result['status']}
         self._note(action['study_id'], key + ':returned-research', {

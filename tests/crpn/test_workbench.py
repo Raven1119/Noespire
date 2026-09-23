@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 import pytest
 from crpn.model import Network
 from crpn.engine import Research
-from crpn.materials import capability_tools
+from crpn.materials import capability_tools, worker_packet
 from crpn.workbench import memory_id
 from substrate.runtime import Runtime
 from substrate.store import lane
@@ -33,13 +33,17 @@ class SessionActors:
                                  request_path=role['REQUEST_PATH'])
         immutable_json(log.parent / 'capabilities.json', {'role': name, 'tools': [t.name for t in tools]})
         with CapabilityBroker(tools, bind='127.0.0.1', evidence_path=log.parent / 'capabilities.jsonl') as broker:
+            receipts = []
             def call(tool, **arguments):
                 req = Request('http://127.0.0.1:%s/rpc' % broker.port,
                     data=json.dumps({'method': 'call', 'name': tool, 'arguments': arguments}).encode(),
                     headers={'Authorization': 'Bearer ' + broker.token, 'Content-Type': 'application/json'})
                 with urlopen(req, timeout=15) as response:
                     body = json.load(response)
-                return body.get('result', body)
+                result = body.get('result', body)
+                if tool == 'candidate_submit' and result.get('accepted'):
+                    receipts.append(result['premise']['fact_id'])
+                return result
             if name == 'verifier':
                 assert {t.name for t in tools} == {'proof_read'}
                 assert 'research_context' not in packet
@@ -50,6 +54,9 @@ class SessionActors:
                           'reason': 'Paragraph 2: missing applicability argument; prove its hypothesis.' if rejected else 'Complete fixture.'}
             elif name == 'worker':
                 result = self.worker(call, packet, role)
+                if isinstance(result, dict):
+                    result.pop('candidate', None)
+                    result['submission_receipts'] = receipts
             elif name == 'probe':
                 result = {'ancestor_claim_id': None, 'mapping': '', 'reason': 'Distinct fixture.'}
             else:
@@ -361,3 +368,73 @@ def test_heartbeat_uses_stable_metadata_and_sharing_conflict_is_nonfatal(tmp_pat
                   schema_path=schema,output_path=wl.dir/'response.json')==0
     timing=json.loads((wl.dir/'timing.json').read_text())
     assert timing['heartbeat_refresh_failures']==1
+
+
+def test_ordinary_worker_handover_cannot_admit_math_and_alternative_tool_proofs_remain_valid(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open target')
+    def worker(call, packet, role):
+        first = call('candidate_submit', candidate=candidate('Local lemma', proof='First complete proof.'))
+        second = call('candidate_submit', candidate=candidate('Local lemma', proof='Independent complete proof.'))
+        assert first['accepted'] and second['accepted']
+        assert first['premise']['fact_id'] != second['premise']['fact_id']
+        return {'submission_receipts': [first['premise']['fact_id'], second['premise']['fact_id']],
+                'continuation': 'A further new theorem, with a claimed complete proof in this final prose. The target remains open.', 'next_work': 'Check the target obligation.',
+                'new_study': None}
+    actor = SessionActors(tmp_path, worker)
+    result = Research(tmp_path, actor.runtime).step()
+    current = Network(tmp_path)
+    assert result['status'] == 'COMPLETED'
+    assert actor.calls == ['worker', 'verifier', 'verifier']
+    assert len(result['tool_submissions']) == len(current.proof_ids()) == 2
+    assert len(current.facts_for(current.register_claim('Local lemma')['claim_id'])) == 2
+    assert current.truth(current.target_id) == 'OPEN'
+    assert current.data['control']['visit'] == 1
+
+
+def test_rejection_feedback_reaches_next_local_packet_without_new_authority(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open target')
+    def worker(call, packet, role):
+        rejected = call('candidate_submit', candidate=candidate('Local lemma', proof='Needs correction.'))
+        assert rejected['verdict'] == 'wrong' and 'Paragraph 2' in rejected['feedback']['reason']
+        return output(continuation='Repair paragraph 2 before resubmitting.')
+    actor = SessionActors(tmp_path, worker)
+    result = Research(tmp_path, actor.runtime).step()
+    assert result['status'] == 'VERIFIER_REJECTED'
+    assert Network(tmp_path).proof_ids() == []
+    study = 'study-' + net.target_id
+    packet = worker_packet(Network(tmp_path), {'study_id': study, 'task': 'Continue the open claim.',
+        'operation': 'RESEARCH', 'fact_ids': [], 'research_queries': []})
+    assert 'Paragraph 2' in json.dumps(packet['verification_feedback'])
+    assert 'Repair paragraph 2' in json.dumps(packet['research_context'])
+
+
+def test_local_research_hits_deduplicate_by_original_record_and_keep_queries(tmp_path):
+    from danus.core import GlobalMemory
+    net = Network.create(tmp_path, 'p', 'Open target')
+    study = 'study-' + net.target_id
+    LocalMemory(lane(tmp_path, study)).append('notes', {'content': 'alpha beta gamma earlier derivation'})
+    gm = GlobalMemory(tmp_path)
+    first = gm.append('conclusion', 'alpha beta gamma claim', 'First conditional evidence.', study)
+    second = gm.append('conclusion', 'alpha beta gamma claim', 'Different conditional evidence.', study)
+    packet = worker_packet(net, {'study_id': study, 'task': 'Continue the open claim.',
+        'operation': 'RESEARCH', 'fact_ids': [], 'research_queries': ['alpha', 'beta', 'gamma']})
+    local = [item for part in packet['research_context'] for item in part['local']]
+    shared = [item for part in packet['research_context'] for item in part['shared']
+              if item['kind'] == 'conclusion']
+    assert len(local) == 1 and len(shared) == 2
+    assert {item['record_id'] for item in shared} == {first, second}
+    assert local[0]['matched_queries'] == ['alpha', 'beta', 'gamma']
+    assert all(item['matched_queries'] == ['alpha', 'beta', 'gamma'] for item in shared)
+    assert packet['accepted_facts'] == [] and packet['related_results'] == []
+
+
+def test_existing_task_result_is_exposed_for_inspection_without_premise_authority(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open target')
+    prior = fixture_fact(net, 'Exact 836 boundary for a finite witness')
+    study = 'study-' + net.target_id
+    packet = worker_packet(net, {'study_id': study,
+        'task': 'Check the existing exact 836 boundary before trying an extension.',
+        'operation': 'RESEARCH', 'fact_ids': [], 'research_queries': []})
+    assert any(item['fact_id'] == prior and item['authority'] == 'INSPECTION_ONLY'
+               for item in packet['related_results'])
+    assert packet['accepted_facts'] == []

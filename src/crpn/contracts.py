@@ -10,10 +10,14 @@ CLAIM = obj({"context": STR, "goal": STR})
 CANDIDATE = obj({"kind": {"enum": ["FACT", "SUPPORT", "REFUTATION"]}, "context": STR,
                  "goal": STR, "proof": STR, "predecessors": STRS,
                  "requirements": {"type": "array", "items": CLAIM}})
-WORKER_SCHEMA = obj({"candidate": {"anyOf": [CANDIDATE, {"type": "null"}]},
+WORKER_SCHEMA = obj({"submission_receipts": STRS,
                      "continuation": STR, "next_work": STR,
                      "new_study": {"anyOf": [obj({"focus": STR, "context": STR,
                          "continues_study_id": STR}), {"type": "null"}]}})
+BRIDGE_WORKER_SCHEMA = obj({"candidate": {"anyOf": [CANDIDATE, {"type": "null"}]},
+                            "continuation": STR, "next_work": STR,
+                            "new_study": {"anyOf": [obj({"focus": STR, "context": STR,
+                                "continues_study_id": STR}), {"type": "null"}]}})
 BRIDGE = obj({"source_fact_id": STR, "target_auxiliary_statement": STR,
               "correspondence": STR})
 SELECTOR_SCHEMA = obj({"study_id": STR,
@@ -55,8 +59,9 @@ conclusion context exactly. Put definitions, variable domains and conditional as
 in self-contained goals; do not add ambient assumptions. Use no external theorem retrieval.
 Persist useful intermediate research with local_append; shared findings/dead ends may
 use gm_add. These are unverified notes, never Facts. Continue existing notes faithfully
-without assuming their calculations or claims correct. A final candidate needs a complete
-self-contained proof; otherwise return null and preserve the precise continuation.
+without assuming their calculations or claims correct. Complete ordinary candidates
+must be submitted with candidate_submit, including a revised proof or a valuable
+alternative proof. The final response is a handover, not a proof submission.
 A REFUTATION needs a complete proof of the negated Claim; suspicion or failure is not
 a refutation. Keep ordinary continuation in this lane. new_study is only for a genuinely
 independent research focus (target relevance may be unknown); set continues_study_id
@@ -121,8 +126,12 @@ accepted evidence ID can be used in further local reasoning immediately. Rejecti
 unknown completion is not acceptance. An unchanged request reuses its recorded outcome;
 a corrected proof is a different candidate. Continue within the supplied local task and
 preserve unfinished work; no manual handover or new Selector is needed for these tools.
-The final candidate may be null after tool submissions; do not describe an unconfirmed
-submission as successful. Use text reasoning only, with no external retrieval, CAS,
+List only received submission receipts in submission_receipts. Use continuation
+for completed work and precise unfinished derivations, and next_work for the
+remaining obligation. The final handover is not independently verified and cannot
+change mathematical truth. A task may end when complete; no
+extra result or tool call is required. Do not describe an unconfirmed submission as
+successful. Use text reasoning only, with no external retrieval, CAS,
 code-based mathematical experiments, extra agents or computational proof checks.
 """
 WORKER += LOCAL_MATH_WORK
