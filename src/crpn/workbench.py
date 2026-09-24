@@ -249,13 +249,9 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
     if any(row.get('interface_page_required') for row in cut.get('routes', [])):
         result.append(tool('support_read', 'Read exact requirements of a broad Support in this cut, eight per page. Inspection only; every condition remains required.', obj({'support_id': STR, 'page': page}), support_read))
     if role == 'selector':
-        from substrate.store import lane
-        def study_research(study_id, page=0):
-            if study_id not in current().data['studies']:
-                raise ValueError('unknown Study')
-            records = LocalMemory(lane(root, study_id)).read('notes')
-            return {'authority': 'UNVERIFIED_RESEARCH', 'records': records[page * 2:(page + 1) * 2]}
-        return result + [tool('study_research', 'Page complete Study research; no truth authority.', obj({'study_id': STR, 'page': page}), study_research)]
+        # Selector reads only through the durable INQUIRE transition. Returning
+        # these general research tools would bypass its per-round page bound.
+        return []
     local = LocalMemory(wl.dir)
     def local_search(query, page=0):
         found = local.search(query, limit_per_channel=4 * (page + 1))
