@@ -7,7 +7,7 @@ from hashlib import sha256
 import json
 import re
 
-from danus.core import LocalMemory
+from danus.core import GlobalMemory, LocalMemory
 from substrate.store import lane
 from .materials import checked_size, model_cut
 from .model import make_claim
@@ -18,6 +18,7 @@ MAX_CHANGES = 4
 MAX_COVERING_RESULTS = 4
 NAVIGATION_PAGE_SIZE = 4
 PROOF_ID_PAGE_SIZE = 2
+INQUIRY_RESULT_PAGE_SIZE = 3
 
 
 def _navigation_owners(network, study):
@@ -58,7 +59,8 @@ def navigation_page(network, study, page=0):
                                'proof_ids': proofs[:PROOF_ID_PAGE_SIZE],
                                'next_proof_page': 1 if len(proofs) > PROOF_ID_PAGE_SIZE else None,
                                'accepted_refutation_count': len(refutations),
-                               'refutation_ids': refutations[:PROOF_ID_PAGE_SIZE]})
+                               'refutation_ids': refutations[:PROOF_ID_PAGE_SIZE],
+                               'next_refutation_page': 1 if len(refutations) > PROOF_ID_PAGE_SIZE else None})
         else:
             row = network.data['supports'][owner]
             certificates = [fid for fid, record in row['certificates'].items()
@@ -76,21 +78,183 @@ def navigation_page(network, study, page=0):
             'notice': 'Graph adjacency and OR proof counts are navigation, not a premise or implication.'}
 
 
-def navigation_proof_page(network, study, kind, owner, page=0):
+def navigation_evidence_ids(page):
+    """IDs actually displayed by a navigation page, including grouped OR routes."""
+    return list(dict.fromkeys(fid for row in page.get('interfaces', [])
+        for key in ('proof_ids', 'refutation_ids', 'certificate_ids')
+        for fid in row.get(key, [])))
+
+
+def navigation_proof_page(network, study, kind, owner, page=0, *, refutations=False):
     """Page exact accepted alternatives for one linked graph owner."""
     if type(page) is not int or page < 0 or (kind, owner) not in _navigation_owners(network, study):
         raise ValueError('proof owner is outside current navigation focus')
-    rows = (network.data['claims'][owner].get('proofs', {}) if kind == 'CLAIM'
+    if refutations and kind != 'CLAIM':
+        raise ValueError('only Claims have refutations')
+    rows = (network.data['claims'][owner].get('refutations' if refutations else 'proofs', {}) if kind == 'CLAIM'
             else network.data['supports'][owner].get('certificates', {}))
     active = [fid for fid, row in rows.items()
               if row['status'] == 'accepted' and network._active(fid)]
     if page * PROOF_ID_PAGE_SIZE > len(active):
         raise ValueError('proof page is out of range')
     return {'authority': 'INSPECTION_ONLY', 'kind': kind, 'owner_id': owner,
+            'slot': 'refutations' if refutations else 'proofs',
             'page': page, 'total_accepted': len(active),
             'proof_ids': active[page * PROOF_ID_PAGE_SIZE:(page + 1) * PROOF_ID_PAGE_SIZE],
             'next_page': page + 1 if (page + 1) * PROOF_ID_PAGE_SIZE < len(active) else None,
             'notice': 'Each proof ID is independent; viewing it grants no premise.'}
+
+
+def inquiry_page(network, study, request, question, known_ids):
+    """One finite, question-directed Selector read inside the pinned focus."""
+    if not isinstance(question, str) or not question.strip() or len(question) > 1000:
+        raise ValueError('a concrete bounded decision question is required')
+    if not isinstance(request, dict) or type(request.get('page')) is not int or request['page'] < 0:
+        raise ValueError('invalid evidence inquiry')
+    kind, reference, page = request.get('kind'), request.get('reference'), request['page']
+    if not isinstance(reference, str) or len(reference) > 500:
+        raise ValueError('invalid evidence reference')
+    response = {'authority': 'INSPECTION_ONLY', 'decision_question': question,
+                'kind': kind, 'reference': reference, 'page': page,
+                'results': [], 'notice': 'A graph/search lead is not an implication or premise permission.'}
+
+    def interface(fid, source):
+        row = network.inspect_fact(fid)
+        return {'fact_id': fid, 'scope': row['scope'],
+                'same_scope': row['scope'] == study['scope'],
+                'statement_excerpt': row['statement'][:1000],
+                'statement_page_required': len(row['statement']) > 1000,
+                'source': source, 'relation': 'POTENTIALLY_RELEVANT_NOT_PROVEN'}
+
+    def memory_key(row):
+        return sha256(json.dumps(row, ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+
+    def memory_text(row):
+        raw = json.dumps(row, ensure_ascii=False, sort_keys=True)
+        start = page * 1600
+        if start > len(raw):
+            raise ValueError('research record page out of range')
+        return {'text': raw[start:start + 1600], 'start': start,
+                'next_page': page + 1 if start + 1600 < len(raw) else None,
+                'total_chars': len(raw)}
+
+    if kind == 'NAVIGATION':
+        response['navigation'] = navigation_page(network, study, page)
+    elif kind in ('PROOFS', 'REFUTATIONS'):
+        owner_kind, divider, owner = reference.partition(':')
+        if not divider:
+            raise ValueError('proof owner must be CLAIM:<id> or SUPPORT:<id>')
+        proof_page = navigation_proof_page(network, study, owner_kind, owner, page,
+                                           refutations=kind == 'REFUTATIONS')
+        response['proof_page'] = proof_page
+        response['results'] = [interface(fid, 'LINKED_OR_PROOF') for fid in proof_page['proof_ids']]
+    elif kind == 'SEARCH':
+        if not reference.strip():
+            raise ValueError('search needs a current-focus query')
+        size = INQUIRY_RESULT_PAGE_SIZE
+        hits = network.search(reference, size * (page + 1))[size * page:size * (page + 1)]
+        response['results'] = [interface(hit['fact_id'], 'TASK_SEARCH_LEAD') for hit in hits]
+        response['next_page'] = page + 1 if len(hits) == size else None
+    elif kind in ('FACT', 'PROOF', 'PREDECESSORS', 'CONSUMERS'):
+        if reference not in known_ids:
+            raise ValueError('inquiry reference was not delivered in this local decision')
+        if kind == 'FACT':
+            response['results'] = [interface(reference, 'EXACT_INSPECTION')]
+            statement = network.inspect_fact(reference)['statement']
+            start = page * 1600
+            if start > len(statement):
+                raise ValueError('statement page out of range')
+            response['statement'] = {'text': statement[start:start + 1600], 'start': start,
+                                     'next_page': page + 1 if start + 1600 < len(statement) else None,
+                                     'total_chars': len(statement)}
+        elif kind == 'PROOF':
+            fact = network._accepted(reference)
+            start = page * 1600
+            if start > len(fact.proof):
+                raise ValueError('proof page out of range')
+            response['results'] = [interface(reference, 'EXACT_PROOF_PAGE')]
+            response['proof'] = {'text': fact.proof[start:start + 1600], 'start': start,
+                                 'next_page': page + 1 if start + 1600 < len(fact.proof) else None,
+                                 'total_chars': len(fact.proof)}
+        else:
+            records = network._records()
+            if kind == 'PREDECESSORS':
+                neighbors = records[reference][3].get('predecessors', [])
+            else:
+                neighbors = [fid for fid, (_table, _owner, _slot, row) in records.items()
+                             if reference in row.get('predecessors', [])]
+            active = []
+            for fid in dict.fromkeys(neighbors):
+                try:
+                    network.inspect_fact(fid)
+                except (KeyError, ValueError):
+                    continue
+                active.append(fid)
+            size = INQUIRY_RESULT_PAGE_SIZE
+            selected = active[size * page:size * (page + 1)]
+            response['results'] = [interface(fid, 'ACTUAL_' + kind[:-1]) for fid in selected]
+            response['next_page'] = page + 1 if (page + 1) * size < len(active) else None
+    elif kind in ('LOCAL_RECENT', 'LOCAL_SEARCH', 'LOCAL_RECORD'):
+        memory = LocalMemory(lane(network.root, study['study_id']))
+        if kind == 'LOCAL_RECENT':
+            notes = list(reversed(memory.read('notes')))
+            selected = notes[2 * page:2 * (page + 1)]
+            response['research'] = [{'authority': 'UNVERIFIED_RESEARCH',
+                'channel': 'notes', 'record_id': memory_key(row),
+                'excerpt': json.dumps(row, ensure_ascii=False)[:1000]} for row in selected]
+            response['next_page'] = page + 1 if 2 * (page + 1) < len(notes) else None
+        elif kind == 'LOCAL_SEARCH':
+            if not reference.strip():
+                raise ValueError('local search requires a task query')
+            found = memory.search(reference, limit_per_channel=3 * (page + 1))
+            ranked = sorted(((channel, hit) for channel, group in found['results_by_channel'].items()
+                             for hit in group['results']),
+                            key=lambda item: (-item[1]['score'], item[0], memory_key(item[1]['item'])))
+            hits = ranked[3 * page:3 * (page + 1)]
+            response['research'] = [{'authority': 'UNVERIFIED_RESEARCH', 'channel': channel,
+                'record_id': memory_key(hit['item']), 'score': hit['score'],
+                'excerpt': json.dumps(hit['item'], ensure_ascii=False)[:1000]}
+                for channel, hit in hits]
+            response['next_page'] = page + 1 if 3 * (page + 1) < len(ranked) else None
+        else:
+            channel, divider, record_id = reference.partition(':')
+            if not divider or channel not in ('notes', 'events'):
+                raise ValueError('local record must be notes:<id> or events:<id>')
+            row = next((item for item in memory.read(channel)
+                        if memory_key(item) == record_id), None)
+            if row is None:
+                raise ValueError('unknown local research record')
+            response['research_record'] = {'authority': 'UNVERIFIED_RESEARCH',
+                'channel': channel, 'record_id': record_id, 'content': memory_text(row)}
+    elif kind in ('GLOBAL_SEARCH', 'GLOBAL_RECORD'):
+        memory = GlobalMemory(network.root)
+        if kind == 'GLOBAL_SEARCH':
+            if not reference.strip():
+                raise ValueError('global search requires a task query')
+            found = memory.search(reference, limit_per_kind=3 * (page + 1))
+            ranked = sorted(((channel, hit) for channel, group in found['results_by_kind'].items()
+                             for hit in group['results']),
+                            key=lambda item: (-item[1]['score'], item[0], item[1]['entry']['id']))
+            hits = ranked[3 * page:3 * (page + 1)]
+            response['research'] = [{'authority': 'UNVERIFIED_RESEARCH', 'kind': channel,
+                'record_id': hit['entry']['id'], 'score': hit['score'],
+                'excerpt': json.dumps(hit['entry'], ensure_ascii=False)[:1000]}
+                for channel, hit in hits]
+            response['next_page'] = page + 1 if 3 * (page + 1) < len(ranked) else None
+        else:
+            from danus.core.schema import GLOBAL_KINDS
+            channel, divider, record_id = reference.partition(':')
+            if not divider or channel not in GLOBAL_KINDS:
+                raise ValueError('global record must be kind:<id>')
+            row = next((item for item in memory.read(channel)
+                        if item.get('id') == record_id), None)
+            if row is None:
+                raise ValueError('unknown shared research record')
+            response['research_record'] = {'authority': 'UNVERIFIED_RESEARCH',
+                'kind': channel, 'record_id': record_id, 'content': memory_text(row)}
+    else:
+        raise ValueError('unknown evidence inquiry kind')
+    return checked_size(response, 16000)
 
 
 def awakened(network, studies):

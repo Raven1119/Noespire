@@ -24,10 +24,17 @@ BRIDGE_WORKER_SCHEMA = obj({"candidate": {"anyOf": [CANDIDATE, {"type": "null"}]
                                 "continues_study_id": STR}), {"type": "null"}]}})
 BRIDGE = obj({"source_fact_id": STR, "target_auxiliary_statement": STR,
               "correspondence": STR})
+INQUIRY = obj({"kind": {"enum": ["NAVIGATION", "PROOFS", "REFUTATIONS", "FACT", "SEARCH",
+                                  "PREDECESSORS", "CONSUMERS", "PROOF", "LOCAL_RECENT",
+                                  "LOCAL_SEARCH", "LOCAL_RECORD", "GLOBAL_SEARCH",
+                                  "GLOBAL_RECORD"]},
+               "reference": STR, "page": {"type": "integer", "minimum": 0}})
 SELECTOR_SCHEMA = obj({"study_id": STR,
-    "operation": {"enum": ["RESEARCH", "CLOSE", "COMPOSE", "INSPECT", "REQUEST_BRIDGE"]},
+    "operation": {"enum": ["RESEARCH", "CLOSE", "COMPOSE", "INSPECT", "REQUEST_BRIDGE", "INQUIRE"]},
     "task": STR, "fact_ids": STRS, "research_queries": STRS,
-    "bridge": {"anyOf": [BRIDGE, {"type": "null"}]}, "notes": STR})
+    "bridge": {"anyOf": [BRIDGE, {"type": "null"}]}, "notes": STR,
+    "decision_question": STR, "decision_evidence_ids": STRS,
+    "inquiry": {"anyOf": [INQUIRY, {"type": "null"}]}})
 VERIFY_SCHEMA = obj({"verdict": {"enum": ["correct", "wrong", "inconclusive"]},
                      "reason": STR})
 PROBE_SCHEMA = obj({"ancestor_claim_id": {"anyOf": [STR, {"type": "null"}]},
@@ -72,9 +79,32 @@ RESEARCH may prove directly, derive a conditional Support, use a new Fact to con
 OPEN Claim, continue a derivation, or change direction. CLOSE attempts a complete
 bounded local result already supported by the research; do not force closure.
 COMPOSE uses a ready Support; do not claim automatic discharge. INSPECT requests
-offered Fact interfaces before deciding. Cross-scope inspected Facts
+offered Fact interfaces before deciding. Use INQUIRE for bounded research memory.
+Cross-scope inspected Facts
 may justify REQUEST_BRIDGE with an exact auxiliary statement and explicit definition/
 variable correspondence. Inspection is not acceptance; preserve all source conditions.
+When the initial four accepted evidence interfaces are insufficient to choose a
+genuinely residual task, use INQUIRE with one concrete decision_question and one
+inquiry. NAVIGATION pages exact Claim/Support neighbors; PROOFS pages alternatives
+for a linked owner named CLAIM:<id> or SUPPORT:<id>; REFUTATIONS pages a linked
+Claim's refutations; FACT inspects one known ID;
+SEARCH pages accepted results for a focus-specific query; PREDECESSORS and
+CONSUMERS follow actual proof edges from an already exposed ID; PROOF reads a short
+page of that known proof. This is navigation, never a mathematical implication.
+LOCAL_RECENT pages this Study's saved notes, LOCAL_SEARCH queries its LocalMemory,
+and LOCAL_RECORD pages an exact local note as channel:record_id. GLOBAL_SEARCH
+queries unverified shared memory and GLOBAL_RECORD pages kind:record_id. These
+research records are never accepted mathematical evidence.
+Each next round sees one bounded page, prior exact IDs, one carried accepted
+interface selected through decision_evidence_ids, and concise prior decision
+notes. These are for comparing a concrete uncertainty, not an accumulated
+project transcript. At most two inquiry pages are available for this decision.
+If the evidence remains insufficient, assign Worker the precise unresolved
+evidence-comparison question instead of expanding Selector context or proving it
+yourself. On a final action, list only additional inspected IDs you actually used
+in decision_evidence_ids; the initial page is retained automatically. State the
+decision question and concise rationale for the final task. Exposure is not
+premise authorization.
 Choose only the pinned Study. Request only offered existing
 project Fact IDs; ordinary predecessors must have the exact current ambient scope.
 No object ranking, required comparison prose, or assessment schema is needed.

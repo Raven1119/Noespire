@@ -31,7 +31,134 @@ def output(value=None, continuation="Preserved local reasoning.", next_work="Exa
 
 def action(card, *, operation="RESEARCH", facts=(), bridge=None, task="Investigate the remaining precise local step."):
     return {"study_id": card["study_id"], "operation": operation, "task": task,
-            "fact_ids": list(facts), "research_queries": [], "bridge": bridge, "notes": "Local task."}
+            "fact_ids": list(facts), "research_queries": [], "bridge": bridge, "notes": "Local task.",
+            "decision_question": "", "decision_evidence_ids": [], "inquiry": None}
+
+
+def test_selector_moves_one_bounded_page_then_worker_inherits_decision_evidence(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open theorem')
+    ids = [fixture_fact(net, 'Open theorem locally related accepted result 0')]
+    ids += [fixture_fact(net, f'Locally related accepted result {i}') for i in range(1, 8)]
+    start_after_initial_direct(net)
+    root = 'study-' + net.target_id
+    for sid, study in net.data['studies'].items():
+        if sid != root:
+            study['last_served_visit'] = 0
+    net.save()
+    seen = []
+
+    def handler(role, packet):
+        if role == 'selector':
+            seen.append(packet)
+            card = packet['studies'][0]
+            if len(seen) == 1:
+                assert len(packet['cut']['shared_evidence_core']['results']) <= 4
+                request = action(card, operation='INQUIRE', task='Resolve the old local boundary.')
+                request['decision_question'] = 'Does another accepted result change the old boundary?'
+                request['decision_evidence_ids'] = [packet['cut']['shared_evidence_core']['results'][0]['fact_id']]
+                request['notes'] = 'Compare the old boundary with the next search page.'
+                request['inquiry'] = {'kind': 'SEARCH',
+                                      'reference': 'Locally related accepted result', 'page': 1}
+                return request
+            page = packet['cut']['inquiry_page']
+            assert len(page['results']) <= 3
+            assert len(packet['cut']['carried_decision_evidence']) == 1
+            assert len(page['results']) + len(packet['cut']['carried_decision_evidence']) <= 4
+            assert packet['cut']['prior_decision_notes'].startswith('Compare the old boundary')
+            assert page['decision_question'] == 'Does another accepted result change the old boundary?'
+            assert any(row['fact_id'] not in {item['fact_id'] for item in
+                       seen[0]['cut']['shared_evidence_core']['results']} for row in page['results'])
+            selected = action(card, task='Resolve whether the newly inspected accepted result changes the boundary.')
+            selected['decision_evidence_ids'] = [page['results'][0]['fact_id']]
+            return selected
+        assert role == 'worker'
+        assert packet['task'].startswith('Resolve whether')
+        decision = packet['decision_evidence']
+        assert set(ids).intersection(row['fact_id'] for row in decision)
+        assert any(row['fact_id'] in {x['fact_id'] for x in seen[1]['cut']['inquiry_page']['results']}
+                   for row in decision)
+        assert packet['accepted_facts'] == []  # Exposure is not premise permission.
+        assert {row['fact_id'] for row in packet['local_cut']['shared_evidence_core']['results']} == {
+            row['fact_id'] for row in decision}
+        assert packet['local_cut']['task_residual']['evidence_core_ids']
+        return output(None, continuation='The question was inspected, with no new proof.')
+
+    actors = Actors(handler)
+    result = Research(tmp_path, runtime(tmp_path, actors)).step()
+    assert result['status'] == 'COMPLETED'
+    assert actors.count('selector') == 2 and actors.count('worker') == 1
+    assert Network(tmp_path).data['control']['visit'] == 2
+
+
+def test_navigation_ids_are_citable_and_bad_advisory_citations_do_not_block(tmp_path):
+    from test_model import support, fact
+    net = Network.create(tmp_path, 'p', 'Open theorem')
+    route = support(net, 'Open theorem', ['Exact open requirement', 'Another open requirement'])
+    requirement_id = route['requirement_claim_ids'][0]
+    evidence_id = fact(net, requirement_id)
+    start_after_initial_direct(net)
+    root = 'study-' + net.target_id
+    for sid, study in net.data['studies'].items():
+        if sid != root:
+            study['last_served_visit'] = 0
+    net.save()
+    seen = []
+
+    def handler(role, packet):
+        if role == 'selector':
+            seen.append(packet)
+            card = packet['studies'][0]
+            if len(seen) == 1:
+                request = action(card, operation='INQUIRE')
+                request['decision_question'] = 'Which direct requirement is already proved?'
+                request['inquiry'] = {'kind': 'NAVIGATION', 'reference': '', 'page': 0}
+                return request
+            assert any(evidence_id in row.get('proof_ids', []) for row in
+                       packet['cut']['inquiry_page']['navigation']['interfaces'])
+            selected = action(card, task='Assess the remaining route with this requirement.')
+            selected['decision_evidence_ids'] = [evidence_id, 'not-an-exposed-id']
+            return selected
+        assert role == 'worker'
+        assert evidence_id in {row['fact_id'] for row in packet['decision_evidence']}
+        assert packet['accepted_facts'] == []
+        return output(None)
+
+    result = Research(tmp_path, runtime(tmp_path, Actors(handler))).step()
+    assert result['status'] == 'COMPLETED'
+    notes = [row['record'] for row in LocalMemory(lane(tmp_path, root)).read('notes')]
+    assert any(row.get('invalid_decision_citations') == ['not-an-exposed-id'] for row in notes)
+
+
+def test_selector_inquiry_exhaustion_delegates_precise_question_once(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open theorem')
+    fixture_fact(net, 'Open theorem accepted interface')
+    start_after_initial_direct(net)
+    root = 'study-' + net.target_id
+    for sid, study in net.data['studies'].items():
+        if sid != root:
+            study['last_served_visit'] = 0
+    net.save()
+
+    def handler(role, packet):
+        if role == 'selector':
+            request = action(packet['studies'][0], operation='INQUIRE')
+            request['decision_question'] = 'Does this accepted interface change the old open question?'
+            request['inquiry'] = {'kind': 'SEARCH', 'reference': 'Open theorem accepted interface', 'page': 0}
+            return request
+        assert role == 'worker'
+        assert packet['task'].startswith('Resolve this precise evidence question')
+        assert 'change the old open question' in packet['task']
+        assert packet['accepted_facts'] == []
+        return output(None)
+
+    actors = Actors(handler)
+    result = Research(tmp_path, runtime(tmp_path, actors)).step()
+    assert result['status'] == 'COMPLETED'
+    assert actors.count('selector') == 3 and actors.count('worker') == 1
+    assert Network(tmp_path).data['control']['visit'] == 2
+    audit = LocalMemory(lane(tmp_path, root)).read('events')[-1]['record']['evidence_window']
+    assert len(audit['inquiry_history']) == 2
+    assert audit['inquiry_delivered_bytes'] <= 32000
 
 
 class Actors:

@@ -1,12 +1,12 @@
 """Deterministic control evidence; fixtures do not establish mathematics."""
 import json
 
-from danus.core import LocalMemory
+from danus.core import GlobalMemory, LocalMemory
 from crpn.engine import Research
 from crpn.materials import selector_packet, worker_packet
 from crpn.model import Network, make_claim, identity, proof_identity
 from crpn.scheduler import focus
-from crpn.work import awakened, derive, interface_snapshot, reference_snapshot, navigation_page, navigation_proof_page, shared_evidence_core
+from crpn.work import awakened, derive, inquiry_page, interface_snapshot, reference_snapshot, navigation_page, navigation_proof_page, shared_evidence_core
 from substrate.store import lane
 from test_engine import Actors, action, candidate, output, runtime, start_after_initial_direct
 from test_model import fact, support
@@ -16,6 +16,43 @@ def cut_for(network, schedule=None):
     exposure, next_schedule = focus(network.active_studies(), schedule or {})
     cut, options, versions = derive(network, exposure)
     return exposure, next_schedule, cut, options, versions
+
+
+def test_inquiry_pages_long_exact_statement_and_study_research(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open target')
+    long_goal = 'Long exact condition ' + 'specific domain and assumption. ' * 90
+    fid = fact(net, net.register_claim(long_goal)['claim_id'])
+    study = net.data['studies']['study-' + net.target_id]
+    first = inquiry_page(net, study, {'kind': 'FACT', 'reference': fid, 'page': 0},
+                         'Which conditions does this accepted result really state?', {fid})
+    second = inquiry_page(net, study, {'kind': 'FACT', 'reference': fid, 'page': 1},
+                          'Which conditions does this accepted result really state?', {fid})
+    assert first['statement']['next_page'] == 1
+    assert first['statement']['text'] + second['statement']['text'] == net.inspect_fact(fid)['statement']
+    memory = LocalMemory(lane(tmp_path, study['study_id']))
+    saved = memory.append('notes', {'content': 'Earlier unresolved construction and gap.'})
+    recent = inquiry_page(net, study, {'kind': 'LOCAL_RECENT', 'reference': '', 'page': 0},
+                          'What unfinished local research is already saved?', set())
+    assert recent['research'][0]['authority'] == 'UNVERIFIED_RESEARCH'
+    assert 'Earlier unresolved construction' in recent['research'][0]['excerpt']
+    record = inquiry_page(net, study, {'kind': 'LOCAL_RECORD',
+        'reference': 'notes:' + recent['research'][0]['record_id'], 'page': 0},
+        'What unfinished local research is already saved?', set())
+    assert 'Earlier unresolved construction' in record['research_record']['content']['text']
+
+
+def test_global_research_search_pages_across_kinds_without_hiding_hits(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open target')
+    study = net.data['studies']['study-' + net.target_id]
+    memory = GlobalMemory(tmp_path)
+    for kind in ('conclusion', 'example'):
+        for index in range(3):
+            memory.append(kind, f'needle {kind} {index}', 'Unverified research detail.', 'fixture')
+    pages = [inquiry_page(net, study, {'kind': 'GLOBAL_SEARCH', 'reference': 'needle', 'page': page},
+                          'What shared research might inform this focus?', set()) for page in (0, 1)]
+    seen = [(row['kind'], row['record_id']) for page in pages for row in page['research']]
+    assert len(seen) == len(set(seen)) == 6
+    assert {kind for kind, _ in seen} == {'conclusion', 'example'}
 
 
 def test_same_cut_is_bounded_with_one_thousand_and_ten_thousand_unrelated_claims(tmp_path):
@@ -620,6 +657,31 @@ def test_direct_requirement_survives_full_initial_core_as_grouped_navigation(tmp
     requirement = next(row for row in refreshed['interfaces'] if row.get('claim_id') == required)
     assert requirement['accepted_proof_count'] == 7
     assert net.truth(required) == 'DISCHARGED'
+
+
+def test_inquiry_follows_only_actual_edges_and_preserves_foreign_scope(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    source = fact(net, net.register_claim('Construction A source')['claim_id'])
+    consumer = fact(net, net.register_claim('Construction A consumer')['claim_id'],
+                    predecessors=[source])
+    foreign = fact(net, net.register_claim('Construction B later endpoint', 'foreign scope')['claim_id'])
+    study = net.data['studies']['study-' + net.target_id]
+    question = 'Which exact accepted proof actually depends on the source?'
+    page = inquiry_page(net, study, {'kind': 'CONSUMERS', 'reference': source, 'page': 0},
+                        question, {source})
+    assert [row['fact_id'] for row in page['results']] == [consumer]
+    assert page['results'][0]['relation'] == 'POTENTIALLY_RELEVANT_NOT_PROVEN'
+    parent = inquiry_page(net, study, {'kind': 'PREDECESSORS', 'reference': consumer, 'page': 0},
+                          question, {consumer})
+    assert [row['fact_id'] for row in parent['results']] == [source]
+    scoped = inquiry_page(net, study, {'kind': 'FACT', 'reference': foreign, 'page': 0},
+                          'Is this different construction relevant?', {foreign})
+    assert scoped['results'][0]['same_scope'] is False
+    assert net.truth(net.target_id) == 'OPEN'
+    net.revoke(source, 'fixture invalidation')
+    after = inquiry_page(net, study, {'kind': 'CONSUMERS', 'reference': source, 'page': 0},
+                         question, {source})
+    assert after['results'] == []
 
 
 def test_ready_or_route_is_dispatched_without_selector_and_other_route_survives_revocation(tmp_path):

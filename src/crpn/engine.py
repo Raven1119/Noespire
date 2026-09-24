@@ -16,11 +16,16 @@ from . import contracts as C
 from .model import Network, make_claim, normalize
 from .scheduler import focus
 from .materials import selector_packet, worker_packet, inspect
-from .work import derive, after_inspection, awakened, interface_snapshot, reference_snapshot
+from .work import (derive, after_inspection, awakened, inquiry_page, navigation_evidence_ids,
+                   interface_snapshot, reference_snapshot)
 
 
 class BlockingError(RuntimeError):
     pass
+
+
+MAX_SELECTOR_INQUIRIES = 2
+MAX_SELECTOR_INQUIRY_BYTES = 32000
 
 
 class Research:
@@ -62,6 +67,15 @@ class Research:
                 control['pending'] = {'exposure': exposure, 'schedule_after': proposed,
                                       'selection_round': 0, 'inspections': [], 'action': None,
                                       'cut': cut, 'options': options, 'observation': observed,
+                                      'inquiry_rounds': 0, 'inquiry_bytes': 0, 'inquiry_history': [],
+                                      'decision_evidence_ids': [row['fact_id'] for row in
+                                                                cut['shared_evidence_core']['results']],
+                                      'exposed_evidence_ids': [row['fact_id'] for row in
+                                                               cut['shared_evidence_core']['results']] +
+                                                              navigation_evidence_ids(cut['mandatory_navigation']),
+                                      'initial_core_ids': [row['fact_id'] for row in
+                                                           cut['shared_evidence_core']['results']],
+                                      'decision_question': cut['task_residual']['current_task'],
                                       'work_cursor_after': n.data['studies'][exposure['focus_study_id']].get('work_cursor', 0)
                                                            + (4 if cut['candidate_count'] > 4 else 1)}
                 # Direct-first is the existing initialization policy, never imposed later.
@@ -80,6 +94,11 @@ class Research:
                     control['pending']['cut']['shared_evidence_core'] = core
                     control['pending']['cut']['task_residual'] = task_residual(
                         n, current_study, pending_action['task'], evidence_core=core)
+                    ids = [row['fact_id'] for row in core['results']]
+                    control['pending']['initial_core_ids'] = ids
+                    control['pending']['decision_evidence_ids'] = ids
+                    control['pending']['exposed_evidence_ids'] = list(dict.fromkeys(
+                        ids + navigation_evidence_ids(control['pending']['cut']['mandatory_navigation'])))
                 n.save()
             pending = control['pending']
             key = control['run_id'] + ':' + str(control['visit']) + ':' + str(control.get('generation', 0))
@@ -99,18 +118,101 @@ class Research:
                     control['pending'] = None
                     n.save()
                     return {'status': 'STALE_WORK', 'role': 'selector'}
-                action = self._action(result['output'], pending['exposure'], pending['options'])
+                raw = result['output']
+                if isinstance(raw, dict) and raw.get('operation') == 'INQUIRE':
+                    question = raw.get('decision_question', '')
+                    if raw.get('study_id') != pending['exposure']['focus_study_id']:
+                        raise BlockingError('evidence inquiry changed the scheduled focus')
+                    exhausted = (pending['inquiry_rounds'] >= MAX_SELECTOR_INQUIRIES or
+                                 pending['inquiry_bytes'] >= MAX_SELECTOR_INQUIRY_BYTES)
+                    if not exhausted:
+                        study_row = n.data['studies'][pending['exposure']['focus_study_id']]
+                        known = set(pending['exposed_evidence_ids'])
+                        known.update(pending['cut']['shared_evidence_core'].get('_audit', {})
+                                     .get('candidate_sources', {}))
+                        try:
+                            page = inquiry_page(n, study_row, raw.get('inquiry'), question, known)
+                        except (ValueError, KeyError) as error:
+                            page = {'authority': 'INSPECTION_ONLY',
+                                    'decision_question': str(question)[:1000], 'results': [],
+                                    'error': 'INVALID_LOCAL_INQUIRY', 'reason': str(error)}
+                        size = len(json.dumps(page, ensure_ascii=False).encode())
+                        exhausted = pending['inquiry_bytes'] + size > MAX_SELECTOR_INQUIRY_BYTES
+                    if exhausted:
+                        pending['action'] = self._evidence_resolution(pending, question)
+                        latest = (pending['inquiry_history'][-1]['evidence_ids']
+                                  if pending['inquiry_history'] else [])
+                        carried = [row['fact_id'] for row in
+                                   pending['cut'].get('carried_decision_evidence', [])]
+                        pending['decision_evidence_ids'] = list(dict.fromkeys(
+                            pending['initial_core_ids'] + carried + latest))
+                        pending['decision_question'] = str(question)[:1000]
+                        self._note(pending['action']['study_id'], key + ':selection:' +
+                                   str(pending['selection_round']),
+                                   {'selected_task': pending['action']['task'],
+                                    'decision_question': pending['decision_question'],
+                                    'inquiry_exhausted': True})
+                        n.save()
+                        break
+                    ids = [row['fact_id'] for row in page.get('results', [])]
+                    ids += navigation_evidence_ids(page.get('navigation', {}))
+                    pending['exposed_evidence_ids'] = list(dict.fromkeys(
+                        pending['exposed_evidence_ids'] + ids))
+                    pending['inquiry_history'].append({'question': str(question)[:1000],
+                        'kind': (raw.get('inquiry') or {}).get('kind'), 'evidence_ids': ids,
+                        'delivered_bytes': size})
+                    pending['inquiry_rounds'] += 1
+                    pending['inquiry_bytes'] += size
+                    pending['decision_question'] = str(question)[:1000]
+                    pending['cut']['inquiry_page'] = page
+                    pending['cut']['decision_question'] = pending['decision_question']
+                    pending['cut']['previous_evidence_ids'] = pending['exposed_evidence_ids']
+                    cited = raw.get('decision_evidence_ids')
+                    cited = cited if isinstance(cited, list) else []
+                    carry = [fid for fid in cited if isinstance(fid, str)
+                             and fid in pending['exposed_evidence_ids'] and fid not in ids]
+                    carry = carry[:1]
+                    pending['cut']['carried_decision_evidence'] = [
+                        {'fact_id': fid, 'scope': n.inspect_fact(fid)['scope'],
+                         'statement_excerpt': n.inspect_fact(fid)['statement'][:700],
+                         'authority': 'INSPECTION_ONLY'} for fid in carry]
+                    pending['cut']['prior_decision_notes'] = str(raw.get('notes', ''))[:1000]
+                    pending['cut']['shared_evidence_core']['results'] = []
+                    pending['cut']['task_residual']['evidence_core_ids'] = ids
+                    pending['inspections'] = []
+                    pending['selection_round'] += 1
+                    n.save()
+                    continue
+                action = self._action(raw, pending['exposure'], pending['options'])
                 if action['operation'] == 'INSPECT':
                     pending['inspections'] = inspect(n, action['fact_ids'])
+                    pending['cut']['shared_evidence_core']['results'] = []
                     pending['options'] = after_inspection(pending['options'], pending['inspections'],
                                                           pending['exposure']['focus_study_id'])
                     pending['selection_round'] += 1; n.save()
                     continue
+                used = raw.get('decision_evidence_ids', [])
+                if not isinstance(used, list):
+                    used = []
+                invalid_citations = [fid for fid in used if not isinstance(fid, str)
+                                     or fid not in pending['exposed_evidence_ids']]
+                used = [fid for fid in used if isinstance(fid, str)
+                        and fid in pending['exposed_evidence_ids']]
                 pending['action'] = action
+                pending['decision_evidence_ids'] = list(dict.fromkeys(
+                    pending['initial_core_ids'] + used))
+                pending['decision_question'] = (raw.get('decision_question') or
+                                                pending['decision_question'])[:1000]
                 self._note(action['study_id'], key + ':selection:' + str(pending['selection_round']),
-                           {'selected_task': action['task'], 'strategy_notes': action.get('notes', '')})
+                           {'selected_task': action['task'], 'strategy_notes': action.get('notes', ''),
+                            'decision_question': pending['decision_question'],
+                            'decision_evidence_ids': pending['decision_evidence_ids'],
+                            'invalid_decision_citations': invalid_citations})
                 n.save()
             action = pending['action']
+            action = {**action, 'decision_evidence_ids': pending.get('decision_evidence_ids', []),
+                      'decision_question': pending.get('decision_question', ''),
+                      'decision_rationale': action.get('notes', '')}
             if action['operation'] == 'REQUEST_BRIDGE':
                 outcome = self._bridge(key + ':bridge:' + str(pending['selection_round']), action, pending)
                 control = n.data['control']
@@ -151,6 +253,12 @@ class Research:
                 if action['operation'] == 'COMPOSE' and not n.support_ready(action['support_id']):
                     control['pending'] = None; n.save()
                     return {'status': 'STALE_WORK', 'study_id': study}
+                try:
+                    for fid in action['decision_evidence_ids']:
+                        n.inspect_fact(fid)
+                except (KeyError, ValueError):
+                    control['pending'] = None; n.save()
+                    return {'status': 'STALE_WORK', 'study_id': study}
                 packet = worker_packet(n, action, cut=pending['cut'])
                 if action['operation'] == 'COMPOSE':
                     materials = n.support_materials(action['support_id'])
@@ -165,8 +273,11 @@ class Research:
                        'task': action['task'], 'operation': action['operation']}
             core = pending['cut'].get('shared_evidence_core', {})
             outcome['evidence_window'] = {
-                'selector_core_ids': [row['fact_id'] for row in core.get('results', [])],
+                'selector_core_ids': pending.get('initial_core_ids', []),
                 'candidate_sources': core.get('_audit', {}).get('candidate_sources', {}),
+                'decision_evidence_ids': pending.get('decision_evidence_ids', []),
+                'inquiry_history': pending.get('inquiry_history', []),
+                'inquiry_delivered_bytes': pending.get('inquiry_bytes', 0),
                 'worker_core_ids': [row['fact_id'] for row in
                                     packet.get('local_cut', {}).get('shared_evidence_core', {}).get('results', [])]}
             from .workbench import recover_submissions, examined_evidence_ids
@@ -187,6 +298,7 @@ class Research:
                 examined = examined_evidence_ids(result['evidence']['request'])
                 initial = [f['fact_id'] for f in packet.get('accepted_facts', [])]
                 initial += outcome['evidence_window']['worker_core_ids']
+                initial += outcome['evidence_window']['decision_evidence_ids']
                 initial = list(dict.fromkeys(initial))
                 self._note(study, key + ':worker-return', {
                     'continuation': output.get('continuation', ''),
@@ -242,6 +354,16 @@ class Research:
         except (ValueError, TypeError, OSError):
             # Confirmed raw actor output remains in DANUS; advisory view may be rebuilt.
             pass
+
+    def _evidence_resolution(self, pending, question):
+        """Bounded Selector fallback: delegate unresolved comparison to Worker."""
+        focused = str(question or pending.get('decision_question') or
+                      pending['cut']['task_residual']['current_task']).strip()[:1000]
+        return {'study_id': pending['exposure']['focus_study_id'], 'operation': 'RESEARCH',
+                'task': 'Resolve this precise evidence question against accepted statements, scope '
+                        'and proof conditions before new mathematics: ' + focused,
+                'fact_ids': [], 'research_queries': [], 'bridge': None,
+                'notes': 'Selector inquiry bound reached; evidence relation remains unproved.'}
 
     def _action(self, raw, exposure, options):
         n = self.network

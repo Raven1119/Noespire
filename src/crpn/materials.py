@@ -52,16 +52,29 @@ def worker_packet(network, action, *, cut=None):
         cut, _, _ = derive(network, {'focus_study_id': study['study_id'],
                                     'external_study_id': None, 'explore_mode': None})
         cut = {**cut, 'shared_evidence_core': shared_evidence_core(network, study, action['task'])}
-    # The Selector may have changed the task, but its decision evidence identity
-    # must survive into the Worker packet. Only the comparison question changes.
+    decision = []
+    for fid in dict.fromkeys(action.get('decision_evidence_ids', [])):
+        interface = network.inspect_fact(fid)
+        decision.append({'authority': 'INSPECTION_ONLY', 'fact_id': fid,
+                         'scope': interface['scope'],
+                         'statement_excerpt': interface['statement'][:700],
+                         'statement_page_required': len(interface['statement']) > 700})
+    # Rebuild the final comparison core from exactly the Selector's cited IDs.
+    # The initial four-item page remains separately auditable in the service event.
     from .work import task_residual
-    cut = {**model_cut(cut),
-           'task_residual': task_residual(
-               network, study, action['task'], evidence_core=cut['shared_evidence_core'])}
+    cut = model_cut(cut)
+    if decision:
+        cut['shared_evidence_core'] = {**cut['shared_evidence_core'],
+                                       'results': decision}
+    cut['task_residual'] = task_residual(
+        network, study, action['task'], evidence_core=cut['shared_evidence_core'])
     supports = cut['routes']
     packet = checked_size({"study": {k: study[k] for k in ('study_id', 'claim_id', 'scope', 'focus', 'revision')
                                      if k in study}, "claim": claim, "task": action["task"],
                            "operation": action["operation"], "accepted_facts": accepted,
+                           "decision_question": action.get('decision_question', ''),
+                           "decision_rationale": action.get('decision_rationale', ''),
+                           "decision_evidence": decision,
                            "support_requirements": supports,
                            "research_context": [], "verification_feedback": [],
                            "local_cut": cut})
