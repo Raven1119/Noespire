@@ -72,7 +72,7 @@ RESEARCH may prove directly, derive a conditional Support, use a new Fact to con
 OPEN Claim, continue a derivation, or change direction. CLOSE attempts a complete
 bounded local result already supported by the research; do not force closure.
 COMPOSE uses a ready Support; do not claim automatic discharge. INSPECT requests
-full Fact interfaces or research memory before deciding. Cross-scope inspected Facts
+offered Fact interfaces before deciding. Cross-scope inspected Facts
 may justify REQUEST_BRIDGE with an exact auxiliary statement and explicit definition/
 variable correspondence. Inspection is not acceptance; preserve all source conditions.
 Choose only the pinned Study. Request only offered existing
