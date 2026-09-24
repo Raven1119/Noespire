@@ -9,13 +9,88 @@ import re
 
 from danus.core import LocalMemory
 from substrate.store import lane
-from .materials import checked_size
+from .materials import checked_size, model_cut
 from .model import make_claim
 
 
 MAX_ROUTES = 4
 MAX_CHANGES = 4
 MAX_COVERING_RESULTS = 4
+NAVIGATION_PAGE_SIZE = 4
+PROOF_ID_PAGE_SIZE = 2
+
+
+def _navigation_owners(network, study):
+    """Exact graph neighbors of one focus, never semantic retrieval matches."""
+    cid = study.get('claim_id')
+    if not cid:
+        return []
+    related = [row for row in network.data['supports'].values()
+               if cid == row['conclusion_claim_id'] or cid in row['requirement_claim_ids']]
+    owners = [('CLAIM', cid)]
+    owners.extend(('SUPPORT', row['support_id']) for row in related)
+    for row in related:
+        owners.extend(('CLAIM', other) for other in
+                      (row['conclusion_claim_id'], *row['requirement_claim_ids']))
+    return list(dict.fromkeys(owners))
+
+
+def navigation_page(network, study, page=0):
+    """Page mechanically linked Claim/Support interfaces, grouping each OR set."""
+    if type(page) is not int or page < 0:
+        raise ValueError('invalid navigation page')
+    owners = _navigation_owners(network, study)
+    if page * NAVIGATION_PAGE_SIZE > len(owners):
+        raise ValueError('navigation page is out of range')
+    interfaces = []
+    for kind, owner in owners[page * NAVIGATION_PAGE_SIZE:(page + 1) * NAVIGATION_PAGE_SIZE]:
+        if kind == 'CLAIM':
+            claim = network.claim(owner)
+            proofs = [fid for fid, row in network.data['claims'][owner].get('proofs', {}).items()
+                      if row['status'] == 'accepted' and network._active(fid)]
+            refutations = [fid for fid, row in network.data['claims'][owner].get('refutations', {}).items()
+                           if row['status'] == 'accepted' and network._active(fid)]
+            interfaces.append({'kind': kind, 'claim_id': owner, 'scope': claim['context'],
+                               'statement_excerpt': claim['statement'][:600],
+                               'statement_page_required': len(claim['statement']) > 600,
+                               'truth': network.truth(owner),
+                               'accepted_proof_count': len(proofs),
+                               'proof_ids': proofs[:PROOF_ID_PAGE_SIZE],
+                               'next_proof_page': 1 if len(proofs) > PROOF_ID_PAGE_SIZE else None,
+                               'accepted_refutation_count': len(refutations),
+                               'refutation_ids': refutations[:PROOF_ID_PAGE_SIZE]})
+        else:
+            row = network.data['supports'][owner]
+            certificates = [fid for fid, record in row['certificates'].items()
+                            if record['status'] == 'accepted' and network._active(fid)]
+            interfaces.append({'kind': kind, 'support_id': owner,
+                               'conclusion_claim_id': row['conclusion_claim_id'],
+                               'requirement_count': len(row['requirement_claim_ids']),
+                               'requirement_page_handle': owner,
+                               'accepted_certificate_count': len(certificates),
+                               'certificate_ids': certificates[:PROOF_ID_PAGE_SIZE],
+                               'next_certificate_page': 1 if len(certificates) > PROOF_ID_PAGE_SIZE else None})
+    next_page = page + 1 if (page + 1) * NAVIGATION_PAGE_SIZE < len(owners) else None
+    return {'authority': 'INSPECTION_ONLY', 'page': page, 'total_interfaces': len(owners),
+            'interfaces': interfaces, 'next_page': next_page,
+            'notice': 'Graph adjacency and OR proof counts are navigation, not a premise or implication.'}
+
+
+def navigation_proof_page(network, study, kind, owner, page=0):
+    """Page exact accepted alternatives for one linked graph owner."""
+    if type(page) is not int or page < 0 or (kind, owner) not in _navigation_owners(network, study):
+        raise ValueError('proof owner is outside current navigation focus')
+    rows = (network.data['claims'][owner].get('proofs', {}) if kind == 'CLAIM'
+            else network.data['supports'][owner].get('certificates', {}))
+    active = [fid for fid, row in rows.items()
+              if row['status'] == 'accepted' and network._active(fid)]
+    if page * PROOF_ID_PAGE_SIZE > len(active):
+        raise ValueError('proof page is out of range')
+    return {'authority': 'INSPECTION_ONLY', 'kind': kind, 'owner_id': owner,
+            'page': page, 'total_accepted': len(active),
+            'proof_ids': active[page * PROOF_ID_PAGE_SIZE:(page + 1) * PROOF_ID_PAGE_SIZE],
+            'next_page': page + 1 if (page + 1) * PROOF_ID_PAGE_SIZE < len(active) else None,
+            'notice': 'Each proof ID is independent; viewing it grants no premise.'}
 
 
 def awakened(network, studies):
@@ -542,6 +617,7 @@ def derive(network, exposure):
            'input_interface': {'scope': claim['context'], 'accepted_premises': 'Only delivered CRPN evidence IDs are usable.'},
            'unfinished': unfinished,
            'local_state': local_state,
+           'mandatory_navigation': navigation_page(network, study),
            'shared_evidence_core': core,
            'task_residual': residual,
            'task_frame': {'unresolved_focus_claim_id': cid,
@@ -562,7 +638,7 @@ def derive(network, exposure):
                          'focus': external['focus'][:4000], 'navigation_only': True,
                          'focus_page_required': len(external['focus']) > 4000} if external else None),
            'explore_mode': exposure.get('explore_mode')}
-    checked_size(cut, 96000)
+    checked_size(model_cut(cut), 96000)
     ready = [r for r in selected if r['compose_ready']]
     if ready:
         options = [{'study_id': study['study_id'], 'operation': 'COMPOSE',

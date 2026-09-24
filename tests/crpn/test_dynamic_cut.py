@@ -4,9 +4,9 @@ import json
 from danus.core import LocalMemory
 from crpn.engine import Research
 from crpn.materials import selector_packet, worker_packet
-from crpn.model import Network, make_claim
+from crpn.model import Network, make_claim, identity, proof_identity
 from crpn.scheduler import focus
-from crpn.work import awakened, derive, interface_snapshot, reference_snapshot
+from crpn.work import awakened, derive, interface_snapshot, reference_snapshot, navigation_page, navigation_proof_page, shared_evidence_core
 from substrate.store import lane
 from test_engine import Actors, action, candidate, output, runtime, start_after_initial_direct
 from test_model import fact, support
@@ -539,6 +539,87 @@ def test_overwide_support_is_paginated_hint_not_a_partial_compose(tmp_path):
     assert route['requirements_count'] == 240 and route['interface_page_required']
     assert route['compose_ready'] is False
     assert not any(action['operation'] == 'COMPOSE' for action in options)
+
+
+def test_large_valid_or_pool_keeps_audit_outside_selector_material(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Target')
+    net._staging = True  # Synthetic schema-valid records, never mathematical verification.
+    target = net.data['claims'][net.target_id]
+    requirements = [make_claim(net.problem_id, '', f'Requirement {i}') for i in range(240)]
+
+    def accepted(statement, proof):
+        record = {'problem_id': net.problem_id, 'author': 'fixture',
+                  'statement': statement, 'proof': proof, 'predecessors': [],
+                  'glossary_introduces': {}, 'provenance': {'purpose': 'fixture'},
+                  'status': 'accepted', 'id_scheme': 'content-v1',
+                  'history': [{'event': 'accepted', 'submission': '0' * 64,
+                               'verification': {'verdict': 'correct', 'reason': 'fixture'}}]}
+        record['fact_id'] = proof_identity(record)
+        return record
+
+    for claim in requirements:
+        net.data['claims'][claim['claim_id']] = claim
+        for variant in range(8):
+            proof = accepted(claim['statement'], f'Alternative proof {variant}')
+            claim.setdefault('proofs', {})[proof['fact_id']] = proof
+    certificate = accepted(net.conditional_statement(target, requirements), 'Conditional fixture proof')
+    values = {'conclusion_claim_id': net.target_id,
+              'requirement_claim_ids': [claim['claim_id'] for claim in requirements],
+              'scope_ref': identity('scope-', {'problem_id': net.problem_id, 'context': ''}),
+              'bridge_fact_id': certificate['fact_id']}
+    support_id = identity('support-', values)
+    net.data['supports'][support_id] = {'support_id': support_id, **values,
+                                       'certificates': {certificate['fact_id']: certificate}}
+    net.ensure_studies(save=False)
+    net.validate()
+    root = net.data['studies']['study-' + net.target_id]
+    exposure = {'focus_study_id': root['study_id'], 'channel': 'ADVANCE',
+                'external_study_id': None, 'explore_mode': None}
+    cut, options, _ = derive(net, exposure)
+    packet = selector_packet(net, exposure, cut=cut, options=options)
+    worker = worker_packet(net, options[0], cut=cut)
+    assert len(packet['cut']['shared_evidence_core']['results']) <= 4
+    assert len(json.dumps(packet).encode()) <= 256000
+    assert 'candidate_sources' not in json.dumps(packet)
+    assert 'candidate_sources' not in json.dumps(worker)
+    assert len(cut['shared_evidence_core']['_audit']['candidate_sources']) >= 1921
+
+
+def test_direct_requirement_survives_full_initial_core_as_grouped_navigation(tmp_path, monkeypatch):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    route = support(net, 'Open parent', ['Required interface'])
+    required = route['requirement_claim_ids'][0]
+    proof_ids = [fact(net, required, proof=f'Independent fixture proof {i}.') for i in range(8)]
+    unrelated = [fact(net, net.register_claim(f'Unrelated accepted {i}')['claim_id'])
+                 for i in range(4)]
+    monkeypatch.setattr(net, 'search', lambda _query, limit: [
+        {'fact_id': fid} for fid in unrelated[2:4]][:limit])
+    study = net.data['studies']['study-' + net.target_id]
+    core = shared_evidence_core(net, study, 'Compare ' + unrelated[1],
+        local_state={'completed_actions': [], 'open_questions': []}, recent=[],
+        newly_accepted=unrelated[0])
+    assert [row['fact_id'] for row in core['results']] == unrelated
+    page = navigation_page(net, study, 0)
+    matching = [row for row in page['interfaces'] if row.get('claim_id') == required]
+    assert len(matching) == 1
+    assert matching[0]['accepted_proof_count'] == 8
+    assert set(matching[0]['proof_ids']) <= set(proof_ids)
+    assert matching[0]['next_proof_page'] == 1
+    assert page['next_page'] is None
+    exposure = {'focus_study_id': study['study_id'], 'channel': 'ADVANCE',
+                'external_study_id': None, 'explore_mode': None}
+    cut, options, _ = derive(net, exposure)
+    packet = selector_packet(net, exposure, cut=cut, options=options)
+    assert any(row.get('claim_id') == required for row in
+               packet['cut']['mandatory_navigation']['interfaces'])
+    paged = [fid for page_index in range(4) for fid in navigation_proof_page(
+        net, study, 'CLAIM', required, page_index)['proof_ids']]
+    assert set(paged) == set(proof_ids)
+    net.revoke(proof_ids[0], 'fixture invalidation of one OR proof')
+    refreshed = navigation_page(net, study, 0)
+    requirement = next(row for row in refreshed['interfaces'] if row.get('claim_id') == required)
+    assert requirement['accepted_proof_count'] == 7
+    assert net.truth(required) == 'DISCHARGED'
 
 
 def test_ready_or_route_is_dispatched_without_selector_and_other_route_survives_revocation(tmp_path):

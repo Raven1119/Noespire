@@ -12,12 +12,17 @@ def checked_size(value, maximum=256000):
     return value
 
 
+def model_cut(cut):
+    """Only the finite mathematical view sent to a model, never audit metadata."""
+    return {**cut, 'shared_evidence_core': {
+        key: value for key, value in cut['shared_evidence_core'].items() if key != '_audit'}}
+
+
 def selector_packet(network, exposure, inspections=(), *, cut, options):
     study = network.data['studies'][exposure['focus_study_id']]
     claim = (network.claim(study['claim_id']) if study.get('claim_id') else
              make_claim(network.problem_id, study['scope'], study['focus']))
-    visible_cut = {**cut, 'shared_evidence_core': {
-        k: v for k, v in cut['shared_evidence_core'].items() if k != '_audit'}}
+    visible_cut = model_cut(cut)
     packet = {'channel': exposure['channel'], 'pinned_study_id': study['study_id'],
         'cut': visible_cut, 'options': options, 'inspections': list(inspections),
         'studies': [{'study_id': study['study_id'], 'claim': claim,
@@ -50,9 +55,7 @@ def worker_packet(network, action, *, cut=None):
     # The Selector may have changed the task, but its decision evidence identity
     # must survive into the Worker packet. Only the comparison question changes.
     from .work import task_residual
-    cut = {**cut,
-           'shared_evidence_core': {k: v for k, v in cut['shared_evidence_core'].items()
-                                    if k != '_audit'},
+    cut = {**model_cut(cut),
            'task_residual': task_residual(
                network, study, action['task'], evidence_core=cut['shared_evidence_core'])}
     supports = cut['routes']
