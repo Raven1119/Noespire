@@ -9,13 +9,28 @@ import pytest
 from crpn.model import Network
 from crpn.engine import Research
 from crpn.materials import capability_tools, worker_packet
-from crpn.workbench import memory_id
+from crpn.workbench import memory_id, examined_evidence_ids
 from substrate.runtime import Runtime
 from substrate.store import lane
 from danus.core import LocalMemory
 from danus.execution.capabilities import CapabilityBroker
 from danus.core.durable_io import immutable_json
 from test_engine import candidate, output, fixture_fact
+
+
+def test_examined_evidence_uses_confirmed_inspection_responses_and_support_certificate(tmp_path):
+    request = tmp_path / 'request.json'
+    journal = tmp_path / 'capabilities.jsonl'
+    rows = [
+        {'phase': 'request', 'name': 'fact_inspect', 'arguments': {'fact_id': 'unconfirmed'}},
+        {'phase': 'response', 'name': 'fact_inspect', 'result': {'fact_id': 'inspected'}},
+        {'phase': 'response', 'name': 'support_read', 'result': {'certificate_fact_id': 'certificate',
+                                                                'facts': None}},
+        {'phase': 'response', 'name': 'premise_request', 'result': {'accepted': True,
+                                                                  'premise': {'fact_id': 'authorized'}}},
+        {'phase': 'response', 'name': 'proof_read', 'result': {'accepted': False, 'fact_id': 'denied'}}]
+    journal.write_text(''.join(json.dumps(row) + '\n' for row in rows))
+    assert examined_evidence_ids(request) == ['authorized', 'certificate', 'inspected']
 
 
 class SessionActors:

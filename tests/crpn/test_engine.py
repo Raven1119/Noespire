@@ -23,7 +23,10 @@ def candidate(goal, *, kind="FACT", context="", predecessors=(), requirements=()
 
 
 def output(value=None, continuation="Preserved local reasoning.", next_work="Examine the remaining step."):
-    return {"candidate": value, "continuation": continuation, "next_work": next_work, "new_study": None}
+    return {"candidate": value, "continuation": continuation, "next_work": next_work,
+            "research_state": {"completed_observation": continuation,
+                               "unfinished_derivation": "", "open_question": next_work,
+                               "recheck_reason": ""}, "new_study": None}
 
 
 def action(card, *, operation="RESEARCH", facts=(), bridge=None, task="Investigate the remaining precise local step."):

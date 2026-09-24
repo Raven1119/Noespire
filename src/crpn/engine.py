@@ -6,6 +6,7 @@ processes, responses and memory. No reconstructed call journal.
 from copy import deepcopy
 from uuid import uuid4
 import json
+from hashlib import sha256
 from danus.core import LocalMemory, GlobalMemory
 from danus.core.durable_io import locked
 from .admission import Admission
@@ -15,7 +16,7 @@ from . import contracts as C
 from .model import Network, make_claim, normalize
 from .scheduler import focus
 from .materials import selector_packet, worker_packet, inspect
-from .work import derive, after_inspection, awakened
+from .work import derive, after_inspection, awakened, interface_snapshot, reference_snapshot
 
 
 class BlockingError(RuntimeError):
@@ -153,7 +154,7 @@ class Research:
             outcome = {'status': result['status'], 'study_id': study, 'channel': pending['exposure']['channel'],
                        'focus_reason': pending['exposure'].get('focus_reason'),
                        'task': action['task'], 'operation': action['operation']}
-            from .workbench import recover_submissions
+            from .workbench import recover_submissions, examined_evidence_ids
             tool_submissions = recover_submissions(n, self.runtime, result['evidence']['request'])
             control = n.data['control']
             pending = control['pending']
@@ -167,9 +168,20 @@ class Research:
             local = LocalMemory(lane(n.root, study))
             if result['status'] == 'COMPLETED':
                 output = result['output']
-                append_once(local, 'notes', key + ':worker-return', {
-                    'authority': 'UNVERIFIED_RESEARCH', 'continuation': output.get('continuation', ''),
-                    'next_work': output.get('next_work', ''), 'source_status': result['status']})
+                graph_versions, graph_evidence = interface_snapshot(n, n.data['studies'][study])
+                examined = examined_evidence_ids(result['evidence']['request'])
+                initial = [f['fact_id'] for f in packet.get('accepted_facts', [])]
+                self._note(study, key + ':worker-return', {
+                    'continuation': output.get('continuation', ''),
+                    'next_work': output.get('next_work', ''),
+                    'research_state': output.get('research_state'),
+                    'source_status': result['status'],
+                    'observation_graph_sha256': sha256((n.root / 'crpn.json').read_bytes()).hexdigest(),
+                    'observation_graph_versions': graph_versions,
+                    'observation_graph_evidence': graph_evidence,
+                    'observation_referenced_proofs': reference_snapshot(n, examined + initial),
+                    'examined_evidence_ids': examined,
+                    'initially_delivered_evidence_ids': initial})
                 self._new_study(study, key, output.get('new_study'))
             self._recurrences(control)
             control = n.data['control']

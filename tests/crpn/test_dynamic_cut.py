@@ -6,7 +6,7 @@ from crpn.engine import Research
 from crpn.materials import selector_packet, worker_packet
 from crpn.model import Network, make_claim
 from crpn.scheduler import focus
-from crpn.work import awakened, derive
+from crpn.work import awakened, derive, interface_snapshot, reference_snapshot
 from substrate.store import lane
 from test_engine import Actors, action, candidate, output, runtime, start_after_initial_direct
 from test_model import fact, support
@@ -105,7 +105,8 @@ def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_pa
         assert cut['task_frame']['open_requirements'][0]['claim_id'] == route['requirement_claim_ids'][0]
         assert cut['task_frame']['recent_accepted'][0]['fact_id'] == intermediate
         assert cut['task_frame']['recent_accepted'][0]['graph_interface'] is False
-        assert cut['unfinished']['task'] == 'Extend the endpoint to 1809.'
+        assert cut['unfinished'] is None
+        assert cut['local_state']['previous_suggestions'][0]['text'] == 'Extend the endpoint to 1809.'
         assert options[0]['operation'] == 'RESEARCH' and 'endpoint' not in options[0]['task']
         assert len(options) <= 4
         packet = selector_packet(net, exposure, cut=cut, options=options)
@@ -131,13 +132,16 @@ def test_obstacle_handover_rebuilds_and_does_not_default_to_repeating_diagnosis(
     before = (tmp_path / 'crpn.json').read_bytes()
     exposure, _, cut, options, _ = cut_for(net)
     state = cut['local_state']
-    assert state['current_obstacle']['authority'] == 'UNVERIFIED_RESEARCH_STATE'
-    assert 'cannot prove P' in state['current_obstacle']['worker_report']
-    assert state['completed_local_actions'][0]['task'].startswith('Examine')
-    assert not state['new_evidence_since_obstacle']
-    assert 'new mathematical information' in options[0]['task']
+    assert state['authority'] == 'UNVERIFIED_RESEARCH_STATE'
+    assert 'cannot prove P' in state['completed_actions'][0]['observation']
+    assert state['completed_actions'][0]['classification'] == 'HISTORICAL_UNCLASSIFIED'
+    assert state['completed_actions'][0]['observation_graph_version'] == 'UNKNOWN'
+    assert state['completed_actions'][0]['task'].startswith('Examine')
+    assert not state['recent_evidence_changes']
+    assert 'concrete open question' in options[0]['task']
     assert all('Examine whether this accepted interface' not in option['task'] for option in options)
-    assert cut['unfinished']['task'] == 'Prove P directly.'
+    assert cut['unfinished'] is None
+    assert state['previous_suggestions'][0]['text'] == 'Prove P directly.'
     assert net.truth(net.target_id) == 'OPEN' and not net.proof_ids() and not net.data['supports']
     assert (tmp_path / 'crpn.json').read_bytes() == before
     # A fresh process reconstructs the same advisory state from existing records.
@@ -150,25 +154,44 @@ def test_obstacle_reopens_on_exact_graph_change_and_revisit_allows_reasoned_doub
     route = support(net, 'P', ['Missing condition', 'Still missing'])
     root = 'study-' + net.target_id
     memory = LocalMemory(lane(tmp_path, root))
+    before_versions, before_evidence = interface_snapshot(net, net.data['studies'][root])
     memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
                             'continuation': 'The old interface has only the wrong implication direction.',
-                            'next_work': 'Find a usable interface.'})
+                            'next_work': 'Find a usable interface.',
+                            'observation_graph_versions': before_versions,
+                            'observation_graph_evidence': before_evidence})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+                             'task': 'Inspect the old interface.'})
     _, _, _, _, versions = cut_for(net)
     net.data['studies'][root]['observed_versions'] = versions
     net.save()
     fact(net, net.register_claim('Missing condition')['claim_id'])
     _, _, cut, options, _ = cut_for(net)
     assert route['requirement_claim_ids'][0] in cut['changes'][0]
-    assert cut['local_state']['new_evidence_since_obstacle'][0]['kind'] == 'EXACT_GRAPH_INTERFACE_CHANGE'
-    assert any('newly changed exact interface' in row['task'] for row in options)
+    assert cut['local_state']['recent_evidence_changes'][0]['kind'] == 'EXACT_GRAPH_INTERFACE_CHANGE'
+    assert cut['local_state']['recent_evidence_changes'][0]['evidence'][0]['now'] == 'accepted'
+    assert any('changed exact interface' in row['task'] for row in options)
     memory.append('notes', {'content': 'I suspect my earlier diagnosis missed a condition.'})
     revisit = {'focus_study_id': root, 'external_study_id': None,
                'explore_mode': None, 'channel': 'REVISIT'}
     cut, options, _ = derive(Network(tmp_path), revisit)
     assert any(row['notes'] == 'reasoned revisit' for row in options)
-    assert any(item['kind'] == 'NEW_LOCAL_RESEARCH'
-               for item in cut['local_state']['new_evidence_since_obstacle'])
+    assert cut['local_state']['recent_evidence_changes']
     assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+    corrected_versions, corrected_evidence = interface_snapshot(Network(tmp_path), Network(tmp_path).data['studies'][root])
+    memory.append('notes', {'source_key': 'run:2:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'The earlier diagnosis missed a usable condition.',
+                           'unfinished_derivation': '', 'open_question': 'Can it discharge P?',
+                           'recheck_reason': 'New accepted condition changes the interface.'},
+        'observation_graph_versions': corrected_versions,
+        'observation_graph_evidence': corrected_evidence})
+    memory.append('events', {'source_key': 'run:2:service', 'status': 'COMPLETED',
+        'task': 'Recheck with the new condition.'})
+    corrected, corrected_options, _ = derive(Network(tmp_path), revisit)
+    assert corrected['local_state']['completed_actions'][0]['observation'].startswith('The earlier diagnosis missed')
+    assert corrected['local_state']['completed_actions'][1]['observation'].startswith('The old interface')
+    assert corrected['local_state']['recent_evidence_changes'] == []
+    assert 'Use the new exact evidence' not in corrected_options[0]['task']
 
 
 def test_obstacle_does_not_suppress_unknown_explore_direction(tmp_path):
@@ -180,9 +203,152 @@ def test_obstacle_does_not_suppress_unknown_explore_direction(tmp_path):
     exposure = {'focus_study_id': root, 'external_study_id': None,
                 'explore_mode': 'OPEN', 'channel': 'EXPLORE'}
     cut, options, _ = derive(net, exposure)
-    assert cut['local_state']['current_obstacle']
+    assert cut['local_state']['previous_suggestions']
     assert any(row['notes'] == 'open exploration' for row in options)
     assert len(options) <= 4
+
+
+def test_completed_observation_and_unfinished_derivation_have_different_actions(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'S proves P implies Q only.',
+                           'unfinished_derivation': '', 'open_question': 'Can a different interface prove P?',
+                           'recheck_reason': ''},
+        'observation_graph_versions': {}, 'examined_evidence_ids': ['0123456789abcdef'],
+        'next_work': 'Inspect S again.'})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+        'task': 'Inspect S for the required direction.'})
+    _, _, cut, options, _ = cut_for(net)
+    assert cut['local_state']['completed_actions'][0]['observation'] == 'S proves P implies Q only.'
+    assert cut['local_state']['completed_actions'][0]['examined_evidence_ids'] == ['0123456789abcdef']
+    assert cut['local_state']['unfinished_derivation'] is None
+    assert cut['unfinished'] is None
+    assert cut['local_state']['previous_suggestions'][0]['text'] == 'Inspect S again.'
+    assert all('Inspect S again.' not in option['task'] for option in options)
+    memory.append('notes', {'source_key': 'run:2:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': '',
+                           'unfinished_derivation': 'Steps 1-4 establish a bound; step 5 remains.',
+                           'open_question': 'Can step 5 be proved?', 'recheck_reason': ''},
+        'observation_graph_versions': {}, 'examined_evidence_ids': []})
+    memory.append('events', {'source_key': 'run:2:service', 'status': 'COMPLETED',
+                             'task': 'Try the bound.'})
+    _, _, cut, options, _ = cut_for(Network(tmp_path))
+    assert cut['local_state']['unfinished_derivation']['text'].startswith('Steps 1-4')
+    assert len(cut['local_state']['completed_actions']) == 1
+    assert [q['text'] for q in cut['local_state']['open_questions']] == ['Can step 5 be proved?']
+    assert options[0]['task'].startswith('Continue the specific unfinished derivation')
+    assert cut['local_state'] == cut_for(Network(tmp_path))[2]['local_state']
+    memory.append('notes', {'source_key': 'run:3:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'The earlier step was completed.',
+                           'unfinished_derivation': '', 'open_question': '', 'recheck_reason': ''}})
+    memory.append('events', {'source_key': 'run:3:service', 'status': 'COMPLETED',
+                             'task': 'Finish step 5.'})
+    _, _, resolved, _, _ = cut_for(Network(tmp_path))
+    assert resolved['local_state']['unfinished_derivation'] is None
+    assert resolved['local_state']['open_questions'] == []
+
+
+def test_revoked_examined_evidence_reopens_observation_without_granting_truth(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    examined = fact(net, net.register_claim('Auxiliary')['claim_id'])
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'Auxiliary may help the route.',
+                           'unfinished_derivation': '', 'open_question': 'Does it connect?',
+                           'recheck_reason': ''}, 'examined_evidence_ids': [examined]})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+                             'task': 'Inspect Auxiliary.'})
+    net.revoke(examined, 'Fixture error')
+    _, _, cut, options, _ = cut_for(Network(tmp_path))
+    assert cut['local_state']['recent_evidence_changes'][0]['kind'] == 'EXAMINED_EVIDENCE_INVALIDATED'
+    assert all(examined not in option['fact_ids'] for option in options)
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_new_actual_predecessor_reference_reopens_old_observation(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    examined = fact(net, net.register_claim('A')['claim_id'])
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'No known route from A yet.',
+                           'unfinished_derivation': '', 'open_question': 'Could A yield a route?',
+                           'recheck_reason': ''}, 'examined_evidence_ids': [examined],
+        'observation_graph_versions': {},
+        'observation_referenced_proofs': reference_snapshot(net, [examined])})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+                             'task': 'Inspect A.'})
+    dependent = fact(net, net.register_claim('B')['claim_id'], predecessors=[examined])
+    _, _, cut, _, _ = cut_for(Network(tmp_path))
+    delta = next(row for row in cut['local_state']['recent_evidence_changes']
+                 if row['kind'] == 'ACTUAL_PREDECESSOR_CHANGE')
+    assert delta['fact_id'] == dependent and delta['now']['predecessors'] == [examined]
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_full_evidence_context_is_compared_but_packet_remains_bounded(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    exposed = [fact(net, net.register_claim(f'A{i}')['claim_id']) for i in range(9)]
+    ninth = sorted(exposed)[8]
+    fact(net, net.register_claim('Dependent')['claim_id'], predecessors=[ninth])
+    observed_versions, _ = interface_snapshot(net, net.data['studies'][root])
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'I examined nine interfaces.',
+                           'unfinished_derivation': '', 'open_question': 'What follows?',
+                           'recheck_reason': ''}, 'examined_evidence_ids': sorted(exposed),
+        'observation_graph_versions': observed_versions,
+        'observation_referenced_proofs': reference_snapshot(net, exposed)})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+                             'task': 'Inspect nine interfaces.'})
+    _, _, cut, _, _ = cut_for(Network(tmp_path))
+    assert len(cut['local_state']['completed_actions'][0]['examined_evidence_ids']) == 8
+    assert cut['local_state']['recent_evidence_changes'] == []
+
+
+def test_timeout_partial_derivation_recovers_from_local_memory_without_truth(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    LocalMemory(lane(tmp_path, root)).append('notes', {
+        'content': 'UNFINISHED DERIVATION:\nEstablished cases 1-4; final bound remains.',
+        'source_service': 'run:1:worker'})
+    exposure = {'focus_study_id': root, 'external_study_id': None,
+                'explore_mode': None, 'channel': 'REVISIT'}
+    cut, options, _ = derive(Network(tmp_path), exposure)
+    assert cut['local_state']['unfinished_derivation']['origin'] == 'LOCAL_MEMORY_PARTIAL'
+    assert cut['local_state']['unfinished_derivation']['source_service'] == 'run:1:worker'
+    assert options[0]['task'].startswith('Continue the specific unfinished derivation')
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_confirmed_worker_handover_recovers_with_observation_graph_version(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    def handler(role, packet):
+        assert role == 'worker'
+        result = output(continuation='Worked through four steps, with the fifth unproved.',
+                        next_work='Try the final estimate.')
+        result['research_state'] = {'completed_observation': 'Steps 1-4 derived a conditional bound.',
+            'unfinished_derivation': 'The final estimate in step 5 remains unproved.',
+            'open_question': 'Does the conditional bound hold uniformly?', 'recheck_reason': ''}
+        return result
+    actors = Actors(handler)
+    assert Research(tmp_path, runtime(tmp_path, actors)).step()['status'] == 'COMPLETED'
+    reloaded = Network(tmp_path)
+    exposure = {'focus_study_id': root, 'external_study_id': None,
+                'explore_mode': None, 'channel': 'REVISIT'}
+    cut, options, _ = derive(reloaded, exposure)
+    action = cut['local_state']['completed_actions'][0]
+    assert action['observation_graph_version'] != 'UNKNOWN'
+    assert action['source_study_id'] == root
+    assert action['source_service'].endswith(':service')
+    assert cut['local_state']['unfinished_derivation']['text'].startswith('The final estimate')
+    assert options[0]['task'].startswith('Continue the specific unfinished derivation')
+    assert reloaded.truth(reloaded.target_id) == 'OPEN'
 
 
 def test_study_task_guidance_does_not_change_proof_authority(tmp_path):

@@ -119,6 +119,27 @@ def recover_submissions(network, runtime, request_path):
     return recovered
 
 
+def examined_evidence_ids(request_path):
+    """IDs actually delivered for inspection in this Worker call, not permissions."""
+    ids = set()
+    for event in read_jsonl(Path(request_path).with_name('capabilities.jsonl')):
+        if event.get('phase') != 'response' or event.get('name') not in (
+                'fact_inspect', 'proof_read', 'premise_request', 'support_read'):
+            continue
+        result = event.get('result', {})
+        if not isinstance(result, dict) or result.get('accepted') is False:
+            continue
+        premise = result.get('premise')
+        fid = result.get('fact_id') or (premise.get('fact_id') if isinstance(premise, dict) else None)
+        if isinstance(fid, str):
+            ids.add(fid)
+        if event.get('name') == 'support_read':
+            certificate = result.get('certificate_fact_id')
+            if isinstance(certificate, str):
+                ids.add(certificate)
+    return sorted(ids)
+
+
 def tools(network, wl, role, *, runtime=None, request_path=None):
     from danus.execution.isolation import CapabilityTool
     from .contracts import obj, STR, CANDIDATE
@@ -254,7 +275,8 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
     def local_read(page=0):
         return {'authority': 'UNVERIFIED_RESEARCH', 'records': local.read('notes')[page * 4:(page + 1) * 4]}
     def local_append(note):
-        row = local.append('notes', {'content': note, 'authority': 'UNVERIFIED_RESEARCH'})
+        row = local.append('notes', {'content': note, 'authority': 'UNVERIFIED_RESEARCH',
+                                     'source_service': request.get('key', 'UNKNOWN')})
         return {'status': 'ok', 'record_id': memory_id(row['entry']), 'channel': 'notes'}
     def gm_add(kind, claim, evidence):
         if kind not in ('conclusion', 'example', 'counterexample', 'proof_attempt', 'plan', 'dead_end', 'direction', 'obstacle'):

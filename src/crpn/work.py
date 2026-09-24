@@ -5,7 +5,6 @@ the Study's own unfinished LocalMemory remain the sources of every item.
 """
 from hashlib import sha256
 import json
-import re
 
 from danus.core import LocalMemory
 from substrate.store import lane
@@ -70,30 +69,35 @@ def _versions(network, claim_id, related):
     return versions
 
 
-def _unfinished(network, study):
-    try:
-        notes = LocalMemory(lane(network.root, study['study_id'])).read('notes')
-    except (OSError, ValueError, TypeError, KeyError):
-        return None
-    for item in reversed(notes):
-        row = item.get('record', {})
-        if isinstance(row, dict):
-            work = row.get('next_work')
-            if isinstance(work, str) and work.strip():
-                source = row.get('source_key') or sha256(json.dumps(item, ensure_ascii=False,
-                    sort_keys=True).encode()).hexdigest()
-                continuation = row.get('continuation', '')
-                if not isinstance(continuation, str):
-                    continuation = ''
-                if len(work) <= 8000:
-                    return {'task': work, 'source_key': source,
-                            'continuation_excerpt': continuation[:4000],
-                            'continuation_page_required': len(continuation) > 4000}
-                return {'task': 'Continue the saved unfinished derivation; read its exact local record first.',
-                        'source_key': source, 'page_required': True,
-                        'continuation_excerpt': continuation[:4000],
-                        'continuation_page_required': len(continuation) > 4000}
-    return None
+def interface_snapshot(network, study):
+    """Exact local graph state at a Worker observation; advisory metadata only."""
+    cid = study.get('claim_id')
+    if not cid:
+        return {}, {}
+    related = [row for row in network.data['supports'].values()
+               if cid == row['conclusion_claim_id'] or cid in row['requirement_claim_ids']]
+    versions = _versions(network, cid, related)
+    evidence = {}
+    for key in versions:
+        kind, owner = key.split(':', 1)
+        row = (network.data['claims'] if kind == 'claim' else network.data['supports'])[owner]
+        slots = ('proofs', 'refutations') if kind == 'claim' else ('certificates',)
+        evidence[key] = {fid: ('accepted' if proof['status'] == 'accepted' and network._active(fid)
+                               else 'revoked')
+                         for slot in slots for fid, proof in row.get(slot, {}).items()}
+    return versions, evidence
+
+
+def reference_snapshot(network, evidence_ids):
+    """Exact proof references to inspected evidence, found by a host-side scan."""
+    referenced = set(evidence_ids)
+    if not referenced:
+        return {}
+    return {fid: {'status': 'accepted' if row['status'] == 'accepted' and network._active(fid)
+                            else 'revoked',
+                  'predecessors': sorted(referenced.intersection(row.get('predecessors', [])))}
+            for fid, (_table, _owner, _slot, row) in network._records().items()
+            if referenced.intersection(row.get('predecessors', []))}
 
 
 def _recent_results(network, study, related):
@@ -132,99 +136,216 @@ def _recent_results(network, study, related):
 
 
 def _local_state(network, study, changed):
-    """Bounded, rebuildable research handover; never an input to graph truth."""
+    """Rebuild bounded observations, derivations and deltas from original records."""
+    state = {'authority': 'UNVERIFIED_RESEARCH_STATE', 'completed_actions': [],
+             'unfinished_derivation': None, 'open_questions': [],
+             'previous_suggestions': [], 'recent_evidence_changes': [],
+             'latest_recheck_reason': None}
     try:
         memory = LocalMemory(lane(network.root, study['study_id']))
         notes, events = memory.read('notes'), memory.read('events')
     except (OSError, ValueError, TypeError, KeyError):
-        return {'authority': 'UNVERIFIED_RESEARCH_STATE', 'current_obstacle': None,
-                'completed_local_actions': [], 'mentioned_evidence_ids': [],
-                'new_evidence_since_obstacle': []}
-    actions = []
+        return state
+    returns = {}
+    for item in notes:
+        row = item.get('record', {}) if isinstance(item, dict) else {}
+        if isinstance(row, dict) and str(row.get('source_key', '')).endswith(':worker-return'):
+            returns[row['source_key'].removesuffix(':worker-return')] = row
     for item in reversed(events):
-        if not isinstance(item, dict):
+        row = item.get('record', {}) if isinstance(item, dict) else {}
+        if not isinstance(row, dict) or not isinstance(row.get('task'), str):
             continue
-        row = item.get('record', {})
-        if (not isinstance(row, dict) or row.get('status') != 'COMPLETED'
-                or not isinstance(row.get('task'), str)):
+        source = str(row.get('source_key', ''))
+        if not source.endswith(':service'):
             continue
+        handover = returns.get(source.removesuffix(':service'), {})
+        if handover.get('source_status') != 'COMPLETED':
+            continue
+        report = handover.get('research_state')
+        report = report if isinstance(report, dict) else {}
+        observation = report.get('completed_observation') or handover.get('continuation', '')
+        if not isinstance(observation, str):
+            observation = ''
+        examined = handover.get('examined_evidence_ids')
+        if not isinstance(examined, list):
+            examined = []
+        initial = handover.get('initially_delivered_evidence_ids')
+        if not isinstance(initial, list):
+            initial = []
+        explicit = report.get('completed_observation')
+        if report and not (isinstance(explicit, str) and explicit.strip()):
+            continue  # A service can end with only an unfinished derivation.
+        action = {'task': row['task'][:1000], 'observation': observation[:3000],
+                  'observation_page_required': len(observation) > 3000,
+                  'classification': 'EXPLICIT_OBSERVATION' if report.get('completed_observation') else
+                                    'HISTORICAL_UNCLASSIFIED',
+                  'source_study_id': study['study_id'], 'source_service': source,
+                  'source_key': handover.get('source_key', 'UNKNOWN'),
+                  'examined_evidence_ids': [v for v in examined if isinstance(v, str)][:8],
+                  'initially_delivered_evidence_ids': [v for v in initial if isinstance(v, str)][:8],
+                  'evidence_context_ids': list(dict.fromkeys(
+                      [v for v in examined + initial if isinstance(v, str)]))[:8],
+                  'recheck_reason': (report.get('recheck_reason') or '')[:1000]
+                                    if isinstance(report.get('recheck_reason'), str) else '',
+                  'observation_graph_version': handover.get('observation_graph_sha256', 'UNKNOWN'),
+                  'channel': row.get('channel', 'UNKNOWN')}
         submissions = row.get('tool_submissions', [])
-        if not isinstance(submissions, list):
-            submissions = []
-        actions.append({'task': row['task'][:1000], 'status': row.get('status'),
-                        'channel': row.get('channel'), 'source_key': row.get('source_key'),
-                        'accepted_fact_ids': [s['fact_id'] for s in submissions
-                                              if isinstance(s, dict) and s.get('accepted') and s.get('fact_id')][:3]})
-        if len(actions) == 3:
+        if isinstance(submissions, list):
+            action['verifier_feedback'] = [
+                {'verdict': s.get('verdict'), 'fact_id': s.get('fact_id'),
+                 'feedback': str(s.get('feedback', ''))[:500]}
+                for s in submissions if isinstance(s, dict) and s.get('verdict')][:3]
+            action['accepted_fact_ids'] = [s['fact_id'] for s in submissions
+                                           if isinstance(s, dict) and s.get('accepted') and s.get('fact_id')][:3]
+        state['completed_actions'].append(action)
+        if len(state['completed_actions']) >= 3:
             break
-    obstacle = None
-    obstacle_at = -1
-    mentioned_ids = []
-    for i in range(len(notes) - 1, -1, -1):
-        if not isinstance(notes[i], dict):
+    latest_structured = False
+    latest_saved = False
+    for item in reversed(notes):
+        row = item.get('record', {}) if isinstance(item, dict) else {}
+        if not isinstance(row, dict):
             continue
-        row = notes[i].get('record', {})
-        if not isinstance(row, dict) or not str(row.get('source_key', '')).endswith(':worker-return'):
-            continue
-        report = row.get('continuation')
-        if row.get('source_status') == 'COMPLETED' and isinstance(report, str) and report.strip():
-            obstacle_at = i
-            obstacle = {'authority': 'UNVERIFIED_RESEARCH_STATE',
-                        'worker_report': report[:4000], 'source_key': row['source_key'],
-                        'page_required': len(report) > 4000,
-                        'interpretation': 'Worker-reported completed work and remaining gap; verify before use.'}
-            # Exact evidence IDs in the handover are navigation history only.
-            # They are never authorized as premises by this view.
-            mentioned_ids = list(dict.fromkeys(re.findall(r'\b[0-9a-f]{16}\b', report)))[:8]
-        break
-    updates = [{'kind': 'EXACT_GRAPH_INTERFACE_CHANGE', 'key': key,
-                'possible_effect': 'Recheck the reported gap; no implication is inferred.'}
-               for key in changed[:MAX_CHANGES]]
-    if obstacle and len(updates) < MAX_CHANGES:
-        records = network._records()
-        for fid in mentioned_ids:
-            if fid in records and not network._active(fid):
-                updates.append({'kind': 'MENTIONED_EVIDENCE_INVALIDATED', 'fact_id': fid,
-                                'possible_effect': 'Earlier research cited this evidence; recheck its use.'})
-            if len(updates) >= MAX_CHANGES:
+        source = row.get('source_key', 'UNKNOWN')
+        content = row.get('content')
+        if (not latest_structured and not latest_saved and isinstance(content, str)
+                and content.startswith('UNFINISHED DERIVATION:\n')):
+            work = content.removeprefix('UNFINISHED DERIVATION:\n').strip()
+            if work:
+                state['unfinished_derivation'] = {'text': work[:4000], 'task': work[:4000],
+                    'source_key': source, 'source_study_id': study['study_id'],
+                    'source_service': row.get('source_service', 'UNKNOWN'),
+                    'page_required': len(work) > 4000,
+                    'origin': 'LOCAL_MEMORY_PARTIAL'}
+                latest_saved = True
+        report = row.get('research_state')
+        report = report if isinstance(report, dict) else {}
+        if row.get('source_status') == 'COMPLETED':
+            first_structured = bool(report) and not latest_structured
+            reason = report.get('recheck_reason')
+            if first_structured and isinstance(reason, str) and reason.strip():
+                state['latest_recheck_reason'] = {'text': reason[:1000],
+                    'source_key': source, 'authority': 'UNVERIFIED_RESEARCH_STATE'}
+            work = report.get('unfinished_derivation')
+            if not latest_structured and not latest_saved and isinstance(work, str) and work.strip():
+                state['unfinished_derivation'] = {'text': work[:4000], 'task': work[:4000],
+                    'source_key': source, 'source_study_id': study['study_id'],
+                    'source_service': str(source).removesuffix(':worker-return'),
+                    'page_required': len(work) > 4000}
+            question = report.get('open_question')
+            if (first_structured and not latest_saved and isinstance(question, str)
+                    and question.strip()):
+                state['open_questions'].append({'text': question[:1000], 'source_key': source,
+                                                'authority': 'UNVERIFIED_RESEARCH_STATE'})
+            if report:
+                latest_structured = True
+        proposal = row.get('next_work') or row.get('strategy_notes')
+        if isinstance(proposal, str) and proposal.strip() and len(state['previous_suggestions']) < 3:
+            state['previous_suggestions'].append({'text': proposal[:1000], 'source_key': source,
+                                                  'authority': 'UNVERIFIED_SUGGESTION'})
+        if len(state['previous_suggestions']) >= 3 and len(state['open_questions']) >= 3:
+            break
+    now_versions, now_evidence = interface_snapshot(network, study)
+    for latest in state['completed_actions'][:1]:
+        handover = returns.get(latest['source_service'].removesuffix(':service'), {})
+        prior = handover.get('observation_graph_versions')
+        before = handover.get('observation_graph_evidence')
+        keys = ([key for key in sorted(set(prior) | set(now_versions))
+                 if prior.get(key) != now_versions.get(key)] if isinstance(prior, dict) else changed)
+        for key in keys[:MAX_CHANGES - len(state['recent_evidence_changes'])]:
+            delta = {'kind': 'EXACT_GRAPH_INTERFACE_CHANGE', 'key': key,
+                     'old_observation': latest['observation'][:700],
+                     'source_service': latest['source_service'],
+                     'possible_effect': 'May change the earlier observation; inspect exact interfaces.'}
+            if isinstance(before, dict):
+                old = before.get(key, {})
+                current = now_evidence.get(key, {})
+                if isinstance(old, dict):
+                    delta['evidence'] = [{'fact_id': fid, 'before': old.get(fid, 'ABSENT'),
+                                          'now': current.get(fid, 'ABSENT')}
+                                         for fid in sorted(set(old) | set(current))
+                                         if old.get(fid) != current.get(fid)][:4]
+            state['recent_evidence_changes'].append(delta)
+        previous_refs = handover.get('observation_referenced_proofs')
+        if isinstance(previous_refs, dict) and len(state['recent_evidence_changes']) < MAX_CHANGES:
+            observed_ids = handover.get('examined_evidence_ids', [])
+            delivered_ids = handover.get('initially_delivered_evidence_ids', [])
+            observed_ids = observed_ids if isinstance(observed_ids, list) else []
+            delivered_ids = delivered_ids if isinstance(delivered_ids, list) else []
+            current_refs = reference_snapshot(network, [v for v in observed_ids + delivered_ids
+                                                        if isinstance(v, str)])
+            for fid in sorted(set(previous_refs) | set(current_refs)):
+                if previous_refs.get(fid) == current_refs.get(fid):
+                    continue
+                state['recent_evidence_changes'].append({'kind': 'ACTUAL_PREDECESSOR_CHANGE',
+                    'fact_id': fid, 'before': previous_refs.get(fid, 'ABSENT'),
+                    'now': current_refs.get(fid, 'ABSENT'),
+                    'old_observation': latest['observation'][:700],
+                    'source_service': latest['source_service'],
+                    'possible_effect': 'A proof explicitly refers to examined evidence; inspect its full interface.'})
+                if len(state['recent_evidence_changes']) >= MAX_CHANGES:
+                    break
+        observed_ids = handover.get('examined_evidence_ids', [])
+        delivered_ids = handover.get('initially_delivered_evidence_ids', [])
+        observed_ids = observed_ids if isinstance(observed_ids, list) else []
+        delivered_ids = delivered_ids if isinstance(delivered_ids, list) else []
+        for fid in dict.fromkeys(v for v in observed_ids + delivered_ids if isinstance(v, str)):
+            if len(state['recent_evidence_changes']) >= MAX_CHANGES:
                 break
-    if obstacle_at >= 0:
-        for item in notes[obstacle_at + 1:]:
-            if not isinstance(item, dict):
-                continue
-            row = item.get('record', {})
+            records = network._records()
+            if fid in records and not network._active(fid):
+                state['recent_evidence_changes'].append({'kind': 'EXAMINED_EVIDENCE_INVALIDATED',
+                    'fact_id': fid, 'old_observation': latest['observation'][:700],
+                    'source_service': latest['source_service'],
+                    'possible_effect': 'Recheck use of the revoked evidence.'})
+    if state['completed_actions'] and len(state['recent_evidence_changes']) < MAX_CHANGES:
+        anchor = state['completed_actions'][0]
+        after = False
+        for item in notes:
+            row = item.get('record', {}) if isinstance(item, dict) else {}
             if not isinstance(row, dict):
                 continue
-            if isinstance(row.get('content'), str):
-                updates.append({'kind': 'NEW_LOCAL_RESEARCH', 'source_key': row.get('source_key'),
-                                'excerpt': row['content'][:700], 'authority': 'UNVERIFIED_RESEARCH'})
-            elif row.get('bridge_status'):
-                updates.append({'kind': 'BRIDGE_RESULT', 'source_key': row.get('source_key'),
-                                'status': row['bridge_status'], 'fact_id': row.get('fact_id'),
-                                'authority': 'RECHECK_GRAPH_BEFORE_USE'})
-            if len(updates) >= MAX_CHANGES:
-                break
-        source_prefix = obstacle['source_key'].removesuffix(':worker-return')
-        obstacle_time = notes[obstacle_at].get('timestamp_utc', '')
-        for item in events:
-            if not isinstance(item, dict) or item.get('timestamp_utc', '') <= obstacle_time:
+            if row.get('source_key') == anchor['source_key']:
+                after = True
                 continue
-            row = item.get('record', {})
-            if not isinstance(row, dict) or str(row.get('source_key', '')).startswith(source_prefix):
+            if not after:
+                continue
+            if row.get('bridge_status'):
+                state['recent_evidence_changes'].append({'kind': 'BRIDGE_RESULT',
+                    'source_key': row.get('source_key'), 'status': row['bridge_status'],
+                    'fact_id': row.get('fact_id'), 'old_observation': anchor['observation'][:700],
+                    'possible_effect': 'Inspect the exact bridge and scope before changing the question.'})
+            elif isinstance(row.get('content'), str):
+                state['recent_evidence_changes'].append({'kind': 'NEW_LOCAL_RESEARCH',
+                    'source_key': row.get('source_key'), 'excerpt': row['content'][:700],
+                    'old_observation': anchor['observation'][:700],
+                    'authority': 'UNVERIFIED_RESEARCH_STATE'})
+            if len(state['recent_evidence_changes']) >= MAX_CHANGES:
+                break
+        after = False
+        for item in events:
+            row = item.get('record', {}) if isinstance(item, dict) else {}
+            if not isinstance(row, dict):
+                continue
+            if row.get('source_key') == anchor['source_service']:
+                after = True
+                continue
+            if not after:
                 continue
             submissions = row.get('tool_submissions', [])
             for submission in submissions if isinstance(submissions, list) else []:
                 if isinstance(submission, dict) and submission.get('verdict'):
-                    updates.append({'kind': 'NEW_VERIFIER_FEEDBACK',
-                                    'verdict': submission['verdict'], 'fact_id': submission.get('fact_id'),
-                                    'feedback_excerpt': str(submission.get('feedback', ''))[:700]})
-                if len(updates) >= MAX_CHANGES:
+                    state['recent_evidence_changes'].append({'kind': 'NEW_VERIFIER_FEEDBACK',
+                        'source_service': row.get('source_key'), 'verdict': submission['verdict'],
+                        'fact_id': submission.get('fact_id'),
+                        'feedback_excerpt': str(submission.get('feedback', ''))[:700],
+                        'old_observation': anchor['observation'][:700],
+                        'possible_effect': 'Feedback is not proof; update the local research question.'})
+                if len(state['recent_evidence_changes']) >= MAX_CHANGES:
                     break
-            if len(updates) >= MAX_CHANGES:
+            if len(state['recent_evidence_changes']) >= MAX_CHANGES:
                 break
-    return {'authority': 'UNVERIFIED_RESEARCH_STATE', 'current_obstacle': obstacle,
-            'completed_local_actions': actions, 'mentioned_evidence_ids': mentioned_ids,
-            'new_evidence_since_obstacle': updates[:MAX_CHANGES]}
+    return state
 
 
 def _route(network, row):
@@ -271,9 +392,9 @@ def derive(network, exposure):
     if ready_row is not None:
         window = [ready_row] + [r for r in window if r['support_id'] != ready_row['support_id']]
     selected = [_route(network, row) for row in window[:MAX_ROUTES]]
-    unfinished = _unfinished(network, study)
     recent_results = _recent_results(network, study, related)
     local_state = _local_state(network, study, changed)
+    unfinished = local_state['unfinished_derivation']
     open_requirements = []
     for route in selected:
         if route.get('conclusion', {}).get('claim_id') != cid:
@@ -285,6 +406,9 @@ def derive(network, exposure):
                                           'statement': requirement['statement'][:2000],
                                           'page_required': len(requirement['statement']) > 2000})
     consumers = [r['support_id'] for r in related if cid in r['requirement_claim_ids']]
+    local_state['claim'] = {'claim_id': cid, 'statement': claim['statement'][:3000],
+                            'page_required': len(claim['statement']) > 3000}
+    local_state['open_requirements'] = open_requirements
     external = network.data['studies'].get(exposure.get('external_study_id'))
     cut = {'focus': {'study_id': study['study_id'], 'claim': claim, 'revision': study.get('revision', 0)},
            'input_interface': {'scope': claim['context'], 'accepted_premises': 'Only delivered CRPN evidence IDs are usable.'},
@@ -295,7 +419,7 @@ def derive(network, exposure):
                           'focus_truth': network.truth(cid) if study.get('claim_id') else 'NO_CLAIM',
                           'open_requirements': open_requirements,
                           'recent_accepted': recent_results,
-                          'saved_next_work_role': 'Unverified route proposal, not the task definition or proof.',
+                          'saved_next_work_role': 'Unverified suggestion, never an unfinished derivation by itself.',
                           'remaining_gap': 'Unknown unless the exact Claim or Support requirements are discharged.'},
            'routes': selected, 'related_route_count': len(related),
            'changes': changed[:MAX_CHANGES], 'other_change_count': max(0, len(changed) - MAX_CHANGES),
@@ -314,43 +438,42 @@ def derive(network, exposure):
                     'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}
                    for r in ready[:1]]
     else:
-        obstacle = local_state['current_obstacle']
-        task = ('Investigate a concrete unresolved part of the reported obstacle and obtain new '
-                'mathematical information about it. Keep the exact Claim as the long-term target; '
-                'do not merely repeat a completed diagnosis without new evidence or a specific reason to doubt it.'
-                if obstacle else
-                'Address the exact unresolved local Claim or one of its open Support requirements; '
-                'use the saved derivation only where it serves this focus.' if study.get('claim_id') else
-                'Investigate the current independent research focus and its specific remaining question.')
+        completed = local_state['completed_actions']
+        updates = local_state['recent_evidence_changes']
+        task = ('Continue the specific unfinished derivation from its saved position; recheck its '
+                'unproved steps and pursue its open question without treating drafts as Facts.' if unfinished else
+                'Use the new exact evidence to reconsider the earlier observation and seek a '
+                'distinguishable result. The old diagnosis is revisable.' if completed and updates else
+                'Investigate a concrete open question or requirement left by the completed research; '
+                'seek new information rather than repeat the same diagnosis. If no concrete move '
+                'is justified, report NO CLEAR LOCAL MOVE.' if completed else
+                'Investigate the exact open Claim or requirement through a concrete local question; '
+                'NO CLEAR LOCAL MOVE is allowed.' if study.get('claim_id') else
+                'Investigate the independent local focus through a concrete question; '
+                'NO CLEAR LOCAL MOVE is allowed.')
         options = [{'study_id': study['study_id'], 'operation': 'RESEARCH', 'task': task,
                     'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}]
-        if obstacle and local_state['new_evidence_since_obstacle']:
+        if completed and updates:
             options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
-                            'task': 'Check whether the newly changed exact interface or research feedback changes '
-                                    'the reported obstacle; establish any connection rather than assuming it.',
+                            'task': 'Check whether a changed exact interface corrects the earlier observation; '
+                                    'establish the connection rather than assuming it.',
                             'fact_ids': [], 'research_queries': [], 'bridge': None,
                             'notes': 'new evidence is a lead, not a proof of the connection'})
-        if unfinished:
+        if unfinished and completed:
             options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
-                            'task': ('Continue the saved derivation only if it yields new information about '
-                                     'the reported obstacle; otherwise change the local question with a reason.'
-                                     if obstacle else 'Test whether the saved next step serves the exact local focus; '
-                                     'change route if new evidence leaves a different gap.'),
+                            'task': 'Reassess the unfinished derivation against the completed observation; '
+                                    'change method or question with a concrete reason if needed.',
                             'fact_ids': [], 'research_queries': [], 'bridge': None,
-                            'notes': 'saved next_work is unverified research, not a renewed task'})
-            if not obstacle:
-                options.append({'study_id': study['study_id'], 'operation': 'CLOSE',
-                                'task': 'Check whether the saved derivation now yields a complete local proof; otherwise preserve its exact gap.',
-                                'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''})
-        if obstacle and exposure.get('channel') == 'REVISIT':
+                            'notes': 'unfinished text is unverified research'})
+        if completed and exposure.get('channel') == 'REVISIT':
             options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
-                            'task': 'Recheck the earlier diagnosis only if you identify a specific error, '
+                            'task': 'Recheck the earlier observation only if you identify a specific error, '
                                     'new evidence, or an unresolved step; state the reason and seek new information.',
                             'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': 'reasoned revisit'})
         if exposure.get('channel') == 'EXPLORE':
             options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
                             'task': 'Explore an unknown local direction, construction or representation; '
-                                    'its relation to the current obstacle or Claim may remain unknown.',
+                                    'its relation to completed research or the Claim may remain unknown.',
                             'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': 'open exploration'})
         if external:
             options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
@@ -360,16 +483,15 @@ def derive(network, exposure):
         # Retrieval suggests inspectable opportunities only; it creates no implication.
         for hit in network.search(study['focus'], 4):
             fid = hit['fact_id']
-            if (obstacle and fid in local_state['mentioned_evidence_ids']
-                    and not local_state['new_evidence_since_obstacle']):
+            if (completed and fid in completed[0]['examined_evidence_ids'] and not updates):
                 # The default retrieval window should not hand the same already
                 # examined interface back as a fresh action. Explicit, reasoned
                 # recheck remains possible through REVISIT and Worker tools.
                 continue
             if network.inspect_fact(fid)['scope'] == claim['context']:
                 options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
-                                'task': ('Use this accepted interface to obtain new information about the reported '
-                                         'obstacle; do not simply repeat a completed directional check.' if obstacle else
+                                'task': ('Use this accepted interface to obtain new information about the open question; '
+                                         'do not repeat a completed check without a reason.' if completed else
                                          'Examine whether this accepted interface addresses the exact local focus or an open requirement.'),
                                 'fact_ids': [fid], 'research_queries': [], 'bridge': None,
                                 'notes': 'retrieval is a lead, not a mathematical connection'})

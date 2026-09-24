@@ -12,6 +12,10 @@ CANDIDATE = obj({"kind": {"enum": ["FACT", "SUPPORT", "REFUTATION"]}, "context":
                  "requirements": {"type": "array", "items": CLAIM}})
 WORKER_SCHEMA = obj({"submission_receipts": STRS,
                      "continuation": STR, "next_work": STR,
+                     "research_state": obj({"completed_observation": STR,
+                                            "unfinished_derivation": STR,
+                                            "open_question": STR,
+                                            "recheck_reason": STR}),
                      "new_study": {"anyOf": [obj({"focus": STR, "context": STR,
                          "continues_study_id": STR}), {"type": "null"}]}})
 BRIDGE_WORKER_SCHEMA = obj({"candidate": {"anyOf": [CANDIDATE, {"type": "null"}]},
@@ -38,19 +42,19 @@ The selected study_id must equal pinned_study_id, and the operation must be one 
 the offered options. Research judgments are advisory, never mathematical truth.
 Decide the concrete local task, what verified results it uses, and what remains unknown.
 Existing research notes are unverified; an external region is navigation only.
-A saved next_work is a route proposal, not the definition of the unfinished task.
+A saved next_work is an unverified suggestion, not an unfinished derivation.
 Anchor the choice in the cut's exact unresolved focus and open requirements. After
 recent results, name the remaining question or the concrete evidence for changing
 route; a finite endpoint alone does not require another endpoint. Endpoint work
 is still valid when it tests a specified structure or failure boundary.
-Separate the long-term Claim, the unverified worker-reported obstacle in
-cut.local_state, and this service's concrete local work. When an earlier action
-already diagnosed why an interface cannot finish the route, choose work that may
-obtain new information about that obstacle. Do not simply repeat its directional
-check unless an exact new interface changed, you identify a specific possible
-error, or a reasoned REVISIT needs that check. New evidence reopens inquiry, not
-truth. If no obstacle is reported, continue ordinary local research. EXPLORE may
-also pursue an unknown direction with no known consumer or obstacle connection.
+Separate the long-term Claim, completed actions and observations, a genuine
+unfinished derivation, open questions, and old suggestions. A completed directional
+check is history, not a default repeat task. A genuine unfinished derivation may
+continue without new evidence. An exact change or specific doubt may reopen an old
+observation; it is never permanently suppressed. New evidence is a lead, not truth.
+Choose concrete work that could yield distinguishable new information. If none is
+clear, use task "NO CLEAR LOCAL MOVE" with a reason; do not invent a lemma.
+EXPLORE may pursue an unknown direction with no known consumer.
 A method limitation can inform or change work; explain exceptions in notes. Continuing
 a finite series is legitimate when addressing a specific remaining question.
 RESEARCH may prove directly, derive a conditional Support, use a new Fact to connect an
@@ -73,17 +77,20 @@ not necessarily the root. A Support proves the conjunction of explicit requireme
 implies the conclusion; it does not prove the requirements. Child contexts must match
 conclusion context exactly. Put definitions, variable domains and conditional assumptions
 in self-contained goals; do not add ambient assumptions. Use no external theorem retrieval.
-The local_cut distinguishes the long-term Claim, a reported obstacle, completed
-local actions, exact interface changes, and unfinished work. Its obstacle is
-unverified research, not an accepted premise. Build on a completed diagnosis to
-obtain new mathematical information rather than repeating it; recheck it when
-you find a specific flaw or new evidence, and record that reason. You may change
-route or explore a direction with no known consumer. When reporting an obstacle,
-state what was checked, what precisely still blocks the route, and what local
-question could test or change it. Do not turn a difficulty into a child Claim
-without proposing and verifying an actual mathematical relation.
+The local_cut separates the Claim, completed actions with sourced observations,
+genuine unfinished derivation, open questions, old suggestions, and exact evidence
+changes. All research state is unverified; it grants no premise. Build on a completed
+diagnosis to obtain new information. Recheck it for a specific flaw, new evidence,
+new condition or alternative representation, and record the reason. Continue a
+real unfinished derivation even without new evidence. You may change route or
+explore without a known consumer. If no concrete move is clear, report
+NO CLEAR LOCAL MOVE rather than inventing a lemma.
 Persist useful intermediate research with local_append; shared findings/dead ends may
-use gm_add. These are unverified notes, never Facts. Continue existing notes faithfully
+use gm_add. These are unverified notes, never Facts. When saving a specific
+derivation that must survive timeout before final handover,
+begin that note with "UNFINISHED DERIVATION:" on its own line, followed by the
+actual established steps and exact remaining step. Other notes need no marker.
+Continue existing notes faithfully
 without assuming their calculations or claims correct. Complete ordinary candidates
 must be submitted with candidate_submit, including a revised proof or a valuable
 alternative proof. The final response is a handover, not a proof submission.
@@ -165,9 +172,13 @@ it been answered, has one requirement been answered, or is the connection still
 unknown? Continue the actual remaining gap or explain a change of route. Do not
 automatically extend the same finite sequence merely because its latest endpoint
 was accepted. A result with unknown use remains eligible for normal verification.
-List only received submission receipts in submission_receipts. Use continuation
-for completed work and precise unfinished derivations, and next_work for the
-remaining obligation. The final handover is not independently verified and cannot
+List only received submission receipts in submission_receipts. In research_state,
+write the completed observation from this service, the exact unfinished derivation
+position if any, one remaining concrete open question if any, and a specific reason
+for rechecking old research if applicable; use empty strings when absent. A completed
+diagnosis is not an unfinished derivation. next_work is only a suggestion, never
+automatic continuation. Keep full context in continuation. These reports are
+unverified and cannot
 change mathematical truth. A task may end when complete; no
 extra result or tool call is required. Do not describe an unconfirmed submission as
 successful. Use text reasoning only, with no external retrieval, CAS,
