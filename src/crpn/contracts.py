@@ -43,6 +43,14 @@ Anchor the choice in the cut's exact unresolved focus and open requirements. Aft
 recent results, name the remaining question or the concrete evidence for changing
 route; a finite endpoint alone does not require another endpoint. Endpoint work
 is still valid when it tests a specified structure or failure boundary.
+Separate the long-term Claim, the unverified worker-reported obstacle in
+cut.local_state, and this service's concrete local work. When an earlier action
+already diagnosed why an interface cannot finish the route, choose work that may
+obtain new information about that obstacle. Do not simply repeat its directional
+check unless an exact new interface changed, you identify a specific possible
+error, or a reasoned REVISIT needs that check. New evidence reopens inquiry, not
+truth. If no obstacle is reported, continue ordinary local research. EXPLORE may
+also pursue an unknown direction with no known consumer or obstacle connection.
 A method limitation can inform or change work; explain exceptions in notes. Continuing
 a finite series is legitimate when addressing a specific remaining question.
 RESEARCH may prove directly, derive a conditional Support, use a new Fact to connect an
@@ -65,6 +73,15 @@ not necessarily the root. A Support proves the conjunction of explicit requireme
 implies the conclusion; it does not prove the requirements. Child contexts must match
 conclusion context exactly. Put definitions, variable domains and conditional assumptions
 in self-contained goals; do not add ambient assumptions. Use no external theorem retrieval.
+The local_cut distinguishes the long-term Claim, a reported obstacle, completed
+local actions, exact interface changes, and unfinished work. Its obstacle is
+unverified research, not an accepted premise. Build on a completed diagnosis to
+obtain new mathematical information rather than repeating it; recheck it when
+you find a specific flaw or new evidence, and record that reason. You may change
+route or explore a direction with no known consumer. When reporting an obstacle,
+state what was checked, what precisely still blocks the route, and what local
+question could test or change it. Do not turn a difficulty into a child Claim
+without proposing and verifying an actual mathematical relation.
 Persist useful intermediate research with local_append; shared findings/dead ends may
 use gm_add. These are unverified notes, never Facts. Continue existing notes faithfully
 without assuming their calculations or claims correct. Complete ordinary candidates

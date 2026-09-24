@@ -117,6 +117,74 @@ def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_pa
     assert all(intermediate not in option['fact_ids'] for option in options)
 
 
+def test_obstacle_handover_rebuilds_and_does_not_default_to_repeating_diagnosis(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+                            'continuation': 'Checked the accepted P implies Q interface. It cannot prove P; '
+                                            'the converse or another route is missing.',
+                            'next_work': 'Prove P directly.'})
+    memory.append('events', {'source_key': 'run:1:service', 'status': 'COMPLETED',
+                             'channel': 'ADVANCE',
+                             'task': 'Examine whether this accepted interface addresses P.'})
+    before = (tmp_path / 'crpn.json').read_bytes()
+    exposure, _, cut, options, _ = cut_for(net)
+    state = cut['local_state']
+    assert state['current_obstacle']['authority'] == 'UNVERIFIED_RESEARCH_STATE'
+    assert 'cannot prove P' in state['current_obstacle']['worker_report']
+    assert state['completed_local_actions'][0]['task'].startswith('Examine')
+    assert not state['new_evidence_since_obstacle']
+    assert 'new mathematical information' in options[0]['task']
+    assert all('Examine whether this accepted interface' not in option['task'] for option in options)
+    assert cut['unfinished']['task'] == 'Prove P directly.'
+    assert net.truth(net.target_id) == 'OPEN' and not net.proof_ids() and not net.data['supports']
+    assert (tmp_path / 'crpn.json').read_bytes() == before
+    # A fresh process reconstructs the same advisory state from existing records.
+    _, _, rebuilt, _, _ = cut_for(Network(tmp_path))
+    assert rebuilt['local_state'] == state
+
+
+def test_obstacle_reopens_on_exact_graph_change_and_revisit_allows_reasoned_doubt(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    route = support(net, 'P', ['Missing condition', 'Still missing'])
+    root = 'study-' + net.target_id
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+                            'continuation': 'The old interface has only the wrong implication direction.',
+                            'next_work': 'Find a usable interface.'})
+    _, _, _, _, versions = cut_for(net)
+    net.data['studies'][root]['observed_versions'] = versions
+    net.save()
+    fact(net, net.register_claim('Missing condition')['claim_id'])
+    _, _, cut, options, _ = cut_for(net)
+    assert route['requirement_claim_ids'][0] in cut['changes'][0]
+    assert cut['local_state']['new_evidence_since_obstacle'][0]['kind'] == 'EXACT_GRAPH_INTERFACE_CHANGE'
+    assert any('newly changed exact interface' in row['task'] for row in options)
+    memory.append('notes', {'content': 'I suspect my earlier diagnosis missed a condition.'})
+    revisit = {'focus_study_id': root, 'external_study_id': None,
+               'explore_mode': None, 'channel': 'REVISIT'}
+    cut, options, _ = derive(Network(tmp_path), revisit)
+    assert any(row['notes'] == 'reasoned revisit' for row in options)
+    assert any(item['kind'] == 'NEW_LOCAL_RESEARCH'
+               for item in cut['local_state']['new_evidence_since_obstacle'])
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_obstacle_does_not_suppress_unknown_explore_direction(tmp_path):
+    net = Network.create(tmp_path, 'p', 'P')
+    root = 'study-' + net.target_id
+    LocalMemory(lane(tmp_path, root)).append('notes', {
+        'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'continuation': 'An attempted route is blocked.', 'next_work': 'Investigate a condition.'})
+    exposure = {'focus_study_id': root, 'external_study_id': None,
+                'explore_mode': 'OPEN', 'channel': 'EXPLORE'}
+    cut, options, _ = derive(net, exposure)
+    assert cut['local_state']['current_obstacle']
+    assert any(row['notes'] == 'open exploration' for row in options)
+    assert len(options) <= 4
+
+
 def test_study_task_guidance_does_not_change_proof_authority(tmp_path):
     net = Network.create(tmp_path, 'p', 'Target')
     root = 'study-' + net.target_id
