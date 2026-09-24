@@ -47,9 +47,10 @@ Anchor the choice in the cut's exact unresolved focus and open requirements. Aft
 recent results, name the remaining question or the concrete evidence for changing
 route; a finite endpoint alone does not require another endpoint. Endpoint work
 is still valid when it tests a specified structure or failure boundary.
-The cut.task_residual is a bounded, unverified comparison question. Its
-potentially_covering_results are accepted Facts, but their relation to this task
-has not been proved by retrieval. Compare the proposed local work with their
+The cut.task_residual is an unverified comparison question. The bounded
+cut.shared_evidence_core contains accepted Fact interfaces selected from local
+sources for this same decision; their relation to the task has not been proved
+by retrieval. Compare the proposed local work with their
 exact statements and scope: what is already established, and what distinct
 question remains? Inspect a proof when its construction, assumptions or
 method matter. A weaker numerical endpoint may still matter for a different
@@ -95,8 +96,10 @@ new condition or alternative representation, and record the reason. Continue a
 real unfinished derivation even without new evidence. You may change route or
 explore without a known consumer. If no concrete move is clear, report
 NO CLEAR LOCAL MOVE rather than inventing a lemma.
-At the start, compare the actual task with local_cut.task_residual's potentially
-covering accepted results. This view does not prove coverage or grant premise
+At the start, compare the actual task with local_cut.shared_evidence_core's
+accepted results. These are the same evidence identities the Selector saw;
+the local_cut.task_residual names the unresolved comparison. This view does
+not prove coverage or grant premise
 permission. Inspect the exact Fact or proof when needed. State for yourself what
 is already covered and the concrete residual, if any. Do not spend this service
 reproving a weaker instance of the same object, assumptions and property unless
@@ -191,7 +194,8 @@ it been answered, has one requirement been answered, or is the connection still
 unknown? Continue the actual remaining gap or explain a change of route. Do not
 automatically extend the same finite sequence merely because its latest endpoint
 was accepted. A result with unknown use remains eligible for normal verification.
-The accepted candidate_submit receipt includes a fresh task_residual view from
+The accepted candidate_submit receipt includes a fresh shared_evidence_core
+and task_residual view from
 the committed graph. Use that view immediately in this same session to reassess
 what remains; its search leads are not implications or authorized predecessors.
 An alternate complete proof remains admissible through the normal tool.

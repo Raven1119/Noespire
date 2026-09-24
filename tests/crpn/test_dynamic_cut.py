@@ -103,8 +103,9 @@ def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_pa
         exposure, _, cut, options, _ = cut_for(net)
         assert cut['task_frame']['focus_truth'] == 'OPEN'
         assert cut['task_frame']['open_requirements'][0]['claim_id'] == route['requirement_claim_ids'][0]
-        assert cut['task_frame']['recent_accepted'][0]['fact_id'] == intermediate
-        assert cut['task_frame']['recent_accepted'][0]['graph_interface'] is False
+        assert cut['task_frame']['recent_receipts'][0]['fact_id'] == intermediate
+        assert cut['task_frame']['recent_receipts'][0]['graph_interface'] is False
+        assert 'statement_excerpt' not in cut['task_frame']['recent_receipts'][0]
         assert cut['unfinished'] is None
         assert cut['local_state']['previous_suggestions'][0]['text'] == 'Extend the endpoint to 1809.'
         assert options[0]['operation'] == 'RESEARCH' and 'endpoint' not in options[0]['task']
@@ -114,7 +115,7 @@ def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_pa
         assert packet['cut']['task_frame']['unresolved_focus_claim_id'] == net.target_id
     net.revoke(intermediate, 'Fixture revocation')
     _, _, cut, options, _ = cut_for(net)
-    assert cut['task_frame']['recent_accepted'][0]['status'] == 'revoked'
+    assert cut['task_frame']['recent_receipts'][0]['status'] == 'revoked'
     assert all(intermediate not in option['fact_ids'] for option in options)
 
 
@@ -133,15 +134,17 @@ def test_existing_results_are_bounded_advisory_material_for_the_local_residual(t
     assert view['authority'] == 'UNVERIFIED_RESEARCH_STATE'
     assert view['coverage'] == 'UNDETERMINED'
     assert view['current_task'] == 'For the same witness, prove feasibility for N <= 1810'
-    assert view['potentially_covering_results'][0]['fact_id'] == stronger
-    assert view['potentially_covering_results'][0]['source'][0] == 'STUDY_ACCEPTED'
-    assert len(view['potentially_covering_results']) <= 4
-    assert all(row['relation'] == 'POTENTIALLY_RELEVANT_NOT_PROVEN' for row in view['potentially_covering_results'])
+    core = cut['shared_evidence_core']['results']
+    assert core[0]['fact_id'] == stronger
+    assert 'STUDY_ACCEPTED' in core[0]['source']
+    assert len(core) <= 4
+    assert all(row['relation'] == 'POTENTIALLY_RELEVANT_NOT_PROVEN' for row in core)
     assert '1810' not in options[0]['task']  # Saved next_work is not a repeated primary action.
     assert selector_packet(net, exposure, cut=cut, options=options)['cut']['task_residual'] == view
-    worker_view = worker_packet(net, options[0], cut=cut)['local_cut']['task_residual']
+    worker_cut = worker_packet(net, options[0], cut=cut)['local_cut']
+    worker_view = worker_cut['task_residual']
     assert worker_view['current_task'] == options[0]['task']
-    assert worker_view['potentially_covering_results'][0]['fact_id'] == stronger
+    assert worker_cut['shared_evidence_core']['results'][0]['fact_id'] == stronger
     assert net.truth(net.target_id) == 'OPEN'
 
 
@@ -152,7 +155,7 @@ def test_exact_known_task_can_be_saturated_without_removing_or_proofs(tmp_path):
     first = fact(net, known['claim_id'], proof='First complete fixture proof.')
     LocalMemory(lane(tmp_path, root)).append('notes', {'next_work': 'Exact local result'})
     _, _, cut, options, _ = cut_for(net)
-    assert cut['task_residual']['potentially_covering_results'][0]['fact_id'] == first
+    assert cut['shared_evidence_core']['results'][0]['fact_id'] == first
     assert cut['task_residual']['may_be_saturated'] is True
     assert all(row['task'] != 'Exact local result' for row in options)
     second = fact(net, known['claim_id'], proof='Independent second fixture proof.')
@@ -170,7 +173,7 @@ def test_different_construction_scope_and_consumer_remain_researchable(tmp_path)
     LocalMemory(lane(tmp_path, root)).append('notes', {
         'next_work': 'Study construction B failure mechanism through 1810 for the consumer'})
     _, _, cut, options, _ = cut_for(net)
-    rows = cut['task_residual']['potentially_covering_results']
+    rows = cut['shared_evidence_core']['results']
     assert any(row['fact_id'] == stronger and row['same_scope'] for row in rows)
     assert any(row['fact_id'] == foreign and not row['same_scope'] for row in rows)
     assert cut['task_frame']['open_requirements'][0]['statement'].endswith('Consumer needs construction B interface')
@@ -195,10 +198,89 @@ def test_cross_study_result_is_only_a_lead_in_next_local_cut(tmp_path):
         'focus_study_id': parent, 'channel': 'ADVANCE',
         'external_study_id': None, 'explore_mode': None})
     assert any(row['fact_id'] == arrived and 'TASK_SEARCH_LEAD' in row['source']
-               for row in cut['task_residual']['potentially_covering_results'])
+               for row in cut['shared_evidence_core']['results'])
     assert cut['task_residual']['coverage'] == 'UNDETERMINED'
     assert Network(tmp_path).truth(net.target_id) == 'OPEN'
     assert any(row['operation'] == 'RESEARCH' for row in options)
+
+
+def test_task_search_result_survives_receipt_and_certificate_competition(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    study_id = 'study-' + net.target_id
+    route = support(net, 'Open parent', ['Unproved interface'])
+    older = [fact(net, net.register_claim(f'Old endpoint {i}')['claim_id']) for i in range(3)]
+    relevant = fact(net, net.register_claim('Exact construction boundary through 1871')['claim_id'])
+    memory = LocalMemory(lane(tmp_path, study_id))
+    memory.append('events', {'task': 'Earlier endpoint work', 'tool_submissions': [
+        {'accepted': True, 'fact_id': fid} for fid in older]})
+    memory.append('notes', {'next_work': 'Check the exact construction boundary through 1871'})
+    exposure, _, cut, options, _ = cut_for(net)
+    core = cut['shared_evidence_core']['results']
+    assert len(core) <= 4
+    assert relevant in [row['fact_id'] for row in core]
+    assert cut['task_residual']['coverage'] == 'UNDETERMINED'
+    assert net.truth(net.target_id) == 'OPEN'
+    selector = selector_packet(net, exposure, cut=cut, options=options)
+    worker = worker_packet(net, options[0], cut=cut)
+    assert [row['fact_id'] for row in selector['cut']['shared_evidence_core']['results']] == [
+        row['fact_id'] for row in worker['local_cut']['shared_evidence_core']['results']]
+    assert worker['accepted_facts'] == []
+    assert 'related_results' not in worker
+
+
+def test_shared_core_deduplicates_evidence_and_keeps_unselected_searchable(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open theorem')
+    study_id = 'study-' + net.target_id
+    route = support(net, 'Open theorem', ['Needed local interface'])
+    direct = fact(net, route['requirement_claim_ids'][0])
+    results = [fact(net, net.register_claim(f'Boundary 1871 method {i}')['claim_id'])
+               for i in range(25)]
+    memory = LocalMemory(lane(tmp_path, study_id))
+    memory.append('events', {'task': 'Boundary 1871 method',
+        'tool_submissions': [{'accepted': True, 'fact_id': results[0]}]})
+    memory.append('notes', {'next_work': f'Compare {results[0]} with Boundary 1871 method'})
+    exposure, _, cut, options, _ = cut_for(net)
+    core = cut['shared_evidence_core']['results']
+    ids = [row['fact_id'] for row in core]
+    assert len(ids) == len(set(ids)) <= 4
+    assert results[0] in ids and direct in ids
+    assert {'EXPLICIT_TASK_REFERENCE', 'STUDY_ACCEPTED', 'TASK_SEARCH_LEAD'} <= set(
+        next(row['source'] for row in core if row['fact_id'] == results[0]))
+    assert cut['shared_evidence_core']['_audit']['candidate_count'] > 20
+    packet = selector_packet(net, exposure, cut=cut, options=options)
+    assert '_audit' not in packet['cut']['shared_evidence_core']
+    assert len(packet['cut']['shared_evidence_core']['results']) <= 4
+    hidden = next(fid for fid in results if fid not in ids)
+    assert any(hit['fact_id'] == hidden for hit in net.search('Boundary 1871 method', 40))
+    net.revoke(results[0], 'fixture correction')
+    _, _, refreshed, _, _ = cut_for(Network(tmp_path))
+    assert results[0] not in [row['fact_id'] for row in refreshed['shared_evidence_core']['results']]
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_stale_boundary_is_visible_without_programmatic_coverage_claim(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open theorem for every construction')
+    study_id = 'study-' + net.target_id
+    older = [fact(net, net.register_claim(f'Finite endpoint through {n}')['claim_id'])
+             for n in (836, 1469, 1810)]
+    same = fact(net, net.register_claim('Construction A feasible through N=1871')['claim_id'])
+    other = fact(net, net.register_claim('Construction B feasible through N=2000',
+                                        'different ambient scope')['claim_id'])
+    memory = LocalMemory(lane(tmp_path, study_id))
+    memory.append('events', {'task': 'Old finite work', 'tool_submissions': [
+        {'accepted': True, 'fact_id': fid} for fid in older]})
+    memory.append('notes', {'next_work': 'N=1868 is first uncovered for Construction A'})
+    _, _, cut, options, _ = cut_for(net)
+    core = cut['shared_evidence_core']['results']
+    assert same in [row['fact_id'] for row in core]
+    assert cut['task_residual']['coverage'] == 'UNDETERMINED'
+    assert cut['task_residual']['remaining_work'] == 'MODEL_MUST_ASSESS'
+    assert any(row['operation'] == 'RESEARCH' for row in options)
+    assert net.truth(net.target_id) == 'OPEN'
+    # The foreign, different-construction result remains a distinct searchable
+    # evidence record; neither its larger N nor lexical similarity proves use.
+    assert net.inspect_fact(other)['scope'] == 'different ambient scope'
+    assert other in [hit['fact_id'] for hit in net.search('Construction B N=2000', 10)]
 
 
 def test_obstacle_handover_rebuilds_and_does_not_default_to_repeating_diagnosis(tmp_path):

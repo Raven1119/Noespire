@@ -123,8 +123,9 @@ def test_full_research_feedback_reuse_and_one_service_even_after_timeout(tmp_pat
         good = call('candidate_submit', candidate=proposed)
         assert good['accepted'] is True
         assert good['task_residual']['authority'] == 'UNVERIFIED_RESEARCH_STATE'
-        assert good['task_residual']['potentially_covering_results'][0]['fact_id'] == good['premise']['fact_id']
-        assert good['task_residual']['potentially_covering_results'][0]['source'][0] == 'SAME_SESSION_ACCEPTED'
+        assert good['shared_evidence_core']['results'][0]['fact_id'] == good['premise']['fact_id']
+        assert good['shared_evidence_core']['results'][0]['source'][0] == 'SAME_SESSION_ACCEPTED'
+        assert good['task_residual']['evidence_core_ids'][0] == good['premise']['fact_id']
         assert good['task_residual']['coverage'] == 'UNDETERMINED'
         assert call('candidate_submit', candidate=proposed) == good
         admitted.append(good['premise']['fact_id'])
@@ -444,7 +445,7 @@ def test_local_research_hits_deduplicate_by_original_record_and_keep_queries(tmp
     assert {item['record_id'] for item in shared} == {first, second}
     assert local[0]['matched_queries'] == ['alpha', 'beta', 'gamma']
     assert all(item['matched_queries'] == ['alpha', 'beta', 'gamma'] for item in shared)
-    assert packet['accepted_facts'] == [] and packet['related_results'] == []
+    assert packet['accepted_facts'] == [] and packet['local_cut']['shared_evidence_core']['results'] == []
 
 
 def test_overwide_support_pages_exact_conditions_only_inside_current_cut(tmp_path):
@@ -508,6 +509,6 @@ def test_existing_task_result_is_exposed_for_inspection_without_premise_authorit
     packet = worker_packet(net, {'study_id': study,
         'task': 'Check the existing exact 836 boundary before trying an extension.',
         'operation': 'RESEARCH', 'fact_ids': [], 'research_queries': []})
-    assert any(item['fact_id'] == prior and item['authority'] == 'INSPECTION_ONLY'
-               for item in packet['related_results'])
+    assert any(item['fact_id'] == prior and packet['local_cut']['shared_evidence_core']['authority'] == 'INSPECTION_ONLY'
+               for item in packet['local_cut']['shared_evidence_core']['results'])
     assert packet['accepted_facts'] == []

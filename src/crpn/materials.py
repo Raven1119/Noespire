@@ -16,8 +16,10 @@ def selector_packet(network, exposure, inspections=(), *, cut, options):
     study = network.data['studies'][exposure['focus_study_id']]
     claim = (network.claim(study['claim_id']) if study.get('claim_id') else
              make_claim(network.problem_id, study['scope'], study['focus']))
+    visible_cut = {**cut, 'shared_evidence_core': {
+        k: v for k, v in cut['shared_evidence_core'].items() if k != '_audit'}}
     packet = {'channel': exposure['channel'], 'pinned_study_id': study['study_id'],
-        'cut': cut, 'options': options, 'inspections': list(inspections),
+        'cut': visible_cut, 'options': options, 'inspections': list(inspections),
         'studies': [{'study_id': study['study_id'], 'claim': claim,
                      'ready_supports': [r for r in cut['routes'] if r['compose_ready']],
                      'research': research_view(network.root, study['study_id'], claim['goal'], 2)}]}
@@ -41,32 +43,25 @@ def worker_packet(network, action, *, cut=None):
         fact = network.visible_fact(fid, claim["context"])
         accepted.append({"fact_id": fid, "statement": fact.statement})
     if cut is None:
-        from .work import derive
+        from .work import derive, shared_evidence_core
         cut, _, _ = derive(network, {'focus_study_id': study['study_id'],
                                     'external_study_id': None, 'explore_mode': None})
-    # The Selector may have changed the proposed task. Refresh the disposable
-    # comparison question for the actual task without changing its frozen cut.
+        cut = {**cut, 'shared_evidence_core': shared_evidence_core(network, study, action['task'])}
+    # The Selector may have changed the task, but its decision evidence identity
+    # must survive into the Worker packet. Only the comparison question changes.
     from .work import task_residual
-    cut = {**cut, 'task_residual': task_residual(
-        network, study, action['task'], local_state=cut['local_state'],
-        explore=cut.get('explore_mode') is not None)}
+    cut = {**cut,
+           'shared_evidence_core': {k: v for k, v in cut['shared_evidence_core'].items()
+                                    if k != '_audit'},
+           'task_residual': task_residual(
+               network, study, action['task'], evidence_core=cut['shared_evidence_core'])}
     supports = cut['routes']
     packet = checked_size({"study": {k: study[k] for k in ('study_id', 'claim_id', 'scope', 'focus', 'revision')
                                      if k in study}, "claim": claim, "task": action["task"],
                            "operation": action["operation"], "accepted_facts": accepted,
-                           "support_requirements": supports, "related_results": [],
+                           "support_requirements": supports,
                            "research_context": [], "verification_feedback": [],
                            "local_cut": cut})
-    for hit in network.search(action["task"], 4):
-        if hit["fact_id"] in {item["fact_id"] for item in accepted}:
-            continue
-        result = {"authority": "INSPECTION_ONLY", "fact_id": hit["fact_id"],
-                  "statement": hit["statement"]}
-        try:
-            checked_size({**packet, "related_results": packet["related_results"] + [result]})
-        except ValueError:
-            break
-        packet["related_results"].append(result)
     # Recent service feedback is an advisory view of the existing receipts, not a
     # second verdict store. The full proof remains available only by explicit read.
     try:

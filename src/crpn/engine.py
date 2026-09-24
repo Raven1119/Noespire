@@ -71,6 +71,15 @@ class Research:
                         'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}
                 elif len(options) == 1:
                     control['pending']['action'] = options[0]
+                if control['pending']['action'] is not None:
+                    from .work import shared_evidence_core, task_residual
+                    pending_action = control['pending']['action']
+                    current_study = n.data['studies'][pending_action['study_id']]
+                    core = shared_evidence_core(n, current_study, pending_action['task'],
+                                                explore=exposure['channel'] == 'EXPLORE')
+                    control['pending']['cut']['shared_evidence_core'] = core
+                    control['pending']['cut']['task_residual'] = task_residual(
+                        n, current_study, pending_action['task'], evidence_core=core)
                 n.save()
             pending = control['pending']
             key = control['run_id'] + ':' + str(control['visit']) + ':' + str(control.get('generation', 0))
@@ -154,6 +163,12 @@ class Research:
             outcome = {'status': result['status'], 'study_id': study, 'channel': pending['exposure']['channel'],
                        'focus_reason': pending['exposure'].get('focus_reason'),
                        'task': action['task'], 'operation': action['operation']}
+            core = pending['cut'].get('shared_evidence_core', {})
+            outcome['evidence_window'] = {
+                'selector_core_ids': [row['fact_id'] for row in core.get('results', [])],
+                'candidate_sources': core.get('_audit', {}).get('candidate_sources', {}),
+                'worker_core_ids': [row['fact_id'] for row in
+                                    packet.get('local_cut', {}).get('shared_evidence_core', {}).get('results', [])]}
             from .workbench import recover_submissions, examined_evidence_ids
             tool_submissions = recover_submissions(n, self.runtime, result['evidence']['request'])
             control = n.data['control']
@@ -171,6 +186,8 @@ class Research:
                 graph_versions, graph_evidence = interface_snapshot(n, n.data['studies'][study])
                 examined = examined_evidence_ids(result['evidence']['request'])
                 initial = [f['fact_id'] for f in packet.get('accepted_facts', [])]
+                initial += outcome['evidence_window']['worker_core_ids']
+                initial = list(dict.fromkeys(initial))
                 self._note(study, key + ':worker-return', {
                     'continuation': output.get('continuation', ''),
                     'next_work': output.get('next_work', ''),
