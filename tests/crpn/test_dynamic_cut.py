@@ -1,11 +1,13 @@
 """Deterministic control evidence; fixtures do not establish mathematics."""
 import json
 
+from danus.core import LocalMemory
 from crpn.engine import Research
 from crpn.materials import selector_packet, worker_packet
 from crpn.model import Network, make_claim
 from crpn.scheduler import focus
 from crpn.work import awakened, derive
+from substrate.store import lane
 from test_engine import Actors, action, candidate, output, runtime, start_after_initial_direct
 from test_model import fact, support
 
@@ -81,6 +83,48 @@ def test_many_routes_rotate_without_entering_one_selector_packet(tmp_path):
         assert len(cut['routes']) <= 4 and len(options) <= 4
         assert len(json.dumps(selector_packet(net, exposure, cut=cut, options=options)).encode()) < 96000
     assert len(seen) == 48
+
+
+def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Target')
+    route = support(net, 'Target', ['Actual missing interface'])
+    root = 'study-' + net.target_id
+    for sid, study in net.data['studies'].items():
+        if sid != root:
+            study['last_served_visit'] = 0
+    memory = LocalMemory(lane(tmp_path, root))
+    memory.append('notes', {'next_work': 'Extend the endpoint to 1809.',
+                            'continuation': 'This endpoint is only a finite check.'})
+    intermediate = fact(net, net.register_claim('Finite endpoint 1808')['claim_id'])
+    memory.append('events', {'task': 'Explore the finite construction',
+                             'tool_submissions': [{'accepted': True, 'fact_id': intermediate}]})
+    for cursor in range(8):
+        net.data['studies'][root]['work_cursor'] = cursor
+        exposure, _, cut, options, _ = cut_for(net)
+        assert cut['task_frame']['focus_truth'] == 'OPEN'
+        assert cut['task_frame']['open_requirements'][0]['claim_id'] == route['requirement_claim_ids'][0]
+        assert cut['task_frame']['recent_accepted'][0]['fact_id'] == intermediate
+        assert cut['task_frame']['recent_accepted'][0]['graph_interface'] is False
+        assert cut['unfinished']['task'] == 'Extend the endpoint to 1809.'
+        assert options[0]['operation'] == 'RESEARCH' and 'endpoint' not in options[0]['task']
+        assert len(options) <= 4
+        packet = selector_packet(net, exposure, cut=cut, options=options)
+        assert packet['cut']['focus']['claim'] == net.claim(net.target_id)
+        assert packet['cut']['task_frame']['unresolved_focus_claim_id'] == net.target_id
+    net.revoke(intermediate, 'Fixture revocation')
+    _, _, cut, options, _ = cut_for(net)
+    assert cut['task_frame']['recent_accepted'][0]['status'] == 'revoked'
+    assert all(intermediate not in option['fact_ids'] for option in options)
+
+
+def test_study_task_guidance_does_not_change_proof_authority(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Target')
+    root = 'study-' + net.target_id
+    LocalMemory(lane(tmp_path, root)).append('notes', {'next_work': 'A plausible unproved lemma.'})
+    _, _, cut, _, _ = cut_for(net)
+    assert cut['task_frame']['focus_truth'] == 'OPEN'
+    assert net.proof_ids() == []
+    assert net.truth(net.target_id) == 'OPEN'
 
 
 def test_overwide_support_is_paginated_hint_not_a_partial_compose(tmp_path):

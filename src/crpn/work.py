@@ -95,6 +95,41 @@ def _unfinished(network, study):
     return None
 
 
+def _recent_results(network, study, related):
+    """Small receipt view; neither notes nor receipts discharge a Claim."""
+    try:
+        events = LocalMemory(lane(network.root, study['study_id'])).read('events')
+    except (OSError, ValueError, TypeError, KeyError):
+        return []
+    relevant = {study.get('claim_id')}
+    relevant_supports = {row['support_id'] for row in related}
+    for row in related:
+        relevant.update((row['conclusion_claim_id'], *row['requirement_claim_ids']))
+    records = network._records()
+    results = []
+    for item in reversed(events):
+        record = item.get('record', {})
+        if not isinstance(record, dict):
+            continue
+        for submission in reversed(record.get('tool_submissions', [])):
+            fid = submission.get('fact_id')
+            if not submission.get('accepted') or not fid:
+                continue
+            if fid not in records:
+                continue
+            table, owner, _slot, fact = records[fid]
+            active = fact['status'] == 'accepted' and network._active(fid)
+            results.append({'fact_id': fid, 'status': 'accepted' if active else 'revoked',
+                            'statement_excerpt': fact['statement'][:500],
+                            'statement_page_required': len(fact['statement']) > 500,
+                            'graph_interface': (owner in relevant if table == 'claims' else
+                                                owner in relevant_supports),
+                            'source_task': record.get('task', '')[:500]})
+            if len(results) == 3:
+                return results
+    return results
+
+
 def _route(network, row):
     sid = row['support_id']
     if sum(len(network.claim(cid)['statement']) for cid in row['requirement_claim_ids']) > 12000:
@@ -140,11 +175,29 @@ def derive(network, exposure):
         window = [ready_row] + [r for r in window if r['support_id'] != ready_row['support_id']]
     selected = [_route(network, row) for row in window[:MAX_ROUTES]]
     unfinished = _unfinished(network, study)
+    recent_results = _recent_results(network, study, related)
+    open_requirements = []
+    for route in selected:
+        if route.get('conclusion', {}).get('claim_id') != cid:
+            continue  # A route consuming this Claim is output use, not its missing input.
+        for requirement in route.get('requirements', []):
+            if requirement['truth'] == 'OPEN' and len(open_requirements) < MAX_ROUTES:
+                open_requirements.append({'support_id': route['support_id'],
+                                          'claim_id': requirement['claim_id'],
+                                          'statement': requirement['statement'][:2000],
+                                          'page_required': len(requirement['statement']) > 2000})
     consumers = [r['support_id'] for r in related if cid in r['requirement_claim_ids']]
     external = network.data['studies'].get(exposure.get('external_study_id'))
     cut = {'focus': {'study_id': study['study_id'], 'claim': claim, 'revision': study.get('revision', 0)},
            'input_interface': {'scope': claim['context'], 'accepted_premises': 'Only delivered CRPN evidence IDs are usable.'},
            'unfinished': unfinished,
+           'task_frame': {'unresolved_focus_claim_id': cid,
+                          'unresolved_focus_source': 'cut.focus.claim',
+                          'focus_truth': network.truth(cid) if study.get('claim_id') else 'NO_CLAIM',
+                          'open_requirements': open_requirements,
+                          'recent_accepted': recent_results,
+                          'saved_next_work_role': 'Unverified route proposal, not the task definition or proof.',
+                          'remaining_gap': 'Unknown unless the exact Claim or Support requirements are discharged.'},
            'routes': selected, 'related_route_count': len(related),
            'changes': changed[:MAX_CHANGES], 'other_change_count': max(0, len(changed) - MAX_CHANGES),
            'output_use': {'known_support_ids': consumers[:MAX_ROUTES],
@@ -162,11 +215,17 @@ def derive(network, exposure):
                     'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}
                    for r in ready[:1]]
     else:
-        task = (unfinished or {}).get('task') or ('Prove the current exact local Claim, or establish a valid local reduction.'
-                                                 if study.get('claim_id') else 'Investigate the current independent research focus.')
+        task = ('Address the exact unresolved local Claim or one of its open Support requirements; '
+                'use the saved derivation only where it serves this focus.' if study.get('claim_id') else
+                'Investigate the current independent research focus and its specific remaining question.')
         options = [{'study_id': study['study_id'], 'operation': 'RESEARCH', 'task': task,
                     'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''}]
         if unfinished:
+            options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
+                            'task': 'Test whether the saved next step serves the exact local focus; '
+                                    'change route if new evidence leaves a different gap.',
+                            'fact_ids': [], 'research_queries': [], 'bridge': None,
+                            'notes': 'saved next_work is unverified research, not a renewed task'})
             options.append({'study_id': study['study_id'], 'operation': 'CLOSE',
                             'task': 'Check whether the saved derivation now yields a complete local proof; otherwise preserve its exact gap.',
                             'fact_ids': [], 'research_queries': [], 'bridge': None, 'notes': ''})
@@ -180,7 +239,7 @@ def derive(network, exposure):
             fid = hit['fact_id']
             if network.inspect_fact(fid)['scope'] == claim['context']:
                 options.append({'study_id': study['study_id'], 'operation': 'RESEARCH',
-                                'task': 'Examine whether this already accepted interface advances the current unfinished work.',
+                                'task': 'Examine whether this accepted interface addresses the exact local focus or an open requirement.',
                                 'fact_ids': [fid], 'research_queries': [], 'bridge': None,
                                 'notes': 'retrieval is a lead, not a mathematical connection'})
             else:
@@ -198,8 +257,10 @@ def derive(network, exposure):
                                 'fact_ids': [fid], 'research_queries': [], 'bridge': None, 'notes': ''})
     cut['candidate_count'] = len(options)
     if len(options) > MAX_ROUTES:
-        start = cursor % len(options)
-        options = (options[start:] + options[:start])[:MAX_ROUTES]
+        # Keep the exact obligation visible while rotating optional leads.
+        remaining = options[1:]
+        start = cursor % len(remaining)
+        options = options[:1] + (remaining[start:] + remaining[:start])[:MAX_ROUTES - 1]
     return cut, options, versions
 
 

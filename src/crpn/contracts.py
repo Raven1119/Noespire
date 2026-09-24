@@ -38,6 +38,11 @@ The selected study_id must equal pinned_study_id, and the operation must be one 
 the offered options. Research judgments are advisory, never mathematical truth.
 Decide the concrete local task, what verified results it uses, and what remains unknown.
 Existing research notes are unverified; an external region is navigation only.
+A saved next_work is a route proposal, not the definition of the unfinished task.
+Anchor the choice in the cut's exact unresolved focus and open requirements. After
+recent results, name the remaining question or the concrete evidence for changing
+route; a finite endpoint alone does not require another endpoint. Endpoint work
+is still valid when it tests a specified structure or failure boundary.
 A method limitation can inform or change work; explain exceptions in notes. Continuing
 a finite series is legitimate when addressing a specific remaining question.
 RESEARCH may prove directly, derive a conditional Support, use a new Fact to connect an
@@ -129,6 +134,20 @@ accepted evidence ID can be used in further local reasoning immediately. Rejecti
 unknown completion is not acceptance. An unchanged request reuses its recorded outcome;
 a corrected proof is a different candidate. Continue within the supplied local task and
 preserve unfinished work; no manual handover or new Selector is needed for these tools.
+Before submitting, distinguish a complete local mathematical conclusion from steps
+inside its proof. Keep routine substitutions, checks within one construction and direct
+corollaries in LocalMemory while working, then include every needed unverified step in
+the final complete proof. Submit an intermediate lemma separately when an actual
+consumer needs its interface, independent review is needed to continue safely, the
+local task itself is complete, or combining proofs would defeat local reviewability.
+There is no per-session submission quota: distinct useful conclusions and alternate
+valid proofs may each be submitted. Do not bundle unrelated conclusions or omit a
+needed proof step to save verification calls. Draft notes grant no premise permission.
+After each accepted result, check the original local question against the graph: has
+it been answered, has one requirement been answered, or is the connection still
+unknown? Continue the actual remaining gap or explain a change of route. Do not
+automatically extend the same finite sequence merely because its latest endpoint
+was accepted. A result with unknown use remains eligible for normal verification.
 List only received submission receipts in submission_receipts. Use continuation
 for completed work and precise unfinished derivations, and next_work for the
 remaining obligation. The final handover is not independently verified and cannot
