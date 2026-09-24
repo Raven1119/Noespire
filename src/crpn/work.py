@@ -320,6 +320,35 @@ def shared_evidence_core(network, study, task, *, local_state=None, recent=None,
                        'candidate_sources': {fid: row['source'] for fid, row in by_id.items()}}}
 
 
+def accepted_continuation_core(network, study, fact_id):
+    """After admission, show the new result and its exact graph interfaces only."""
+    records = network._records()
+    if fact_id not in records:
+        raise ValueError('accepted continuation result is missing')
+    candidates = [(fact_id, 'SAME_SESSION_ACCEPTED')]
+    candidates.extend((fid, 'ACTUAL_PREDECESSOR')
+                      for fid in records[fact_id][3].get('predecessors', []))
+    candidates.extend((fid, 'ACTUAL_CONSUMER')
+                      for fid, (_table, _owner, _slot, row) in records.items()
+                      if fact_id in row.get('predecessors', []))
+    results = []
+    for fid, source in candidates:
+        if fid in {row['fact_id'] for row in results}:
+            continue
+        try:
+            fact = network.inspect_fact(fid)
+        except (KeyError, ValueError):
+            continue
+        results.append({'fact_id': fid, 'scope': fact['scope'],
+                        'same_scope': fact['scope'] == study['scope'],
+                        'statement_excerpt': fact['statement'][:1000],
+                        'statement_page_required': len(fact['statement']) > 1000,
+                        'source': [source], 'relation': 'POTENTIALLY_RELEVANT_NOT_PROVEN'})
+        if len(results) == MAX_COVERING_RESULTS:
+            break
+    return {'authority': 'INSPECTION_ONLY', 'results': results}
+
+
 def task_residual(network, study, task, *, evidence_core=None, **core_options):
     """The unresolved comparison question; evidence exposure grants no premise."""
     core = evidence_core if evidence_core is not None else shared_evidence_core(

@@ -125,6 +125,10 @@ def test_full_research_feedback_reuse_and_one_service_even_after_timeout(tmp_pat
         assert good['task_residual']['authority'] == 'UNVERIFIED_RESEARCH_STATE'
         assert good['shared_evidence_core']['results'][0]['fact_id'] == good['premise']['fact_id']
         assert good['shared_evidence_core']['results'][0]['source'][0] == 'SAME_SESSION_ACCEPTED'
+        assert [row['fact_id'] for row in good['shared_evidence_core']['results']] == [
+            good['premise']['fact_id'], prior]
+        assert good['premise']['fact_id'] in good['decision_question']
+        assert good['mandatory_navigation']['authority'] == 'INSPECTION_ONLY'
         assert good['task_residual']['evidence_core_ids'][0] == good['premise']['fact_id']
         assert good['task_residual']['coverage'] == 'UNDETERMINED'
         assert call('candidate_submit', candidate=proposed) == good

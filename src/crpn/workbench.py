@@ -303,15 +303,18 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
             if response['accepted']:
                 # Admission has already committed. Rebuild from that graph, in
                 # this Worker session, without another model call or truth store.
-                from .work import shared_evidence_core, task_residual
+                from .work import accepted_continuation_core, navigation_page, task_residual
                 fresh = current()
                 study = fresh.data['studies'][packet['study']['study_id']]
-                core = shared_evidence_core(
-                    fresh, study, packet['task'], newly_accepted=response['fact_id'])
-                result['shared_evidence_core'] = {
-                    k: v for k, v in core.items() if k != '_audit'}
+                core = accepted_continuation_core(fresh, study, response['fact_id'])
+                result['shared_evidence_core'] = core
                 result['task_residual'] = task_residual(
                     fresh, study, packet['task'], evidence_core=core)
+                result['decision_question'] = (
+                    'Does accepted evidence ' + response['fact_id'] + ' complete the current task, '
+                    'only one step, or no established connection? Inspect exact related evidence '
+                    'before deciding the remaining work.')
+                result['mandatory_navigation'] = navigation_page(fresh, study)
             return result
         result += [tool('premise_request', 'Request an existing result as an actual premise for this session. Checks current scope and valid closure. Foreign scope requires the existing Selector bridge; inspection alone is not authorization.', obj({'fact_id': STR}), premise_request),
                    tool('candidate_submit', 'Submit a complete local Fact, conditional Support or refutation through CRPN and a fresh independent Verifier. Returns feedback or an accepted evidence ID; you may continue within the same task. Identical requests reuse the verdict.', obj({'candidate': CANDIDATE}), candidate_submit, waits=True)]
