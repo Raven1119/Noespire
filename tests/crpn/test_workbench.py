@@ -122,6 +122,10 @@ def test_full_research_feedback_reuse_and_one_service_even_after_timeout(tmp_pat
         assert bad['verdict'] == 'wrong' and 'Paragraph 2' in bad['feedback']['reason']
         good = call('candidate_submit', candidate=proposed)
         assert good['accepted'] is True
+        assert good['task_residual']['authority'] == 'UNVERIFIED_RESEARCH_STATE'
+        assert good['task_residual']['potentially_covering_results'][0]['fact_id'] == good['premise']['fact_id']
+        assert good['task_residual']['potentially_covering_results'][0]['source'][0] == 'SAME_SESSION_ACCEPTED'
+        assert good['task_residual']['coverage'] == 'UNDETERMINED'
         assert call('candidate_submit', candidate=proposed) == good
         admitted.append(good['premise']['fact_id'])
         next_candidate = candidate('New C', context='x is real', predecessors=admitted)

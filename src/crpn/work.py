@@ -14,6 +14,7 @@ from .model import make_claim
 
 MAX_ROUTES = 4
 MAX_CHANGES = 4
+MAX_COVERING_RESULTS = 4
 
 
 def awakened(network, studies):
@@ -133,6 +134,71 @@ def _recent_results(network, study, related):
             if len(results) == 3:
                 return results
     return results
+
+
+def task_residual(network, study, task, *, local_state=None, recent=None,
+                  related=None, newly_accepted=None, explore=False):
+    """Bounded evidence for a local model to assess, never a theorem implication.
+
+    Receipts and exact graph neighbors precede lexical leads. A search hit is
+    only an inspectable candidate; even identical-looking statements do not
+    acquire predecessor permission or discharge a task through this view.
+    """
+    cid = study.get('claim_id')
+    related = related if related is not None else [
+        row for row in network.data['supports'].values()
+        if cid and (cid == row['conclusion_claim_id'] or cid in row['requirement_claim_ids'])]
+    local_state = local_state if local_state is not None else _local_state(network, study, [])
+    recent = recent if recent is not None else _recent_results(network, study, related)
+    results = []
+    by_id = {}
+
+    def add(fid, source):
+        if fid in by_id:
+            if source not in by_id[fid]['source']:
+                by_id[fid]['source'].append(source)
+            return
+        if len(results) >= MAX_COVERING_RESULTS:
+            return
+        try:
+            fact = network.inspect_fact(fid)  # accepted and valid closure only
+        except (KeyError, ValueError):
+            return
+        statement = fact['statement']
+        row = {'fact_id': fid, 'scope': fact['scope'],
+               'same_scope': fact['scope'] == study['scope'],
+               'statement_excerpt': statement[:1000],
+               'statement_page_required': len(statement) > 1000,
+               'source': [source], 'relation': 'POTENTIALLY_RELEVANT_NOT_PROVEN'}
+        results.append(row)
+        by_id[fid] = row
+
+    if newly_accepted:
+        add(newly_accepted, 'SAME_SESSION_ACCEPTED')
+    for row in recent:
+        if row['status'] == 'accepted':
+            add(row['fact_id'], 'STUDY_ACCEPTED')
+    if cid:
+        claims = [cid]
+        for route in related:
+            claims.extend((route['conclusion_claim_id'], *route['requirement_claim_ids']))
+        for owner in dict.fromkeys(claims):
+            for fid in network.data['claims'][owner].get('proofs', {}):
+                add(fid, 'DIRECT_GRAPH_INTERFACE')
+        for route in related:
+            for fid in route.get('certificates', {}):
+                add(fid, 'DIRECT_GRAPH_INTERFACE')
+    for action in local_state['completed_actions'][:2]:
+        for fid in action.get('evidence_context_ids', []):
+            add(fid, 'RESEARCH_STATE_REFERENCE')
+    for hit in network.search(task, MAX_COVERING_RESULTS):
+        add(hit['fact_id'], 'TASK_SEARCH_LEAD')
+    if explore and len(results) < MAX_COVERING_RESULTS:
+        for hit in network.search(study['focus'], MAX_COVERING_RESULTS):
+            add(hit['fact_id'], 'EXPLORE_CROSS_REGION_LEAD')
+    return {'authority': 'UNVERIFIED_RESEARCH_STATE', 'current_task': task[:2000],
+            'coverage': 'UNDETERMINED', 'remaining_work': 'MODEL_MUST_ASSESS',
+            'may_be_saturated': True, 'potentially_covering_results': results}
 
 
 def _local_state(network, study, changed):
@@ -409,11 +475,19 @@ def derive(network, exposure):
     local_state['claim'] = {'claim_id': cid, 'statement': claim['statement'][:3000],
                             'page_required': len(claim['statement']) > 3000}
     local_state['open_requirements'] = open_requirements
+    proposed_task = (unfinished['text'] if unfinished else
+                     local_state['open_questions'][0]['text'] if local_state['open_questions'] else
+                     local_state['previous_suggestions'][0]['text'] if local_state['previous_suggestions'] else
+                     open_requirements[0]['statement'] if open_requirements else study['focus'])
+    residual = task_residual(network, study, proposed_task, local_state=local_state,
+                             recent=recent_results, related=related,
+                             explore=exposure.get('channel') == 'EXPLORE')
     external = network.data['studies'].get(exposure.get('external_study_id'))
     cut = {'focus': {'study_id': study['study_id'], 'claim': claim, 'revision': study.get('revision', 0)},
            'input_interface': {'scope': claim['context'], 'accepted_premises': 'Only delivered CRPN evidence IDs are usable.'},
            'unfinished': unfinished,
            'local_state': local_state,
+           'task_residual': residual,
            'task_frame': {'unresolved_focus_claim_id': cid,
                           'unresolved_focus_source': 'cut.focus.claim',
                           'focus_truth': network.truth(cid) if study.get('claim_id') else 'NO_CLAIM',

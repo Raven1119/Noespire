@@ -47,6 +47,16 @@ Anchor the choice in the cut's exact unresolved focus and open requirements. Aft
 recent results, name the remaining question or the concrete evidence for changing
 route; a finite endpoint alone does not require another endpoint. Endpoint work
 is still valid when it tests a specified structure or failure boundary.
+The cut.task_residual is a bounded, unverified comparison question. Its
+potentially_covering_results are accepted Facts, but their relation to this task
+has not been proved by retrieval. Compare the proposed local work with their
+exact statements and scope: what is already established, and what distinct
+question remains? Inspect a proof when its construction, assumptions or
+method matter. A weaker numerical endpoint may still matter for a different
+construction, method, scope, independent OR proof, failure mechanism or
+consumer-required interface. If the old task is saturated, redirect to a real
+open requirement, unfinished derivation or parent question. The residual may
+be empty; say NO CLEAR LOCAL MOVE rather than inventing an obligation.
 Separate the long-term Claim, completed actions and observations, a genuine
 unfinished derivation, open questions, and old suggestions. A completed directional
 check is history, not a default repeat task. A genuine unfinished derivation may
@@ -85,6 +95,15 @@ new condition or alternative representation, and record the reason. Continue a
 real unfinished derivation even without new evidence. You may change route or
 explore without a known consumer. If no concrete move is clear, report
 NO CLEAR LOCAL MOVE rather than inventing a lemma.
+At the start, compare the actual task with local_cut.task_residual's potentially
+covering accepted results. This view does not prove coverage or grant premise
+permission. Inspect the exact Fact or proof when needed. State for yourself what
+is already covered and the concrete residual, if any. Do not spend this service
+reproving a weaker instance of the same object, assumptions and property unless
+it has a distinct mathematical purpose. A different construction, scope,
+method, independent proof route, failure mechanism or consumer-specific
+interface can be such a purpose. A saturated task may end or return to a real
+open question; never synthesize a new lemma solely to avoid an empty residual.
 Persist useful intermediate research with local_append; shared findings/dead ends may
 use gm_add. These are unverified notes, never Facts. When saving a specific
 derivation that must survive timeout before final handover,
@@ -172,6 +191,10 @@ it been answered, has one requirement been answered, or is the connection still
 unknown? Continue the actual remaining gap or explain a change of route. Do not
 automatically extend the same finite sequence merely because its latest endpoint
 was accepted. A result with unknown use remains eligible for normal verification.
+The accepted candidate_submit receipt includes a fresh task_residual view from
+the committed graph. Use that view immediately in this same session to reassess
+what remains; its search leads are not implications or authorized predecessors.
+An alternate complete proof remains admissible through the normal tool.
 List only received submission receipts in submission_receipts. In research_state,
 write the completed observation from this service, the exact unfinished derivation
 position if any, one remaining concrete open question if any, and a specific reason

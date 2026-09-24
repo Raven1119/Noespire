@@ -44,6 +44,12 @@ def worker_packet(network, action, *, cut=None):
         from .work import derive
         cut, _, _ = derive(network, {'focus_study_id': study['study_id'],
                                     'external_study_id': None, 'explore_mode': None})
+    # The Selector may have changed the proposed task. Refresh the disposable
+    # comparison question for the actual task without changing its frozen cut.
+    from .work import task_residual
+    cut = {**cut, 'task_residual': task_residual(
+        network, study, action['task'], local_state=cut['local_state'],
+        explore=cut.get('explore_mode') is not None)}
     supports = cut['routes']
     packet = checked_size({"study": {k: study[k] for k in ('study_id', 'claim_id', 'scope', 'focus', 'revision')
                                      if k in study}, "claim": claim, "task": action["task"],

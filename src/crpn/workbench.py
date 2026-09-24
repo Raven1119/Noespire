@@ -296,10 +296,19 @@ def tools(network, wl, role, *, runtime=None, request_path=None):
         def candidate_submit(candidate):
             n = current()
             response = submit_candidate(n, runtime, request_path, candidate)
-            return {'accepted': response['accepted'], 'verdict': response['verdict'],
+            result = {'accepted': response['accepted'], 'verdict': response['verdict'],
                     'feedback': {k: v for k, v in response['verification'].items() if k != 'evidence'},
                     'admission': response['admission'],
                     'premise': n.inspect_fact(response['fact_id']) if response['accepted'] else None}
+            if response['accepted']:
+                # Admission has already committed. Rebuild from that graph, in
+                # this Worker session, without another model call or truth store.
+                from .work import task_residual
+                fresh = current()
+                study = fresh.data['studies'][packet['study']['study_id']]
+                result['task_residual'] = task_residual(
+                    fresh, study, packet['task'], newly_accepted=response['fact_id'])
+            return result
         result += [tool('premise_request', 'Request an existing result as an actual premise for this session. Checks current scope and valid closure. Foreign scope requires the existing Selector bridge; inspection alone is not authorization.', obj({'fact_id': STR}), premise_request),
                    tool('candidate_submit', 'Submit a complete local Fact, conditional Support or refutation through CRPN and a fresh independent Verifier. Returns feedback or an accepted evidence ID; you may continue within the same task. Identical requests reuse the verdict.', obj({'candidate': CANDIDATE}), candidate_submit, waits=True)]
     return result

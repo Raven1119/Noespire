@@ -118,6 +118,89 @@ def test_saved_next_work_is_a_lead_while_the_exact_gap_stays_in_every_cut(tmp_pa
     assert all(intermediate not in option['fact_ids'] for option in options)
 
 
+def test_existing_results_are_bounded_advisory_material_for_the_local_residual(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Prove an open theorem')
+    root = 'study-' + net.target_id
+    stronger = fact(net, net.register_claim('For the same witness, feasibility holds for N <= 1867')['claim_id'])
+    fact(net, net.register_claim('Another construction has a distinct failure mechanism')['claim_id'])
+    LocalMemory(lane(tmp_path, root)).append('events', {
+        'task': 'For the same witness, prove feasibility for N <= 1810',
+        'tool_submissions': [{'accepted': True, 'fact_id': stronger}]})
+    LocalMemory(lane(tmp_path, root)).append('notes', {
+        'next_work': 'For the same witness, prove feasibility for N <= 1810'})
+    exposure, _, cut, options, _ = cut_for(net)
+    view = cut['task_residual']
+    assert view['authority'] == 'UNVERIFIED_RESEARCH_STATE'
+    assert view['coverage'] == 'UNDETERMINED'
+    assert view['current_task'] == 'For the same witness, prove feasibility for N <= 1810'
+    assert view['potentially_covering_results'][0]['fact_id'] == stronger
+    assert view['potentially_covering_results'][0]['source'][0] == 'STUDY_ACCEPTED'
+    assert len(view['potentially_covering_results']) <= 4
+    assert all(row['relation'] == 'POTENTIALLY_RELEVANT_NOT_PROVEN' for row in view['potentially_covering_results'])
+    assert '1810' not in options[0]['task']  # Saved next_work is not a repeated primary action.
+    assert selector_packet(net, exposure, cut=cut, options=options)['cut']['task_residual'] == view
+    worker_view = worker_packet(net, options[0], cut=cut)['local_cut']['task_residual']
+    assert worker_view['current_task'] == options[0]['task']
+    assert worker_view['potentially_covering_results'][0]['fact_id'] == stronger
+    assert net.truth(net.target_id) == 'OPEN'
+
+
+def test_exact_known_task_can_be_saturated_without_removing_or_proofs(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    root = 'study-' + net.target_id
+    known = net.register_claim('Exact local result')
+    first = fact(net, known['claim_id'], proof='First complete fixture proof.')
+    LocalMemory(lane(tmp_path, root)).append('notes', {'next_work': 'Exact local result'})
+    _, _, cut, options, _ = cut_for(net)
+    assert cut['task_residual']['potentially_covering_results'][0]['fact_id'] == first
+    assert cut['task_residual']['may_be_saturated'] is True
+    assert all(row['task'] != 'Exact local result' for row in options)
+    second = fact(net, known['claim_id'], proof='Independent second fixture proof.')
+    assert second != first
+    assert {first, second} <= set(Network(tmp_path).proof_ids())
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+
+
+def test_different_construction_scope_and_consumer_remain_researchable(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    root = 'study-' + net.target_id
+    stronger = fact(net, net.register_claim('Construction A works through 1867')['claim_id'])
+    foreign = fact(net, net.register_claim('Construction A works through 2000', 'foreign scope')['claim_id'])
+    support(net, 'Open parent', ['Consumer needs construction B interface'])
+    LocalMemory(lane(tmp_path, root)).append('notes', {
+        'next_work': 'Study construction B failure mechanism through 1810 for the consumer'})
+    _, _, cut, options, _ = cut_for(net)
+    rows = cut['task_residual']['potentially_covering_results']
+    assert any(row['fact_id'] == stronger and row['same_scope'] for row in rows)
+    assert any(row['fact_id'] == foreign and not row['same_scope'] for row in rows)
+    assert cut['task_frame']['open_requirements'][0]['statement'].endswith('Consumer needs construction B interface')
+    assert any(row['operation'] == 'RESEARCH' for row in options)
+    assert net.truth(net.target_id) == 'OPEN'
+
+
+def test_cross_study_result_is_only_a_lead_in_next_local_cut(tmp_path):
+    net = Network.create(tmp_path, 'p', 'Open parent')
+    parent = 'study-' + net.target_id
+    support(net, 'Open parent', ['Unresolved dependency'])
+    LocalMemory(lane(tmp_path, parent)).append('notes', {
+        'source_key': 'run:1:worker-return', 'source_status': 'COMPLETED',
+        'research_state': {'completed_observation': 'A route needs a modular interface.',
+                           'unfinished_derivation': '',
+                           'open_question': 'Can the modular interface close the gap?',
+                           'recheck_reason': ''}})
+    LocalMemory(lane(tmp_path, parent)).append('events', {
+        'source_key': 'run:1:service', 'task': 'Inspect modular route.'})
+    arrived = fact(net, net.register_claim('Modular interface from another Study')['claim_id'])
+    cut, options, _ = derive(Network(tmp_path), {
+        'focus_study_id': parent, 'channel': 'ADVANCE',
+        'external_study_id': None, 'explore_mode': None})
+    assert any(row['fact_id'] == arrived and 'TASK_SEARCH_LEAD' in row['source']
+               for row in cut['task_residual']['potentially_covering_results'])
+    assert cut['task_residual']['coverage'] == 'UNDETERMINED'
+    assert Network(tmp_path).truth(net.target_id) == 'OPEN'
+    assert any(row['operation'] == 'RESEARCH' for row in options)
+
+
 def test_obstacle_handover_rebuilds_and_does_not_default_to_repeating_diagnosis(tmp_path):
     net = Network.create(tmp_path, 'p', 'P')
     root = 'study-' + net.target_id
