@@ -22,6 +22,11 @@ docs/kimi_noespire_project_understanding.md
 dynamic_run/
 *.log
 
+# Archived local CRPN experiment drivers and raw evidence. Published reports live at repo root.
+/experiments/crpn_authority_convergence/
+/experiments/crpn_first_real_cycle/
+/experiments/crpn_local_workbench/
+
 # One-off frozen replay drivers and their local evidence.
 /experiments/n2a[b-m]_*/
 /experiments/n2z_live_boundary/environment_repair/
